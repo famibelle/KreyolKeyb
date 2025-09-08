@@ -1,4 +1,4 @@
-# TODO – Klavié Kreyòl Karukera (Android)
+# TODO – Klavyé Kreyòl Karukera (Android)
 
 Statut actuel: dépôt recentré sur `android_keyboard/` uniquement. Cette liste structure les prochaines étapes par domaine.
 

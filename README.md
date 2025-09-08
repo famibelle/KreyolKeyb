@@ -1,6 +1,6 @@
 # 🇬🇵 Klavyé Kreyòl Karukera : Clavier intelligent pour la saisie en **Kreyòl Guadeloupéen** avec suggestions de mots.
 
-**Klavié Kreyòl Karukera** est un clavier Android intelligent conçu pour répondre à un besoin fondamental : permettre aux Guadeloupéens d’écrire facilement en **Kreyòl Guadeloupéen** sur leur smartphone, avec fluidité, authenticité et fierté.
+**Klavyé Kreyòl Karukera** est un clavier Android intelligent conçu pour répondre à un besoin fondamental : permettre aux Guadeloupéens d’écrire facilement en **Kreyòl Guadeloupéen** sur leur smartphone, avec fluidité, authenticité et fierté.
 
 
 - 🛠️ Si ton créole est très rouillé...
@@ -27,7 +27,7 @@ Grâce à un dictionnaire de plus de **1 800 mots** et un système de **suggesti
 
 ---
 
-**Klavié Kreyòl Karukera**, c’est plus qu’un outil :  
+**Klavyé Kreyòl Karukera**, c’est plus qu’un outil :  
 C’est un acte de transmission, un hommage à la langue, une technologie au service de l’identité créole.
 
 
