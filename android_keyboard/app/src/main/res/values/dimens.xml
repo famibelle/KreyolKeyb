@@ -13,23 +13,23 @@
     <dimen name="text_size_action_key">18sp</dimen>      <!-- Actions - Priorité 3 (augmenté) -->
     <dimen name="text_size_suggestion">16sp</dimen>      <!-- Suggestions - Priorité 4 (augmenté) -->
     <dimen name="text_size_numeric">18sp</dimen>         <!-- Chiffres (augmenté) -->
-    <dimen name="text_size_title">20sp</dimen>           <!-- Titre du clavier (augmenté) -->
+    <dimen name="text_size_title">16sp</dimen>           <!-- Titre réduit pour compacité -->
     <dimen name="text_size_watermark">10sp</dimen>       <!-- Watermark -->
     
-    <!-- Padding et marges - OPTIMISÉS POUR LE TACTILE -->
-    <dimen name="key_padding_horizontal">18dp</dimen>    <!-- Augmenté pour zone tactile -->
-    <dimen name="key_padding_vertical">16dp</dimen>      <!-- Augmenté pour zone tactile -->
-    <dimen name="key_margin">4dp</dimen>                 <!-- Augmenté pour l'aération -->
-    <dimen name="suggestion_padding_horizontal">24dp</dimen> <!-- Augmenté pour les chips -->
-    <dimen name="suggestion_padding_vertical">12dp</dimen>
-    <dimen name="suggestion_margin">10dp</dimen>         <!-- Plus d'espace entre suggestions -->
+    <!-- Padding et marges - OPTIMISÉS POUR COMPACITÉ -->
+    <dimen name="key_padding_horizontal">12dp</dimen>    <!-- Réduit pour compacité -->
+    <dimen name="key_padding_vertical">10dp</dimen>      <!-- Réduit pour compacité -->
+    <dimen name="key_margin">2dp</dimen>                 <!-- Réduit pour compacité -->
+    <dimen name="suggestion_padding_horizontal">16dp</dimen> <!-- Réduit pour compacité -->
+    <dimen name="suggestion_padding_vertical">8dp</dimen>    <!-- Réduit pour compacité -->
+    <dimen name="suggestion_margin">6dp</dimen>          <!-- Réduit pour compacité -->
     
     <!-- Élévation pour effet 3D -->
     <dimen name="key_elevation">6dp</dimen>              <!-- Augmenté pour plus de relief -->
     <dimen name="suggestion_elevation">4dp</dimen>       <!-- Augmenté pour plus de relief -->
     <dimen name="popup_elevation">10dp</dimen>           <!-- Augmenté pour plus de relief -->
     
-    <!-- Hauteur minimale des touches - OPTIMISÉE POUR MOBILE -->
-    <dimen name="key_min_height">54dp</dimen>            <!-- Augmenté pour meilleur tactile -->
-    <dimen name="space_key_height">58dp</dimen>          <!-- Augmenté pour plus de visibilité -->
+    <!-- Hauteur minimale des touches - OPTIMISÉE POUR COMPACITÉ -->
+    <dimen name="key_min_height">48dp</dimen>            <!-- Réduit pour clavier compact -->
+    <dimen name="space_key_height">52dp</dimen>          <!-- Réduit pour plus de compacité -->
 </resources>
