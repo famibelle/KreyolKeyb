@@ -459,8 +459,8 @@ class KreyolInputMethodService : InputMethodService() {
             val mainLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setBackgroundColor(Color.parseColor("#1C1C1C")) // Noir volcanique direct
-                // Padding augmenté pour un design plus aéré
-                setPadding(12, 12, 12, 12)
+                // Padding réduit pour optimiser l'espace vertical
+                setPadding(6, 4, 6, 4)
             }
             
             // Stocker la référence pour les changements de mode
@@ -472,7 +472,7 @@ class KreyolInputMethodService : InputMethodService() {
                 textSize = resources.getDimension(R.dimen.text_size_title) / resources.displayMetrics.density
                 setBackgroundColor(Color.parseColor("#0080FF")) // Bleu caraïbe direct
                 setTextColor(Color.parseColor("#FFFFFF")) // Blanc coral direct
-                setPadding(16, 12, 16, 12)
+                setPadding(8, 6, 8, 6)
                 gravity = Gravity.CENTER
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 elevation = 2f
@@ -486,8 +486,8 @@ class KreyolInputMethodService : InputMethodService() {
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
                 setBackgroundColor(Color.parseColor("#F5F5DC")) // Beige sable direct
-                // Padding augmenté pour un meilleur espacement
-                setPadding(16, 16, 16, 16)
+                // Padding réduit pour optimiser l'espace vertical
+                setPadding(8, 6, 8, 6)
                 elevation = 1f
             }
             
@@ -658,8 +658,8 @@ class KreyolInputMethodService : InputMethodService() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            // Espacement amélioré entre les rangées
-            setPadding(6, 6, 6, 6)
+            // Espacement réduit entre les rangées pour taille optimisée
+            setPadding(3, 2, 3, 2)
         }
         
         for (key in keys) {
@@ -713,15 +713,15 @@ class KreyolInputMethodService : InputMethodService() {
                 }
             }
             
-            // 3. PADDING ET DIMENSIONS selon le brief UX
+            // 3. PADDING ET DIMENSIONS selon le brief UX - OPTIMISÉ POUR TAILLE
             val padding = when {
-                key == "ESPACE" -> 16
-                key.matches(Regex("[a-zA-Z]")) -> 12
-                else -> 10
+                key == "ESPACE" -> 12
+                key.matches(Regex("[a-zA-Z]")) -> 8
+                else -> 6
             }
             button.setPadding(padding, padding, padding, padding)
-            button.minHeight = 120
-            button.minWidth = if (key == "ESPACE") 200 else 80
+            button.minHeight = resources.getDimensionPixelSize(R.dimen.key_min_height)
+            button.minWidth = if (key == "ESPACE") 150 else 60
             
             // 4. DEBUG
             Log.d(TAG, "=== TextView '$key' créé avec background arrondi ===")
@@ -737,7 +737,7 @@ class KreyolInputMethodService : InputMethodService() {
             } else {
                 params.weight = 1f
             }
-            params.setMargins(4, 4, 4, 4)
+            params.setMargins(2, 1, 2, 1)
             button.layoutParams = params
             
             // 6. GESTION TACTILE OPTIMISÉE - Stabilité améliorée
