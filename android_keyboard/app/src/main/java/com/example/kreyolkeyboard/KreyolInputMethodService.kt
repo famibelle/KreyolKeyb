@@ -468,7 +468,7 @@ class KreyolInputMethodService : InputMethodService() {
             
             // Titre du clavier - Style moderne et épuré selon le brief
             val titleView = TextView(this).apply {
-                text = "Klavié Kreyòl Karukera 🇬🇵 • Potomitan™"
+                text = "Klavyé Kreyòl Karukera 🇬🇵 • Potomitan™"
                 textSize = resources.getDimension(R.dimen.text_size_title) / resources.displayMetrics.density
                 setBackgroundColor(Color.parseColor("#0080FF")) // Bleu caraïbe direct
                 setTextColor(Color.parseColor("#FFFFFF")) // Blanc coral direct

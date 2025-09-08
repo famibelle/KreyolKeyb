@@ -44,7 +44,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         val appTitle = TextView(this).apply {
-            text = "Klavié Kreyòl Karukera 🇬🇵"
+            text = "Klavyé Kreyòl Karukera 🇬🇵"
             textSize = 28f
             setTextColor(Color.parseColor("#F8F8FF")) // Blanc Coral
             setTypeface(null, Typeface.BOLD)
@@ -129,7 +129,7 @@ class SettingsActivity : AppCompatActivity() {
         
         val installSteps = TextView(this).apply {
             text = "1️⃣ Appuyez sur 'Activer le clavier' ci-dessous\n" +
-                    "2️⃣ Dans les paramètres, activez 'Klavié Kreyòl Karukera'\n" +
+                    "2️⃣ Dans les paramètres, activez 'Klavyé Kreyòl Karukera'\n" +
                     "3️⃣ Revenez ici et testez le clavier\n" +
                     "4️⃣ Changez de clavier en appuyant sur l'icône clavier dans la barre de notifications"
             textSize = 15f
@@ -193,7 +193,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         val switchButton = Button(this).apply {
-            text = "🔄 Basculer vers Klavié Kreyòl"
+            text = "🔄 Basculer vers Klavyé Kreyòl"
             textSize = 14f
             setBackgroundColor(Color.parseColor("#228B22")) // Vert Canne
             setTextColor(Color.parseColor("#F8F8FF")) // Blanc Coral

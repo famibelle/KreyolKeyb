@@ -3,7 +3,7 @@
 ## ✅ Modifications Terminées
 
 ### 📱 Interface Utilisateur du Clavier
-1. **Titre principal** : `"Klavié Kreyòl Karukera 🇬🇵 • Potomitan™"`
+1. **Titre principal** : `"Klavyé Kreyòl Karukera 🇬🇵 • Potomitan™"`
 2. **Indicateur de suggestions** : Apparaît discrètement quand pas de suggestions
 3. **Watermark permanent** : "Potomitan™" en transparence (coin inférieur droit)
 
@@ -37,7 +37,7 @@ L'utilisateur verra maintenant :
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Klavié Kreyòl Karukera 🇬🇵 • Potomitan™    │ ← Titre principal
+│ Klavyé Kreyòl Karukera 🇬🇵 • Potomitan™    │ ← Titre principal
 ├─────────────────────────────────────────────┤
 │ [Potomitan™]  [suggestion] [suggestion]     │ ← Barre suggestions  
 ├─────────────────────────────────────────────┤

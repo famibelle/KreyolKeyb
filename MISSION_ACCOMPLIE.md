@@ -22,7 +22,7 @@
 - ✅ **Branding Potomitan™** intégré partout
 
 #### 🎨 Interface Utilisateur
-- ✅ **Titre** : "Klavié Kreyòl Karukera 🇬🇵 • Potomitan™"
+- ✅ **Titre** : "Klavyé Kreyòl Karukera 🇬🇵 • Potomitan™"
 - ✅ **Watermark permanent** : "Potomitan™" en transparence
 - ✅ **Palette Guadeloupe** : Bleu caraïbe, blanc corail, etc.
 - ✅ **Screenshots** inclus dans la documentation
