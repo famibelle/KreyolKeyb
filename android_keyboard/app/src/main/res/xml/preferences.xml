@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="Paramètres Klavié Kreyòl">
+
+    <!-- Section Disposition -->
+    <PreferenceCategory
+        android:title="🎹 Disposition du clavier"
+        android:summary="Choisir le type de clavier">
+
+        <SwitchPreference
+            android:key="enable_kreyol_layout"
+            android:title="Disposition Kréyol Optimisée"
+            android:summary="Activer la disposition optimisée pour le créole guadeloupéen"
+            android:summaryOn="✅ Disposition Kréyol activée - É accessible facilement"
+            android:summaryOff="❌ Disposition AZERTY standard"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_keyboard_layout" />
+
+        <Preference
+            android:key="layout_preview"
+            android:title="🔍 Aperçu de la disposition"
+            android:summary="Voir la différence entre AZERTY et Kréyol"
+            android:dependency="enable_kreyol_layout" />
+
+    </PreferenceCategory>
+
+    <!-- Section Accents Créoles -->
+    <PreferenceCategory
+        android:title="🌴 Caractères créoles"
+        android:summary="Configuration des accents">
+
+        <SwitchPreference
+            android:key="enable_long_press_accents"
+            android:title="Accents par appui long"
+            android:summary="Accéder aux accents É, È, Ò, À, Ô par appui long"
+            android:summaryOn="✅ Appui long activé sur O, E, A"
+            android:summaryOff="❌ Accents en accès direct uniquement"
+            android:defaultValue="true" />
+
+        <SwitchPreference
+            android:key="priority_creole_accents"
+            android:title="Priorité aux accents créoles"
+            android:summary="Afficher É, È, Ò en premier dans les suggestions"
+            android:summaryOn="✅ Accents créoles prioritaires"
+            android:summaryOff="❌ Ordre alphabétique standard"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <!-- Section Performance -->
+    <PreferenceCategory
+        android:title="⚡ Performance et ergonomie"
+        android:summary="Optimisations pour la frappe">
+
+        <Preference
+            android:key="layout_stats"
+            android:title="📊 Statistiques de performance"
+            android:summary="Voir les gains d'efficacité de la disposition Kréyol" />
+
+        <SwitchPreference
+            android:key="enable_haptic_feedback"
+            android:title="Vibration tactile"
+            android:summary="Vibration légère à chaque touche"
+            android:defaultValue="true" />
+
+        <SeekBarPreference
+            android:key="key_press_duration"
+            android:title="Durée d'appui long"
+            android:summary="Temps pour déclencher les accents (en millisecondes)"
+            android:defaultValue="500"
+            android:max="1000"
+            android:min="200" />
+
+    </PreferenceCategory>
+
+    <!-- Section Prédiction -->
+    <PreferenceCategory
+        android:title="💭 Suggestions intelligentes"
+        android:summary="Prédiction de texte créole">
+
+        <SwitchPreference
+            android:key="enable_creole_predictions"
+            android:title="Prédictions créoles"
+            android:summary="Suggestions de mots en créole guadeloupéen"
+            android:summaryOn="✅ Dictionnaire créole actif"
+            android:summaryOff="❌ Prédictions françaises uniquement"
+            android:defaultValue="true" />
+
+        <SwitchPreference
+            android:key="enable_ngram_predictions"
+            android:title="Prédictions contextuelles"
+            android:summary="Suggestions basées sur les mots précédents"
+            android:defaultValue="true"
+            android:dependency="enable_creole_predictions" />
+
+    </PreferenceCategory>
+
+    <!-- Section About -->
+    <PreferenceCategory
+        android:title="ℹ️ À propos">
+
+        <Preference
+            android:key="about_potomitan"
+            android:title="Potomitan™ Keyboard"
+            android:summary="Version 3.0 - Disposition scientifiquement optimisée pour le créole guadeloupéen" />
+
+        <Preference
+            android:key="layout_methodology"
+            android:title="📚 Méthodologie scientifique"
+            android:summary="Comment la disposition Kréyol a été créée" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

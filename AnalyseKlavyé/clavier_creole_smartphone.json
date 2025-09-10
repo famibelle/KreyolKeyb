@@ -1,0 +1,167 @@
+{
+  "version": "3.0-SMARTPHONE",
+  "type": "mobile_keyboard_layout",
+  "branding": "POTOMITAN MOBILE™",
+  "layout_name": "Clavier Créole Mobile",
+  "description": "Disposition tactile optimisée pour smartphone - Créole Guadeloupéen",
+  "target_platform": "Android/iOS",
+  "layout_configuration": {
+    "rangee1": {
+      "0": "a",
+      "1": "z",
+      "2": "e",
+      "3": "r",
+      "4": "t",
+      "5": "y",
+      "6": "u",
+      "7": "i",
+      "8": "o",
+      "9": "p"
+    },
+    "rangee2": {
+      "0": "q",
+      "1": "s",
+      "2": "d",
+      "3": "f",
+      "4": "g",
+      "5": "h",
+      "6": "j",
+      "7": "k",
+      "8": "l",
+      "9": "é"
+    },
+    "rangee3": {
+      "0": "w",
+      "1": "x",
+      "2": "c",
+      "3": "v",
+      "4": "b",
+      "5": "n",
+      "6": "m",
+      "7": "è",
+      "8": "ò",
+      "9": "à"
+    },
+    "rangee4_speciale": {
+      "0": "1",
+      "1": "2",
+      "2": "3",
+      "3": "4",
+      "4": "5",
+      "5": "6",
+      "6": "7",
+      "7": "8",
+      "8": "9",
+      "9": "0"
+    },
+    "acces_long_press": {
+      "o": [
+        "ô",
+        "ó",
+        "ò",
+        "õ"
+      ],
+      "e": [
+        "é",
+        "è",
+        "ê",
+        "ë"
+      ],
+      "a": [
+        "à",
+        "á",
+        "â",
+        "ã"
+      ],
+      "i": [
+        "ì",
+        "í",
+        "î",
+        "ï"
+      ],
+      "u": [
+        "ù",
+        "ú",
+        "û",
+        "ü"
+      ]
+    }
+  },
+  "performance_scores": {
+    "score_optimisation": 82.74599495627562,
+    "score_total": 182431.75,
+    "score_max": 220472,
+    "efficacite": "Bonne"
+  },
+  "ameliorations_suggestions": {
+    "layout_physique": [
+      "Utiliser 3 rangées principales + 1 rangée chiffres",
+      "Taille des touches: minimum 44x44 pixels",
+      "Espacement entre touches: 2-4 pixels",
+      "Zone tactile élargie pour compensation imprécision"
+    ],
+    "optimisations_creoles": [
+      "É en position premium (rangée 2, droite)",
+      "Accents créoles groupés (È, Ò, À) pour mémorisation",
+      "Accès rapide via swipe ou appui long",
+      "Prédiction intelligente créole → français"
+    ],
+    "ux_smartphone": [
+      "Vibration tactile pour confirmation",
+      "Prévisualisation caractère avant validation",
+      "Suggestions contextuelles créole/français",
+      "Mode une main pour accessibilité"
+    ],
+    "fonctionnalites_avancees": [
+      "Clavier adaptatif (apprentissage utilisateur)",
+      "Thèmes visuels créole",
+      "Raccourcis mots fréquents",
+      "Correction auto créole ↔ français"
+    ]
+  },
+  "specifications_techniques": {
+    "rangees": 3,
+    "touches_par_rangee": 10,
+    "total_touches": 30,
+    "taille_minimale_touche": "44x44px",
+    "espacement_touches": "2-4px",
+    "zones_optimales": "Rangée 2 (milieu)"
+  },
+  "caracteres_creoles": {
+    "é": {
+      "position": "rangee2_col9",
+      "acces": "direct",
+      "frequence": "très_haute"
+    },
+    "è": {
+      "position": "rangee3_col7",
+      "acces": "direct",
+      "frequence": "haute"
+    },
+    "ò": {
+      "position": "rangee3_col8",
+      "acces": "direct",
+      "frequence": "moyenne"
+    },
+    "à": {
+      "position": "rangee3_col9",
+      "acces": "direct",
+      "frequence": "faible"
+    },
+    "ô": {
+      "position": "appui_long_o",
+      "acces": "appui_long",
+      "frequence": "très_faible"
+    }
+  },
+  "integration_mobile": {
+    "prediction_texte": true,
+    "correction_automatique": true,
+    "haptic_feedback": true,
+    "swipe_gestures": true,
+    "voice_input": true,
+    "offline_mode": true
+  },
+  "timestamp": "2025-09-10T20:49:06.394055",
+  "created_by": "Potomitan Mobile Keyboard Optimizer"
+}

@@ -168,7 +168,7 @@ def main():
         print("💡 Pour utiliser un token: ajoutez HF_TOKEN=<votre_token> dans le fichier .env")
     
     # Chemin du fichier unique
-    chemin_dict = "android_keyboard/app/src/main/assets/creole_dict.json"
+    chemin_dict = "../android_keyboard/app/src/main/assets/creole_dict.json"
     print("📚 Utilisation du dictionnaire unique creole_dict.json...")
     
     # 3. Charger le dictionnaire existant

@@ -21,6 +21,9 @@ import android.os.Looper
 import android.widget.PopupWindow
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
+import org.json.JSONObject
 
 class KreyolInputMethodService : InputMethodService() {
     
@@ -48,6 +51,11 @@ class KreyolInputMethodService : InputMethodService() {
     private var currentWord = ""
     private var suggestionsView: LinearLayout? = null
     private var suggestionsViewId: Int = View.NO_ID
+    
+    // Configuration des dispositions de clavier
+    private var isKreyolLayout = false // Mode disposition Kréyol activé/désactivé
+    private var kreyolLayoutConfig: JSONObject? = null // Configuration du layout Kréyol
+    private lateinit var sharedPreferences: SharedPreferences
     
     // Variables pour l'appui long
     private val longPressHandler = Handler(Looper.getMainLooper())
@@ -79,6 +87,12 @@ class KreyolInputMethodService : InputMethodService() {
         Log.d(TAG, "=== KREYOL IME SERVICE onCreate() APPELÉ - Potomitan™ ===")
         
         try {
+            // Initialiser les préférences partagées
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+            
+            // Charger les préférences de disposition
+            loadLayoutPreferences()
+            
             Log.d(TAG, "Initialisation du dictionnaire...")
             dictionary = emptyList()
             currentWord = "" // Reset du mot actuel
@@ -448,6 +462,9 @@ class KreyolInputMethodService : InputMethodService() {
 
     override fun onCreateInputView(): View? {
         Log.d(TAG, "=== KREYOL onCreateInputView appelé ! ===")
+        
+        // Vérifier si les préférences ont changé
+        refreshLayoutFromPreferences()
         
         try {
             Log.d(TAG, "Création du clavier AZERTY avec support majuscules/minuscules...")
@@ -922,18 +939,12 @@ class KreyolInputMethodService : InputMethodService() {
             val row4 = createKeyboardRow(arrayOf("ABC", ",", "ESPACE", ".", "⏎"))
             mainLayout.addView(row4)
         } else {
-            // Mode alphabétique AZERTY
-            val row1 = createKeyboardRow(arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p"))
-            mainLayout.addView(row1)
-            
-            val row2 = createKeyboardRow(arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m"))
-            mainLayout.addView(row2)
-            
-            val row3 = createKeyboardRow(arrayOf("⇧", "w", "x", "c", "v", "b", "n", "⌫"))
-            mainLayout.addView(row3)
-            
-            val row4 = createKeyboardRow(arrayOf("123", "ESPACE", "⏎"))
-            mainLayout.addView(row4)
+            // Mode alphabétique - choisir la disposition selon les préférences
+            if (isKreyolLayout) {
+                createKreyolKeyboardLayout(mainLayout)
+            } else {
+                createAzertyKeyboardLayout(mainLayout)
+            }
         }
         
         // Rafraîchir les suggestions après reconstruction
@@ -1419,6 +1430,110 @@ class KreyolInputMethodService : InputMethodService() {
                 } catch (e: Exception) {
                     Log.w(TAG, "Erreur lors de la vérification du mot sélectionné: ${e.message}")
                 }
+            }
+        }
+    }
+    
+    // ==================== GESTION DES DISPOSITIONS DE CLAVIER ====================
+    
+    /**
+     * Charge les préférences de disposition du clavier
+     */
+    private fun loadLayoutPreferences() {
+        isKreyolLayout = sharedPreferences.getBoolean("enable_kreyol_layout", false)
+        Log.d(TAG, "Disposition Kréyol ${if (isKreyolLayout) "activée" else "désactivée"}")
+        
+        // Charger la configuration du layout Kréyol depuis le fichier JSON
+        if (isKreyolLayout && kreyolLayoutConfig == null) {
+            loadKreyolLayoutConfig()
+        }
+    }
+    
+    /**
+     * Charge la configuration du layout Kréyol depuis le fichier assets
+     */
+    private fun loadKreyolLayoutConfig() {
+        try {
+            val inputStream = assets.open("clavier_kreyol_smartphone.json")
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            kreyolLayoutConfig = JSONObject(jsonString)
+            Log.d(TAG, "Configuration layout Kréyol chargée avec succès")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors du chargement de la configuration Kréyol", e)
+            // Fallback vers AZERTY si erreur
+            isKreyolLayout = false
+        }
+    }
+    
+    /**
+     * Crée la disposition AZERTY standard
+     */
+    private fun createAzertyKeyboardLayout(mainLayout: LinearLayout) {
+        val row1 = createKeyboardRow(arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p"))
+        mainLayout.addView(row1)
+        
+        val row2 = createKeyboardRow(arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m"))
+        mainLayout.addView(row2)
+        
+        val row3 = createKeyboardRow(arrayOf("⇧", "w", "x", "c", "v", "b", "n", "⌫"))
+        mainLayout.addView(row3)
+        
+        val row4 = createKeyboardRow(arrayOf("123", "ESPACE", "⏎"))
+        mainLayout.addView(row4)
+        
+        Log.d(TAG, "Layout AZERTY standard créé")
+    }
+    
+    /**
+     * Crée la disposition Kréyol optimisée
+     */
+    private fun createKreyolKeyboardLayout(mainLayout: LinearLayout) {
+        try {
+            // Rangée 1: maintenir familiarité AZERTY
+            val row1 = createKeyboardRow(arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p"))
+            mainLayout.addView(row1)
+            
+            // Rangée 2: é en position premium (facilement accessible)
+            val row2 = createKeyboardRow(arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "é"))
+            mainLayout.addView(row2)
+            
+            // Rangée 3: Zone créole regroupée à droite
+            val row3 = createKeyboardRow(arrayOf("⇧", "w", "x", "c", "v", "b", "n", "m", "è", "ò", "à", "⌫"))
+            mainLayout.addView(row3)
+            
+            val row4 = createKeyboardRow(arrayOf("123", "ESPACE", "⏎"))
+            mainLayout.addView(row4)
+            
+            Log.d(TAG, "Layout Kréyol optimisé créé avec é en position premium et zone créole regroupée")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors de la création du layout Kréyol, fallback vers AZERTY", e)
+            createAzertyKeyboardLayout(mainLayout)
+        }
+    }
+    
+    /**
+     * Actualise la disposition si les préférences ont changé
+     */
+    fun refreshLayoutFromPreferences() {
+        val newKreyolSetting = sharedPreferences.getBoolean("enable_kreyol_layout", false)
+        
+        if (newKreyolSetting != isKreyolLayout) {
+            Log.d(TAG, "Changement de disposition détecté: ${if (newKreyolSetting) "Vers Kréyol" else "Vers AZERTY"}")
+            
+            isKreyolLayout = newKreyolSetting
+            
+            if (isKreyolLayout && kreyolLayoutConfig == null) {
+                loadKreyolLayoutConfig()
+            }
+            
+            // Recréer le clavier avec la nouvelle disposition
+            val currentView = mainKeyboardLayout
+            if (currentView != null) {
+                keyboardButtons.clear()
+                createKeyboardLayout(currentView)
+                updateKeyboardDisplay()
+                Log.d(TAG, "Clavier mis à jour avec la nouvelle disposition")
             }
         }
     }
