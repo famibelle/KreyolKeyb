@@ -1,0 +1,55 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     RAPPORT D'ANALYSE - DISPOSITION CLAVIER CRÉOLE          ║
+║                              Potomitan™ - Version 1.0                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📊 STATISTIQUES GÉNÉRALES:
+   • Caractères analysés: 31
+   • Bigrammes analysés: 467
+   • Caractères créoles détectés: 5
+
+🔤 TOP 10 CARACTÈRES LES PLUS FRÉQUENTS:
+    1. 'a' : 29,993 occurrences
+    2. 'n' : 25,865 occurrences
+    3. 'o' : 17,645 occurrences
+    4. 'é' : 14,974 occurrences ⭐ (créole)
+    5. 'i' : 11,505 occurrences
+    6. 'l' : 10,716 occurrences
+    7. 'k' : 10,124 occurrences
+    8. 't' : 9,787 occurrences
+    9. 'u' : 8,699 occurrences
+   10. 's' : 8,155 occurrences
+
+🔗 TOP 5 BIGRAMMES LES PLUS FRÉQUENTS:
+   1. 'an' : 16,857 occurrences
+   2. 'ou' : 12,145 occurrences
+   3. 'on' : 6,063 occurrences
+   4. 'la' : 5,967 occurrences
+   5. 'ka' : 5,352 occurrences
+
+⚖️ COMPARAISON DE PERFORMANCE:
+   🔴 AZERTY (actuel):
+      • Effort total: 648,078
+      • Effort caractères: 316,348
+      • Effort bigrammes: 331,730
+   
+   🟢 DISPOSITION OPTIMISÉE:
+      • Effort total: 311,141
+      • Effort caractères: 176,475
+      • Effort bigrammes: 134,667
+   
+   ✨ AMÉLIORATION GLOBALE: 52.0%
+
+💡 RECOMMANDATIONS:
+   1. Placer les caractères créoles (ò, é, è) sur les touches d'index
+   2. Optimiser la position de 'ka', 'an', 'té' (mots les plus fréquents)
+   3. Réduire l'effort des bigrammes courants ('ka', 'an', 'ou')
+   4. Intégrer les accents dans la disposition principale
+
+🎯 CONCLUSION:
+   La disposition optimisée réduit l'effort de frappe de 52.0% 
+   par rapport à AZERTY, spécialement adaptée au créole guadeloupéen.
+
+─────────────────────────────────────────────────────────────────────────────
+Généré le 10/09/2025 à 11:51 | Potomitan™ Kreyol Keyboard

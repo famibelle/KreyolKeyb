@@ -1,0 +1,132 @@
+{
+  "version": "2.1-HYBRIDE-COMPLET",
+  "type": "azerty_creole_hybrid_complete",
+  "branding": "AZERTY-POTOMITAN™",
+  "layout_name": "Clavier Créole Hybride Complet",
+  "description": "Disposition AZERTY complète optimisée pour le créole - Alphabet français intégral + accents créoles",
+  "alphabet_verification": {
+    "alphabet_complet": true,
+    "lettres_presentes": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z"
+    ],
+    "lettres_manquantes": [],
+    "lettres_excedentaires": [],
+    "total_lettres": 26
+  },
+  "disposition_complete": {
+    "rangee1": {
+      "0": "a",
+      "1": "e",
+      "2": "é",
+      "3": "r",
+      "4": "t",
+      "5": "y",
+      "6": "u",
+      "7": "i",
+      "8": "o",
+      "9": "p"
+    },
+    "rangee2": {
+      "0": "z",
+      "1": "s",
+      "2": "d",
+      "3": "f",
+      "4": "g",
+      "5": "h",
+      "6": "j",
+      "7": "k",
+      "8": "l",
+      "9": "m"
+    },
+    "rangee3": {
+      "0": "w",
+      "1": "x",
+      "2": "c",
+      "3": "v",
+      "4": "b",
+      "5": "n",
+      "6": "q",
+      "7": "è",
+      "8": "ò",
+      "9": "à"
+    },
+    "bonus": {
+      "ô": "AltGr + o",
+      ",": "Virgule (accès direct ou Shift)",
+      ";": "AltGr + è",
+      ":": "AltGr + ò",
+      "!": "Shift + à",
+      "?": "Shift + ,",
+      ".": "Point (accès direct)",
+      "\"": "Guillemets",
+      "'": "Apostrophe"
+    }
+  },
+  "changements_vs_azerty": {
+    "E_vers_É": "Position 2 rangée 1: E remplacé par É",
+    "Z_déplacé": "Z déplacé de rangée 1 vers rangée 2 (position Q)",
+    "Q_déplacé": "Q déplacé vers rangée 3 position 6",
+    "accents_créoles": "è, ò, à remplacent ;, :, ! en rangée 3",
+    "accès_ô": "Ô accessible via AltGr + O"
+  },
+  "optimisations_créoles": {
+    "é": {
+      "position": "rangee1_pos2",
+      "accessibilite": "excellente",
+      "remplace": "e"
+    },
+    "è": {
+      "position": "rangee3_pos7",
+      "accessibilite": "bonne",
+      "remplace": ";"
+    },
+    "ò": {
+      "position": "rangee3_pos8",
+      "accessibilite": "bonne",
+      "remplace": ":"
+    },
+    "à": {
+      "position": "rangee3_pos9",
+      "accessibilite": "moyenne",
+      "remplace": "!"
+    },
+    "ô": {
+      "position": "bonus_altgr",
+      "accessibilite": "bonne",
+      "acces": "AltGr + O"
+    }
+  },
+  "compatibilite": {
+    "alphabet_complet": true,
+    "pourcentage_azerty_preserve": 87,
+    "changements_majeurs": 5,
+    "impact_apprentissage": "Faible à moyen"
+  },
+  "timestamp": "2025-09-10T12:18:42.060668",
+  "created_by": "Potomitan Keyboard Optimizer v2.1"
+}

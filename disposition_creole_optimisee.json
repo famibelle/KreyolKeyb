@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "type": "keyboard_layout",
+  "branding": "Potomitan™",
+  "layout_name": "Creole Optimized",
+  "description": "Disposition clavier optimisée pour le créole guadeloupéen",
+  "character_positions": {
+    "a": 3,
+    "n": 6,
+    "o": 2,
+    "é": 7,
+    "i": 4,
+    "l": 5,
+    "k": 1,
+    "t": 8,
+    "u": 0,
+    "s": 9
+  },
+  "finger_strength": {
+    "0": 0.5,
+    "1": 0.7,
+    "2": 0.9,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 0.9,
+    "8": 0.7,
+    "9": 0.5
+  },
+  "stats": {
+    "azerty_total": 648077.9222222224,
+    "optimise_total": 311141.319047619,
+    "amelioration_pct": 51.99013754692753,
+    "azerty_chars": 316348.22222222225,
+    "azerty_bigrammes": 331729.70000000024,
+    "optimise_chars": 176474.61904761905,
+    "optimise_bigrammes": 134666.69999999998
+  },
+  "timestamp": "2025-09-10T11:51:27.121128"
+}

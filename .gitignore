@@ -40,3 +40,6 @@ clavier_creole/.flutter-plugins-dependencies
 ConvertToJson.py
 android_keyboard/gradle.properties
 .env
+WORKFLOW_RESTORED.md
+test_unigrams.json
+TestAuto.py

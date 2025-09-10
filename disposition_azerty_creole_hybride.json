@@ -1,0 +1,128 @@
+{
+  "version": "2.0-HYBRIDE",
+  "type": "azerty_creole_hybrid",
+  "branding": "AZERTY-POTOMITAN™",
+  "layout_name": "Clavier Créole Hybride",
+  "description": "Disposition AZERTY optimisée pour le créole guadeloupéen - Compatible bilingue",
+  "methodology": "Permutations intelligentes préservant la familiarité AZERTY",
+  "target_users": "Utilisateurs bilingues français-créole",
+  "disposition_complete": {
+    "rangee1": {
+      "0": "a",
+      "1": "e",
+      "2": "é",
+      "3": "r",
+      "4": "t",
+      "5": "y",
+      "6": "u",
+      "7": "i",
+      "8": "o",
+      "9": "p"
+    },
+    "rangee2": {
+      "0": "à",
+      "1": "s",
+      "2": "d",
+      "3": "f",
+      "4": "g",
+      "5": "h",
+      "6": "j",
+      "7": "k",
+      "8": "l",
+      "9": "m"
+    },
+    "rangee3": {
+      "0": "è",
+      "1": "ò",
+      "2": "c",
+      "3": "v",
+      "4": "b",
+      "5": "n",
+      "6": ",",
+      "7": "ô",
+      "8": ":",
+      "9": "!"
+    }
+  },
+  "character_positions": {
+    "a": 0,
+    "e": 1,
+    "é": 2,
+    "r": 3,
+    "t": 4,
+    "y": 5,
+    "u": 6,
+    "i": 7,
+    "o": 8,
+    "p": 9,
+    "à": 0,
+    "s": 1,
+    "d": 2,
+    "f": 3,
+    "g": 4,
+    "h": 5,
+    "j": 6,
+    "k": 7,
+    "l": 8,
+    "m": 9,
+    "è": 0,
+    "ò": 1,
+    "c": 2,
+    "v": 3,
+    "b": 4,
+    "n": 5,
+    ",": 6,
+    "ô": 7,
+    ":": 8,
+    "!": 9
+  },
+  "optimisations_creoles": {
+    "e_vers_é": "E remplacé par É en position majeur gauche (très accessible)",
+    "caracteres_rares_remplaces": "Q, W, X remplacés par À, È, Ò",
+    "ponctuation_adaptee": "; remplacé par Ô"
+  },
+  "compatibilite_azerty": {
+    "pourcentage_preserve": 94,
+    "changements_mineurs": 6,
+    "muscle_memory_impact": "Minimal",
+    "apprentissage_requis": "1-2 semaines"
+  },
+  "performance": {
+    "effort_hybride": 288996.0317460318,
+    "effort_azerty": 266882.2222222222,
+    "amelioration_pct": -8.285980736999521,
+    "chars_creoles_optimises": [
+      "é",
+      "è",
+      "ò",
+      "à",
+      "ô"
+    ],
+    "changements_vs_azerty": 6
+  },
+  "caracteres_creoles": {
+    "é": {
+      "position": "rangee1_majeur_gauche",
+      "accessibilite": "excellente"
+    },
+    "è": {
+      "position": "rangee3_auriculaire_gauche",
+      "accessibilite": "bonne"
+    },
+    "ò": {
+      "position": "rangee3_annulaire_gauche",
+      "accessibilite": "bonne"
+    },
+    "à": {
+      "position": "rangee2_auriculaire_gauche",
+      "accessibilite": "moyenne"
+    },
+    "ô": {
+      "position": "rangee3_majeur_droit",
+      "accessibilite": "bonne"
+    }
+  },
+  "timestamp": "2025-09-10T12:15:18.343680",
+  "created_by": "Potomitan Keyboard Optimizer",
+  "license": "Creative Commons BY-SA 4.0"
+}

@@ -102,10 +102,12 @@ def creer_modele_ngrams(textes):
     print("🔄 Création du modèle de N-grams...")
     
     # Compteurs pour les n-grams
+    unigrams_count = Counter()  # Nouveau: compteur pour les mots individuels
     bigrammes_count = Counter()
     trigrammes_count = Counter()
     mots_suivants = defaultdict(Counter)  # mot -> {mot_suivant: freq}
     
+    total_unigrams = 0
     total_bigrammes = 0
     total_trigrammes = 0
     
@@ -114,17 +116,22 @@ def creer_modele_ngrams(textes):
             continue
             
         mots = nettoyer_et_tokeniser(texte)
-        if len(mots) < 2:
+        if len(mots) < 1:
             continue
+        
+        # Générer unigrams (mots individuels)
+        unigrams_count.update(mots)
+        total_unigrams += len(mots)
             
         # Générer bigrammes
-        bigrammes = generer_bigrammes(mots)
-        bigrammes_count.update(bigrammes)
-        total_bigrammes += len(bigrammes)
-        
-        # Créer le mapping mot -> mots suivants
-        for mot1, mot2 in bigrammes:
-            mots_suivants[mot1][mot2] += 1
+        if len(mots) >= 2:
+            bigrammes = generer_bigrammes(mots)
+            bigrammes_count.update(bigrammes)
+            total_bigrammes += len(bigrammes)
+            
+            # Créer le mapping mot -> mots suivants
+            for mot1, mot2 in bigrammes:
+                mots_suivants[mot1][mot2] += 1
         
         # Générer trigrammes si assez de mots
         if len(mots) >= 3:
@@ -133,12 +140,14 @@ def creer_modele_ngrams(textes):
             total_trigrammes += len(trigrammes)
     
     print(f"📊 Statistiques:")
+    print(f"   - Unigrams uniques: {len(unigrams_count)}")
     print(f"   - Bigrammes uniques: {len(bigrammes_count)}")
     print(f"   - Trigrammes uniques: {len(trigrammes_count)}")
+    print(f"   - Total unigrams: {total_unigrams}")
     print(f"   - Total bigrammes: {total_bigrammes}")
     print(f"   - Total trigrammes: {total_trigrammes}")
     
-    return bigrammes_count, trigrammes_count, mots_suivants
+    return unigrams_count, bigrammes_count, trigrammes_count, mots_suivants
 
 def convertir_en_probabilites(mots_suivants):
     """Convertit les compteurs en probabilités"""
@@ -154,33 +163,40 @@ def convertir_en_probabilites(mots_suivants):
     
     return modele_probabilites
 
-def sauvegarder_modele_ngrams(bigrammes, trigrammes, mots_suivants):
+def sauvegarder_modele_ngrams(unigrams, bigrammes, trigrammes, mots_suivants):
     """Sauvegarde le modèle de N-grams pour Android"""
     
     # 1. Modèle de prédiction simple : mot -> mots suivants avec probabilités
     modele_predictions = convertir_en_probabilites(mots_suivants)
     
-    # 2. Top bigrammes pour validation (convertir tuples en strings)
+    # 2. Top unigrams (mots les plus fréquents)
+    top_unigrams = {}
+    for mot, count in unigrams.most_common(2000):  # Top 2000 mots
+        top_unigrams[mot] = count
+    
+    # 3. Top bigrammes pour validation (convertir tuples en strings)
     top_bigrammes = {}
     for (mot1, mot2), count in bigrammes.most_common(1000):
         key = f"{mot1} {mot2}"  # Convertir tuple en string
         top_bigrammes[key] = count
     
-    # 3. Format pour Android
+    # 4. Format pour Android
     modele_android = {
-        "version": "1.0",
+        "version": "1.1",  # Version incrémentée pour inclure unigrams
         "type": "ngram_model",
         "branding": "Potomitan™",
+        "unigrams": top_unigrams,  # Nouveau: mots les plus fréquents
         "predictions": {},
         "top_bigrammes": top_bigrammes,
         "stats": {
+            "total_unigrams": len(unigrams),
             "total_bigrammes": len(bigrammes),
             "total_trigrammes": len(trigrammes),
             "mots_avec_predictions": len(modele_predictions)
         }
     }
     
-    # 4. Convertir le modèle de prédictions en format compact
+    # 5. Convertir le modèle de prédictions en format compact
     for mot, probabilites in modele_predictions.items():
         # Garder seulement les 5 mots suivants les plus probables
         top_predictions = sorted(probabilites.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -190,16 +206,21 @@ def sauvegarder_modele_ngrams(bigrammes, trigrammes, mots_suivants):
                 for mot_suivant, prob in top_predictions
             ]
     
-    # 5. Sauvegarder pour Android
+    # 6. Sauvegarder pour Android
     chemin_ngrams = "android_keyboard/app/src/main/assets/creole_ngrams.json"
     with open(chemin_ngrams, 'w', encoding='utf-8') as f:
         json.dump(modele_android, f, ensure_ascii=False, indent=2)
     
     print(f"✅ Modèle N-grams sauvegardé: {chemin_ngrams}")
+    print(f"📈 Inclut {len(top_unigrams)} unigrams fréquents")
     return len(modele_android["predictions"])
 
-def afficher_exemples_predictions(mots_suivants):
-    """Affiche des exemples de prédictions"""
+def afficher_exemples_predictions(unigrams, mots_suivants):
+    """Affiche des exemples de prédictions et statistiques"""
+    print("\n📊 Top 10 mots les plus fréquents (unigrams):")
+    for mot, count in unigrams.most_common(10):
+        print(f"   '{mot}' : {count} occurrences")
+    
     print("\n🎯 Exemples de prédictions N-grams:")
     
     # Mots créoles courants pour exemples
@@ -236,13 +257,13 @@ def main():
         return
     
     # 4. Créer le modèle N-grams
-    bigrammes, trigrammes, mots_suivants = creer_modele_ngrams(textes)
+    unigrams, bigrammes, trigrammes, mots_suivants = creer_modele_ngrams(textes)
     
     # 5. Afficher des exemples
-    afficher_exemples_predictions(mots_suivants)
+    afficher_exemples_predictions(unigrams, mots_suivants)
     
     # 6. Sauvegarder le modèle
-    nb_predictions = sauvegarder_modele_ngrams(bigrammes, trigrammes, mots_suivants)
+    nb_predictions = sauvegarder_modele_ngrams(unigrams, bigrammes, trigrammes, mots_suivants)
     
     print(f"\n🎉 Modèle N-grams créé avec succès !")
     print(f"📈 {nb_predictions} mots avec prédictions disponibles")
