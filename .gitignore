@@ -43,3 +43,5 @@ android_keyboard/gradle.properties
 WORKFLOW_RESTORED.md
 test_unigrams.json
 TestAuto.py
+
+AnalyseKlavyé/__pycache__/
