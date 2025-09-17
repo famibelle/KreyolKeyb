@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <PreferenceCategory
+        android:title="Paramètres du clavier"
+        android:key="keyboard_settings">
+        
+        <CheckBoxPreference
+            android:key="auto_capitalize"
+            android:title="Mise en majuscule automatique"
+            android:summary="Mettre automatiquement en majuscule en début de phrase"
+            android:defaultValue="true" />
+            
+        <CheckBoxPreference
+            android:key="sound_on_keypress"
+            android:title="Son à l'appui"
+            android:summary="Jouer un son lors de l'appui sur une touche"
+            android:defaultValue="false" />
+            
+        <CheckBoxPreference
+            android:key="vibrate_on_keypress"
+            android:title="Vibration à l'appui"
+            android:summary="Vibrer lors de l'appui sur une touche"
+            android:defaultValue="true" />
+            
+    </PreferenceCategory>
+    
+    <PreferenceCategory
+        android:title="Suggestions"
+        android:key="suggestions_settings">
+        
+        <CheckBoxPreference
+            android:key="show_suggestions"
+            android:title="Afficher les suggestions"
+            android:summary="Afficher la barre de suggestions de mots"
+            android:defaultValue="true" />
+            
+        <CheckBoxPreference
+            android:key="auto_complete"
+            android:title="Complétion automatique"
+            android:summary="Compléter automatiquement les mots suggérés"
+            android:defaultValue="false" />
+            
+    </PreferenceCategory>
+    
+</PreferenceScreen>
