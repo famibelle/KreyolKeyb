@@ -11,6 +11,16 @@
     <!-- Déclarer que l'app fonctionne avec l'état d'écriture externe granulaire -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
         android:maxSdkVersion="32" />
+    
+    <!-- 🖥️ ChromeOS: Déclarer les fonctionnalités requises comme optionnelles -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    
+    <!-- 🖥️ ChromeOS: Support du clavier physique et souris -->
+    <uses-feature android:name="android.hardware.type.pc" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -25,7 +35,15 @@
         android:requestLegacyExternalStorage="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        tools:targetApi="34">
+        tools:targetApi="34"
+        android:resizeableActivity="true">
+        
+        <!-- 🖥️ ChromeOS: Métadonnées de compatibilité -->
+        <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/app_name" />
+        <meta-data android:name="android.max_aspect" android:value="2.4" />
+        
+        <!-- 🖥️ ChromeOS: Support du mode multi-fenêtres -->
+        <meta-data android:name="android.allow_multiple_resumed_activities" android:value="true" />
 
         <!-- Service du clavier IME -->
         <service

@@ -49,9 +49,12 @@ android {
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
         
+        // 🖥️ ChromeOS: Support des écrans larges et tablettes
+        resConfigs "en", "fr", "ht"
+        
         // Paramètres Samsung spéciaux
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a'
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'  // 🖥️ Ajout x86/x86_64 pour ChromeOS
         }
     }
 
