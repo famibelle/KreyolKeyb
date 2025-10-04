@@ -120,7 +120,7 @@ jobs:
     - name: 🧹 Clean Project
       env:
         GRADLE_OPTS: "-Dorg.gradle.buildscan.termsOfServiceUrl=https://gradle.com/terms-of-service -Dorg.gradle.buildscan.termsOfServiceAgree=yes"
-      run: cd android_keyboard && ./gradlew clean --no-daemon --scan
+      run: cd android_keyboard && gradle clean --no-daemon --scan
 
     - name: 🔨 Build ChromeOS Debug APK (4 architectures)
       env:
@@ -129,7 +129,7 @@ jobs:
         cd android_keyboard
         echo "🏗️ Building APK avec support ChromeOS..."
         echo "📱 Architectures: armeabi-v7a, arm64-v8a, x86, x86_64"
-        ./gradlew assembleDebug --no-daemon --scan
+        gradle assembleDebug --no-daemon --scan
         
         echo ""
         echo "📊 APK généré:"
@@ -190,7 +190,7 @@ jobs:
     - name: 📦 Build ChromeOS Debug AAB
       env:
         GRADLE_OPTS: "-Dorg.gradle.buildscan.termsOfServiceUrl=https://gradle.com/terms-of-service -Dorg.gradle.buildscan.termsOfServiceAgree=yes"
-      run: cd android_keyboard && ./gradlew bundleDebug --no-daemon --scan
+      run: cd android_keyboard && gradle bundleDebug --no-daemon --scan
 
     - name: 📤 Upload ChromeOS Debug AAB
       uses: actions/upload-artifact@v4
@@ -244,7 +244,7 @@ jobs:
     - name: 🧹 Clean Project
       env:
         GRADLE_OPTS: "-Dorg.gradle.buildscan.termsOfServiceUrl=https://gradle.com/terms-of-service -Dorg.gradle.buildscan.termsOfServiceAgree=yes"
-      run: cd android_keyboard && ./gradlew clean --no-daemon --scan
+      run: cd android_keyboard && gradle clean --no-daemon --scan
 
     - name: 🚀 Build ChromeOS Release APK
       env:
@@ -253,7 +253,7 @@ jobs:
         cd android_keyboard
         echo "🏗️ Building Release APK avec support ChromeOS..."
         echo "📱 Architectures: armeabi-v7a, arm64-v8a, x86, x86_64"
-        ./gradlew assembleRelease --no-daemon --scan
+        gradle assembleRelease --no-daemon --scan
         
         echo ""
         echo "📊 Release APK généré:"
@@ -328,7 +328,7 @@ jobs:
       run: |
         cd android_keyboard
         echo "🏗️ Building Release AAB pour Play Store (Android + ChromeOS)..."
-        ./gradlew bundleRelease --no-daemon --scan
+        gradle bundleRelease --no-daemon --scan
         
         echo ""
         echo "📊 Release AAB généré:"
