@@ -91,3 +91,12 @@ android_keyboard/GUIDE_TEST_BILINGUE.md
 RESUME_MODIFICATIONS_BILINGUES.md
 IMPLEMENTATION_BILINGUE_COMPLETE.md
 MEMORIAL_SYSTEM.md
+android_keyboard/GITHUB_ACTIONS_SUMMARY.md
+test-keyboard-logs.txt
+test-keyboard-manual.ps1
+test-keyboard-simple.ps1
+test-keyboard-suggestions.ps1
+GUIDE_TEST_MANUEL.md
+test-context-reset.md
+test-verification-complete.ps1
+.gitignore
