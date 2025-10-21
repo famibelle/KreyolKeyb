@@ -146,13 +146,29 @@ class KreyolPipelineUnique:
                 
                 dataset = load_dataset("POTOMITAN/PawolKreyol-gfc", token=self.hf_token)
                 print("   ✅ Dataset récupéré avec succès")
-                print(f"   📊 Nombre total de rows dans le dataset: {len(dataset['train'])}")
-                print("   🔍 Extraction des textes...")
+                
+                # NOUVEAU: Afficher tous les splits disponibles
+                print(f"   � Splits disponibles: {list(dataset.keys())}")
+                for split_name in dataset.keys():
+                    print(f"      - {split_name}: {len(dataset[split_name])} rows")
+                
+                print("   🔍 Extraction des textes de TOUS les splits...")
+                
+                # NOUVEAU: Combiner tous les splits
+                all_items = []
+                total_rows = 0
+                for split_name in dataset.keys():
+                    split_data = dataset[split_name]
+                    all_items.extend(split_data)
+                    total_rows += len(split_data)
+                    print(f"      ✅ {split_name}: {len(split_data)} rows ajoutées")
+                
+                print(f"   📊 Nombre total de rows dans TOUT le dataset: {total_rows}")
                 
                 # Échantillon des premières rows pour debug
                 print("   🔬 Échantillon des premières rows:")
-                for i in range(min(3, len(dataset['train']))):
-                    item = dataset['train'][i]
+                for i in range(min(3, len(all_items))):
+                    item = all_items[i]
                     print(f"      Row {i+1}: {list(item.keys())}")
                     if 'Texte' in item:
                         preview = str(item['Texte'])[:50] + "..." if len(str(item['Texte'])) > 50 else str(item['Texte'])
@@ -166,7 +182,7 @@ class KreyolPipelineUnique:
                 textes_avec_texte = 0
                 textes_avec_text = 0
                 
-                for i, item in enumerate(dataset["train"]):
+                for i, item in enumerate(all_items):
                     if "Texte" in item and item["Texte"]:
                         self.textes_kreyol.append({
                             "Texte": item["Texte"],
@@ -185,7 +201,7 @@ class KreyolPipelineUnique:
                             print(f"   ⚠️ Row {i+1} sans texte valide: {list(item.keys())}")
                 
                 print(f"   📈 Statistiques d'extraction:")
-                print(f"      - Rows totales: {len(dataset['train'])}")
+                print(f"      - Rows totales (tous splits): {total_rows}")
                 print(f"      - Avec champ 'Texte': {textes_avec_texte}")
                 print(f"      - Avec champ 'text': {textes_avec_text}")
                 print(f"      - Vides ou invalides: {textes_vides}")
