@@ -616,7 +616,7 @@ class SettingsActivity : AppCompatActivity() {
         
         val sourcesText = TextView(this).apply {
             text = "Les suggestions de mots en Kréyòl sont construites sur les travaux des défenseurs du Kréyòl :\n\n" +
-                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, Esnard Boisdur, Pierre Édouard Décimus,\n\n" +
+                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, Esnard Boisdur, Pierre Édouard Décimus,Corinne Famibelle\n\n" +
                     "Grâce à leur riche contributions, ce clavier vous propose des suggestions authentiques et fidèles à notre créole guadeloupéen."
             textSize = 14f
             setTextColor(Color.parseColor("#2F5233"))
