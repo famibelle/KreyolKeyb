@@ -17,6 +17,7 @@ android_keyboard/*.iml
 *.keystore
 key.properties
 local-release.properties
+*keystore*base64*.txt
 
 # Fichiers temporaires
 *.tmp
@@ -39,7 +40,7 @@ clavier_creole/.dart_tool/
 clavier_creole/.flutter-plugins
 clavier_creole/.flutter-plugins-dependencies
 ConvertToJson.py
-android_keyboard/gradle.properties
+
 .env
 Dictionnaries/__pycache__/
 Dictionnaries/.env.template
@@ -102,7 +103,7 @@ COMMIT_SUMMARY.md
 test-keyboard-simple.ps1
 test-keyboard-suggestions.ps1
 android_keyboard/keystore-base64.txt
-android_keyboard/gradle.properties
+
 test-accent-tolerant.ps1
 GUIDE_TEST_ACCENT_TOLERANT.md
 test-accent-pid.ps1
@@ -147,3 +148,22 @@ android_keyboard/screenshot_tabs_fixed.png
 android_keyboard/screenshot_tabs_v3.png
 screenshot_keyboard_name.png
 screenshot_final.png
+
+QUICK_FIX_ENTREE.md
+DIAGNOSTIC_TOUCHE_ENTREE.md
+android_keyboard/CHANGELOG.md
+COMMIT_V6.1.7_SUMMARY.md
+android_keyboard/CHANGELOG.md
+AUDIT_COROUTINES.md
+INSTALLATION_V6.0.0.md
+OPTIMISATION_MEMOIRE_A21S.md
+PLAN_CORRECTION_CRITIQUES.md
+RAPPORT_CORRECTIONS_CRITIQUES.md
+
+android_keyboard\GAMIFICATION_README.md
+android_keyboard\GUIDE_TEST_BILINGUE.md
+INSTALLATION_V6.0.0.md
+
+OPTIMISATION_MEMOIRE_A21S.md
+
+.github\workflows\build-apk-old.yml.disabled
