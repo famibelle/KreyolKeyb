@@ -168,9 +168,16 @@ class KeyboardLayoutManager(private val context: Context) {
                 // Teinter l'icône en blanc pour visibilité sur fond coloré
                 setColorFilter(Color.WHITE)
                 
-                // Supprimer le padding par défaut de ImageButton
-                setPadding(0, 0, 0, 0)
+                // Configurer la taille et le padding de l'icône (différent selon la touche)
+                val iconPadding = when (key) {
+                    "⏎" -> dpToPx(8)  // Moins de padding pour l'icône Enter (plus grande)
+                    "⌫" -> dpToPx(10) // Padding moyen pour Backspace
+                    "⇧" -> dpToPx(12) // Padding normal pour Shift
+                    else -> dpToPx(12)
+                }
+                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
                 scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
                 
                 // Description pour accessibilité
                 contentDescription = when (key) {
@@ -240,44 +247,52 @@ class KeyboardLayoutManager(private val context: Context) {
             
             when (key) {
                 "⇧" -> {
-                    // Touche Shift avec vert tropical guadeloupéen
+                    // Touche Shift avec nuance de blanc/gris
                     val colors = when {
-                        isCapsLock -> intArrayOf(Color.parseColor("#d9e6dfff"), Color.parseColor("#2E8B57")) // VERT TROPICAL ACTIVÉ
-                        isCapitalMode -> intArrayOf(Color.parseColor("#3BAF77"), Color.parseColor("#228B22")) // VERT TROPICAL ACTIF
-                        else -> intArrayOf(Color.parseColor("#3BAF77"), Color.parseColor("#32CD32")) // VERT TROPICAL
+                        isCapsLock -> intArrayOf(Color.parseColor("#E8E8E8"), Color.parseColor("#D0D0D0")) // Gris moyen activé
+                        isCapitalMode -> intArrayOf(Color.parseColor("#F0F0F0"), Color.parseColor("#E0E0E0")) // Gris clair actif
+                        else -> intArrayOf(Color.parseColor("#FFFFFF"), Color.parseColor("#F8F8F8")) // Blanc neutre
                     }
                     setColors(colors)
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "⌫" -> {
-                    // Touche Supprimer avec corail
+                    // Touche Supprimer avec couleur semi-transparente
                     setColors(intArrayOf(
-                        Color.parseColor("#FF7F50"), // Corail
-                        Color.parseColor("#FF6347")  // Tomate pour dégradé
+                        Color.parseColor("#CCFFFFFF"), // Blanc semi-transparent
+                        Color.parseColor("#C0F0F0F0")  // Gris très clair semi-transparent
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "⏎" -> {
-                    // Touche Entrée avec jaune soleil
+                    // Touche Entrée avec couleur semi-transparente
                     setColors(intArrayOf(
-                        Color.parseColor("#FFD700"), // Jaune soleil
-                        Color.parseColor("#FFA500")  // Orange pour dégradé
+                        Color.parseColor("#CCFFFFFF"), // Blanc semi-transparent
+                        Color.parseColor("#C0F0F0F0")  // Gris très clair semi-transparent
+                    ))
+                    orientation = GradientDrawable.Orientation.TOP_BOTTOM
+                }
+                ",", "." -> {
+                    // Touches virgule et point avec nuance de blanc/gris
+                    setColors(intArrayOf(
+                        Color.parseColor("#FFFFFF"), // Blanc
+                        Color.parseColor("#F8F8F8")  // Blanc cassé
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "123", "ABC" -> {
-                    // Touches de mode avec vert tropical
+                    // Touches de mode avec couleur semi-transparente
                     setColors(intArrayOf(
-                        Color.parseColor("#3BAF77"), // Vert tropical
-                        Color.parseColor("#2E8B57")  // Vert forêt pour dégradé
+                        Color.parseColor("#CCFFFFFF"), // Blanc semi-transparent
+                        Color.parseColor("#C0F0F0F0")  // Gris très clair semi-transparent
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "à", "è", "ò", "é", "ù", "ì", "ç" -> {
-                    // Touches créoles avec vert tropical guadeloupéen
+                    // Touches créoles avec nuance de blanc/gris
                     setColors(intArrayOf(
-                        Color.parseColor("#3BAF77"), // Vert tropical
-                        Color.parseColor("#2E8B57")  // Vert forêt pour dégradé
+                        Color.parseColor("#FFFFFF"), // Blanc
+                        Color.parseColor("#F8F8F8")  // Blanc cassé
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
@@ -308,9 +323,10 @@ class KeyboardLayoutManager(private val context: Context) {
         // Couleur du texte (seulement pour Button, pas ImageButton)
         if (view is Button) {
             view.setTextColor(when (key) {
-                "⇧" -> if (isCapsLock || isCapitalMode) Color.WHITE else Color.parseColor("#333333")
-                "⌫", "⏎", "123", "ABC" -> Color.WHITE
-                "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.WHITE // Texte blanc sur fond vert
+                "⇧" -> if (isCapsLock || isCapitalMode) Color.parseColor("#666666") else Color.parseColor("#333333")
+                "⌫", "⏎", ",", "." -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
+                "123", "ABC" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
+                "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
                 " " -> Color.parseColor("#CCFFFFFF") // Blanc semi-transparent pour Potomitan™ - discret mais lisible
                 else -> Color.parseColor("#333333")
             })
@@ -321,7 +337,12 @@ class KeyboardLayoutManager(private val context: Context) {
         
         // Teinte de l'icône pour ImageButton
         if (view is android.widget.ImageButton) {
-            view.setColorFilter(Color.WHITE)
+            // Couleur des icônes selon le type de touche
+            when (key) {
+                "⇧" -> view.setColorFilter(if (isCapsLock || isCapitalMode) Color.parseColor("#666666") else Color.parseColor("#333333"))
+                "⌫", "⏎" -> view.setColorFilter(Color.parseColor("#333333")) // Icônes gris foncé sur fond blanc
+                else -> view.setColorFilter(Color.WHITE)
+            }
         }
     }
     
@@ -560,6 +581,13 @@ class KeyboardLayoutManager(private val context: Context) {
     }
     
     /**
+     * Retourne l'état actuel du mode numérique sans le modifier
+     */
+    fun isNumericMode(): Boolean {
+        return isNumericMode
+    }
+    
+    /**
      * Force le mode alphabétique (pour l'initialisation)
      */
     fun switchKeyboardModeToAlphabetic() {
@@ -605,8 +633,8 @@ class KeyboardLayoutManager(private val context: Context) {
             "⌫" -> "⌫"
             "⏎" -> "⏎"
             "123" -> if (isNumericMode) "ABC" else "123"
-            // Caractères accentués créoles - toujours affichés comme ils sont
-            "à", "è", "ò", "é", "ù", "ì", "ç" -> key
+            // Caractères accentués créoles - respecter le mode majuscule/minuscule
+            "à", "è", "ò", "é", "ù", "ì", "ç" -> if (isCapitalMode) key.uppercase() else key
             else -> if (isCapitalMode) key.uppercase() else key.lowercase()
         }
     }

@@ -616,7 +616,7 @@ class SettingsActivity : AppCompatActivity() {
         
         val sourcesText = TextView(this).apply {
             text = "Les suggestions de mots en Kréyòl sont construites sur les travaux des défenseurs du Kréyòl :\n\n" +
-                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, Esnard Boisdur, Pierre Édouard Décimus,Corinne Famibelle\n\n" +
+                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, Esnard Boisdur, Pierre Édouard Décimus, Corinne Famibelle\n\n" +
                     "Grâce à leur riche contributions, ce clavier vous propose des suggestions authentiques et fidèles à notre créole guadeloupéen."
             textSize = 14f
             setTextColor(Color.parseColor("#2F5233"))
@@ -796,7 +796,7 @@ class SettingsActivity : AppCompatActivity() {
         // === Top 5 - Liste simple ===
         val top5Container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 40, 24, 40)
+            setPadding(24, 16, 24, 40)
         }
         
         val top5Title = TextView(this).apply {
@@ -911,6 +911,13 @@ class SettingsActivity : AppCompatActivity() {
         buttonsContainer.addView(refreshButton)
         */
         
+        // === Mots à Découvrir ===
+        val wordsToDiscoverContainer = createWordListSection(
+            "🌟 Mots à Découvrir",
+            stats.wordsToDiscover,
+            "#2196F3"
+        )
+        
         // === Mots Découverts ===
         val discoveredWordsContainer = createWordListSection(
             "🔍 Mots Découverts (${stats.discoveredWordsList.size})",
@@ -918,20 +925,13 @@ class SettingsActivity : AppCompatActivity() {
             "#4CAF50"
         )
         
-        // === Mots à Découvrir ===
-        val wordsToDiscoverContainer = createWordListSection(
-            "🌟 Mots à Découvrir (${stats.wordsToDiscover.size})",
-            stats.wordsToDiscover,
-            "#2196F3"
-        )
-        
         // Assembler
         statsContainer.addView(levelContainer)
         statsContainer.addView(wordContainer)
+        statsContainer.addView(wordsToDiscoverContainer)
         statsContainer.addView(top5Container)
         statsContainer.addView(statsGridContainer)
         statsContainer.addView(discoveredWordsContainer)
-        statsContainer.addView(wordsToDiscoverContainer)
         statsContainer.addView(buttonsContainer)
         
         mainLayout.addView(statsContainer)
@@ -978,7 +978,7 @@ class SettingsActivity : AppCompatActivity() {
             // Titre de la section
             val sectionTitle = TextView(this@SettingsActivity).apply {
                 text = title
-                textSize = 16f
+                textSize = 24f  // Augmenté de 1.5x (16f * 1.5)
                 setTextColor(Color.parseColor("#1C1C1C"))
                 setTypeface(null, Typeface.BOLD)
                 setPadding(0, 0, 0, 16)
@@ -989,7 +989,7 @@ class SettingsActivity : AppCompatActivity() {
                 // Message si aucun mot
                 val emptyMessage = TextView(this@SettingsActivity).apply {
                     text = "Aucun mot dans cette catégorie pour le moment"
-                    textSize = 14f
+                    textSize = 21f  // Augmenté de 1.5x (14f * 1.5)
                     setTextColor(Color.parseColor("#999999"))
                     setTypeface(null, Typeface.ITALIC)
                     setPadding(16, 12, 16, 12)
@@ -1001,7 +1001,7 @@ class SettingsActivity : AppCompatActivity() {
                 val scrollView = ScrollView(this@SettingsActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        300 // Hauteur maximale
+                        450 // Hauteur maximale augmentée de 1.5x (300 * 1.5)
                     )
                 }
                 
@@ -1033,9 +1033,9 @@ class SettingsActivity : AppCompatActivity() {
                     // Créer le chip du mot
                     val wordChip = TextView(this@SettingsActivity).apply {
                         text = word
-                        textSize = 13f
+                        textSize = 19.5f  // Augmenté de 1.5x (13f * 1.5)
                         setTextColor(Color.parseColor(accentColor))
-                        setPadding(10, 5, 10, 5)
+                        setPadding(15, 7, 15, 7)  // Augmenté de 1.5x (10, 5, 10, 5)
                         setBackgroundColor(Color.parseColor("${accentColor}20"))
                         setSingleLine(true)
                         layoutParams = LinearLayout.LayoutParams(

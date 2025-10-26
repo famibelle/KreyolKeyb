@@ -473,16 +473,23 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     override fun onModeChanged(isNumeric: Boolean, isCapital: Boolean, isCapsLock: Boolean) {
-        Log.e("SHIFT_REAL_DEBUG", "🚨 onModeChanged CALLED! isCapital=$isCapital, isCapsLock=$isCapsLock")
+        Log.e("SHIFT_REAL_DEBUG", "🚨 onModeChanged CALLED! isNumeric=$isNumeric, isCapital=$isCapital, isCapsLock=$isCapsLock")
+        
+        // ✅ Vérifier si le mode numérique a changé (avant de mettre à jour les états)
+        val currentNumericMode = keyboardLayoutManager.isNumericMode()
+        val needsLayoutRefresh = currentNumericMode != isNumeric
         
         // ✅ CORRECTION: Mettre à jour les états AVANT l'affichage
         keyboardLayoutManager.updateKeyboardStates(isNumeric, isCapital, isCapsLock)
+        
+        // Mettre à jour l'état du mode majuscule dans AccentHandler
+        accentHandler.isCapitalMode = isCapital || isCapsLock
         
         // Mettre à jour l'affichage du clavier
         keyboardLayoutManager.updateKeyboardDisplay()
         
         // Si on change vers le mode numérique, recréer le layout
-        if (keyboardLayoutManager.switchKeyboardMode() != isNumeric) {
+        if (needsLayoutRefresh) {
             refreshKeyboardLayout()
         }
     }
