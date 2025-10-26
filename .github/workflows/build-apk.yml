@@ -422,6 +422,32 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: 📝 Extract Release Notes from CHANGELOG
+      id: changelog
+      run: |
+        echo "📖 Extraction des notes de release depuis CHANGELOG.md..."
+        
+        # Extraire la section de la version actuelle du CHANGELOG
+        # On prend tout depuis le premier ## jusqu'au prochain ## ou fin de fichier
+        RELEASE_NOTES=$(awk '/^## / {if (found) exit; found=1; next} found' CHANGELOG.md | sed '/^## /q' | sed '$d')
+        
+        # Si le CHANGELOG n'a pas de contenu, utiliser un message par défaut
+        if [ -z "$RELEASE_NOTES" ]; then
+          RELEASE_NOTES="🎯 Nouvelle version du Clavier Kreyòl Potomitan
+          
+          Consultez le CHANGELOG.md complet pour tous les détails des améliorations."
+        fi
+        
+        # Sauvegarder dans un fichier pour utilisation ultérieure
+        echo "$RELEASE_NOTES" > /tmp/release-notes.md
+        
+        echo "✅ Notes de release extraites avec succès"
+        echo "📄 Aperçu des notes:"
+        head -20 /tmp/release-notes.md
+    
     - name: 📥 Download All Build Artifacts
       uses: actions/download-artifact@v4
       with:
@@ -509,34 +535,42 @@ jobs:
       with:
         tag_name: ${{ github.ref_name }}
         name: 🇸🇷 Kreyòl Keyboard ${{ github.ref_name }}
-        body: |
-          🎯 **Clavier Kreyòl Potomitan Release ${{ github.ref_name }}**
-          
-          🔧 **AMÉLIORATIONS TECHNIQUES**
-          - ✅ Build Scan® integration avec monitoring avancé
-          - ✅ Pipeline subdivisionné en 6 jobs parallèles  
-          - ✅ Fix memory leaks Samsung A21s (serviceScope)
-          - ✅ Optimisations pour processeurs Exynos 850
-          - ✅ Detection low-end devices automatique
-          
-          📱 **FICHIERS ANDROID DISPONIBLES**
-          - � **APK Release** - Installation directe (recommandé pour utilisateurs)
-          - � **APK Debug** - Version de développement avec logs
-          - 🏪 **AAB Release** - Bundle Google Play Store (distribution officielle)  
-          - 🛠️ **AAB Debug** - Bundle de développement
-          - 📊 Build Scan Reports pour analyse détaillée
-          
-          🔤 **DICTIONNAIRE KREYÒL ENRICHI** 
-          - ✅ ${{ needs.generate-dictionary.outputs.dict-count }} mots créoles
-          - 🧠 ${{ needs.generate-dictionary.outputs.ngrams-count }} N-grams prédictifs
-          - 📡 Synchronisation automatique Hugging Face
-          - 🔄 Pipeline de génération optimisé
-          
-          🇸🇷 **Kreyòl Gwadloup ka viv!** 🇸🇷
-          
-          ---
-          🔗 **Build Details**: Consulter les Build Scan Reports pour analyse complète des performances
+        body_path: /tmp/release-notes.md
         draft: false
         prerelease: false
         make_latest: true
         files: ./final-release-assets/*
+        
+    - name: 📊 Add Build Statistics to Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📊 Ajout des statistiques de build à la release..."
+        
+        # Créer un commentaire avec les statistiques techniques
+        STATS_COMMENT="
+        
+        ---
+        
+        ## 📊 Statistiques de Build
+        
+        🔤 **DICTIONNAIRE KREYÒL**
+        - ✅ **${{ needs.generate-dictionary.outputs.dict-count }}** mots créoles
+        - 🧠 **${{ needs.generate-dictionary.outputs.ngrams-count }}** N-grams prédictifs
+        - 📡 Synchronisation automatique Hugging Face
+        
+        📱 **FICHIERS DISPONIBLES**
+        - 📱 **APK Release** - Installation directe (recommandé pour utilisateurs finaux)
+        - 🔧 **APK Debug** - Version de développement avec logs détaillés
+        - 🏪 **AAB Release** - Bundle Google Play Store (distribution officielle)
+        - 🛠️ **AAB Debug** - Bundle de développement pour tests
+        
+        � **Build Scan Reports** - Consultez les rapports détaillés dans les logs GitHub Actions
+        
+        ---
+        
+        🇸🇷 **Kreyòl Gwadloup ka viv!** 🇸🇷
+        "
+        
+        # Ajouter le commentaire à la release existante
+        gh release edit "${{ github.ref_name }}" --notes-file /tmp/release-notes.md --notes "$STATS_COMMENT" || echo "⚠️ Impossible d'ajouter les statistiques (release peut-être déjà complète)"

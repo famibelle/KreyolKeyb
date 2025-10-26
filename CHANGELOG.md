@@ -1,5 +1,103 @@
 # 📝 Changelog Klavyé Kréyòl
 
+## 🎨 Version 6.1.9 (2025-10-26) - MODERNISATION UI & MATERIAL DESIGN
+
+### ✨ Nouvelles Fonctionnalités
+- **🎨 Icônes Material Design** : Remplacement des symboles Unicode par des vector drawables pour les touches spéciales
+  - ⌫ Backspace : Icône animée avec dégradé
+  - ⏎ Enter : Icône moderne avec flèche de retour
+  - ⇧ Shift : Triple état (off/on/caps) avec icônes distinctes
+  - Padding optimisé : 8dp (Enter), 10dp (Backspace), 12dp (Shift)
+  
+- **🎨 Schéma de couleurs épuré** : Migration vers tons neutres blanc/gris
+  - Touches spéciales (⌫, ⏎, ⇧, virgule, point) : Blanc/gris neutre
+  - Touches 123, ⌫, ⏎ : Blanc semi-transparent (#CCFFFFFF) pour effet moderne
+  - Touches accentuées (é, è, ò) : Style cohérent avec reste du clavier
+  - Meilleure lisibilité et esthétique professionnelle
+
+- **📊 Interface statistiques améliorée** : Section "Mots à Découvrir" agrandie et repositionnée
+  - Taille augmentée de 1.5x pour meilleure visibilité
+    - Titre : 16f → 24f
+    - Hauteur conteneur : 300px → 450px  
+    - Taille chips : 13f → 19.5f
+    - Padding chips : (10,5) → (15,7)
+  - Repositionnement au-dessus de "Mots les plus utilisés" pour visibilité accrue
+  - Optimisation espacement inter-sections (40dp au lieu de 64dp)
+
+### 🔧 Corrections Bugs
+- **⇧ Fix touche Shift** : La première pression ne bascule plus vers le mode numérique
+  - Ajout de la méthode `isNumericMode()` pour lecture d'état sans modification
+  - Correction de la logique dans `onModeChanged()` pour éviter basculements non désirés
+  - Synchronisation parfaite entre `InputProcessor` et `KeyboardLayoutManager`
+
+- **🔤 Support majuscules accents** : Les caractères accentués s'affichent correctement en majuscule
+  - Clavier principal : é/è/ò → É/È/Ò en mode majuscule
+  - Popups d'accents : tous les accents respectent maintenant le mode majuscule/minuscule
+  - Synchronisation de `isCapitalMode` entre `KeyboardLayoutManager` et `AccentHandler`
+
+### 🏗️ Refactoring Technique
+- **Type System** : Migration de `TextView` vers `View` dans toute la codebase
+  - Support simultané de `Button` (texte) et `ImageButton` (icônes)
+  - 40+ signatures de méthodes mises à jour dans `AccentHandler` et `KeyboardLayoutManager`
+  - Architecture flexible pour futures extensions UI
+
+- **Assets Vector Drawables** : Création de 5 nouveaux fichiers d'icônes
+  - `ic_backspace.xml` : Icône Backspace avec dégradé personnalisé
+  - `ic_keyboard_return.xml` : Icône Enter style Material
+  - `ic_shift_off.xml` : État normal du Shift
+  - `ic_shift_on.xml` : État majuscule temporaire
+  - `ic_shift_caps.xml` : État Caps Lock permanent
+
+### 📦 Détails Techniques
+- Fichiers modifiés : 
+  - `KeyboardLayoutManager.kt` : Support ImageButton, gestion icônes, nouveau schéma couleurs
+  - `AccentHandler.kt` : Support majuscules, migration View hierarchy
+  - `KreyolInputMethodServiceRefactored.kt` : Synchronisation états majuscules
+  - `SettingsActivity.kt` : Agrandissement section "Mots à Découvrir", réorganisation
+  - 5 nouveaux vector drawables dans `res/drawable/`
+
+### ✅ Tests et Validation
+- ✅ Icônes Material Design affichées correctement sur tous les appareils
+- ✅ Schéma de couleurs neutre cohérent et professionnel
+- ✅ Majuscules fonctionnelles pour é/è/ò en clavier et popups
+- ✅ Touche Shift ne bascule plus en mode numérique au premier appui
+- ✅ Section "Mots à Découvrir" 1.5x plus grande et mieux positionnée
+- ✅ Espacement optimisé entre sections statistiques
+
+---
+
+## 🐛 Version 6.1.8 (2025-10-21) - FIX ENCODAGE ACCENTS
+
+### 🔧 Corrections
+- **🔤 Correction encodage UTF-8 des accents** : Réparation de la corruption des caractères accentués dans `AccentHandler.kt`
+  - Appui long sur "e" affiche maintenant correctement : `é`, `è`, `ê`, `ë` (au lieu de caractères corrompus)
+  - Correction de tous les mappings d'accents : a, e, i, o, u, n, c, s, z, l, y
+  - Impact : Toutes les touches avec accents fonctionnent maintenant correctement
+
+### 📦 Détails Techniques
+- Fichier corrigé : `AccentHandler.kt` ligne 33
+- Cause : Encodage UTF-8 corrompu lors d'une sauvegarde précédente
+- Solution : Remplacement de tous les caractères corrompus par leurs équivalents UTF-8 corrects
+
+---
+
+## 🐛 Version 6.1.7 (2025-10-20) - FIX CRITIQUE TOUCHE ENTRÉE
+
+### 🔧 Corrections Critiques
+- **⏎ Correction touche ENTRÉE** : Le clavier ne se ferme plus lors de l'appui sur Entrée
+  - Vérification du flag `IME_FLAG_NO_ENTER_ACTION` (0x40000000)
+  - Détection des champs multilignes avec `TYPE_TEXT_FLAG_MULTI_LINE` (0x00020000)
+  - Insertion correcte du caractère newline (`\n`) dans les champs multilignes
+  - Prévention de la fermeture intempestive du clavier
+  - Logs détaillés pour diagnostic futur
+
+### 📦 Détails Techniques
+- Fichier modifié : `InputProcessor.kt` - fonction `handleEnter()`
+- Documentation ajoutée : `DIAGNOSTIC_TOUCHE_ENTREE.md`, `QUICK_FIX_ENTREE.md`
+- Tests validés sur émulateur Pixel 6 avec WhatsApp, Notes, formulaires
+
+---
+
 ## 🎮 Version 6.0.0 (2025-10-11) - ÉDITION GAMIFICATION MAJEURE
 
 ### 🎯 Nouvelles Fonctionnalités Majeures
