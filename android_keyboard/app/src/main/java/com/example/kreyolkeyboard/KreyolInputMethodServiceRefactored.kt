@@ -343,7 +343,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         Log.d(TAG, "=== FIN TRAITEMENT TOUCHE ===")
     }
     
-    override fun onLongPress(key: String, button: TextView) {
+    override fun onLongPress(key: String, button: View) {
         Log.d(TAG, "🔗 Appui long sur: $key")
         
         when (key) {

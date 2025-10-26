@@ -36,7 +36,7 @@ class KeyboardLayoutManager(private val context: Context) {
     private var isCapitalMode = false
     private var isCapsLock = false
     private var isNumericMode = false // FORCE ALPHABÉTIQUE PAR DÉFAUT
-    private val keyboardButtons = mutableListOf<TextView>()
+    private val keyboardButtons = mutableListOf<View>() // Changé de TextView à View pour supporter ImageButton
     
     // 🌐 Handler pour l'appui long personnalisé de la barre d'espace
     private val spaceLongPressHandler = Handler(Looper.getMainLooper())
@@ -51,7 +51,7 @@ class KeyboardLayoutManager(private val context: Context) {
     // Callbacks pour l'interaction avec les touches
     interface KeyboardInteractionListener {
         fun onKeyPress(key: String)
-        fun onLongPress(key: String, button: TextView)
+        fun onLongPress(key: String, button: View) // Changé de TextView à View
         fun onKeyRelease()
     }
     
@@ -146,31 +146,81 @@ class KeyboardLayoutManager(private val context: Context) {
     }
     
     /**
-     * Crée un bouton de touche individuel
+     * Crée un bouton de touche individuel (Button ou ImageButton selon le type)
      */
-    private fun createKeyButton(key: String, totalWeight: Float): Button {
-        val button = Button(context).apply {
-            text = getDisplayText(key)
-            // Taille de police personnalisée pour Potomitan™ branding discret
-            textSize = if (key == " ") TEXT_SIZE_SP * 0.75f else TEXT_SIZE_SP
-            setTypeface(typeface, Typeface.BOLD)
-            
-            // Calcul du poids selon le type de touche
-            val weight = getKeyWeight(key)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                dpToPx(BUTTON_HEIGHT_DP),
-                weight
-            ).apply {
-                setMargins(
-                    dpToPx(BUTTON_MARGIN_DP), 0, 
-                    dpToPx(BUTTON_MARGIN_DP), 0
-                )
+    private fun createKeyButton(key: String, totalWeight: Float): View {
+        // Déterminer si on utilise une icône Material Design
+        val useIcon = key in listOf("⌫", "⏎", "⇧")
+        
+        val button: View = if (useIcon) {
+            // Créer un ImageButton pour les touches avec icônes
+            android.widget.ImageButton(context).apply {
+                // Définir l'icône selon la touche
+                setImageResource(when (key) {
+                    "⌫" -> R.drawable.ic_backspace
+                    "⏎" -> R.drawable.ic_keyboard_return
+                    "⇧" -> if (isCapsLock) R.drawable.ic_shift_caps
+                           else if (isCapitalMode) R.drawable.ic_shift_on
+                           else R.drawable.ic_shift_off
+                    else -> R.drawable.ic_backspace // Fallback
+                })
+                
+                // Teinter l'icône en blanc pour visibilité sur fond coloré
+                setColorFilter(Color.WHITE)
+                
+                // Supprimer le padding par défaut de ImageButton
+                setPadding(0, 0, 0, 0)
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                
+                // Description pour accessibilité
+                contentDescription = when (key) {
+                    "⌫" -> "Supprimer"
+                    "⏎" -> "Entrée"
+                    "⇧" -> "Majuscule"
+                    else -> key
+                }
+                
+                // Stocker la clé dans le tag pour identification
+                tag = key
+                
+                // Calcul du poids selon le type de touche
+                val weight = getKeyWeight(key)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    dpToPx(BUTTON_HEIGHT_DP),
+                    weight
+                ).apply {
+                    setMargins(
+                        dpToPx(BUTTON_MARGIN_DP), 0, 
+                        dpToPx(BUTTON_MARGIN_DP), 0
+                    )
+                }
+            }
+        } else {
+            // Créer un Button classique pour les autres touches
+            Button(context).apply {
+                text = getDisplayText(key)
+                // Taille de police personnalisée pour Potomitan™ branding discret
+                textSize = if (key == " ") TEXT_SIZE_SP * 0.75f else TEXT_SIZE_SP
+                setTypeface(typeface, Typeface.BOLD)
+                
+                // Calcul du poids selon le type de touche
+                val weight = getKeyWeight(key)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    dpToPx(BUTTON_HEIGHT_DP),
+                    weight
+                ).apply {
+                    setMargins(
+                        dpToPx(BUTTON_MARGIN_DP), 0, 
+                        dpToPx(BUTTON_MARGIN_DP), 0
+                    )
+                }
             }
         }
         
         // Application du style Guadeloupe
-        applyGuadeloupeStyle(button, key)
+        applyGuadeloupeStyleToView(button, key)
         
         // Ajouter le bouton à la liste de suivi
         keyboardButtons.add(button)
@@ -182,9 +232,9 @@ class KeyboardLayoutManager(private val context: Context) {
     }
     
     /**
-     * Applique le style visuel spécifique à la Guadeloupe
+     * Applique le style visuel spécifique à la Guadeloupe (supporte Button et ImageButton)
      */
-    private fun applyGuadeloupeStyle(button: Button, key: String) {
+    private fun applyGuadeloupeStyleToView(view: View, key: String) {
         val drawable = GradientDrawable().apply {
             cornerRadius = dpToPx(CORNER_RADIUS_DP.toInt()).toFloat()
             
@@ -253,25 +303,39 @@ class KeyboardLayoutManager(private val context: Context) {
             setStroke(dpToPx(1), Color.parseColor("#D0D0D0"))
         }
         
-        button.background = drawable
+        view.background = drawable
         
-        // Couleur du texte
-        button.setTextColor(when (key) {
-            "⇧" -> if (isCapsLock || isCapitalMode) Color.WHITE else Color.parseColor("#333333")
-            "⌫", "⏎", "123", "ABC" -> Color.WHITE
-            "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.WHITE // Texte blanc sur fond vert
-            " " -> Color.parseColor("#CCFFFFFF") // Blanc semi-transparent pour Potomitan™ - discret mais lisible
-            else -> Color.parseColor("#333333")
-        })
+        // Couleur du texte (seulement pour Button, pas ImageButton)
+        if (view is Button) {
+            view.setTextColor(when (key) {
+                "⇧" -> if (isCapsLock || isCapitalMode) Color.WHITE else Color.parseColor("#333333")
+                "⌫", "⏎", "123", "ABC" -> Color.WHITE
+                "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.WHITE // Texte blanc sur fond vert
+                " " -> Color.parseColor("#CCFFFFFF") // Blanc semi-transparent pour Potomitan™ - discret mais lisible
+                else -> Color.parseColor("#333333")
+            })
+            
+            // Ombre portée pour l'effet de profondeur
+            view.setShadowLayer(SHADOW_RADIUS, 0f, dpToPx(1).toFloat(), Color.parseColor("#40000000"))
+        }
         
-        // Ombre portée pour l'effet de profondeur
-        button.setShadowLayer(SHADOW_RADIUS, 0f, dpToPx(1).toFloat(), Color.parseColor("#40000000"))
+        // Teinte de l'icône pour ImageButton
+        if (view is android.widget.ImageButton) {
+            view.setColorFilter(Color.WHITE)
+        }
+    }
+    
+    /**
+     * Applique le style visuel spécifique à la Guadeloupe (compatibilité avec ancien code)
+     */
+    private fun applyGuadeloupeStyle(button: Button, key: String) {
+        applyGuadeloupeStyleToView(button, key)
     }
     
     /**
      * Configure les interactions tactiles pour un bouton
      */
-    private fun setupButtonInteractions(button: Button, key: String) {
+    private fun setupButtonInteractions(button: View, key: String) {
         button.setOnClickListener {
             interactionListener?.onKeyPress(key)
         }
@@ -293,7 +357,7 @@ class KeyboardLayoutManager(private val context: Context) {
     /**
      * 🌐 Configure l'appui long personnalisé de 1 seconde pour la barre d'espace
      */
-    private fun setupSpaceLongPress(button: Button, key: String) {
+    private fun setupSpaceLongPress(button: View, key: String) {
         button.setOnTouchListener { view, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
@@ -361,26 +425,29 @@ class KeyboardLayoutManager(private val context: Context) {
     /**
      * Ajoute une animation tactile et feedback haptique au bouton
      */
-    private fun addTouchAnimation(button: Button) {
-        button.setOnTouchListener { view, event ->
+    /**
+     * Ajoute une animation tactile et feedback haptique au bouton
+     */
+    private fun addTouchAnimation(view: View) {
+        view.setOnTouchListener { v, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
                     // Animation d'appui (100ms comme l'original)
-                    view.animate()
+                    v.animate()
                         .scaleX(0.95f)
                         .scaleY(0.95f)
                         .setDuration(100)
                         .start()
                     
                     // 📳 FEEDBACK HAPTIQUE MODERNE
-                    performHapticFeedback(view)
+                    performHapticFeedback(v)
                     
                     false
                 }
                 android.view.MotionEvent.ACTION_UP, 
                 android.view.MotionEvent.ACTION_CANCEL -> {
                     // Animation de relâchement (120ms comme l'original)
-                    view.animate()
+                    v.animate()
                         .scaleX(1.0f)
                         .scaleY(1.0f)
                         .setDuration(120)
@@ -435,13 +502,28 @@ class KeyboardLayoutManager(private val context: Context) {
         
         keyboardButtons.forEach { button ->
             val key = getKeyFromButton(button)
-            button.text = getDisplayText(key)
             
             // Mise à jour du style pour la touche Shift
             if (key == "⇧") {
                 Log.e("SHIFT_REAL_DEBUG", "🚨 UPDATING SHIFT BUTTON! isCapitalMode=$isCapitalMode, isCapsLock=$isCapsLock")
-                applyGuadeloupeStyle(button as Button, key)
+                
+                // Si c'est un ImageButton, mettre à jour l'icône
+                if (button is android.widget.ImageButton) {
+                    val newIcon = if (isCapsLock) R.drawable.ic_shift_caps
+                                  else if (isCapitalMode) R.drawable.ic_shift_on
+                                  else R.drawable.ic_shift_off
+                    button.setImageResource(newIcon)
+                    Log.e("SHIFT_REAL_DEBUG", "🎨 ICON UPDATED TO: ${if (isCapsLock) "CAPS" else if (isCapitalMode) "ON" else "OFF"}")
+                } else if (button is Button) {
+                    // Si c'est un Button classique, mettre à jour le texte
+                    button.text = getDisplayText(key)
+                    applyGuadeloupeStyle(button, key)
+                }
+                
                 Log.e("SHIFT_REAL_DEBUG", "🚨 SHIFT STYLE APPLIED!")
+            } else if (button is Button) {
+                // Pour les autres touches, mettre à jour le texte normalement
+                button.text = getDisplayText(key)
             }
         }
     }
@@ -508,7 +590,7 @@ class KeyboardLayoutManager(private val context: Context) {
      */
     fun cleanup() {
         keyboardButtons.forEach { button ->
-            cleanupTextView(button)
+            cleanupView(button)
         }
         keyboardButtons.clear()
         interactionListener = null
@@ -541,26 +623,30 @@ class KeyboardLayoutManager(private val context: Context) {
         return keys.sumOf { getKeyWeight(it).toDouble() }.toFloat()
     }
     
-    private fun getKeyFromButton(button: TextView): String {
-        // Version simple : récupérer depuis le texte affiché
-        return button.text.toString().lowercase()
+    private fun getKeyFromButton(button: View): String {
+        // Version simple : récupérer depuis le texte affiché ou le tag
+        return when (button) {
+            is Button -> button.text.toString().lowercase()
+            is android.widget.ImageButton -> (button.tag as? String)?.lowercase() ?: ""
+            else -> ""
+        }
     }
     
     private fun dpToPx(dp: Int): Int {
         return (dp * context.resources.displayMetrics.density).toInt()
     }
     
-    private fun cleanupTextView(textView: TextView) {
-        textView.setOnClickListener(null)
-        textView.setOnLongClickListener(null)
-        textView.setOnTouchListener(null)
-        textView.background = null
+    private fun cleanupView(view: View) {
+        view.setOnClickListener(null)
+        view.setOnLongClickListener(null)
+        view.setOnTouchListener(null)
+        view.background = null
         
         // Nettoyer les animations en cours
-        textView.animate().cancel()
-        textView.clearAnimation()
+        view.animate().cancel()
+        view.clearAnimation()
         
         // Nettoyer les références du parent
-        (textView.parent as? ViewGroup)?.removeView(textView)
+        (view.parent as? ViewGroup)?.removeView(view)
     }
 }
