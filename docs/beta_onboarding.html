@@ -216,17 +216,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="title">✊🏽 Rejoindre le groupe des beta testeurs en avant première</h1>
-            <p id="subtitle">Si ou vlé testé <strong>Klavyé Kréyòl Karukera</strong> avan tout moun, mété adrès é-mail a'w isi. Nou ké voyé lyanaj la !</p>
+            <h1 id="title">✊🏽 Rejoindre le groupe des bêta-testeurs en avant-première</h1>
+            <p id="subtitle">Si vous voulez tester <strong>Klavyé Kréyòl Karukera</strong> avant tout le monde, indiquez votre adresse e-mail ici. Nous vous enverrons le lien !</p>
         </div>
 
         <div class="success-message" id="successMessage">
-            <h3 id="successTitle">🎉 Mèsi anpil!</h3>
-            <p id="successText">Ou bien añ lalis la. Nou ké voyé'w an é-mail toutswit.</p>
+            <h3 id="successTitle">🎉 Merci beaucoup !</h3>
+            <p id="successText">Vous êtes bien sur la liste. Nous vous enverrons un e-mail très bientôt.</p>
         </div>
 
         <form id="betaForm" action="https://formspree.io/f/meorvlnq" method="POST">
-            <label for="email" id="labelEmail">Adrès é-mail :</label>
+            <label for="email" id="labelEmail">Adresse e-mail :</label>
             <input 
                 type="email" 
                 id="email" 
@@ -238,18 +238,18 @@
             <div class="checkbox-container">
                 <input type="checkbox" id="consent" required>
                 <label for="consent" id="labelConsent">
-                    Mwen dakò pou itilizé adrès é-mail mwen pou pati-sipé an test bèta la.
+                    J'accepte d'utiliser mon adresse e-mail pour participer au test bêta.
                 </label>
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">
-                <span id="btnText">Envoyé</span> ✉️
+                <span id="btnText">Envoyer</span> ✉️
             </button>
         </form>
 
         <div class="lang-switch">
-            <button type="button" class="lang-btn active" id="btnGcf">GCF</button>
-            <button type="button" class="lang-btn" id="btnFr">FR</button>
+            <button type="button" class="lang-btn" id="btnGcf">GCF</button>
+            <button type="button" class="lang-btn active" id="btnFr">FR</button>
         </div>
     </div>
 
@@ -286,8 +286,8 @@
             }
         };
 
-        let currentLang = 'gcf';
-        let currentError = translations.gcf.error;
+        let currentLang = 'fr';
+        let currentError = translations.fr.error;
 
         function switchLanguage(lang) {
             currentLang = lang;
