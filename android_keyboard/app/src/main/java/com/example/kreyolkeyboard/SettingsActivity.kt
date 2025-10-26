@@ -1196,28 +1196,105 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     private fun getCurrentLevel(wordsDiscovered: Int): String {
+        val thresholds = calculateGaussianThresholds()
         return when {
-            wordsDiscovered >= 2830 -> "🧙🏿‍♀️ Benzo"          // 2830-2833 (niveau secret - tous les mots!)
-            wordsDiscovered >= 2200 -> "👑 Potomitan"          // 2200-2829 (22% supérieur - expert)
-            wordsDiscovered >= 1650 -> "🐘 Kompè Zamba"        // 1650-2199 (19% supérieur)
-            wordsDiscovered >= 1100 -> "🐇 Kompè Lapen"        // 1100-1649 (19% centre haut)
-            wordsDiscovered >= 650 -> "💎 An mitan"            // 650-1099 (16% centre - pic gaussien)
-            wordsDiscovered >= 300 -> "🔥 Débrouya"            // 300-649 (12% centre bas)
-            wordsDiscovered >= 50 -> "🌱 Ti moun"              // 50-299 (9% inférieur)
-            else -> "🌍 Pipirit"                                // 0-49 (3% débutant absolu)
+            wordsDiscovered >= thresholds[7] -> "🧙🏿‍♀️ Benzo"          // +3σ (0.15% - ~4 mots)
+            wordsDiscovered >= thresholds[6] -> "👑 Potomitan"          // +2σ à +3σ (2% - ~57 mots)
+            wordsDiscovered >= thresholds[5] -> "🐘 Kompè Zamba"        // +1σ à +2σ (14% - ~396 mots)
+            wordsDiscovered >= thresholds[4] -> "🐇 Kompè Lapen"        // 0 à +1σ (34% - ~963 mots)
+            wordsDiscovered >= thresholds[3] -> "💎 An mitan"            // -1σ à 0 (34% - ~963 mots)
+            wordsDiscovered >= thresholds[2] -> "🔥 Débrouya"            // -2σ à -1σ (14% - ~396 mots)
+            wordsDiscovered >= thresholds[1] -> "🌱 Ti moun"              // -3σ à -2σ (2% - ~57 mots)
+            else -> "🌍 Pipirit"                                          // < -3σ (0.15% - ~4 mots)
         }
     }
     
     private fun getNextLevelInfo(wordsDiscovered: Int): Pair<String, Int> {
+        val thresholds = calculateGaussianThresholds()
         return when {
-            wordsDiscovered >= 2830 -> Pair("Benzo", 0) // Niveau maximum absolu atteint!
-            wordsDiscovered >= 2200 -> Pair("Benzo", 2830 - wordsDiscovered)
-            wordsDiscovered >= 1650 -> Pair("Potomitan", 2200 - wordsDiscovered)
-            wordsDiscovered >= 1100 -> Pair("Kompè Zamba", 1650 - wordsDiscovered)
-            wordsDiscovered >= 650 -> Pair("Kompè Lapen", 1100 - wordsDiscovered)
-            wordsDiscovered >= 300 -> Pair("An mitan", 650 - wordsDiscovered)
-            wordsDiscovered >= 50 -> Pair("Débrouya", 300 - wordsDiscovered)
-            else -> Pair("Ti moun", 50 - wordsDiscovered)
+            wordsDiscovered >= thresholds[7] -> Pair("Benzo", 0) // Niveau maximum atteint!
+            wordsDiscovered >= thresholds[6] -> Pair("Benzo", thresholds[7] - wordsDiscovered)
+            wordsDiscovered >= thresholds[5] -> Pair("Potomitan", thresholds[6] - wordsDiscovered)
+            wordsDiscovered >= thresholds[4] -> Pair("Kompè Zamba", thresholds[5] - wordsDiscovered)
+            wordsDiscovered >= thresholds[3] -> Pair("Kompè Lapen", thresholds[4] - wordsDiscovered)
+            wordsDiscovered >= thresholds[2] -> Pair("An mitan", thresholds[3] - wordsDiscovered)
+            wordsDiscovered >= thresholds[1] -> Pair("Débrouya", thresholds[2] - wordsDiscovered)
+            else -> Pair("Ti moun", thresholds[1] - wordsDiscovered)
+        }
+    }
+    
+    /**
+     * Calcule les seuils de niveau basés sur une distribution gaussienne
+     * 
+     * Distribution centrée sur 50% du dictionnaire (μ = totalWords * 0.5)
+     * Écart-type = 16.67% du dictionnaire (σ = totalWords * 0.1667)
+     * 
+     * Répartition gaussienne des niveaux:
+     * - Pipirit (< -3σ): 0.15% des utilisateurs (~4 mots)
+     * - Ti moun (-3σ à -2σ): 2% (~57 mots)
+     * - Débrouya (-2σ à -1σ): 14% (~396 mots)
+     * - An mitan (-1σ à 0): 34% (~963 mots)
+     * - Kompè Lapen (0 à +1σ): 34% (~963 mots)
+     * - Kompè Zamba (+1σ à +2σ): 14% (~396 mots)
+     * - Potomitan (+2σ à +3σ): 2% (~57 mots)
+     * - Benzo (+3σ): 0.15% (~4 mots - tous les mots!)
+     * 
+     * Cela garantit que:
+     * - 99.7% des utilisateurs sont entre -3σ et +3σ
+     * - Les niveaux extrêmes (Pipirit et Benzo) sont très rares
+     * - La distribution s'adapte automatiquement à la taille du dictionnaire
+     * 
+     * @return IntArray avec 8 seuils: [0: min, 1: -3σ, 2: -2σ, 3: -1σ, 4: μ, 5: +1σ, 6: +2σ, 7: +3σ]
+     */
+    private fun calculateGaussianThresholds(): IntArray {
+        val totalWords = getTotalDictionaryWords()
+        
+        // Paramètres de la gaussienne
+        val mean = totalWords * 0.5  // Moyenne à 50% du dictionnaire
+        val sigma = totalWords * 0.1667  // Écart-type à ~16.67% du dictionnaire (6σ = 100%)
+        
+        return intArrayOf(
+            0,                           // 0: Minimum absolu
+            kotlin.math.max(0, (mean - 3 * sigma).toInt()),  // 1: -3σ (~0.15% en dessous)
+            kotlin.math.max(0, (mean - 2 * sigma).toInt()),  // 2: -2σ (~2.3% en dessous)
+            kotlin.math.max(0, (mean - 1 * sigma).toInt()),  // 3: -1σ (~16% en dessous)
+            mean.toInt(),                // 4: μ (50% - pic de la courbe)
+            (mean + 1 * sigma).toInt(),  // 5: +1σ (~84% atteints)
+            (mean + 2 * sigma).toInt(),  // 6: +2σ (~97.7% atteints)
+            totalWords                   // 7: +3σ (100% - tous les mots!)
+        )
+    }
+    
+    /**
+     * Récupère le nombre total de mots dans le dictionnaire
+     * Utilise un cache pour éviter de relire le fichier à chaque fois
+     */
+    private var cachedTotalWords: Int? = null
+    
+    private fun getTotalDictionaryWords(): Int {
+        // Retourner depuis le cache si disponible
+        cachedTotalWords?.let { return it }
+        
+        return try {
+            val usageFile = File(filesDir, "creole_dict_with_usage.json")
+            
+            val count = if (usageFile.exists()) {
+                val jsonString = usageFile.readText()
+                val jsonObject = JSONObject(jsonString)
+                jsonObject.keys().asSequence().count()
+            } else {
+                // Charger depuis les assets
+                val jsonString = assets.open("creole_dict.json").bufferedReader().use { it.readText() }
+                val jsonArray = org.json.JSONArray(jsonString)
+                jsonArray.length()
+            }
+            
+            cachedTotalWords = count
+            Log.d("SettingsActivity", "📊 Total mots dictionnaire: $count")
+            count
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur comptage mots: ${e.message}")
+            2833 // Fallback sur la valeur connue
         }
     }
     

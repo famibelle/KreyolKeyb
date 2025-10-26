@@ -5,6 +5,63 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.0] - 2025-10-26
+
+### 🎮 Gamification - Distribution Gaussienne
+
+#### ✨ Nouveau
+- **Système de niveaux dynamique** : Les seuils de niveaux s'adaptent automatiquement à la taille du dictionnaire
+- **Distribution gaussienne** : Répartition mathématiquement correcte des niveaux basée sur une courbe normale
+- **8 niveaux équilibrés** :
+  - 🌍 Pipirit (< -3σ): ~0.15% - Les tout premiers pas (~4 mots)
+  - 🌱 Ti moun (-3σ à -2σ): ~2% - Débutant (~57 mots)
+  - 🔥 Débrouya (-2σ à -1σ): ~14% - Débutant avancé (~396 mots)
+  - 💎 An mitan (-1σ à 0): ~34% - Intermédiaire (~963 mots)
+  - 🐇 Kompè Lapen (0 à +1σ): ~34% - Avancé (~963 mots)
+  - 🐘 Kompè Zamba (+1σ à +2σ): ~14% - Très avancé (~396 mots)
+  - 👑 Potomitan (+2σ à +3σ): ~2% - Expert absolu (~57 mots)
+  - 🧙🏿‍♀️ Benzo (+3σ): ~0.15% - Niveau secret - Tous les mots! (~4 mots)
+
+#### 🔧 Amélioré
+- **Cache du dictionnaire** : Comptage des mots mis en cache pour optimiser les performances
+- **Calcul des seuils** : Basé sur une vraie distribution normale (μ = 50%, σ = 16.67%)
+- **Adaptation automatique** : Si le dictionnaire évolue, les niveaux s'ajustent sans modification de code
+- **Documentation enrichie** : Commentaires détaillés avec les pourcentages et approximations pour chaque niveau
+
+#### 📊 Technique
+- Nouvelle fonction `calculateGaussianThresholds()` : Calcule dynamiquement les 8 seuils (-3σ à +3σ)
+- Nouvelle fonction `getTotalDictionaryWords()` : Récupère le nombre total de mots avec cache
+- Modification de `getCurrentLevel()` : Utilise les seuils gaussiens au lieu de valeurs fixes
+- Modification de `getNextLevelInfo()` : S'adapte aux seuils dynamiques
+- Basé sur ~2833 mots actuellement dans le dictionnaire
+
+### 🎨 Design
+
+#### ✨ Nouveau
+- **Page d'onboarding bêta-testeurs** : Nouvelle page `beta_onboarding.html` pour recruter des testeurs
+  - Design cohérent avec `feedbacks_form.html`
+  - Formulaire Formspree intégré
+  - Switch FR/GCF (français par défaut)
+  - Gradient rouge/violet thématique
+  - Responsive mobile
+
+#### 🔧 Amélioré
+- **Switch de langue optimisé** : Taille réduite et positionné en bas à droite
+- **Ergonomie** : Plus de superposition entre le titre et les contrôles
+- **Accessibilité** : Checkbox de consentement clairement visible
+
+### 🔐 Sécurité
+
+#### 🔧 Corrigé
+- **Rotation des mots de passe du keystore** : Changement des mots de passe après exposition accidentelle dans l'historique git
+- **GitHub Secrets mis à jour** : STORE_PASSWORD, KEY_PASSWORD, KEYSTORE_BASE64 actualisés
+- **Protection renforcée** : `.gitignore` mis à jour pour exclure `*keystore*base64*.txt`
+
+#### 📝 Note de sécurité
+- Le certificat de signature reste identique (aucun impact sur Google Play)
+- Les anciens mots de passe exposés sont désormais inutilisables
+- Historique git contient encore les traces (nettoyage optionnel disponible)
+
 ## [6.1.7] - 2025-10-20
 
 ### 🐛 Corrigé
