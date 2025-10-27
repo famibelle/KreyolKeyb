@@ -10,6 +10,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +32,7 @@ import kotlinx.coroutines.*
 import kotlin.random.Random
 
 class SettingsActivity : AppCompatActivity() {
-    private var currentTab = 0 // 0 = home, 1 = stats
+    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
     
@@ -324,15 +325,20 @@ class SettingsActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
             }
             
-            // Tab Accueil
-            val homeTab = createTab(0, "🏠", "Accueil")
-            tabContainer.addView(homeTab)
-            Log.d("SettingsActivity", "Onglet Accueil créé et ajouté")
+            // Tab Démarrage
+            val startTab = createTab(0, "🚀", "Démarrage")
+            tabContainer.addView(startTab)
+            Log.d("SettingsActivity", "Onglet Démarrage créé et ajouté")
             
             // Tab Statistiques  
             val statsTab = createTab(1, "📊", "Kréyòl an mwen")
             tabContainer.addView(statsTab)
             Log.d("SettingsActivity", "Onglet Statistiques créé et ajouté")
+            
+            // Tab À Propos
+            val aboutTab = createTab(2, "ℹ️", "À Propos")
+            tabContainer.addView(aboutTab)
+            Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
             
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
@@ -436,9 +442,10 @@ class SettingsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         
-        // Tabs
-        tabContainer.addView(createTab(0, "🏠", "Accueil"))
-        tabContainer.addView(createTab(1, "📊", "Mon Kreyòl"))
+        // Tabs avec les 3 onglets
+        tabContainer.addView(createTab(0, "🚀", "Démarrage"))
+        tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
+        tabContainer.addView(createTab(2, "ℹ️", "À Propos"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -453,16 +460,612 @@ class SettingsActivity : AppCompatActivity() {
         tabBar.addView(separator)
     }
     
-
-    
-    fun createHomeContent(): LinearLayout {
+    // Onglet 1 : Démarrage / Onboarding
+    fun createOnboardingContent(): LinearLayout {
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24, 32, 24, 32)
             setBackgroundColor(Color.parseColor("#F5F5F5"))
         }
         
-        // En-tête compact avec logo uniquement
+        val isEnabled = isKeyboardEnabled()
+        val isSelected = isKeyboardSelected()
+        
+        // Barre de statut dynamique en haut
+        val statusBar = createStatusBar(isEnabled, isSelected)
+        mainLayout.addView(statusBar)
+        mainLayout.addView(createSpacing(24))
+        
+        // Hero Section - Bienvenue avec progression
+        val heroCard = createCard("#0080FF")
+        
+        val welcomeIcon = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "✅"
+                isEnabled -> "🎯"
+                else -> "🎉"
+            }
+            textSize = 48f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 16)
+        }
+        
+        val welcomeTitle = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "Tout est prêt !"
+                isEnabled -> "Vous y êtes presque !"
+                else -> "Bienvenue sur Klavyé Kréyòl !"
+            }
+            textSize = 24f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 8)
+        }
+        
+        val welcomeSubtitle = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "Vous pouvez taper en Kréyòl partout !"
+                isEnabled -> "Sélectionnez le clavier pour l'utiliser"
+                else -> "Configurez votre clavier en 2 minutes ⏱️"
+            }
+            textSize = 16f
+            setTextColor(Color.parseColor("#E0E0E0"))
+            gravity = Gravity.CENTER
+            setLineSpacing(0f, 1.3f)
+        }
+        
+        // Barre de progression
+        val progressBar = createProgressBar(isEnabled, isSelected)
+        
+        heroCard.addView(welcomeIcon)
+        heroCard.addView(welcomeTitle)
+        heroCard.addView(welcomeSubtitle)
+        heroCard.addView(createSpacing(16))
+        heroCard.addView(progressBar)
+        
+        mainLayout.addView(heroCard)
+        mainLayout.addView(createSpacing(24))
+        
+        // Section "En 3 étapes"
+        val stepsTitle = TextView(this).apply {
+            text = "📍 Configuration en 3 étapes"
+            textSize = 20f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 16)
+        }
+        mainLayout.addView(stepsTitle)
+        
+        // ÉTAPE 1 : Activer le clavier
+        val step1Card = createStepCard(
+            stepNumber = 1,
+            isCompleted = isEnabled,
+            isLocked = false,
+            icon = "⚙️",
+            title = "Activer le clavier",
+            description = "Activez 'Klavyé Kréyòl Karukera' dans les paramètres système",
+            buttonText = if (isEnabled) "✓ Activé" else "Ouvrir les paramètres",
+            buttonEnabled = !isEnabled,
+            buttonAction = {
+                openKeyboardSettings()
+            }
+        )
+        mainLayout.addView(step1Card)
+        mainLayout.addView(createSpacing(12))
+        
+        // ÉTAPE 2 : Sélectionner le clavier
+        val step2Card = createStepCard(
+            stepNumber = 2,
+            isCompleted = isSelected,
+            isLocked = !isEnabled,
+            icon = "🔄",
+            title = "Sélectionner le clavier",
+            description = if (!isEnabled) "Complétez d'abord l'étape 1" else "Choisissez le clavier Kréyòl quand vous tapez du texte",
+            buttonText = when {
+                !isEnabled -> "🔒 Verrouillé"
+                isSelected -> "✓ Sélectionné"
+                else -> "Ouvrir le sélecteur"
+            },
+            buttonEnabled = isEnabled && !isSelected,
+            buttonAction = {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showInputMethodPicker()
+            }
+        )
+        mainLayout.addView(step2Card)
+        mainLayout.addView(createSpacing(12))
+        
+        // ÉTAPE 3 : Tester le clavier
+        val step3Card = createCard("#FFFFFF")
+        
+        val isStep3Locked = !isEnabled || !isSelected
+        
+        val step3Header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, 12)
+        }
+        
+        val step3Badge = TextView(this).apply {
+            text = if (isStep3Locked) "🔒" else "3"
+            textSize = 20f
+            setTextColor(
+                when {
+                    isStep3Locked -> Color.parseColor("#999999")
+                    else -> Color.parseColor("#0080FF")
+                }
+            )
+            setTypeface(null, Typeface.BOLD)
+            setPadding(12, 8, 12, 8)
+            setBackgroundColor(
+                when {
+                    isStep3Locked -> Color.parseColor("#F5F5F5")
+                    else -> Color.parseColor("#E3F2FD")
+                }
+            )
+        }
+        
+        val step3Icon = TextView(this).apply {
+            text = "✍️"
+            textSize = 24f
+            setPadding(16, 0, 12, 0)
+            alpha = if (isStep3Locked) 0.5f else 1.0f
+        }
+        
+        val step3TitleText = TextView(this).apply {
+            text = "Tester le clavier"
+            textSize = 18f
+            setTextColor(if (isStep3Locked) Color.parseColor("#999999") else Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        
+        step3Header.addView(step3Badge)
+        step3Header.addView(step3Icon)
+        step3Header.addView(step3TitleText)
+        
+        val step3Desc = TextView(this).apply {
+            text = if (isStep3Locked) "Complétez les étapes 1 et 2 pour débloquer" else "Tapez quelques mots pour essayer les suggestions en Kréyòl"
+            textSize = 14f
+            setTextColor(Color.parseColor("#666666"))
+            setPadding(0, 0, 0, 12)
+            setLineSpacing(0f, 1.3f)
+        }
+        
+        val testEditText = EditText(this).apply {
+            hint = if (isStep3Locked) "🔒 Verrouillé" else "Ékri an Kréyòl la..."
+            textSize = 16f
+            setPadding(16, 16, 16, 16)
+            minHeight = 100
+            setBackgroundColor(if (isStep3Locked) Color.parseColor("#EEEEEE") else Color.parseColor("#F9F9F9"))
+            setTextColor(Color.parseColor("#1C1C1C"))
+            setHintTextColor(Color.parseColor("#999999"))
+            this.isEnabled = !isStep3Locked
+            alpha = if (isStep3Locked) 0.5f else 1.0f
+        }
+        
+        step3Card.addView(step3Header)
+        step3Card.addView(step3Desc)
+        step3Card.addView(testEditText)
+        
+        mainLayout.addView(step3Card)
+        mainLayout.addView(createSpacing(24))
+        
+        // Section "Astuce" si tout est configuré
+        if (isEnabled && isSelected) {
+            val tipCard = createCard("#FFF9E6")
+            
+            val tipHeader = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 0, 0, 8)
+            }
+            
+            val tipIcon = TextView(this).apply {
+                text = "💡"
+                textSize = 24f
+                setPadding(0, 0, 12, 0)
+            }
+            
+            val tipTitle = TextView(this).apply {
+                text = "Astuce du jour"
+                textSize = 16f
+                setTextColor(Color.parseColor("#F57C00"))
+                setTypeface(null, Typeface.BOLD)
+            }
+            
+            tipHeader.addView(tipIcon)
+            tipHeader.addView(tipTitle)
+            
+            val tipText = TextView(this).apply {
+                text = "Appuyez longuement sur une lettre pour accéder aux accents et caractères spéciaux (é, è, à, ò, etc.)"
+                textSize = 14f
+                setTextColor(Color.parseColor("#666666"))
+                setLineSpacing(0f, 1.3f)
+            }
+            
+            tipCard.addView(tipHeader)
+            tipCard.addView(tipText)
+            
+            mainLayout.addView(tipCard)
+            mainLayout.addView(createSpacing(16))
+            
+            // Lien vers statistiques
+            val statsLinkCard = createCard("#E8F5E9")
+            
+            val statsLinkLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            
+            val statsIcon = TextView(this).apply {
+                text = "📊"
+                textSize = 32f
+                setPadding(0, 0, 16, 0)
+            }
+            
+            val statsTextContainer = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            val statsTitle = TextView(this).apply {
+                text = "Découvrez vos statistiques"
+                textSize = 16f
+                setTextColor(Color.parseColor("#2E7D32"))
+                setTypeface(null, Typeface.BOLD)
+            }
+            
+            val statsDesc = TextView(this).apply {
+                text = "Suivez votre progression et montez en niveau !"
+                textSize = 13f
+                setTextColor(Color.parseColor("#558B2F"))
+            }
+            
+            statsTextContainer.addView(statsTitle)
+            statsTextContainer.addView(statsDesc)
+            
+            val statsArrow = TextView(this).apply {
+                text = "→"
+                textSize = 24f
+                setTextColor(Color.parseColor("#2E7D32"))
+            }
+            
+            statsLinkLayout.addView(statsIcon)
+            statsLinkLayout.addView(statsTextContainer)
+            statsLinkLayout.addView(statsArrow)
+            
+            statsLinkCard.addView(statsLinkLayout)
+            statsLinkCard.setOnClickListener {
+                viewPager.currentItem = 1 // Naviguer vers l'onglet Stats
+            }
+            
+            mainLayout.addView(statsLinkCard)
+        }
+        
+        // Message si clavier non activé
+        if (!isEnabled) {
+            mainLayout.addView(createSpacing(16))
+            
+            val helpCard = createCard("#FFF3E0")
+            
+            val helpText = TextView(this).apply {
+                text = "❓ Besoin d'aide ? Suivez les étapes ci-dessus dans l'ordre pour configurer votre clavier."
+                textSize = 14f
+                setTextColor(Color.parseColor("#E65100"))
+                gravity = Gravity.CENTER
+                setLineSpacing(0f, 1.3f)
+            }
+            
+            helpCard.addView(helpText)
+            mainLayout.addView(helpCard)
+        }
+        
+        return mainLayout
+    }
+    
+    // Fonction pour créer la barre de statut dynamique
+    private fun createStatusBar(isEnabled: Boolean, isSelected: Boolean): LinearLayout {
+        val statusBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(20, 16, 20, 16)
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundColor(
+                when {
+                    isEnabled && isSelected -> Color.parseColor("#4CAF50") // Vert
+                    isEnabled -> Color.parseColor("#FFA726") // Orange
+                    else -> Color.parseColor("#FF6B35") // Rouge-orange
+                }
+            )
+        }
+        
+        val icon = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "✅"
+                isEnabled -> "🔄"
+                else -> "⚠️"
+            }
+            textSize = 24f
+            setPadding(0, 0, 16, 0)
+        }
+        
+        val textContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        
+        val title = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "Tout est prêt !"
+                isEnabled -> "Presque prêt !"
+                else -> "Action requise"
+            }
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+        }
+        
+        val subtitle = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "Vous pouvez taper en Kréyòl partout"
+                isEnabled -> "Sélectionnez le clavier pour l'utiliser"
+                else -> "Activez le clavier pour commencer"
+            }
+            textSize = 13f
+            setTextColor(Color.WHITE)
+            alpha = 0.9f
+        }
+        
+        textContainer.addView(title)
+        textContainer.addView(subtitle)
+        
+        statusBar.addView(icon)
+        statusBar.addView(textContainer)
+        
+        // Bouton d'action si nécessaire
+        if (!isEnabled || !isSelected) {
+            val actionButton = Button(this).apply {
+                text = if (!isEnabled) "Activer →" else "Sélectionner →"
+                textSize = 14f
+                setBackgroundColor(Color.WHITE)
+                setTextColor(if (!isEnabled) Color.parseColor("#FF6B35") else Color.parseColor("#FFA726"))
+                setPadding(20, 10, 20, 10)
+                setTypeface(null, Typeface.BOLD)
+                setOnClickListener {
+                    if (!isEnabled) {
+                        openKeyboardSettings()
+                    } else {
+                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.showInputMethodPicker()
+                    }
+                }
+            }
+            statusBar.addView(actionButton)
+        }
+        
+        return statusBar
+    }
+    
+    // Fonction pour créer la barre de progression
+    private fun createProgressBar(isEnabled: Boolean, isSelected: Boolean): LinearLayout {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 0, 0, 0)
+        }
+        
+        val progressText = TextView(this).apply {
+            text = when {
+                isEnabled && isSelected -> "Progression : 100% ✓"
+                isEnabled -> "Progression : 67%"
+                else -> "Progression : 33%"
+            }
+            textSize = 13f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 8)
+        }
+        
+        val progressBarContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                12
+            )
+            setBackgroundColor(Color.parseColor("#FFFFFF33")) // Blanc transparent
+        }
+        
+        val filledPart = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                when {
+                    isEnabled && isSelected -> 3f
+                    isEnabled -> 2f
+                    else -> 1f
+                }
+            )
+            setBackgroundColor(Color.WHITE)
+        }
+        
+        val emptyPart = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                when {
+                    isEnabled && isSelected -> 0f
+                    isEnabled -> 1f
+                    else -> 2f
+                }
+            )
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+        
+        progressBarContainer.addView(filledPart)
+        if (emptyPart.layoutParams.width != 0) {
+            progressBarContainer.addView(emptyPart)
+        }
+        
+        container.addView(progressText)
+        container.addView(progressBarContainer)
+        
+        return container
+    }
+    
+    // Fonction pour créer une card d'étape
+    private fun createStepCard(
+        stepNumber: Int,
+        isCompleted: Boolean,
+        isLocked: Boolean,
+        icon: String,
+        title: String,
+        description: String,
+        buttonText: String,
+        buttonEnabled: Boolean,
+        buttonAction: () -> Unit
+    ): LinearLayout {
+        val card = createCard("#FFFFFF")
+        
+        // Appliquer une opacité si verrouillé
+        if (isLocked) {
+            card.alpha = 0.6f
+        }
+        
+        // Header avec numéro et icône
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, 12)
+        }
+        
+        val badge = TextView(this).apply {
+            text = stepNumber.toString()
+            textSize = 20f
+            setTextColor(
+                when {
+                    isLocked -> Color.parseColor("#999999")
+                    isCompleted -> Color.parseColor("#4CAF50")
+                    else -> Color.parseColor("#0080FF")
+                }
+            )
+            setTypeface(null, Typeface.BOLD)
+            setPadding(12, 8, 12, 8)
+            setBackgroundColor(
+                when {
+                    isLocked -> Color.parseColor("#F5F5F5")
+                    isCompleted -> Color.parseColor("#E8F5E9")
+                    else -> Color.parseColor("#E3F2FD")
+                }
+            )
+        }
+        
+        val iconText = TextView(this).apply {
+            text = icon
+            textSize = 24f
+            setPadding(16, 0, 12, 0)
+        }
+        
+        val titleText = TextView(this).apply {
+            text = title
+            textSize = 18f
+            setTextColor(if (isLocked) Color.parseColor("#999999") else Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        
+        if (isCompleted) {
+            val checkIcon = TextView(this).apply {
+                text = "✓"
+                textSize = 24f
+                setTextColor(Color.parseColor("#4CAF50"))
+                setTypeface(null, Typeface.BOLD)
+            }
+            header.addView(badge)
+            header.addView(iconText)
+            header.addView(titleText)
+            header.addView(checkIcon)
+        } else if (isLocked) {
+            val lockIcon = TextView(this).apply {
+                text = "🔒"
+                textSize = 20f
+            }
+            header.addView(badge)
+            header.addView(iconText)
+            header.addView(titleText)
+            header.addView(lockIcon)
+        } else {
+            header.addView(badge)
+            header.addView(iconText)
+            header.addView(titleText)
+        }
+        
+        val descText = TextView(this).apply {
+            text = description
+            textSize = 14f
+            setTextColor(Color.parseColor("#666666"))
+            setPadding(0, 0, 0, 16)
+            setLineSpacing(0f, 1.3f)
+        }
+        
+        val button = Button(this).apply {
+            text = buttonText
+            textSize = 15f
+            setBackgroundColor(
+                when {
+                    isLocked -> Color.parseColor("#EEEEEE")
+                    isCompleted -> Color.parseColor("#E0E0E0")
+                    buttonEnabled -> Color.parseColor("#0080FF")
+                    else -> Color.parseColor("#BDBDBD")
+                }
+            )
+            setTextColor(
+                when {
+                    isLocked -> Color.parseColor("#999999")
+                    isCompleted -> Color.parseColor("#757575")
+                    else -> Color.WHITE
+                }
+            )
+            setPadding(24, 16, 24, 16)
+            this.isEnabled = buttonEnabled && !isCompleted && !isLocked
+            setOnClickListener {
+                if (!isCompleted && !isLocked) {
+                    buttonAction()
+                }
+            }
+        }
+        
+        card.addView(header)
+        card.addView(descText)
+        card.addView(button)
+        
+        return card
+    }
+    
+    // Onglet 3 : À Propos
+    fun createAboutContent(): LinearLayout {
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 32, 24, 32)
+            setBackgroundColor(Color.parseColor("#F5F5F5"))
+        }
+        
+        // En-tête avec logo
         val headerLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -477,13 +1080,11 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         headerLayout.addView(logoImage)
+        mainLayout.addView(headerLayout)
+        mainLayout.addView(createSpacing(24))
         
-        // Description principale
-        val descriptionCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
-            setBackgroundColor(Color.WHITE)
-        }
+        // Mission
+        val missionCard = createCard("#FFFFFF")
         
         val missionTitle = TextView(this).apply {
             text = "🌟 Notre Mission"
@@ -495,119 +1096,27 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         val missionText = TextView(this).apply {
-            text = "Ce clavier a été spécialement conçu pour préserver et promouvoir le Kréyòl Guadeloupéen (Karukera). Il met à disposition de tous un outil moderne pour écrire dans notre belle langue créole avec :\n\n" +
+            text = "Ce clavier a été spécialement conçu pour préserver et promouvoir le Kréyòl Guadeloupéen (Karukera). " +
+                    "Il met à disposition de tous un outil moderne pour écrire dans notre belle langue créole avec :\n\n" +
                     "💡 Suggestions de mots en Kréyòl\n" +
                     "🔢 Mode numérique intégré\n" +
                     "🌈 Design aux couleurs de la Guadeloupe\n" +
-                    "🪘Identité guadeloupéenne forte"
+                    "🪘 Identité guadeloupéenne forte"
             textSize = 16f
             setTextColor(Color.parseColor("#333333"))
-            setLineSpacing(0f, 1.2f)
-        }
-        
-        descriptionCard.addView(missionTitle)
-        descriptionCard.addView(missionText)
-        
-        // Instructions d'installation
-        val installCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
-            setBackgroundColor(Color.parseColor("#E8F4FD"))
-        }
-        
-        val installTitle = TextView(this).apply {
-            text = "📱 Comment activer le clavier ?"
-            textSize = 18f
-            setTextColor(Color.parseColor("#0080FF"))
-            setTypeface(null, Typeface.BOLD)
-            setPadding(0, 0, 0, 12)
-        }
-        
-        val installSteps = TextView(this).apply {
-            text = "1️⃣ Appuyez sur 'Activer le clavier' ci-dessous\n" +
-                    "2️⃣ Dans les paramètres, activez 'Klavyé Kréyòl Karukera'\n" +
-                    "3️⃣ Revenez ici et testez le clavier\n" +
-                    "4️⃣ Changez de clavier en appuyant sur l'icône clavier dans la barre de notifications"
-            textSize = 15f
-            setTextColor(Color.parseColor("#444444"))
             setLineSpacing(0f, 1.3f)
         }
         
-        installCard.addView(installTitle)
-        installCard.addView(installSteps)
+        missionCard.addView(missionTitle)
+        missionCard.addView(missionText)
+        mainLayout.addView(missionCard)
+        mainLayout.addView(createSpacing(16))
         
-        // Boutons d'action
-        val buttonLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 16, 0, 16)
-        }
-        
-        val activateButton = Button(this).apply {
-            text = "🔧 Activer le clavier dans les paramètres"
-            textSize = 16f
-            setBackgroundColor(Color.parseColor("#0080FF"))
-            setTextColor(Color.parseColor("#F8F8FF"))
-            setPadding(20, 16, 20, 16)
-            setOnClickListener {
-                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-                startActivity(intent)
-            }
-        }
-        
-        val testTitle = TextView(this).apply {
-            text = "✍️ Zone de test du clavier"
-            textSize = 18f
-            setTextColor(Color.parseColor("#0080FF"))
-            setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            setPadding(0, 24, 0, 12)
-        }
-        
-        val testDescription = TextView(this).apply {
-            text = "Tapez dans le champ ci-dessous pour tester le clavier Kréyòl :"
-            textSize = 14f
-            setTextColor(Color.parseColor("#666666"))
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 12)
-        }
-        
-        val testEditText = EditText(this).apply {
-            hint = "Ékri an Kréyòl la... (Écrivez en créole...)"
-            textSize = 16f
-            setPadding(16, 16, 16, 16)
-            minHeight = 120
-            setBackgroundColor(Color.WHITE)
-            setTextColor(Color.parseColor("#1C1C1C"))
-            setHintTextColor(Color.parseColor("#999999"))
-            val layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            layoutParams.setMargins(8, 8, 8, 8)
-            this.layoutParams = layoutParams
-        }
-        
-        val switchButton = Button(this).apply {
-            text = "🔄 Basculer vers Klavyé Kréyòl"
-            textSize = 14f
-            setBackgroundColor(Color.parseColor("#228B22"))
-            setTextColor(Color.parseColor("#F8F8FF"))
-            setPadding(16, 12, 16, 12)
-            setOnClickListener {
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showInputMethodPicker()
-            }
-        }
-        
-        // Section Sources littéraires
-        val sourcesCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
-            setBackgroundColor(Color.parseColor("#F0F8E8"))
-        }
+        // Sources littéraires
+        val sourcesCard = createCard("#F0F8E8")
         
         val sourcesTitle = TextView(this).apply {
-            text = "📚 Sources littéraires créoles"
+            text = "📚 Sources littéraires"
             textSize = 18f
             setTextColor(Color.parseColor("#228B22"))
             setTypeface(null, Typeface.BOLD)
@@ -616,8 +1125,9 @@ class SettingsActivity : AppCompatActivity() {
         
         val sourcesText = TextView(this).apply {
             text = "Les suggestions de mots en Kréyòl sont construites sur les travaux des défenseurs du Kréyòl :\n\n" +
-                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, Esnard Boisdur, Pierre Édouard Décimus, Corinne Famibelle\n\n" +
-                    "Grâce à leur riche contributions, ce clavier vous propose des suggestions authentiques et fidèles à notre créole guadeloupéen."
+                    "✍️ Sylviane Telchid, Sonny Rupaire, Robert Fontes, Max Rippon, Alain Rutil, Alain Vérin, Katel, " +
+                    "Esnard Boisdur, Pierre Édouard Décimus, Corinne Famibelle\n\n" +
+                    "Grâce à leurs riches contributions, ce clavier vous propose des suggestions authentiques et fidèles à notre créole guadeloupéen."
             textSize = 14f
             setTextColor(Color.parseColor("#2F5233"))
             setLineSpacing(0f, 1.3f)
@@ -625,42 +1135,241 @@ class SettingsActivity : AppCompatActivity() {
         
         sourcesCard.addView(sourcesTitle)
         sourcesCard.addView(sourcesText)
+        mainLayout.addView(sourcesCard)
+        mainLayout.addView(createSpacing(16))
         
-        // Footer
-        val footerCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
-            setBackgroundColor(Color.parseColor("#F8F9FA"))
+        // Informations app
+        val infoCard = createCard("#F8F9FA")
+        
+        val infoTitle = TextView(this).apply {
+            text = "ℹ️ Informations"
+            textSize = 18f
+            setTextColor(Color.parseColor("#666666"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
         }
         
-        val footerText = TextView(this).apply {
-            text = "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
-                    "Préservons notre langue créole pour les générations futures !\n\n" +
-                    "© Potomitan™ - Clavier Kréyòl Karukera\n" +
-                    "Design aux couleurs authentiques de nos îles"
-            textSize = 12f
+        val versionText = TextView(this).apply {
+            text = "Version : 6.2.0\n" +
+                    "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
+                    "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
+                    "Préservons notre langue créole pour les générations futures !"
+            textSize = 14f
             setTextColor(Color.parseColor("#666666"))
+            setLineSpacing(0f, 1.3f)
             gravity = Gravity.CENTER
+        }
+        
+        infoCard.addView(infoTitle)
+        infoCard.addView(versionText)
+        mainLayout.addView(infoCard)
+        
+        return mainLayout
+    }
+    
+    // Helpers pour créer les éléments UI
+    private fun createCard(backgroundColor: String): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(20, 20, 20, 20)
+            setBackgroundColor(Color.parseColor(backgroundColor))
+        }
+    }
+    
+    private fun createSpacing(heightDp: Int): View {
+        return View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (heightDp * resources.displayMetrics.density).toInt()
+            )
+        }
+    }
+    
+    private fun createChecklistItem(isChecked: Boolean, title: String, description: String): LinearLayout {
+        val item = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.TOP
+        }
+        
+        val checkbox = TextView(this).apply {
+            text = if (isChecked) "✅" else "⚠️"
+            textSize = 24f
+            setPadding(0, 0, 16, 0)
+        }
+        
+        val textContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        
+        val titleText = TextView(this).apply {
+            text = title
+            textSize = 16f
+            setTextColor(if (isChecked) Color.parseColor("#228B22") else Color.parseColor("#FF6B35"))
+            setTypeface(null, Typeface.BOLD)
+        }
+        
+        val descText = TextView(this).apply {
+            text = description
+            textSize = 14f
+            setTextColor(Color.parseColor("#666666"))
             setLineSpacing(0f, 1.2f)
         }
         
-        footerCard.addView(footerText)
+        textContainer.addView(titleText)
+        textContainer.addView(descText)
         
-        // Assembler
-        buttonLayout.addView(activateButton)
-        buttonLayout.addView(testTitle)
-        buttonLayout.addView(testDescription)
-        buttonLayout.addView(testEditText)
-        buttonLayout.addView(switchButton)
+        item.addView(checkbox)
+        item.addView(textContainer)
         
-        mainLayout.addView(headerLayout)
-        mainLayout.addView(descriptionCard)
-        mainLayout.addView(installCard)
-        mainLayout.addView(buttonLayout)
-        mainLayout.addView(sourcesCard)
-        mainLayout.addView(footerCard)
+        return item
+    }
+    
+    private fun createGuideCard(icon: String, title: String, description: String): LinearLayout {
+        val card = createCard("#FFFFFF")
         
-        return mainLayout
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        
+        val iconText = TextView(this).apply {
+            text = icon
+            textSize = 28f
+            setPadding(0, 0, 16, 0)
+        }
+        
+        val titleText = TextView(this).apply {
+            text = title
+            textSize = 16f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        
+        header.addView(iconText)
+        header.addView(titleText)
+        
+        val descText = TextView(this).apply {
+            text = description
+            textSize = 14f
+            setTextColor(Color.parseColor("#666666"))
+            setLineSpacing(0f, 1.3f)
+            setPadding(0, 8, 0, 0)
+        }
+        
+        card.addView(header)
+        card.addView(descText)
+        
+        return card
+    }
+    
+    
+    // Fonction pour créer la bannière d'activation
+    private fun createActivationBanner(): LinearLayout {
+        val banner = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#FF6B35")) // Orange vif
+            setPadding(24, 16, 24, 16)
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        
+        val icon = TextView(this).apply {
+            text = "⚠️"
+            textSize = 24f
+            setPadding(0, 0, 16, 0)
+        }
+        
+        val textContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+        }
+        
+        val title = TextView(this).apply {
+            text = "Clavier non activé"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        
+        val subtitle = TextView(this).apply {
+            text = "Activez le clavier pour commencer à taper"
+            textSize = 13f
+            setTextColor(Color.parseColor("#FFFFFF"))
+            alpha = 0.9f
+        }
+        
+        val activateButton = Button(this).apply {
+            text = "Activer maintenant"
+            setBackgroundColor(Color.WHITE)
+            setTextColor(Color.parseColor("#FF6B35"))
+            setPadding(24, 12, 24, 12)
+            setOnClickListener {
+                openKeyboardSettings()
+            }
+        }
+        
+        textContainer.addView(title)
+        textContainer.addView(subtitle)
+        banner.addView(icon)
+        banner.addView(textContainer)
+        banner.addView(activateButton)
+        
+        return banner
+    }
+    
+    // Fonction pour vérifier si le clavier est activé
+    private fun isKeyboardEnabled(): Boolean {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val enabledIMEs = imm.enabledInputMethodList
+        val myPackageName = packageName
+        
+        return enabledIMEs.any { it.packageName == myPackageName }
+    }
+    
+    // Fonction pour vérifier si le clavier est sélectionné comme clavier actif
+    private fun isKeyboardSelected(): Boolean {
+        try {
+            val currentIme = Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.DEFAULT_INPUT_METHOD
+            )
+            return currentIme?.contains(packageName) == true
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur vérification clavier sélectionné: ${e.message}")
+            return false
+        }
+    }
+    
+    // Fonction pour ouvrir les paramètres de clavier
+    private fun openKeyboardSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            
+            Toast.makeText(this, 
+                "Activez 'Klavyé Kréyòl Karukera' dans la liste", 
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur ouverture paramètres clavier: ${e.message}")
+            // Fallback vers paramètres généraux
+            try {
+                val intent = Intent(Settings.ACTION_SETTINGS)
+                startActivity(intent)
+            } catch (ex: Exception) {
+                Toast.makeText(this, "Impossible d'ouvrir les paramètres", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     fun createStatsContent(): LinearLayout {
@@ -1300,19 +2009,20 @@ class SettingsActivity : AppCompatActivity() {
     
     // Adapter pour ViewPager2
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
-        override fun getItemCount(): Int = 2
+        override fun getItemCount(): Int = 3
         
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> HomeFragment()
+                0 -> OnboardingFragment()
                 1 -> StatsFragment()
-                else -> HomeFragment()
+                2 -> AboutFragment()
+                else -> OnboardingFragment()
             }
         }
     }
     
-    // Fragment pour l'accueil
-    class HomeFragment : Fragment() {
+    // Fragment pour le démarrage / onboarding
+    class OnboardingFragment : Fragment() {
         override fun onCreateView(
             inflater: android.view.LayoutInflater,
             container: android.view.ViewGroup?,
@@ -1320,7 +2030,21 @@ class SettingsActivity : AppCompatActivity() {
         ): View {
             val activity = requireActivity() as SettingsActivity
             val scrollView = ScrollView(activity)
-            scrollView.addView(activity.createHomeContent())
+            scrollView.addView(activity.createOnboardingContent())
+            return scrollView
+        }
+    }
+    
+    // Fragment pour l'à propos
+    class AboutFragment : Fragment() {
+        override fun onCreateView(
+            inflater: android.view.LayoutInflater,
+            container: android.view.ViewGroup?,
+            savedInstanceState: android.os.Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+            val scrollView = ScrollView(activity)
+            scrollView.addView(activity.createAboutContent())
             return scrollView
         }
     }
