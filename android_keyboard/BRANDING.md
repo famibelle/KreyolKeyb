@@ -8,7 +8,7 @@ Le branding **Potomitan™** est intégré de façon subtile et professionnelle 
 
 ### 1. Titre Principal du Clavier
 ```
-📱 "Klavyé Kréyòl Karukera 🇸🇷 • Potomitan™"
+📱 "Klavyé Kréyòl Karukera  • Potomitan™"
 ```
 - Affiché dans la barre de titre du clavier
 - Style: Fond bleu caraïbe avec texte blanc corail
@@ -44,7 +44,7 @@ Le branding **Potomitan™** est intégré de façon subtile et professionnelle 
 ### Interface Utilisateur
 | Composant | Texte | Style |
 |-----------|--------|-------|
-| Titre du clavier | "Klavyé Kréyòl Karukera 🇸🇷 • Potomitan™" | Gras, bleu caraïbe |
+| Titre du clavier | "Klavyé Kréyòl Karukera  • Potomitan™" | Gras, bleu caraïbe |
 | Suggestions vides | "Potomitan™" | Italique, transparent |
 | Watermark | "Potomitan™" | Italique, coin droit |
 

@@ -254,7 +254,7 @@ jobs:
         fi
         
         # Créer le changelog complet
-        CHANGELOG="# 🇸🇷 Klavié Kreyòl Karukera v${{ steps.version.outputs.VERSION }}
+        CHANGELOG="#  Klavié Kreyòl Karukera v${{ steps.version.outputs.VERSION }}
 
         **Nouveau clavier créole pour la Guadeloupe avec corrections importantes !**
 
@@ -289,7 +289,7 @@ jobs:
 
         ---
         **Alé douvan épi klavié kreyòl-la !** ⌨️✨  
-        **Potomitan™ - Teknoloji pou tout moun** 🇸🇷"
+        **Potomitan™ - Teknoloji pou tout moun** "
         
         # Échapper le changelog pour GitHub Actions
         echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
@@ -299,7 +299,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.event.inputs.version || github.ref_name }}
-        name: 🇸🇷 Klavié Kreyòl Karukera v${{ steps.version.outputs.VERSION }}
+        name:  Klavié Kreyòl Karukera v${{ steps.version.outputs.VERSION }}
         body: ${{ steps.changelog.outputs.CHANGELOG }}
         files: |
           android_keyboard/${{ steps.artifacts.outputs.debug_apk }}
@@ -329,4 +329,4 @@ jobs:
         echo "| **Dictionary** | ${DICT_SIZE:-0} words |" >> $GITHUB_STEP_SUMMARY
         echo "| **N-grams** | ${NGRAM_SIZE:-0} predictions |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🇸🇷 **Kreyòl Keyboard Ready for Distribution!**" >> $GITHUB_STEP_SUMMARY
+        echo "###  **Kreyòl Keyboard Ready for Distribution!**" >> $GITHUB_STEP_SUMMARY

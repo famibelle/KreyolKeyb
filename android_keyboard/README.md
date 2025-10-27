@@ -1,4 +1,4 @@
-# 🇸🇷 Clavier Créole Guadeloupéen - Potomitan™
+#  Clavier Créole Guadeloupéen - Potomitan™
 
 Un clavier Android intelligent pour la saisie en **Kreyòl Guadeloupéen** avec layout AZERTY, suggestions de mots et accents caribéens.
 
@@ -249,7 +249,7 @@ R: Utiliser le script `EnrichirDictionnaire.py` pour enrichir le corpus
 
 <div align="center">
 
-**🇸🇷 Fierté Guadeloupéenne - Technologie Moderne 🇸🇷**
+** Fierté Guadeloupéenne - Technologie Moderne **
 
 *Développé avec ❤️ pour la communauté créolophone*
 

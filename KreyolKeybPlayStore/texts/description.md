@@ -1,4 +1,4 @@
-🇸🇷 KLAVYÉ KRÉYÒL KARUKERA - Enfin écrire en kréyòl sans galérer !
+ KLAVYÉ KRÉYÒL KARUKERA - Enfin écrire en kréyòl sans galérer !
 
 Tu galères à écrire en kréyòl parce que ton téléphone refuse tous les mots ? Tu doutes de l'orthographe à chaque message ? Klavyé Kréyòl Karukera est fait pour toi !
 
@@ -83,4 +83,4 @@ Fais partie du mouvement qui refuse de laisser mourir le kréyòl dans l'ère nu
 
 ---
 🏝️ Potomitan™ - Teknoloji pou tout moun  
-🇸🇷 "An kreyòl nou ka palé, an kreyòl nou ka rivé !"
+ "An kreyòl nou ka palé, an kreyòl nou ka rivé !"

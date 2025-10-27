@@ -1,4 +1,4 @@
-name: 🇸🇷 Build Potomitan Kreyol Keyboard - Detailed Steps
+name:  Build Potomitan Kreyol Keyboard - Detailed Steps
 
 permissions:
   contents: write
@@ -534,7 +534,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref_name }}
-        name: 🇸🇷 Kreyòl Keyboard ${{ github.ref_name }}
+        name:  Kreyòl Keyboard ${{ github.ref_name }}
         body_path: /tmp/release-notes.md
         draft: false
         prerelease: false
@@ -569,7 +569,7 @@ jobs:
         
         ---
         
-        🇸🇷 **Kreyòl Gwadloup ka viv!** 🇸🇷
+         **Kreyòl Gwadloup ka viv!** 
         "
         
         # Ajouter le commentaire à la release existante

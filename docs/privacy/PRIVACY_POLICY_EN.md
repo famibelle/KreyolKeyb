@@ -234,7 +234,7 @@ French courts have jurisdiction for any dispute relating to this policy.
 
 ---
 
-**Thank you for using Klavyé Kréyòl Karukera • Potomitan™ to preserve and promote our beautiful Creole language!** 🇸🇷
+**Thank you for using Klavyé Kréyòl Karukera • Potomitan™ to preserve and promote our beautiful Creole language!** 
 
 ---
 

@@ -234,7 +234,7 @@ Les tribunaux français sont compétents pour tout litige relatif à cette polit
 
 ---
 
-**Merci d'utiliser Klavyé Kréyòl Karukera • Potomitan™ pour préserver et promouvoir notre belle langue créole !** 🇸🇷
+**Merci d'utiliser Klavyé Kréyòl Karukera • Potomitan™ pour préserver et promouvoir notre belle langue créole !** 
 
 ---
 

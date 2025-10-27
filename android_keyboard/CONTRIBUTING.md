@@ -1,6 +1,6 @@
 # Guide de Contribution
 
-Merci de votre intérêt pour contribuer au **Clavier Créole Guadeloupéen** ! 🇸🇷
+Merci de votre intérêt pour contribuer au **Clavier Créole Guadeloupéen** ! 
 
 ## 🌟 Comment Contribuer
 
@@ -282,4 +282,4 @@ Tous les contributeurs sont mentionnés dans :
 
 ---
 
-**Merci de contribuer à la préservation et à la modernisation du kreyòl guadeloupéen ! 🇸🇷**
+**Merci de contribuer à la préservation et à la modernisation du kreyòl guadeloupéen ! **

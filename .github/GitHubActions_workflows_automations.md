@@ -55,7 +55,7 @@ git push origin v3.1.0
 Ajoutez ces badges dans le README principal :
 
 ```markdown
-![Build Status](https://github.com/famibelle/KreyolKeyb/workflows/🇸🇷%20Build%20Clavier%20Créole%20Guadeloupéen/badge.svg)
+![Build Status](https://github.com/famibelle/KreyolKeyb/workflows/%20Build%20Clavier%20Créole%20Guadeloupéen/badge.svg)
 ![Release](https://img.shields.io/github/v/release/famibelle/KreyolKeyb)
 ![License](https://img.shields.io/github/license/famibelle/KreyolKeyb)
 ```
@@ -77,7 +77,7 @@ Aucun secret spécial requis pour l'instant. Le workflow utilise :
 - `GRADLE_VERSION`: wrapper
 - `ANDROID_COMPILE_SDK`: 34
 
-## 🇸🇷 Spécificités Créoles
+##  Spécificités Créoles
 
 Le workflow inclut des validations spécifiques au créole :
 - ✅ **Validation du dictionnaire JSON** (`creole_dict.json`)
@@ -99,4 +99,4 @@ Le workflow inclut des validations spécifiques au créole :
 
 ---
 
-**Potomitan™** - Automatisation CI/CD pour le clavier créole guadeloupéen 🇸🇷
+**Potomitan™** - Automatisation CI/CD pour le clavier créole guadeloupéen 

@@ -203,4 +203,4 @@ Log.d(TAG, "Historique des mots: ${wordHistory.joinToString(" → ")}")
 
 ---
 
-**🇸🇷 Les N-grams préservent et promeuvent la richesse linguistique du kreyòl guadeloupéen ! 🇸🇷**
+** Les N-grams préservent et promeuvent la richesse linguistique du kreyòl guadeloupéen ! **

@@ -26,7 +26,7 @@ class KreyolInputMethodService : InputMethodService() {
     
     private val TAG = "KreyolIME-Potomitan™"
     
-    // 🇸🇷 PALETTE COULEURS GUADELOUPE 🇸🇷
+    //  PALETTE COULEURS GUADELOUPE 
     companion object {
         // Couleurs principales - Palette "Pur Guadeloupe"
         const val BLEU_CARAIBE = "#0080FF"        // Bleu des eaux caribéennes
@@ -571,7 +571,7 @@ class KreyolInputMethodService : InputMethodService() {
             
             // Titre du clavier - Style moderne et épuré selon le brief
             val titleView = TextView(this).apply {
-                text = "Klavié Kreyòl Karukera 🇸🇷 • Potomitan™"
+                text = "Klavié Kreyòl Karukera  • Potomitan™"
                 textSize = resources.getDimension(R.dimen.text_size_title) / resources.displayMetrics.density
                 setBackgroundColor(Color.parseColor("#0080FF")) // Bleu caraïbe direct
                 setTextColor(Color.parseColor("#FFFFFF")) // Blanc coral direct
@@ -653,7 +653,7 @@ class KreyolInputMethodService : InputMethodService() {
         }
     }
     
-    // 🇸🇷 FONCTION DE STYLE GUADELOUPE SIMPLE ET EFFICACE
+    //  FONCTION DE STYLE GUADELOUPE SIMPLE ET EFFICACE
     private fun applyGuadeloupeStyle(button: Button, key: String) {
         // Configuration de base pour toutes les touches
         button.setTypeface(null, android.graphics.Typeface.BOLD)
