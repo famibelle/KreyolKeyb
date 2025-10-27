@@ -1,3 +1,27 @@
+﻿# Changelog
+
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
+
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [6.2.1] - 2025-10-27
+
+###  Corrections
+
+####  Interface d'onboarding
+- **Sélecteur de clavier fonctionnel** : Le bouton "Ouvrir le sélecteur" affiche maintenant correctement la liste des claviers Android
+- **Rafraîchissement dynamique** : L'interface se met à jour automatiquement quand on revient à l'app après avoir sélectionné le clavier
+- **Détection d'état en temps réel** : 
+  - La barre de statut passe instantanément au vert  après sélection
+  - Le bouton devient " Sélectionné" automatiquement
+  - L'étape 3 se déverrouille immédiatement
+  - La barre de progression atteint 100% sans recharger l'app
+
+####  Technique
+- Restauration du `onResume()` dans `SettingsActivity` avec délai de 300ms
+- Ajout du `onResume()` dans `OnboardingFragment` pour recréer le contenu dynamiquement
+- Amélioration de la détection des changements d'état clavier
 # Changelog
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
