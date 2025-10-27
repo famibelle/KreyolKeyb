@@ -1,235 +1,214 @@
-# 📝 Changelog Klavyé Kréyòl
+﻿# Changelog
 
-## 🎨 Version 6.1.9 (2025-10-26) - MODERNISATION UI & MATERIAL DESIGN
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-### ✨ Nouvelles Fonctionnalités
-- **🎨 Icônes Material Design** : Remplacement des symboles Unicode par des vector drawables pour les touches spéciales
-  - ⌫ Backspace : Icône animée avec dégradé
-  - ⏎ Enter : Icône moderne avec flèche de retour
-  - ⇧ Shift : Triple état (off/on/caps) avec icônes distinctes
-  - Padding optimisé : 8dp (Enter), 10dp (Backspace), 12dp (Shift)
-  
-- **🎨 Schéma de couleurs épuré** : Migration vers tons neutres blanc/gris
-  - Touches spéciales (⌫, ⏎, ⇧, virgule, point) : Blanc/gris neutre
-  - Touches 123, ⌫, ⏎ : Blanc semi-transparent (#CCFFFFFF) pour effet moderne
-  - Touches accentuées (é, è, ò) : Style cohérent avec reste du clavier
-  - Meilleure lisibilité et esthétique professionnelle
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- **📊 Interface statistiques améliorée** : Section "Mots à Découvrir" agrandie et repositionnée
-  - Taille augmentée de 1.5x pour meilleure visibilité
-    - Titre : 16f → 24f
-    - Hauteur conteneur : 300px → 450px  
-    - Taille chips : 13f → 19.5f
-    - Padding chips : (10,5) → (15,7)
-  - Repositionnement au-dessus de "Mots les plus utilisés" pour visibilité accrue
-  - Optimisation espacement inter-sections (40dp au lieu de 64dp)
+## [6.2.1] - 2025-10-27
 
-### 🔧 Corrections Bugs
-- **⇧ Fix touche Shift** : La première pression ne bascule plus vers le mode numérique
-  - Ajout de la méthode `isNumericMode()` pour lecture d'état sans modification
-  - Correction de la logique dans `onModeChanged()` pour éviter basculements non désirés
-  - Synchronisation parfaite entre `InputProcessor` et `KeyboardLayoutManager`
+###  Corrections
 
-- **🔤 Support majuscules accents** : Les caractères accentués s'affichent correctement en majuscule
-  - Clavier principal : é/è/ò → É/È/Ò en mode majuscule
-  - Popups d'accents : tous les accents respectent maintenant le mode majuscule/minuscule
-  - Synchronisation de `isCapitalMode` entre `KeyboardLayoutManager` et `AccentHandler`
+####  Interface d'onboarding
+- **Sélecteur de clavier fonctionnel** : Le bouton "Ouvrir le sélecteur" affiche maintenant correctement la liste des claviers Android
+- **Rafraîchissement dynamique** : L'interface se met à jour automatiquement quand on revient à l'app après avoir sélectionné le clavier
+- **Détection d'état en temps réel** : 
+  - La barre de statut passe instantanément au vert  après sélection
+  - Le bouton devient " Sélectionné" automatiquement
+  - L'étape 3 se déverrouille immédiatement
+  - La barre de progression atteint 100% sans recharger l'app
 
-### 🏗️ Refactoring Technique
-- **Type System** : Migration de `TextView` vers `View` dans toute la codebase
-  - Support simultané de `Button` (texte) et `ImageButton` (icônes)
-  - 40+ signatures de méthodes mises à jour dans `AccentHandler` et `KeyboardLayoutManager`
-  - Architecture flexible pour futures extensions UI
+####  Technique
+- Restauration du `onResume()` dans `SettingsActivity` avec délai de 300ms
+- Ajout du `onResume()` dans `OnboardingFragment` pour recréer le contenu dynamiquement
+- Amélioration de la détection des changements d'état clavier
+# Changelog
 
-- **Assets Vector Drawables** : Création de 5 nouveaux fichiers d'icônes
-  - `ic_backspace.xml` : Icône Backspace avec dégradé personnalisé
-  - `ic_keyboard_return.xml` : Icône Enter style Material
-  - `ic_shift_off.xml` : État normal du Shift
-  - `ic_shift_on.xml` : État majuscule temporaire
-  - `ic_shift_caps.xml` : État Caps Lock permanent
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-### 📦 Détails Techniques
-- Fichiers modifiés : 
-  - `KeyboardLayoutManager.kt` : Support ImageButton, gestion icônes, nouveau schéma couleurs
-  - `AccentHandler.kt` : Support majuscules, migration View hierarchy
-  - `KreyolInputMethodServiceRefactored.kt` : Synchronisation états majuscules
-  - `SettingsActivity.kt` : Agrandissement section "Mots à Découvrir", réorganisation
-  - 5 nouveaux vector drawables dans `res/drawable/`
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### ✅ Tests et Validation
-- ✅ Icônes Material Design affichées correctement sur tous les appareils
-- ✅ Schéma de couleurs neutre cohérent et professionnel
-- ✅ Majuscules fonctionnelles pour é/è/ò en clavier et popups
-- ✅ Touche Shift ne bascule plus en mode numérique au premier appui
-- ✅ Section "Mots à Découvrir" 1.5x plus grande et mieux positionnée
-- ✅ Espacement optimisé entre sections statistiques
+## [6.2.0] - 2025-10-26
 
----
+### 🎮 Gamification - Distribution Gaussienne
 
-## 🐛 Version 6.1.8 (2025-10-21) - FIX ENCODAGE ACCENTS
+#### ✨ Nouveau
+- **Système de niveaux dynamique** : Les seuils de niveaux s'adaptent automatiquement à la taille du dictionnaire
+- **Distribution gaussienne** : Répartition mathématiquement correcte des niveaux basée sur une courbe normale
+- **8 niveaux équilibrés** :
+  - 🌍 Pipirit (< -3σ): ~0.15% - Les tout premiers pas (~4 mots)
+  - 🌱 Ti moun (-3σ à -2σ): ~2% - Débutant (~57 mots)
+  - 🔥 Débrouya (-2σ à -1σ): ~14% - Débutant avancé (~396 mots)
+  - 💎 An mitan (-1σ à 0): ~34% - Intermédiaire (~963 mots)
+  - 🐇 Kompè Lapen (0 à +1σ): ~34% - Avancé (~963 mots)
+  - 🐘 Kompè Zamba (+1σ à +2σ): ~14% - Très avancé (~396 mots)
+  - 👑 Potomitan (+2σ à +3σ): ~2% - Expert absolu (~57 mots)
+  - 🧙🏿‍♀️ Benzo (+3σ): ~0.15% - Niveau secret - Tous les mots! (~4 mots)
 
-### 🔧 Corrections
-- **🔤 Correction encodage UTF-8 des accents** : Réparation de la corruption des caractères accentués dans `AccentHandler.kt`
-  - Appui long sur "e" affiche maintenant correctement : `é`, `è`, `ê`, `ë` (au lieu de caractères corrompus)
-  - Correction de tous les mappings d'accents : a, e, i, o, u, n, c, s, z, l, y
-  - Impact : Toutes les touches avec accents fonctionnent maintenant correctement
+#### 🔧 Amélioré
+- **Cache du dictionnaire** : Comptage des mots mis en cache pour optimiser les performances
+- **Calcul des seuils** : Basé sur une vraie distribution normale (μ = 50%, σ = 16.67%)
+- **Adaptation automatique** : Si le dictionnaire évolue, les niveaux s'ajustent sans modification de code
+- **Documentation enrichie** : Commentaires détaillés avec les pourcentages et approximations pour chaque niveau
 
-### 📦 Détails Techniques
-- Fichier corrigé : `AccentHandler.kt` ligne 33
-- Cause : Encodage UTF-8 corrompu lors d'une sauvegarde précédente
-- Solution : Remplacement de tous les caractères corrompus par leurs équivalents UTF-8 corrects
+#### 📊 Technique
+- Nouvelle fonction `calculateGaussianThresholds()` : Calcule dynamiquement les 8 seuils (-3σ à +3σ)
+- Nouvelle fonction `getTotalDictionaryWords()` : Récupère le nombre total de mots avec cache
+- Modification de `getCurrentLevel()` : Utilise les seuils gaussiens au lieu de valeurs fixes
+- Modification de `getNextLevelInfo()` : S'adapte aux seuils dynamiques
+- Basé sur ~2833 mots actuellement dans le dictionnaire
 
----
+### 🎨 Design
 
-## 🐛 Version 6.1.7 (2025-10-20) - FIX CRITIQUE TOUCHE ENTRÉE
+#### ✨ Nouveau
+- **Page d'onboarding bêta-testeurs** : Nouvelle page `beta_onboarding.html` pour recruter des testeurs
+  - Design cohérent avec `feedbacks_form.html`
+  - Formulaire Formspree intégré
+  - Switch FR/GCF (français par défaut)
+  - Gradient rouge/violet thématique
+  - Responsive mobile
 
-### 🔧 Corrections Critiques
-- **⏎ Correction touche ENTRÉE** : Le clavier ne se ferme plus lors de l'appui sur Entrée
-  - Vérification du flag `IME_FLAG_NO_ENTER_ACTION` (0x40000000)
-  - Détection des champs multilignes avec `TYPE_TEXT_FLAG_MULTI_LINE` (0x00020000)
-  - Insertion correcte du caractère newline (`\n`) dans les champs multilignes
-  - Prévention de la fermeture intempestive du clavier
-  - Logs détaillés pour diagnostic futur
+#### 🔧 Amélioré
+- **Switch de langue optimisé** : Taille réduite et positionné en bas à droite
+- **Ergonomie** : Plus de superposition entre le titre et les contrôles
+- **Accessibilité** : Checkbox de consentement clairement visible
 
-### 📦 Détails Techniques
-- Fichier modifié : `InputProcessor.kt` - fonction `handleEnter()`
-- Documentation ajoutée : `DIAGNOSTIC_TOUCHE_ENTREE.md`, `QUICK_FIX_ENTREE.md`
-- Tests validés sur émulateur Pixel 6 avec WhatsApp, Notes, formulaires
+### 🔐 Sécurité
 
----
+#### 🔧 Corrigé
+- **Rotation des mots de passe du keystore** : Changement des mots de passe après exposition accidentelle dans l'historique git
+- **GitHub Secrets mis à jour** : STORE_PASSWORD, KEY_PASSWORD, KEYSTORE_BASE64 actualisés
+- **Protection renforcée** : `.gitignore` mis à jour pour exclure `*keystore*base64*.txt`
 
-## 🎮 Version 6.0.0 (2025-10-11) - ÉDITION GAMIFICATION MAJEURE
+#### 📝 Note de sécurité
+- Le certificat de signature reste identique (aucun impact sur Google Play)
+- Les anciens mots de passe exposés sont désormais inutilisables
+- Historique git contient encore les traces (nettoyage optionnel disponible)
 
-### 🎯 Nouvelles Fonctionnalités Majeures
+## [6.1.7] - 2025-10-20
 
-#### Système de Gamification Complet
-- **✨ Tracking vocabulaire temps réel** : Suivi automatique de l'usage de chaque mot du dictionnaire créole (7000+ mots)
-- **📊 Statistiques intelligentes** : 
-  - Compteur mots découverts (utilisés exactement 1 fois)
-  - Total utilisations avec historique
-  - Top 5 mots les plus utilisés
-  - Listes découverts vs à découvrir
-- **🏆 Système de niveaux créoles** : "Pipirit" → "Ti moun" → "Débrouya" → "An mitan" → "Kompè Lapen" → "Kompè Zamba" → "Potomitan"
-- **🌅 Mot du jour** : Sélection quotidienne avec statistiques d'usage personnalisées
-- **🔒 Respect vie privée** : Seuls les mots du dictionnaire créole sont trackés (ignore mots de passe, URLs, emails)
+### 🐛 Corrigé
+- **Touche ENTRÉE** : Résolution du problème critique où la touche ENTRÉE fermait le clavier et provoquait une perte de focus
+  - Respect du flag `IME_FLAG_NO_ENTER_ACTION` : Le clavier détecte maintenant quand une application souhaite que ENTRÉE insère une nouvelle ligne plutôt que d'exécuter une action
+  - Détection des champs multilignes : Amélioration de la détection des champs de texte multiligne pour insérer correctement les nouvelles lignes
+  - Fix validé sur l'application Potomitan et autres applications utilisant des champs multilignes
+  - Plus de fermeture intempestive du clavier
+  - Plus de perte de focus sur le champ de texte
+  - Plus de redirection vers d'autres applications
 
-#### Interface Utilisateur Moderne  
-- **📱 Migration ViewPager2** : Architecture Fragment avec navigation swipe horizontale fluide
-- **🎨 Onglets repositionnés** : Passage vertical droite → horizontal haut pour optimiser l'espace écran
-- **✨ Design Material** : Indicateurs orange, animations de transition, interface épurée
-- **🎯 Ergonomie optimisée** : Réduction espace inutile, compatibilité clavier tactile améliorée
+### 📝 Technique
+- Modification de `handleEnter()` dans `InputProcessor.kt` :
+  - Vérification du flag `IME_FLAG_NO_ENTER_ACTION` avant d'exécuter les actions IME
+  - Détection du flag `TYPE_TEXT_FLAG_MULTI_LINE` pour les champs multilignes
+  - Logs détaillés pour faciliter le diagnostic futur
+- Documentation complète :
+  - `DIAGNOSTIC_TOUCHE_ENTREE.md` : Analyse des causes racines
+  - `QUICK_FIX_ENTREE.md` : Documentation de l'implémentation
+  - `tests/diagnostic-enter-key.ps1` : Script de diagnostic
+  - `tests/reports/quick-fix-enter-test-report.md` : Rapport de validation
 
-### 🔧 Améliorations Techniques Majeures
+## [1.2.0] - 2025-09-07
 
-#### Architecture Optimisée Mémoire
-- **⚡ Gestion ultra-minimale** : ConcurrentHashMap (capacité 16, load factor 0.75f, concurrence 1)
-- **💾 Sauvegarde intelligente** : SAVE_BATCH_SIZE = 1 pour synchronisation temps réel
-- **🚀 Streaming I/O** : BufferedReader 8KB, écriture atomique via fichiers temporaires
-- **🔒 Thread safety** : Opérations merge concurrentes, locks synchronisés
-- **📋 Format JSON dual** : Compatibilité {"mot": 1} et {"mot": {"frequency": X, "user_count": Y}}
+### 🎉 Ajouté
+- **Dictionnaire enrichi** : 1 867 mots créoles (+390 mots)
+- **Sources littéraires** : Intégration de textes créoles authentiques
+- **Script d'enrichissement** : `EnrichirDictionnaire.py` pour l'évolution du dictionnaire
+- **Textes de Gisèle Pineau** : "L'Exil selon Julia"
+- **Poésie de Sonny Rupaire** : "Cette igname brisée qu'est ma terre natale"
+- **Chansons traditionnelles** : "La voix des Grands-Fonds"
 
-#### Optimisations Samsung A21s
-- **📱 Détection low-end devices** : `ActivityManager.isLowRamDevice` avec adaptations automatiques
-- **📈 Monitoring mémoire** : Surveillance continue avec seuils adaptatifs pour éviter crashes
-- **⚙️ Coroutines lifecycle** : `serviceScope` avec `SupervisorJob()` pour stabilité maximale
-- **💾 Gestion fichiers robuste** : Recovery automatique, migration formats, écriture atomique
+### 🔧 Amélioré
+- **Qualité des suggestions** : Plus précises grâce au corpus enrichi
+- **Couverture lexicale** : +26% de mots créoles supportés
+- **Performance** : Optimisation du chargement du dictionnaire
 
-### 🐛 Corrections Bugs Critiques
+### 📚 Données
+- **Mots les plus ajoutés** : ka, an, té, on, pou, nou, ou, sé
+- **Format conservé** : Liste de listes [mot, fréquence]
+- **Validation** : Tests sur textes littéraires créoles
 
-#### Fixes Fonctionnels
-- **🔧 Double counting** : Fix duplicate `wordCommitListener?.onWordCommitted()` dans InputProcessor.kt
-- **🔄 Refresh functionality** : Intégration `forceSave()` avant `recreate()` pour synchronisation parfaite
-- **🔤 Casse preservation** : Fix bug majuscules intentionnelles dans suggestions (applyCaseToSuggestion)
-- **📊 Format compatibility** : Migration automatique entre formats JSON via `getWordDataSafe()`
-- **🧹 Demo data elimination** : Suppression contamination données de démonstration
+## [1.1.0] - 2025-09-06
 
-#### Améliorations Stabilité
-- **💾 Atomic writes** : Prévention corruption fichiers via `.tmp` → `rename()`
-- **🔄 Error handling** : Recovery automatique fichiers corrompus avec recréation
-- **📊 Statistics sync** : Synchronisation temps réel garantie après chaque mot tapé
-- **🎯 Memory leaks** : Élimination fuites mémoire dans cycle de vie fragments
+### 🎨 Ajouté
+- **Design Guadeloupéen** : Palette de couleurs du drapeau
+- **Logo Potomitan™** : Intégration respectueuse du branding culturel
+- **Thème authentique** : Couleurs Caribbean (bleu, jaune, rouge, vert)
 
-### 🎨 Interface Utilisateur Raffinée
+### 🔧 Amélioré
+- **Interface utilisateur** : Plus moderne et culturellement appropriée
+- **Visibilité** : Contraste optimisé pour tous les thèmes Android
+- **Accessibilité** : Meilleure lisibilité des touches et suggestions
 
-#### Gamification Visible
-- **📊 Sections word lists** : Affichage organisé mots découverts/à découvrir avec scroll
-- **📈 Statistiques visuelles** : Grille 3 colonnes (Découverts | Utilisations | Dictionnaire)
-- **🔄 Actualisation simple** : Bouton "Actualiser" avec feedback Toast utilisateur
-- **🗑️ Interface épurée** : Suppression bouton Reset pour interface plus clean
+### 🐛 Corrigé
+- **Texte blanc sur fond blanc** : Problème de contraste résolu
+- **Affichage suggestions** : Visibilité améliorée
+- **Icônes** : Restauration des icônes manquantes
 
-#### Feedback Utilisateur
-- **💬 Toast messages** : Messages informatifs pour actions synchronisation
-- **📊 Affichage adaptatif** : Gestion intelligente cas vides avec messages informatifs
-- **🎯 Logs détaillés** : Système debugging complet avec PID filtering ADB
-- **⚡ Performance UI** : Chargement rapide, transitions fluides, pas de lag
+## [1.0.0] - 2025-09-05
 
-### 📁 Fichiers Modifiés
+### 🎉 Première Version
+- **Clavier AZERTY** : Layout français adapté au créole
+- **1 477 mots créoles** : Dictionnaire initial basé sur le corpus Potomitan
+- **Suggestions intelligentes** : Prédiction de texte en temps réel
+- **Accents créoles** : Support complet des caractères spéciaux
+- **Mode numérique** : Basculement alphabétique/numérique
+- **Service IME** : Intégration native Android
 
-#### Code Source Principal
-- `InputProcessor.kt` : Fix double counting, intégration WordCommitListener gamification
-- `KreyolInputMethodServiceRefactored.kt` : Initialisation CreoleDictionaryWithUsage, monitoring mémoire
-- `SettingsActivity.kt` : ViewPager2 + Fragments, statistiques complètes, interface épurée
-- `CreoleDictionaryWithUsage.kt` : Système tracking complet, forceSave(), migration formats
+### ⌨️ Fonctionnalités Clavier
+- **Appui long** : Accès aux accents (à, è, ò, etc.)
+- **Suggestions contextuelles** : Prédiction basée sur la fréquence
+- **Interface native** : InputMethodService Android
+- **Compatibilité** : Android 7.0+ (API 24)
 
-#### Configuration Projet
-- `build.gradle` : Version 6.0.0, versionCode 60000, optimisations build
-- `INSTALLATION_V6.0.0.md` : Documentation complète nouvelle version
-- `CHANGELOG.md` : Historique détaillé des changements
+### 📱 Applications Testées
+- **Messagerie** : WhatsApp, Telegram, SMS
+- **Email** : Gmail, Outlook
+- **Réseaux sociaux** : Facebook, Twitter
+- **Productivité** : Notes, Documents Google
 
-### ✅ Tests et Validation
+### 🏗️ Architecture
+- **Kotlin** : Langage de développement moderne
+- **Material Design** : Guidelines UI/UX respectées
+- **JSON** : Format optimisé pour le dictionnaire
+- **Gradle** : Build system standard Android
 
-#### Fonctionnalités Validées
-- ✅ **Tracking temps réel** : 6 mots tapés → 6 utilisations confirmées en statistiques
-- ✅ **Synchronisation stats** : Actualisation immédiate après forceSave() + recreate()
-- ✅ **Interface swipe** : Navigation horizontale fluide Accueil ↔ Statistiques
-- ✅ **Gestion mémoire** : < 16MB overhead confirmé sur Samsung A21s
-- ✅ **Compatibilité formats** : Migration automatique JSON ancien → nouveau format
-- ✅ **Respect vie privée** : Filtrage automatique mots sensibles (mots de passe, URLs)
+### 📊 Métriques Initiales
+- **Taille APK** : ~8 MB
+- **RAM** : ~15 MB en utilisation
+- **Démarrage** : <500ms chargement dictionnaire
+- **Latence** : <50ms suggestions
 
-#### Performance Confirmée
-- ✅ **Samsung A21s** : Tests approfondis sur appareil low-end, monitoring mémoire actif
-- ✅ **Thread safety** : Opérations concurrentes sans crash ni corruption données
-- ✅ **Atomic I/O** : Pas de corruption fichiers même en cas d'interruption brutale
-- ✅ **Recovery automatique** : Reconstruction fichiers corrompus sans perte données utilisateur
+## [Versions Futures]
 
-### 🎯 Impact Version 6.0.0
+### 🔮 Prévu v1.3.0
+- [ ] **Mode hors-ligne complet**
+- [ ] **Apprentissage personnalisé**
+- [ ] **Sync cloud dictionnaire**
+- [ ] **Thèmes personnalisables**
+- [ ] **Raccourcis gestuels**
 
-**Transformation Majeure** : Evolution d'un clavier créole basique vers un **système gamifié intelligent** avec :
-- **Tracking vocabulaire** respectueux vie privée 
-- **Interface moderne** Material Design
-- **Architecture optimisée** pour appareils low-end
-- **Gamification motivante** pour apprentissage créole
-- **Performance garantie** sur Samsung A21s et équivalents
-
-**Utilisateurs Cibles** : 
-- Apprenants créole guadeloupéen cherchant progression mesurable
-- Utilisateurs quotidiens souhaitant interface moderne et fluide  
-- Possesseurs appareils low-end nécessitant optimisation mémoire
-- Communauté créole valorisant patrimoine linguistique
+### 🌟 Roadmap v2.0.0
+- [ ] **Support vocal**
+- [ ] **Traduction français ↔ créole**
+- [ ] **Correction orthographique**
+- [ ] **API développeurs**
+- [ ] **Extension autres créoles caribéens**
 
 ---
 
-## 📋 Versions Précédentes
+### Notes de Version
 
-### Version 5.3.4 (2025-10-09)
-- Interface onglets verticaux
-- Système suggestions basique
-- Tracking manuel utilisateur
-- Bugs double counting et refresh
+#### Format des Versions
+- **Major.Minor.Patch** (SemVer)
+- **Major** : Changements incompatibles
+- **Minor** : Nouvelles fonctionnalités compatibles
+- **Patch** : Corrections de bugs
 
-### Version 5.3.1 (2025-09-28) 
-- Optimisations Samsung A21s
-- Correction crashes mémoire
-- Amélioration suggestions créoles
-- Tests performance automatisés
-
-### Version 5.2.0 (2025-08-15)
-- Support accents automatiques
-- Dictionnaire créole étendu
-- Corrections bugs capitalisation
-- Interface utilisateur améliorée
-
----
-
-**Klavyé Kréyòl** - À la mémoire de Saint-Ange Corneille Famibelle  
-*Potomitan - Préservation du patrimoine linguistique créole guadeloupéen*
+#### Types de Changements
+- **🎉 Ajouté** : Nouvelles fonctionnalités
+- **🔧 Amélioré** : Fonctionnalités existantes
+- **🐛 Corrigé** : Corrections de bugs
+- **🚨 Déprécié** : Fonctionnalités obsolètes
+- **❌ Supprimé** : Fonctionnalités retirées
+- **🔒 Sécurité** : Correctifs de sécurité
