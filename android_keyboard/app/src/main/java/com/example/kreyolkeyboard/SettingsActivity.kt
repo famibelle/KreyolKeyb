@@ -471,23 +471,36 @@ class SettingsActivity : AppCompatActivity() {
         val isEnabled = isKeyboardEnabled()
         val isSelected = isKeyboardSelected()
         
-        // Barre de statut dynamique en haut
-        val statusBar = createStatusBar(isEnabled, isSelected)
-        mainLayout.addView(statusBar)
-        mainLayout.addView(createSpacing(24))
+        // 🔍 Log pour déboguer l'état du clavier
+        Log.d("SettingsActivity", "📋 État du clavier: isEnabled=$isEnabled, isSelected=$isSelected")
         
-        // Hero Section - Bienvenue avec progression
-        val heroCard = createCard("#0080FF")
+        // Hero Section - Bienvenue avec progression (carte compacte)
+        val heroCard = createCard("#FFFFFF")
+        
+        // Layout horizontal pour icône + texte
+        val headerLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, 12)
+        }
         
         val welcomeIcon = TextView(this).apply {
             text = when {
                 isEnabled && isSelected -> "✅"
                 isEnabled -> "🎯"
-                else -> "🎉"
+                else -> "🚀"
             }
-            textSize = 48f
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 16)
+            textSize = 32f
+            setPadding(0, 0, 16, 0)
+        }
+        
+        val textContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
         }
         
         val welcomeTitle = TextView(this).apply {
@@ -496,44 +509,47 @@ class SettingsActivity : AppCompatActivity() {
                 isEnabled -> "Vous y êtes presque !"
                 else -> "Bienvenue sur Klavyé Kréyòl !"
             }
-            textSize = 24f
-            setTextColor(Color.WHITE)
+            textSize = 18f
+            setTextColor(when {
+                isEnabled && isSelected -> Color.parseColor("#4CAF50")
+                isEnabled -> Color.parseColor("#FF9800")
+                else -> Color.parseColor("#0080FF")
+            })
             setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 8)
         }
         
         val welcomeSubtitle = TextView(this).apply {
             text = when {
                 isEnabled && isSelected -> "Vous pouvez taper en Kréyòl partout !"
                 isEnabled -> "Sélectionnez le clavier pour l'utiliser"
-                else -> "Configurez votre clavier en 2 minutes ⏱️"
+                else -> "Configurez votre clavier en 3 étapes ⏱️"
             }
-            textSize = 16f
-            setTextColor(Color.parseColor("#E0E0E0"))
-            gravity = Gravity.CENTER
-            setLineSpacing(0f, 1.3f)
+            textSize = 13f
+            setTextColor(Color.parseColor("#666666"))
         }
         
-        // Barre de progression
-        val progressBar = createProgressBar(isEnabled, isSelected)
+        textContainer.addView(welcomeTitle)
+        textContainer.addView(welcomeSubtitle)
         
-        heroCard.addView(welcomeIcon)
-        heroCard.addView(welcomeTitle)
-        heroCard.addView(welcomeSubtitle)
-        heroCard.addView(createSpacing(16))
+        headerLayout.addView(welcomeIcon)
+        headerLayout.addView(textContainer)
+        
+        heroCard.addView(headerLayout)
+        
+        // Barre de progression compacte
+        val progressBar = createProgressBar(isEnabled, isSelected)
         heroCard.addView(progressBar)
         
         mainLayout.addView(heroCard)
-        mainLayout.addView(createSpacing(24))
+        mainLayout.addView(createSpacing(16))
         
         // Section "En 3 étapes"
         val stepsTitle = TextView(this).apply {
-            text = "📍 Configuration en 3 étapes"
-            textSize = 20f
+            text = "📍 Configuration"
+            textSize = 18f
             setTextColor(Color.parseColor("#333333"))
             setTypeface(null, Typeface.BOLD)
-            setPadding(0, 0, 0, 16)
+            setPadding(0, 0, 0, 12)
         }
         mainLayout.addView(stepsTitle)
         
@@ -569,8 +585,7 @@ class SettingsActivity : AppCompatActivity() {
             },
             buttonEnabled = isEnabled && !isSelected,
             buttonAction = {
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showInputMethodPicker()
+                openInputMethodPicker()
             }
         )
         mainLayout.addView(step2Card)
@@ -848,8 +863,7 @@ class SettingsActivity : AppCompatActivity() {
                     if (!isEnabled) {
                         openKeyboardSettings()
                     } else {
-                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.showInputMethodPicker()
+                        openInputMethodPicker()
                     }
                 }
             }
@@ -863,28 +877,27 @@ class SettingsActivity : AppCompatActivity() {
     private fun createProgressBar(isEnabled: Boolean, isSelected: Boolean): LinearLayout {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, 0, 0, 0)
+            setPadding(0, 8, 0, 0)
         }
         
         val progressText = TextView(this).apply {
             text = when {
-                isEnabled && isSelected -> "Progression : 100% ✓"
-                isEnabled -> "Progression : 67%"
-                else -> "Progression : 33%"
+                isEnabled && isSelected -> "Configuration terminée ✓"
+                isEnabled -> "Étape 2 sur 3"
+                else -> "Étape 1 sur 3"
             }
-            textSize = 13f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 8)
+            textSize = 12f
+            setTextColor(Color.parseColor("#999999"))
+            setPadding(0, 0, 0, 6)
         }
         
         val progressBarContainer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                12
+                8
             )
-            setBackgroundColor(Color.parseColor("#FFFFFF33")) // Blanc transparent
+            setBackgroundColor(Color.parseColor("#E0E0E0"))
         }
         
         val filledPart = View(this).apply {
@@ -897,7 +910,11 @@ class SettingsActivity : AppCompatActivity() {
                     else -> 1f
                 }
             )
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(when {
+                isEnabled && isSelected -> Color.parseColor("#4CAF50")
+                isEnabled -> Color.parseColor("#FF9800")
+                else -> Color.parseColor("#0080FF")
+            })
         }
         
         val emptyPart = View(this).apply {
@@ -1327,7 +1344,7 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     // Fonction pour vérifier si le clavier est activé
-    private fun isKeyboardEnabled(): Boolean {
+    fun isKeyboardEnabled(): Boolean {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val enabledIMEs = imm.enabledInputMethodList
         val myPackageName = packageName
@@ -1336,7 +1353,7 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     // Fonction pour vérifier si le clavier est sélectionné comme clavier actif
-    private fun isKeyboardSelected(): Boolean {
+    fun isKeyboardSelected(): Boolean {
         try {
             val currentIme = Settings.Secure.getString(
                 contentResolver,
@@ -1369,6 +1386,49 @@ class SettingsActivity : AppCompatActivity() {
             } catch (ex: Exception) {
                 Toast.makeText(this, "Impossible d'ouvrir les paramètres", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    
+    // Fonction pour ouvrir le sélecteur de méthode d'entrée (clavier)
+    private fun openInputMethodPicker() {
+        try {
+            Log.d("SettingsActivity", "🔄 Ouverture du sélecteur de clavier")
+            
+            // Créer un EditText temporaire invisible pour avoir un contexte d'entrée
+            val tempEditText = EditText(this).apply {
+                visibility = View.GONE
+                isFocusable = true
+                isFocusableInTouchMode = true
+            }
+            
+            // Ajouter temporairement à la vue racine
+            val rootView = window.decorView.rootView as android.view.ViewGroup
+            rootView.addView(tempEditText)
+            
+            // Demander le focus
+            tempEditText.requestFocus()
+            
+            // Ouvrir le sélecteur après un court délai pour laisser le focus s'établir
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showInputMethodPicker()
+                
+                // Nettoyer après un délai supplémentaire
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    rootView.removeView(tempEditText)
+                }, 1000)
+            }, 100)
+            
+            Toast.makeText(this, 
+                "Sélectionnez 'Klavyé Kréyòl Karukera' dans la liste", 
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur ouverture sélecteur clavier: ${e.message}")
+            Toast.makeText(this, 
+                "Impossible d'ouvrir le sélecteur. Utilisez la barre de notification pour changer de clavier.", 
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
     
@@ -2023,15 +2083,83 @@ class SettingsActivity : AppCompatActivity() {
     
     // Fragment pour le démarrage / onboarding
     class OnboardingFragment : Fragment() {
+        private var rootView: ScrollView? = null
+        private var refreshHandler: Handler? = null
+        private var refreshRunnable: Runnable? = null
+        
         override fun onCreateView(
             inflater: android.view.LayoutInflater,
             container: android.view.ViewGroup?,
             savedInstanceState: android.os.Bundle?
         ): View {
             val activity = requireActivity() as SettingsActivity
-            val scrollView = ScrollView(activity)
-            scrollView.addView(activity.createOnboardingContent())
-            return scrollView
+            rootView = ScrollView(activity)
+            refreshContent()
+            return rootView!!
+        }
+        
+        override fun onResume() {
+            super.onResume()
+            // 🔧 FIX: Rafraîchir le contenu quand le fragment redevient visible
+            // Cela met à jour l'état du clavier (activé/sélectionné)
+            refreshContent()
+            
+            // 🔧 FIX: Démarrer une vérification périodique de l'état du clavier
+            startPeriodicRefresh()
+        }
+        
+        override fun onPause() {
+            super.onPause()
+            // Arrêter la vérification périodique quand le fragment n'est plus visible
+            stopPeriodicRefresh()
+        }
+        
+        private fun startPeriodicRefresh() {
+            stopPeriodicRefresh() // S'assurer qu'il n'y a pas de refresh en cours
+            
+            refreshHandler = Handler(Looper.getMainLooper())
+            refreshRunnable = object : Runnable {
+                override fun run() {
+                    // Vérifier si l'état a changé et rafraîchir si nécessaire
+                    val activity = requireActivity() as SettingsActivity
+                    val currentEnabled = activity.isKeyboardEnabled()
+                    val currentSelected = activity.isKeyboardSelected()
+                    
+                    // Rafraîchir uniquement si l'état a changé
+                    if (shouldRefresh(currentEnabled, currentSelected)) {
+                        refreshContent()
+                    }
+                    
+                    // Reprogrammer la vérification dans 2 secondes
+                    refreshHandler?.postDelayed(this, 2000)
+                }
+            }
+            refreshHandler?.postDelayed(refreshRunnable!!, 2000)
+        }
+        
+        private fun stopPeriodicRefresh() {
+            refreshRunnable?.let { refreshHandler?.removeCallbacks(it) }
+            refreshHandler = null
+            refreshRunnable = null
+        }
+        
+        private var lastKnownEnabled = false
+        private var lastKnownSelected = false
+        
+        private fun shouldRefresh(currentEnabled: Boolean, currentSelected: Boolean): Boolean {
+            val hasChanged = currentEnabled != lastKnownEnabled || currentSelected != lastKnownSelected
+            lastKnownEnabled = currentEnabled
+            lastKnownSelected = currentSelected
+            return hasChanged
+        }
+        
+        private fun refreshContent() {
+            val activity = requireActivity() as SettingsActivity
+            lastKnownEnabled = activity.isKeyboardEnabled()
+            lastKnownSelected = activity.isKeyboardSelected()
+            rootView?.removeAllViews()
+            rootView?.addView(activity.createOnboardingContent())
+            Log.d("SettingsActivity", "🔄 Contenu de l'onboarding rafraîchi (enabled=$lastKnownEnabled, selected=$lastKnownSelected)")
         }
     }
     
