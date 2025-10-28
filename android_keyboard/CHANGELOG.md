@@ -5,6 +5,29 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.2] - 2025-10-28
+
+### 🔧 Corrections
+
+#### 🎯 Ergonomie et défilement
+- **Scroll fonctionnel dans tous les onglets** : Ajout des `LayoutParams` appropriés (MATCH_PARENT, WRAP_CONTENT) dans les 3 méthodes de création de contenu
+- **ScrollView optimisé** : Configuration de `isFillViewport=true` pour permettre le calcul correct de la zone défilante
+- **Gestion du clavier virtuel** : 
+  - Ajout de `windowSoftInputMode="adjustPan|stateHidden"` dans AndroidManifest.xml
+  - Le clavier ne couvre plus le contenu important
+  - Scroll automatique vers l'EditText de test quand il obtient le focus
+- **Interface simplifiée** : 
+  - Suppression de la barre de statut redondante (verte/rouge)
+  - Carte de progression compacte avec layout horizontal
+  - Design plus épuré et moderne
+
+#### 🛠️ Technique
+- `createOnboardingContent()` : LayoutParams + OnFocusChangeListener sur EditText
+- `createStatsContent()` : LayoutParams pour permettre le scroll
+- `createAboutContent()` : LayoutParams pour permettre le scroll
+- `OnboardingFragment` : ScrollView avec isFillViewport=true
+- `AndroidManifest.xml` : windowSoftInputMode pour SettingsActivity
+
 ## [6.2.1] - 2025-10-27
 
 ###  Corrections
