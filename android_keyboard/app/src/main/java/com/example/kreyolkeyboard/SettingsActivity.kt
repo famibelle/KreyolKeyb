@@ -466,6 +466,10 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(24, 32, 24, 32)
             setBackgroundColor(Color.parseColor("#F5F5F5"))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
         
         val isEnabled = isKeyboardEnabled()
@@ -662,6 +666,18 @@ class SettingsActivity : AppCompatActivity() {
             setHintTextColor(Color.parseColor("#999999"))
             this.isEnabled = !isStep3Locked
             alpha = if (isStep3Locked) 0.5f else 1.0f
+            
+            // Force le scroll vers ce champ quand il obtient le focus
+            if (!isStep3Locked) {
+                setOnFocusChangeListener { view, hasFocus ->
+                    if (hasFocus) {
+                        // Post avec délai pour laisser le clavier s'ouvrir
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            view.parent?.requestChildFocus(view, view)
+                        }, 300)
+                    }
+                }
+            }
         }
         
         step3Card.addView(step3Header)
@@ -1080,6 +1096,10 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(24, 32, 24, 32)
             setBackgroundColor(Color.parseColor("#F5F5F5"))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
         
         // En-tête avec logo
@@ -1438,6 +1458,10 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 0, 0, 0)
             setBackgroundColor(Color.WHITE)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
         
         val stats = loadVocabularyStats()
@@ -2093,7 +2117,10 @@ class SettingsActivity : AppCompatActivity() {
             savedInstanceState: android.os.Bundle?
         ): View {
             val activity = requireActivity() as SettingsActivity
-            rootView = ScrollView(activity)
+            rootView = ScrollView(activity).apply {
+                isFillViewport = true
+                isVerticalScrollBarEnabled = true
+            }
             refreshContent()
             return rootView!!
         }
