@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.3] - 2025-10-29
+
+### 🔧 Corrections
+
+#### 📊 Onglet Statistiques
+- **Espacement optimisé** : Suppression du padding top (24dp) dans `createWordListSection()` pour éliminer l'espace vide entre "Mots à Découvrir" et "Mots les plus utilisés"
+- **Lisibilité améliorée** : Augmentation de la taille du texte de 16f à 20f dans la liste des top 5 mots (rang, nom du mot et compteur)
+
+Ces ajustements rendent l'onglet "Kréyòl an mwen" plus compact et lisible.
+
 ## [6.2.2] - 2025-10-28
 
 ### 🔧 Corrections
