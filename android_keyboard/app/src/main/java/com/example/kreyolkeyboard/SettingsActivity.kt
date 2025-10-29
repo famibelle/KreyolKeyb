@@ -1610,7 +1610,7 @@ class SettingsActivity : AppCompatActivity() {
             
             val rank = TextView(this).apply {
                 text = "${index + 1}."
-                textSize = 16f
+                textSize = 20f
                 setTextColor(Color.parseColor("#FF8C00"))
                 setTypeface(null, Typeface.BOLD)
                 setPadding(0, 0, 16, 0)
@@ -1618,7 +1618,7 @@ class SettingsActivity : AppCompatActivity() {
             
             val wordName = TextView(this).apply {
                 text = word.first
-                textSize = 16f
+                textSize = 20f
                 setTextColor(Color.parseColor("#1C1C1C"))
                 layoutParams = LinearLayout.LayoutParams(
                     0,
@@ -1629,7 +1629,7 @@ class SettingsActivity : AppCompatActivity() {
             
             val wordCount = TextView(this).apply {
                 text = "${word.second}"
-                textSize = 16f
+                textSize = 20f
                 setTextColor(Color.parseColor("#999999"))
                 gravity = Gravity.END
             }
@@ -1766,7 +1766,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun createWordListSection(title: String, words: List<String>, accentColor: String): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, 24, 0, 0)
+            setPadding(0, 0, 0, 0)
             
             // Titre de la section
             val sectionTitle = TextView(this@SettingsActivity).apply {
