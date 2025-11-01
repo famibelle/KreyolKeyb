@@ -167,3 +167,15 @@ INSTALLATION_V6.0.0.md
 OPTIMISATION_MEMOIRE_A21S.md
 
 .github\workflows\build-apk-old.yml.disabled
+
+OPTIMISATION_MEMOIRE_A21S.md
+INSTALLATION_V6.0.0.md
+AUDIT_COROUTINES.md
+PLAN_CORRECTION_CRITIQUES.md
+RAPPORT_CORRECTIONS_CRITIQUES.md
+android_keyboard/app/src/main/java/com/example/kreyolkeyboard/SettingsActivity.kt
+android_keyboard/app/src/main/java/com/example/kreyolkeyboard/SettingsActivity.kt
+docs/FIX_AUTO_REFRESH_STATE.md
+docs/FIX_SETTINGS_REFRESH.md
+docs/FIX_INPUT_METHOD_PICKER.md
+.gitignore
