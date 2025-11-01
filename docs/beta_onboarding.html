@@ -15,19 +15,21 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #c0392b 0%, #8e44ad 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 20px 20px 60px 20px;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 550px;
             width: 100%;
             padding: 40px;
+            margin-bottom: 20px;
         }
 
         .header {
@@ -38,15 +40,108 @@
 
         .header h1 {
             color: #c0392b;
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 15px;
             line-height: 1.3;
+        }
+
+        .header h2 {
+            color: #c0392b;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .header h3 {
+            color: #8e44ad;
+            font-size: 20px;
+            margin-top: 25px;
+            margin-bottom: 12px;
         }
 
         .header p {
             color: #555;
             font-size: 16px;
             line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .header ul {
+            margin: 15px 0;
+            padding-left: 30px;
+            color: #555;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .header ul li {
+            margin-bottom: 8px;
+        }
+
+        .screenshots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .screenshots img {
+            max-width: 28%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .level-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        .level-table th,
+        .level-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .level-table th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .level-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 24px;
+        }
+
+        .benefit-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .benefit-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .benefit-list li {
+            padding: 8px 0;
+            color: #555;
+        }
+
+        .benefit-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
         }
 
         .lang-switch {
@@ -207,49 +302,195 @@
                 font-size: 24px;
             }
 
+            .header h2 {
+                font-size: 20px;
+            }
+
+            .header h3 {
+                font-size: 18px;
+            }
+
             .header p {
                 font-size: 15px;
+            }
+
+            .screenshots img {
+                max-width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .level-table {
+                font-size: 13px;
+            }
+
+            .level-table th,
+            .level-table td {
+                padding: 8px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 id="title">✊🏽 Rejoindre le groupe des bêta-testeurs en avant-première</h1>
-            <p id="subtitle">Si vous voulez tester <strong>Klavyé Kréyòl Karukera</strong> avant tout le monde, indiquez votre adresse e-mail ici. Nous vous enverrons le lien !</p>
+    <div class="main-container">
+        <!-- Section de présentation -->
+        <div class="container">
+            <div class="header">
+                <h1>📱 Klavyé Kréyòl Karukera</h1>
+                <p><strong>Klavyé Kréyòl Karukera</strong> est un clavier Android intelligent conçu pour répondre à un besoin fondamental : permettre aux Guadeloupéens d'écrire facilement en <strong>Kréyòl Gwaloup</strong> sur leur smartphone, avec fluidité, authenticité et fierté.</p>
+                
+                <ul>
+                    <li>🛠️ Si ton créole est très rouillé...</li>
+                    <li>😤 Que tu galères à écrire en kréyòl parce que ton téléphone refuse tous les mots</li>
+                    <li>🤔 Que tu doutes de l'orthographe à chaque message ...</li>
+                    <li>➡️ Klavyé Kréyòl Karukera est fait pour toi !</li>
+                </ul>
+
+                <h2>📱 Aperçu</h2>
+                <div class="screenshots">
+                    <img src="Screenshots/KlavyéAnAktion.gif" alt="Clavier kréyòl Karukera en Action">
+                    <img src="Screenshots/Screenshot_1761763560.png" alt="Interface du clavier">
+                    <img src="Screenshots/Screenshot_1761763491.png" alt="Suggestions de mots">
+                </div>
+
+                <h2>📱 Google Play Store</h2>
+                <p><strong>Google Play Store :</strong> <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard" target="_blank" style="color: #c0392b; text-decoration: none; font-weight: 600;">Bientôt disponible</a></p>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard" target="_blank">
+                        <img src="Screenshots/PreRegisterOnGooglePlay_Badge_Web_color_french.png" alt="Pré-inscription sur Google Play Store" style="max-width: 250px; height: auto;">
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class="success-message" id="successMessage">
-            <h3 id="successTitle">🎉 Merci beaucoup !</h3>
-            <p id="successText">Vous êtes bien sur la liste. Nous vous enverrons un e-mail très bientôt.</p>
-        </div>
-
-        <form id="betaForm" action="https://formspree.io/f/meorvlnq" method="POST">
-            <label for="email" id="labelEmail">Adresse e-mail :</label>
-            <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                placeholder="votrenom@email.com" 
-                required
-            >
-
-            <div class="checkbox-container">
-                <input type="checkbox" id="consent" required>
-                <label for="consent" id="labelConsent">
-                    J'accepte d'utiliser mon adresse e-mail pour participer au test bêta.
-                </label>
+        <!-- Section formulaire d'inscription -->
+        <div class="container">
+            <div class="header">
+                <h1 id="title">✊🏽 Rejoindre le groupe des bêta-testeurs en avant-première</h1>
+                <p id="subtitle">Si vous voulez tester <strong>Klavyé Kréyòl Karukera</strong> avant tout le monde, indiquez votre adresse e-mail ici. Nous vous enverrons le lien !</p>
             </div>
 
-            <button type="submit" class="submit-btn" id="submitBtn">
-                <span id="btnText">Envoyer</span> ✉️
-            </button>
-        </form>
+            <div class="success-message" id="successMessage">
+                <h3 id="successTitle">🎉 Merci beaucoup !</h3>
+                <p id="successText">Vous êtes bien sur la liste. Nous vous enverrons un e-mail très bientôt.</p>
+            </div>
 
-        <div class="lang-switch">
-            <button type="button" class="lang-btn" id="btnGcf">GCF</button>
-            <button type="button" class="lang-btn active" id="btnFr">FR</button>
+            <form id="betaForm" action="https://formspree.io/f/meorvlnq" method="POST">
+                <label for="email" id="labelEmail">Adresse e-mail :</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="votrenom@email.com" 
+                    required
+                >
+
+                <div class="checkbox-container">
+                    <input type="checkbox" id="consent" required>
+                    <label for="consent" id="labelConsent">
+                        J'accepte d'utiliser mon adresse e-mail pour participer au test bêta.
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">Envoyer</span> ✉️
+                </button>
+            </form>
+
+            <div class="lang-switch">
+                <button type="button" class="lang-btn" id="btnGcf">GCF</button>
+                <button type="button" class="lang-btn active" id="btnFr">FR</button>
+            </div>
+        </div>
+
+        <!-- Section Gamification -->
+        <div class="container">
+            <div class="header">
+                <h2>🎮 Système de progression et de gamification</h2>
+                <p><strong>Klavyé Kréyòl Karukera</strong> ne se contente pas de fluidifier l'écriture du Kréyòl : il <strong>suit votre progression</strong> et vous accompagne dans votre maîtrise du kréyòl !</p>
+
+                <h3>📊 Suivez vos progrès en temps réel</h3>
+                <p>À chaque mot que vous écrivez en kréyòl, l'application :</p>
+                <div class="benefit-list">
+                    <ul>
+                        <li><strong>Compte les mots découverts</strong> - Votre vocabulaire s'enrichit automatiquement</li>
+                        <li><strong>Calcule votre niveau</strong> - Du débutant "Ti moun 🌱" au maître "Potomitan 👑"</li>
+                        <li><strong>Vous motive</strong> - Visualisez combien de mots il vous reste pour atteindre le niveau suivant</li>
+                    </ul>
+                </div>
+
+                <h3>🏆 7 niveaux de maîtrise du kréyòl</h3>
+                <p>Progressez à travers 7 niveaux qui suivent une distribution gaussienne (la plupart des utilisateurs se situent dans les niveaux intermédiaires) :</p>
+                
+                <table class="level-table">
+                    <thead>
+                        <tr>
+                            <th>Niveau</th>
+                            <th>Badge</th>
+                            <th>Nom</th>
+                            <th>Signification</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="badge">🌍</td>
+                            <td><strong>Pipirit</strong></td>
+                            <td>Débutant absolu - Premiers pas</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td class="badge">🌱</td>
+                            <td><strong>Ti moun</strong></td>
+                            <td>Débutant - Tu commences ton apprentissage</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td class="badge">🔥</td>
+                            <td><strong>Débrouya</strong></td>
+                            <td>Tu te débrouilles bien !</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td class="badge">💎</td>
+                            <td><strong>An mitan</strong></td>
+                            <td>Tu es au milieu du chemin</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td class="badge">🐇</td>
+                            <td><strong>Kompè Lapen</strong></td>
+                            <td>Tu as de bonnes connaissances</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td class="badge">🐘</td>
+                            <td><strong>Kompè Zamba</strong></td>
+                            <td>Tu maîtrises le kréyòl !</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td class="badge">👑</td>
+                            <td><strong>Potomitan</strong></td>
+                            <td>Expert - Tu es un pilier du kréyòl !</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>💡 Visualisez votre apprentissage</h3>
+                <p>Dans l'onglet <strong>"Kréyòl an mwen"</strong> 📊, vous pouvez :</p>
+                <div class="benefit-list">
+                    <ul>
+                        <li><strong>Voir tous les mots découverts</strong> - Avec leur orthographe correcte en vert</li>
+                        <li><strong>Découvrir les mots à apprendre</strong> - Les mots du dictionnaire que vous n'avez pas encore utilisés</li>
+                        <li><strong>Suivre votre progression</strong> - Un message vous indique combien de mots il reste pour passer au niveau suivant</li>
+                        <li><strong>Vous motiver</strong> - "Votre niveau actuel est Débrouya, plus que 125 mots restants à découvrir pour passer au niveau suivant (An mitan)"</li>
+                    </ul>
+                </div>
+
+                <h3>🔄 Actualisation en temps réel</h3>
+                <p>Tirez simplement l'écran vers le bas (<strong>Pull-to-Refresh</strong>) dans l'onglet Statistiques pour mettre à jour vos progrès instantanément !</p>
+            </div>
         </div>
     </div>
 
