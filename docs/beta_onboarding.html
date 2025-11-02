@@ -2,33 +2,31 @@
 <head>
     <title>Beta Onboarding</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="multilang.js"></script>
+    <script src="scripts.js"></script>
 </head>
 <body>
-    <h1>Welcome to the Beta Onboarding</h1>
-    <div class="gamification">
-        <h2>Gamification Levels</h2>
-        <ul>
-            <li>Pipirit - Level 1</li>
-            <li>Pye - Level 2</li>
-            <li>Raton - Level 3</li>
-            <li>Chou - Level 4</li>
-            <li>Gran Chou - Level 5</li>
-            <li>Pye Zanj - Level 6</li>
-            <li>Potomitan - Level 7</li>
-        </ul>
+    <div id="language-switcher">
+        <button onclick="switchLanguage('en')">English</button>
+        <button onclick="switchLanguage('fr')">Français</button>
     </div>
-    <div class="screenshots">
+    <h1>Welcome to the Beta Program</h1>
+    <p>Join our beta program and help us improve.</p>
+    <div id="gamification">
+        <h2>Gamification System</h2>
+        <p>Earn points for completing tasks!</p>
+    </div>
+    <div id="screenshots">
+        <h2>Application Screenshots</h2>
         <img src="screenshot1.png" alt="Screenshot 1">
         <img src="screenshot2.png" alt="Screenshot 2">
     </div>
-    <a href="https://play.google.com/store/apps/details?id=com.famibelle.kreyolkeyb">
-        <img src="google_play_badge.png" alt="Get it on Google Play">
-    </a>
-    <form>
-        <label for="email">Register for Beta:</label>
-        <input type="email" id="email" name="email">
-        <input type="submit" value="Register">
-    </form>
+    <div id="registration-form">
+        <h2>Beta Registration Form</h2>
+        <form action="/register" method="post">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <input type="submit" value="Register">
+        </form>
+    </div>
 </body>
 </html>
