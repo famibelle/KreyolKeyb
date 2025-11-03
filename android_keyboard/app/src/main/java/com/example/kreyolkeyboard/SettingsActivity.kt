@@ -1178,9 +1178,16 @@ class SettingsActivity : AppCompatActivity() {
         // Informations app
         val infoCard = createCard("#F8F9FA")
         
+        val infoTitle = TextView(this).apply {
+            text = "ℹ️ Informations"
+            textSize = 18f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(Color.parseColor("#333333"))
+            setPadding(0, 0, 0, 24)
+        }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.2.3\n" +
+            text = "Version : 6.2.4\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"

@@ -265,10 +265,10 @@ class KeyboardLayoutManager(private val context: Context) {
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "⏎" -> {
-                    // Touche Entrée avec couleur semi-transparente
+                    // Touche Entrée avec vert tropical
                     setColors(intArrayOf(
-                        Color.parseColor("#CCFFFFFF"), // Blanc semi-transparent
-                        Color.parseColor("#C0F0F0F0")  // Gris très clair semi-transparent
+                        Color.parseColor("#00C853"), // Vert tropical vif
+                        Color.parseColor("#00A843")  // Vert tropical foncé
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
@@ -281,10 +281,10 @@ class KeyboardLayoutManager(private val context: Context) {
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
                 "123", "ABC" -> {
-                    // Touches de mode avec couleur semi-transparente
+                    // Touches de mode avec vert tropical
                     setColors(intArrayOf(
-                        Color.parseColor("#CCFFFFFF"), // Blanc semi-transparent
-                        Color.parseColor("#C0F0F0F0")  // Gris très clair semi-transparent
+                        Color.parseColor("#00C853"), // Vert tropical vif
+                        Color.parseColor("#00A843")  // Vert tropical foncé
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
@@ -324,8 +324,8 @@ class KeyboardLayoutManager(private val context: Context) {
         if (view is Button) {
             view.setTextColor(when (key) {
                 "⇧" -> if (isCapsLock || isCapitalMode) Color.parseColor("#666666") else Color.parseColor("#333333")
-                "⌫", "⏎", ",", "." -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
-                "123", "ABC" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
+                "⌫", ",", "." -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
+                "⏎", "123", "ABC" -> Color.WHITE // Texte blanc sur fond vert tropical
                 "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
                 " " -> Color.parseColor("#CCFFFFFF") // Blanc semi-transparent pour Potomitan™ - discret mais lisible
                 else -> Color.parseColor("#333333")
@@ -340,7 +340,8 @@ class KeyboardLayoutManager(private val context: Context) {
             // Couleur des icônes selon le type de touche
             when (key) {
                 "⇧" -> view.setColorFilter(if (isCapsLock || isCapitalMode) Color.parseColor("#666666") else Color.parseColor("#333333"))
-                "⌫", "⏎" -> view.setColorFilter(Color.parseColor("#333333")) // Icônes gris foncé sur fond blanc
+                "⌫" -> view.setColorFilter(Color.parseColor("#333333")) // Icône gris foncé sur fond blanc
+                "⏎" -> view.setColorFilter(Color.WHITE) // Icône blanche sur fond vert tropical
                 else -> view.setColorFilter(Color.WHITE)
             }
         }
