@@ -5,6 +5,28 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.6] - 2025-11-04
+
+### 🎨 Interface et UX
+
+#### ✨ Nouveau
+- **Animation Tinder swipe** : Effet de swipe style Tinder entre les onglets avec :
+  - Rotation dynamique -15° à +15° pendant le swipe
+  - Translation verticale (carte qui se soulève)
+  - Scale progressif jusqu'à 80%
+  - Fade out doux avec élévation
+  - Animation fluide et moderne pour une navigation tactile plus engageante
+
+#### 🧹 Interface épurée
+- **Suppression bandeau bleu** : Retrait du header "Klavyé Kréyòl" en haut de l'écran
+- **Suppression logo Potomitan** : Retrait du logo dans l'onglet "À Propos"
+- **Design minimaliste** : Interface focalisée sur le contenu essentiel avec navigation par onglets uniquement
+
+#### 🔧 Technique
+- Ajout de la classe `TinderSwipeTransformer` implémentant `ViewPager2.PageTransformer`
+- Application du transformer via `setPageTransformer()` sur le ViewPager2
+- Transformation basée sur 6 propriétés animées : rotation, translationX, translationY, scale, alpha, elevation
+
 ## [6.2.3] - 2025-10-29
 
 ### 🔧 Corrections
