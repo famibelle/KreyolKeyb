@@ -217,29 +217,11 @@ class SettingsActivity : AppCompatActivity() {
         
         Log.d("SettingsActivity", "Création de l'activité principale Kréyòl Karukera")
         
-        // Layout principal vertical : Titre, Tabs en haut, puis ViewPager
+        // Layout principal vertical : Tabs en haut, puis ViewPager
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#F5F5F5"))
         }
-        
-        // En-tête principal avec le titre de l'app
-        val appHeader = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(16, 20, 16, 16)
-            setBackgroundColor(Color.parseColor("#0080FF"))
-        }
-        
-        val appTitle = TextView(this).apply {
-            text = "Klavyé Kréyòl"
-            textSize = 22f
-            setTextColor(Color.parseColor("#F8F8FF"))
-            setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-        }
-        
-        appHeader.addView(appTitle)
         
         // Créer la barre d'onglets horizontale
         tabBar = createTabBar()
@@ -263,7 +245,6 @@ class SettingsActivity : AppCompatActivity() {
             })
         }
         
-        mainLayout.addView(appHeader)
         mainLayout.addView(tabBar)
         mainLayout.addView(viewPager)
         
@@ -1101,24 +1082,6 @@ class SettingsActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        
-        // En-tête avec logo
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(16, 24, 16, 24)
-            setBackgroundColor(Color.parseColor("#0080FF"))
-        }
-        
-        val logoImage = ImageView(this).apply {
-            setImageResource(R.drawable.logo_potomitan)
-            layoutParams = LinearLayout.LayoutParams(180, 60)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-        
-        headerLayout.addView(logoImage)
-        mainLayout.addView(headerLayout)
-        mainLayout.addView(createSpacing(24))
         
         // Mission
         val missionCard = createCard("#FFFFFF")
