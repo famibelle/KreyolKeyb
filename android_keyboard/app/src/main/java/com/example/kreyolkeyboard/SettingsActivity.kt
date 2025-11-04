@@ -235,6 +235,9 @@ class SettingsActivity : AppCompatActivity() {
             )
             adapter = SettingsPagerAdapter(this@SettingsActivity)
             
+            // 🎨 Effet de swipe style Tinder
+            setPageTransformer(TinderSwipeTransformer())
+            
             // Callback pour synchroniser avec la barre d'onglets
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
@@ -1149,7 +1152,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.2.5\n" +
+            text = "Version : 6.2.6\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"
@@ -2279,6 +2282,69 @@ class SettingsActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur mot du jour: ${e.message}")
             Pair("Bonjou", 0)
+        }
+    }
+    
+    /**
+     * 🎨 Transformateur personnalisé pour effet Tinder Swipe
+     * 
+     * Caractéristiques :
+     * - Rotation de -15° à +15° selon la direction du swipe
+     * - Translation verticale : la carte se soulève légèrement
+     * - Scale : la carte rétrécit un peu en s'éloignant
+     * - Fade out progressif
+     * - Élévation : la page courante est au-dessus
+     */
+    private class TinderSwipeTransformer : ViewPager2.PageTransformer {
+        override fun transformPage(page: View, position: Float) {
+            page.apply {
+                when {
+                    position < -1 -> { // [-Infinity,-1)
+                        // Page complètement à gauche, hors écran
+                        alpha = 0f
+                        translationX = 0f
+                        translationY = 0f
+                        rotation = 0f
+                        scaleX = 1f
+                        scaleY = 1f
+                    }
+                    position <= 1 -> { // [-1,1]
+                        // Page visible ou en transition
+                        
+                        // 🎯 Effet Tinder : rotation + translation + scale
+                        val absPosition = Math.abs(position)
+                        
+                        // Rotation de -15° à +15° selon la direction du swipe
+                        rotation = -15f * position
+                        
+                        // Translation verticale : la carte se soulève légèrement
+                        translationY = -Math.abs(position) * 50f
+                        
+                        // Translation horizontale pour accentuer le mouvement
+                        translationX = position * width * 0.3f
+                        
+                        // Scale : la carte rétrécit un peu en s'éloignant
+                        val scale = 1f - absPosition * 0.2f
+                        scaleX = scale
+                        scaleY = scale
+                        
+                        // Alpha : fade out progressif
+                        alpha = 1f - absPosition * 0.5f
+                        
+                        // Élévation : la page courante est au-dessus
+                        elevation = (1f - absPosition) * 10f
+                    }
+                    else -> { // (1,+Infinity]
+                        // Page complètement à droite, hors écran
+                        alpha = 0f
+                        translationX = 0f
+                        translationY = 0f
+                        rotation = 0f
+                        scaleX = 1f
+                        scaleY = 1f
+                    }
+                }
+            }
         }
     }
 }
