@@ -1136,7 +1136,6 @@ class SettingsActivity : AppCompatActivity() {
             text = "Ce clavier a été spécialement conçu pour préserver et promouvoir le Kréyòl Guadeloupéen (Karukera). " +
                     "Il met à disposition de tous un outil moderne pour écrire dans notre belle langue créole avec :\n\n" +
                     "💡 Suggestions de mots en Kréyòl\n" +
-                    "🔢 Mode numérique intégré\n" +
                     "🌈 Design aux couleurs de la Guadeloupe\n" +
                     "🪘 Identité guadeloupéenne forte"
             textSize = 16f
