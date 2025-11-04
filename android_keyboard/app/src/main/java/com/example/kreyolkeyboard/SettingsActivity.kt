@@ -293,18 +293,39 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 
-                140 // Hauteur augmentée pour afficher les emojis complets sans coupure
+                LinearLayout.LayoutParams.WRAP_CONTENT
             )
             setBackgroundColor(Color.WHITE)
             elevation = 4f // Ombre légère pour séparer du contenu
+            
+            // Bandeau bleu en haut
+            val appHeader = LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setBackgroundColor(Color.parseColor("#0080FF"))
+                gravity = Gravity.CENTER
+                setPadding(16, 16, 16, 16)
+            }
+            
+            val appTitle = TextView(this@SettingsActivity).apply {
+                text = "Klavyé Kréyòl"
+                textSize = 22f
+                setTextColor(Color.WHITE)
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+            }
+            
+            appHeader.addView(appTitle)
             
             // Container pour les onglets
             val tabContainer = LinearLayout(this@SettingsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    0,
-                    1f // Prend le reste de la hauteur
+                    140
                 )
                 gravity = Gravity.CENTER
             }
@@ -333,6 +354,7 @@ class SettingsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.parseColor("#E0E0E0"))
             }
             
+            addView(appHeader)
             addView(tabContainer)
             addView(separator)
         }
@@ -415,13 +437,34 @@ class SettingsActivity : AppCompatActivity() {
     private fun updateTabBar() {
         tabBar.removeAllViews()
         
+        // Bandeau bleu en haut
+        val appHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setBackgroundColor(Color.parseColor("#0080FF"))
+            gravity = Gravity.CENTER
+            setPadding(16, 16, 16, 16)
+        }
+        
+        val appTitle = TextView(this).apply {
+            text = "Klavyé Kréyòl"
+            textSize = 22f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+        }
+        
+        appHeader.addView(appTitle)
+        
         // Container pour les onglets
         val tabContainer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f // Prend le reste de la hauteur
+                140
             )
             gravity = Gravity.CENTER
         }
@@ -440,6 +483,7 @@ class SettingsActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#E0E0E0"))
         }
         
+        tabBar.addView(appHeader)
         tabBar.addView(tabContainer)
         tabBar.addView(separator)
     }
