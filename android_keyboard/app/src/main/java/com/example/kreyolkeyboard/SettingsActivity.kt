@@ -242,10 +242,17 @@ class SettingsActivity : AppCompatActivity() {
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    currentTab = position
+                    // Calculer la position réelle (0, 1 ou 2) avec modulo
+                    currentTab = position % SettingsPagerAdapter.REAL_COUNT
                     updateTabBar()
                 }
             })
+            
+            // 🔄 Démarrer au milieu de la plage virtuelle pour permettre le swipe dans les deux sens
+            post {
+                val startPosition = SettingsPagerAdapter.START_POSITION - (SettingsPagerAdapter.START_POSITION % SettingsPagerAdapter.REAL_COUNT) + currentTab
+                setCurrentItem(startPosition, false)
+            }
         }
         
         mainLayout.addView(tabBar)
@@ -253,10 +260,7 @@ class SettingsActivity : AppCompatActivity() {
         
         setContentView(mainLayout)
         
-        // Restaurer l'onglet précédent après la création de l'interface
-        viewPager.setCurrentItem(currentTab, false)
-        
-        Log.d("SettingsActivity", "Interface avec tabs en haut créée avec succès")
+        Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
     }
     
     override fun onSaveInstanceState(outState: Bundle) {
@@ -429,7 +433,23 @@ class SettingsActivity : AppCompatActivity() {
             }
             
             setOnClickListener {
-                viewPager.currentItem = tabIndex
+                // Calculer la position virtuelle la plus proche pour le tabIndex demandé
+                val currentPosition = viewPager.currentItem
+                val currentRealTab = currentPosition % SettingsPagerAdapter.REAL_COUNT
+                val targetRealTab = tabIndex
+                
+                // Calculer la distance la plus courte en tenant compte du cycle
+                val forwardDistance = (targetRealTab - currentRealTab + SettingsPagerAdapter.REAL_COUNT) % SettingsPagerAdapter.REAL_COUNT
+                val backwardDistance = (currentRealTab - targetRealTab + SettingsPagerAdapter.REAL_COUNT) % SettingsPagerAdapter.REAL_COUNT
+                
+                // Choisir la direction la plus courte
+                val targetPosition = if (forwardDistance <= backwardDistance) {
+                    currentPosition + forwardDistance
+                } else {
+                    currentPosition - backwardDistance
+                }
+                
+                viewPager.setCurrentItem(targetPosition, true)
             }
         }
     }
@@ -1196,7 +1216,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.2.7\n" +
+            text = "Version : 6.2.8\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"
@@ -2100,12 +2120,20 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
-    // Adapter pour ViewPager2
+    // Adapter pour ViewPager2 avec swipe cyclique
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
-        override fun getItemCount(): Int = 3
+        companion object {
+            const val REAL_COUNT = 3 // Nombre réel d'onglets
+            const val VIRTUAL_COUNT = Int.MAX_VALUE // Nombre virtuel pour simuler l'infini
+            const val START_POSITION = VIRTUAL_COUNT / 2 // Position de départ au milieu
+        }
+        
+        override fun getItemCount(): Int = VIRTUAL_COUNT
         
         override fun createFragment(position: Int): Fragment {
-            return when (position) {
+            // Utiliser le modulo pour revenir aux 3 vraies pages
+            val realPosition = position % REAL_COUNT
+            return when (realPosition) {
                 0 -> OnboardingFragment()
                 1 -> StatsFragment()
                 2 -> AboutFragment()

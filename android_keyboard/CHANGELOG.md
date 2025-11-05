@@ -5,6 +5,24 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.8] - 2025-11-05
+
+### 🎨 Interface et UX
+
+#### ✨ Nouveau
+- **Navigation cyclique** : Swipe infini entre les onglets
+  - Swipe vers la droite sur "À Propos" → retour à "Démarrage"
+  - Swipe vers la gauche sur "Démarrage" → accès à "À Propos"
+  - Navigation fluide dans les deux sens sans limite
+- **Réintégration bandeau bleu** : Retour du header "Klavyé Kréyòl" en haut de l'écran pour une meilleure identification de l'app
+
+#### 🔧 Technique
+- Implémentation d'un adapter avec nombre virtuel de pages (`Int.MAX_VALUE`)
+- Utilisation du modulo pour mapper les positions virtuelles aux 3 onglets réels
+- Démarrage au milieu de la plage virtuelle pour permettre le swipe bidirectionnel
+- Calcul intelligent de la distance la plus courte lors des clics sur onglets
+- Conservation de l'animation Tinder swipe sur tous les déplacements
+
 ## [6.2.7] - 2025-11-04
 
 ### 🎨 Interface et UX
