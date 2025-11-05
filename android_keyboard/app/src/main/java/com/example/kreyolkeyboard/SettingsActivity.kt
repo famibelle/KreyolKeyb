@@ -1216,7 +1216,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.2.8\n" +
+            text = "Version : 6.2.9\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"
@@ -1618,7 +1618,7 @@ class SettingsActivity : AppCompatActivity() {
         // === Top 5 - Liste simple ===
         val top5Container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 16, 24, 40)
+            setPadding(24, 0, 24, 40)
         }
         
         val top5Title = TextView(this).apply {
@@ -1696,43 +1696,6 @@ class SettingsActivity : AppCompatActivity() {
         
         statsGridContainer.addView(statsRow)
         
-        // === Boutons de contrôle ===
-        val buttonsContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, 32, 0, 0)
-        }
-        
-        // Bouton "Actualiser" masqué mais code conservé pour réactivation future si nécessaire
-        /*
-        val refreshButton = Button(this).apply {
-            text = "⟳ Actualiser"
-            textSize = 14f
-            setBackgroundColor(Color.WHITE)
-            setTextColor(Color.parseColor("#1C1C1C"))
-            setPadding(24, 16, 24, 16)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setOnClickListener {
-                Log.d("SettingsActivity", "🔄 Bouton actualiser pressé")
-                
-                // Laisser un délai pour que les sauvegardes différées se terminent
-                // CreoleDictionaryWithUsage sauvegarde automatiquement après 30 secondes d'inactivité
-                Toast.makeText(this@SettingsActivity, "Actualisation des statistiques...", Toast.LENGTH_SHORT).show()
-                
-                // Attendre un peu puis recharger l'activité
-                postDelayed({
-                    Log.d("SettingsActivity", "🔄 Rechargement de l'activité après délai")
-                    recreate() // Redémarre complètement l'activité
-                }, 1000) // Attendre 1 seconde
-            }
-        }
-        
-        buttonsContainer.addView(refreshButton)
-        */
-        
         // === Mots à Découvrir ===
         val wordsToDiscoverContainer = createWordListSection(
             "🌟 Mots à Découvrir",
@@ -1754,7 +1717,6 @@ class SettingsActivity : AppCompatActivity() {
         statsContainer.addView(top5Container)
         statsContainer.addView(statsGridContainer)
         statsContainer.addView(discoveredWordsContainer)
-        statsContainer.addView(buttonsContainer)
         
         mainLayout.addView(statsContainer)
         

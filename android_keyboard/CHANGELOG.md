@@ -5,6 +5,20 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.9] - 2025-11-05
+
+### 🎨 Interface et UX
+
+#### 🧹 Améliorations
+- **Réduction des espaces blancs** : Suppression des espaces blancs inutilisés
+  - Retrait de l'espace au-dessus de "Mots à Découvrir"
+  - Réduction de l'espace au-dessus de "Mots les plus utilisés"
+  - Interface plus compacte et mieux organisée
+
+#### 🔧 Technique
+- Suppression du conteneur vide `buttonsContainer` avec padding de 32dp
+- Réduction du padding supérieur de `top5Container` de 16dp à 0dp
+
 ## [6.2.8] - 2025-11-05
 
 ### 🎨 Interface et UX
