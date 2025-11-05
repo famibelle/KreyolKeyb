@@ -428,11 +428,11 @@ jobs:
     - name: 📝 Extract Release Notes from CHANGELOG
       id: changelog
       run: |
-        echo "📖 Extraction des notes de release depuis CHANGELOG.md..."
+        echo "📖 Extraction des notes de release depuis android_keyboard/CHANGELOG.md..."
         
         # Extraire la section de la version actuelle du CHANGELOG
         # On prend tout depuis le premier ## jusqu'au prochain ## ou fin de fichier
-        RELEASE_NOTES=$(awk '/^## / {if (found) exit; found=1; next} found' CHANGELOG.md | sed '/^## /q' | sed '$d')
+        RELEASE_NOTES=$(awk '/^## / {if (found) exit; found=1; next} found' android_keyboard/CHANGELOG.md | sed '/^## /q' | sed '$d')
         
         # Si le CHANGELOG n'a pas de contenu, utiliser un message par défaut
         if [ -z "$RELEASE_NOTES" ]; then
