@@ -5,6 +5,39 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.3.0] - 2025-11-06
+
+### ✨ Nouvelles fonctionnalités
+
+#### 🎮 Système de gamification dynamique
+- **Niveaux adaptatifs** : Les seuils de progression s'ajustent automatiquement à la taille du dictionnaire
+  - Ti moun : 1.5% du dictionnaire (~55 mots pour 3680 mots)
+  - Débrouya : 5% (~184 mots)
+  - An mitan : 12% (~441 mots)
+  - Kompè Lapen : 25% (~920 mots)
+  - Kompè Zamba : 45% (~1656 mots)
+  - Potomitan : 70% (~2576 mots)
+  - Benzo : 100% (tous les mots !)
+- **Progression motivante** : Écarts entre niveaux croissants (facile au début, plus difficile à la fin)
+- **Évolutivité** : Si le dictionnaire grandit (ex: 5000 mots), les seuils restent proportionnels
+
+### 🔧 Corrections
+
+#### 🐛 Suggestions N-grams
+- **Fix regression critique** : Correction du format JSON incompatible avec le moteur de suggestions
+  - Suppression du wrapper `"predictions"` attendu mais absent dans le fichier
+  - Correction de la clé `"prob"` → `"probability"` dans 3 emplacements
+  - Les suggestions contextuelles fonctionnent à nouveau correctement
+
+### 🧹 Refactoring
+
+#### 🎯 Gamification
+- **Nettoyage code** : Suppression de 2 systèmes de niveaux redondants
+  - Retrait de `MasteryLevel` enum dans VocabularyStats.kt (6 niveaux)
+  - Retrait de `getCurrentLevel()` dans VocabularyStatsActivity.kt (7 niveaux)
+  - Conservation du système Gaussian dans SettingsActivity.kt (8 niveaux Créoles)
+  - Résultat : -50 lignes de code, logique unifiée
+
 ## [6.2.9] - 2025-11-05
 
 ### 🎨 Interface et UX
