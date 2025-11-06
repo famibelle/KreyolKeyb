@@ -1511,6 +1511,12 @@ class SettingsActivity : AppCompatActivity() {
         // Calcul des mots restants pour le niveau suivant
         val (nextLevelName, wordsRemaining) = getNextLevelInfo(stats.wordsDiscovered)
         
+        // 🔍 DEBUG: Log pour vérifier les calculs
+        val thresholdsDebug = calculateGaussianThresholds()
+        Log.d("SettingsActivity", "📊 DEBUG Niveau: wordsDiscovered=${stats.wordsDiscovered}, " +
+                "levelName=$levelName, nextLevelName=$nextLevelName, wordsRemaining=$wordsRemaining")
+        Log.d("SettingsActivity", "📊 DEBUG Seuils: ${thresholdsDebug.joinToString(", ")}")
+        
         val levelContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -2008,45 +2014,54 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     /**
-     * Calcule les seuils de niveau basés sur une distribution gaussienne
+     * Calcule les seuils de niveau de façon dynamique selon la taille du dictionnaire
      * 
-     * Distribution centrée sur 50% du dictionnaire (μ = totalWords * 0.5)
-     * Écart-type = 16.67% du dictionnaire (σ = totalWords * 0.1667)
+     * Progression motivante basée sur des pourcentages du dictionnaire total:
+     * - Pipirit (début): 0% - démarrage
+     * - Ti moun: 1.5% - premiers pas (rapide à atteindre!)
+     * - Débrouya: 5% - débrouillard
+     * - An mitan: 12% - au milieu du chemin
+     * - Kompè Lapen: 25% - bon niveau
+     * - Kompè Zamba: 45% - niveau avancé
+     * - Potomitan: 70% - expert
+     * - Benzo: 100% - maître absolu (tous les mots!)
      * 
-     * Répartition gaussienne des niveaux:
-     * - Pipirit (< -3σ): 0.15% des utilisateurs (~4 mots)
-     * - Ti moun (-3σ à -2σ): 2% (~57 mots)
-     * - Débrouya (-2σ à -1σ): 14% (~396 mots)
-     * - An mitan (-1σ à 0): 34% (~963 mots)
-     * - Kompè Lapen (0 à +1σ): 34% (~963 mots)
-     * - Kompè Zamba (+1σ à +2σ): 14% (~396 mots)
-     * - Potomitan (+2σ à +3σ): 2% (~57 mots)
-     * - Benzo (+3σ): 0.15% (~4 mots - tous les mots!)
+     * Avantages:
+     * - S'adapte automatiquement à la croissance du dictionnaire
+     * - Progression douce au début (1.5% pour Ti moun)
+     * - Écarts progressifs entre niveaux (motivant!)
+     * - Benzo reste l'objectif ultime (100%)
      * 
-     * Cela garantit que:
-     * - 99.7% des utilisateurs sont entre -3σ et +3σ
-     * - Les niveaux extrêmes (Pipirit et Benzo) sont très rares
-     * - La distribution s'adapte automatiquement à la taille du dictionnaire
+     * Exemples pour 3680 mots:
+     * - Ti moun: 55 mots, Débrouya: 184 mots, An mitan: 442 mots
+     * - Kompè Lapen: 920 mots, Kompè Zamba: 1656 mots
+     * - Potomitan: 2576 mots, Benzo: 3680 mots
      * 
-     * @return IntArray avec 8 seuils: [0: min, 1: -3σ, 2: -2σ, 3: -1σ, 4: μ, 5: +1σ, 6: +2σ, 7: +3σ]
+     * @return IntArray avec 8 seuils calculés dynamiquement
      */
     private fun calculateGaussianThresholds(): IntArray {
         val totalWords = getTotalDictionaryWords()
         
-        // Paramètres de la gaussienne
-        val mean = totalWords * 0.5  // Moyenne à 50% du dictionnaire
-        val sigma = totalWords * 0.1667  // Écart-type à ~16.67% du dictionnaire (6σ = 100%)
-        
-        return intArrayOf(
-            0,                           // 0: Minimum absolu
-            kotlin.math.max(0, (mean - 3 * sigma).toInt()),  // 1: -3σ (~0.15% en dessous)
-            kotlin.math.max(0, (mean - 2 * sigma).toInt()),  // 2: -2σ (~2.3% en dessous)
-            kotlin.math.max(0, (mean - 1 * sigma).toInt()),  // 3: -1σ (~16% en dessous)
-            mean.toInt(),                // 4: μ (50% - pic de la courbe)
-            (mean + 1 * sigma).toInt(),  // 5: +1σ (~84% atteints)
-            (mean + 2 * sigma).toInt(),  // 6: +2σ (~97.7% atteints)
-            totalWords                   // 7: +3σ (100% - tous les mots!)
+        // Pourcentages progressifs pour chaque niveau
+        val percentages = doubleArrayOf(
+            0.0,    // 0: Pipirit (démarrage)
+            0.015,  // 1: Ti moun (1.5% - premiers pas encourageants)
+            0.05,   // 2: Débrouya (5% - débrouillard)
+            0.12,   // 3: An mitan (12% - au milieu)
+            0.25,   // 4: Kompè Lapen (25% - quart du chemin)
+            0.45,   // 5: Kompè Zamba (45% - presque la moitié)
+            0.70,   // 6: Potomitan (70% - expert confirmé)
+            1.0     // 7: Benzo (100% - tous les mots!)
         )
+        
+        // Convertir les pourcentages en nombres de mots
+        return IntArray(8) { index ->
+            if (index == 7) {
+                totalWords  // Dernier niveau = tous les mots exactement
+            } else {
+                (totalWords * percentages[index]).toInt()
+            }
+        }
     }
     
     /**
