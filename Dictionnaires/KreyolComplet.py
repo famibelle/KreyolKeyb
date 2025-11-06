@@ -59,12 +59,14 @@ class KreyolPipelineUnique:
         self.version = "3.0 - Pipeline Unique"
         self.chemin_dict = "../clavier_creole/assets/creole_dict.json"
         self.chemin_ngrams = "../clavier_creole/assets/creole_ngrams.json"
+        self.chemin_rapport = "RAPPORT_LINGUISTIQUE.md"
         self.hf_token = None
         self.textes_kreyol = []
         self.dictionnaire_actuel = {}
         self.ngrams_actuels = {}
         self.nouveau_dictionnaire = {}
         self.nouveaux_ngrams = {}
+        self.stats_corpus = {}  # Nouvelles statistiques pour le rapport
         
         # Affichage d'en-tête
         self._afficher_entete()
@@ -396,6 +398,12 @@ class KreyolPipelineUnique:
         
         self.nouveaux_ngrams = predictions
         
+        # Stocker pour le rapport
+        self.stats_corpus['unigrammes'] = unigrammes
+        self.stats_corpus['bigrammes'] = bigrammes
+        self.stats_corpus['trigrammes'] = trigrammes
+        self.stats_corpus['total_tokens'] = total_unigrammes
+        
         print(f"✅ N-grams créés:")
         print(f"   - Unigrammes: {len(unigrammes)}")
         print(f"   - Bigrammes: {len(bigrammes)}")
@@ -509,6 +517,377 @@ class KreyolPipelineUnique:
                     print(f"      + '{mot}' → {premiere_pred['word']}")
         
         return True
+    
+    def generer_rapport_linguistique(self):
+        """Génère un rapport linguistique scientifique au format Markdown"""
+        print("\n📄 GÉNÉRATION DU RAPPORT LINGUISTIQUE")
+        print("-" * 45)
+        
+        if not self.nouveau_dictionnaire:
+            print("❌ Aucune donnée à analyser")
+            return False
+        
+        print("🔬 Analyse linguistique approfondie en cours...")
+        
+        rapport = []
+        
+        # ============================================================
+        # 1. EN-TÊTE & MÉTADONNÉES
+        # ============================================================
+        rapport.append("# Analyse Lexicographique du Kreyòl Guadeloupéen")
+        rapport.append("")
+        rapport.append("## Métadonnées du Corpus")
+        rapport.append("")
+        rapport.append(f"- **Date de génération** : {datetime.now().strftime('%d %B %Y à %H:%M')}")
+        rapport.append(f"- **Version du pipeline** : {self.version}")
+        rapport.append(f"- **Source des données** : Dataset POTOMITAN/PawolKreyol-gfc (Hugging Face)")
+        rapport.append(f"- **Nombre de textes** : {len(self.textes_kreyol)}")
+        rapport.append(f"- **Tokens totaux** : {self.stats_corpus.get('total_tokens', 0):,}")
+        rapport.append(f"- **Types lexicaux** : {len(self.nouveau_dictionnaire):,}")
+        rapport.append("")
+        rapport.append("---")
+        rapport.append("")
+        
+        # ============================================================
+        # 2. CORPUS & REPRÉSENTATIVITÉ
+        # ============================================================
+        mots = list(self.nouveau_dictionnaire.keys())
+        frequences = list(self.nouveau_dictionnaire.values())
+        total_tokens = sum(frequences)
+        
+        # Calculer Type-Token Ratio
+        ttr = len(mots) / total_tokens if total_tokens > 0 else 0
+        
+        rapport.append("## 1. Corpus et Échantillonnage")
+        rapport.append("")
+        rapport.append("### 1.1 Taille et Couverture")
+        rapport.append("")
+        rapport.append(f"- **Total des tokens** : {total_tokens:,}")
+        rapport.append(f"- **Types lexicaux uniques** : {len(mots):,}")
+        rapport.append(f"- **Type-Token Ratio (TTR)** : {ttr:.4f}")
+        rapport.append(f"- **Richesse lexicale** : {'Élevée' if ttr > 0.1 else 'Moyenne' if ttr > 0.05 else 'Faible'}")
+        rapport.append("")
+        
+        # ============================================================
+        # 3. ANALYSE MORPHOLOGIQUE
+        # ============================================================
+        rapport.append("## 2. Analyse Morphologique")
+        rapport.append("")
+        
+        # Distribution par longueur
+        longueurs = defaultdict(int)
+        for mot in mots:
+            longueurs[len(mot)] += 1
+        
+        rapport.append("### 2.1 Distribution par Longueur")
+        rapport.append("")
+        rapport.append("| Longueur | Nombre de mots | Pourcentage |")
+        rapport.append("|----------|----------------|-------------|")
+        
+        for longueur in sorted(longueurs.keys())[:20]:  # Top 20 longueurs
+            count = longueurs[longueur]
+            pct = (count / len(mots)) * 100
+            barre = "█" * int(pct / 2)  # Graphique ASCII
+            rapport.append(f"| {longueur:2d} lettres | {count:6,} | {pct:5.1f}% {barre} |")
+        
+        rapport.append("")
+        
+        # Mots avec traits d'union
+        mots_composes = [m for m in mots if '-' in m]
+        rapport.append("### 2.2 Mots Composés (avec trait d'union)")
+        rapport.append("")
+        rapport.append(f"- **Total** : {len(mots_composes)} mots ({len(mots_composes)/len(mots)*100:.1f}%)")
+        rapport.append(f"- **Exemples** : {', '.join(mots_composes[:15])}")
+        rapport.append("")
+        
+        # ============================================================
+        # 4. ANALYSE PHONOGRAPHÉMATIQUE
+        # ============================================================
+        rapport.append("## 3. Analyse Phonographématique")
+        rapport.append("")
+        
+        # Caractères spéciaux créoles
+        caracteres_creoles = {'à': 0, 'é': 0, 'è': 0, 'ê': 0, 'ò': 0, 'ô': 0, 'ù': 0, 'ñ': 0, 'ç': 0}
+        for mot in mots:
+            for char in mot:
+                if char in caracteres_creoles:
+                    caracteres_creoles[char] += 1
+        
+        rapport.append("### 3.1 Caractères Diacritiques")
+        rapport.append("")
+        rapport.append("| Caractère | Fréquence | Usage |")
+        rapport.append("|-----------|-----------|-------|")
+        for char, freq in sorted(caracteres_creoles.items(), key=lambda x: x[1], reverse=True):
+            if freq > 0:
+                rapport.append(f"| **{char}** | {freq:,} | Très fréquent" if freq > 100 else f"| **{char}** | {freq:,} | Modéré" if freq > 10 else f"| **{char}** | {freq:,} | Rare |")
+        rapport.append("")
+        
+        # Digrammes fréquents
+        digrammes = Counter()
+        for mot in mots:
+            for i in range(len(mot) - 1):
+                digrammes[mot[i:i+2]] += 1
+        
+        rapport.append("### 3.2 Digrammes les Plus Fréquents")
+        rapport.append("")
+        rapport.append("| Digramme | Fréquence |")
+        rapport.append("|----------|-----------|")
+        for digr, freq in digrammes.most_common(20):
+            rapport.append(f"| **{digr}** | {freq:,} |")
+        rapport.append("")
+        
+        # ============================================================
+        # 5. ANALYSE LEXICALE STRATIFIÉE
+        # ============================================================
+        rapport.append("## 4. Analyse Lexicale Stratifiée")
+        rapport.append("")
+        
+        # Hapax et distribution de fréquence
+        hapax = sum(1 for f in frequences if f == 1)
+        dis_legomena = sum(1 for f in frequences if f == 2)
+        
+        rapport.append("### 4.1 Distribution de Fréquence (Loi de Zipf)")
+        rapport.append("")
+        rapport.append(f"- **Hapax legomena** (freq=1) : {hapax:,} mots ({hapax/len(mots)*100:.1f}%)")
+        rapport.append(f"- **Dis legomena** (freq=2) : {dis_legomena:,} mots ({dis_legomena/len(mots)*100:.1f}%)")
+        rapport.append(f"- **Mots rares** (freq 3-5) : {sum(1 for f in frequences if 3 <= f <= 5):,} mots")
+        rapport.append(f"- **Mots fréquents** (freq 6-20) : {sum(1 for f in frequences if 6 <= f <= 20):,} mots")
+        rapport.append(f"- **Mots très fréquents** (freq >20) : {sum(1 for f in frequences if f > 20):,} mots")
+        rapport.append("")
+        
+        # Principe de Pareto
+        cumul = 0
+        seuil_80 = total_tokens * 0.8
+        mots_80 = 0
+        for freq in sorted(frequences, reverse=True):
+            cumul += freq
+            mots_80 += 1
+            if cumul >= seuil_80:
+                break
+        
+        rapport.append("### 4.2 Principe de Pareto")
+        rapport.append("")
+        rapport.append(f"- **{mots_80:,} mots** ({mots_80/len(mots)*100:.1f}%) représentent **80%** des occurrences")
+        rapport.append(f"- **Vocabulaire fondamental** : Les {min(1000, len(mots))} mots les plus fréquents")
+        rapport.append("")
+        
+        # Top 50 mots
+        rapport.append("### 4.3 Vocabulaire Fondamental (Top 50)")
+        rapport.append("")
+        rapport.append("| Rang | Mot | Fréquence | % Cumul |")
+        rapport.append("|------|-----|-----------|---------|")
+        
+        cumul = 0
+        for i, (mot, freq) in enumerate(list(self.nouveau_dictionnaire.items())[:50], 1):
+            cumul += freq
+            pct_cumul = (cumul / total_tokens) * 100
+            rapport.append(f"| {i:2d} | **{mot}** | {freq:,} | {pct_cumul:.2f}% |")
+        
+        rapport.append("")
+        
+        # ============================================================
+        # 6. ANALYSE SYNTAXIQUE (N-GRAMS)
+        # ============================================================
+        rapport.append("## 5. Analyse Syntaxique et Collocations")
+        rapport.append("")
+        
+        if 'bigrammes' in self.stats_corpus:
+            bigrammes = self.stats_corpus['bigrammes']
+            
+            rapport.append("### 5.1 Bigrammes les Plus Fréquents")
+            rapport.append("")
+            rapport.append("| Rang | Bigramme | Fréquence |")
+            rapport.append("|------|----------|-----------|")
+            
+            for i, ((w1, w2), freq) in enumerate(bigrammes.most_common(30), 1):
+                rapport.append(f"| {i:2d} | **{w1} {w2}** | {freq:,} |")
+            
+            rapport.append("")
+            
+            # Marqueurs TMA
+            rapport.append("### 5.2 Marqueurs Temps-Mode-Aspect (TMA)")
+            rapport.append("")
+            
+            marqueurs_tma = {
+                'ka': 'Aspect progressif/habituel',
+                'té': 'Passé',
+                'ké': 'Futur',
+                'kay': 'Futur',
+                'pa': 'Négation',
+                'ja': 'Déjà (accompli)',
+            }
+            
+            rapport.append("| Marqueur | Fonction | Fréquence | Collocations principales |")
+            rapport.append("|----------|----------|-----------|--------------------------|")
+            
+            for marqueur, fonction in marqueurs_tma.items():
+                if marqueur in self.nouveau_dictionnaire:
+                    freq = self.nouveau_dictionnaire[marqueur]
+                    # Trouver les collocations
+                    collocations = []
+                    for (w1, w2), f in bigrammes.most_common(100):
+                        if w1 == marqueur:
+                            collocations.append(w2)
+                        if len(collocations) >= 3:
+                            break
+                    coll_str = ', '.join(collocations) if collocations else "—"
+                    rapport.append(f"| **{marqueur}** | {fonction} | {freq:,} | {coll_str} |")
+            
+            rapport.append("")
+        
+        # Prédictions N-grams
+        if self.nouveaux_ngrams:
+            rapport.append("### 5.3 Exemples de Prédictions Contextuelles")
+            rapport.append("")
+            rapport.append("| Mot source | Prédictions (probabilité) |")
+            rapport.append("|------------|---------------------------|")
+            
+            exemples_pred = ['ka', 'nou', 'mwen', 'yo', 'an', 'la', 'té', 'pa', 'tout', 'pou']
+            for mot in exemples_pred:
+                if mot in self.nouveaux_ngrams:
+                    preds = self.nouveaux_ngrams[mot][:5]
+                    pred_str = ", ".join([f"{p['word']} ({p['probability']:.2f})" for p in preds])
+                    rapport.append(f"| **{mot}** | {pred_str} |")
+            
+            rapport.append("")
+        
+        # ============================================================
+        # 7. MOTS LONGS ET COMPLEXITÉ
+        # ============================================================
+        rapport.append("## 6. Mots Longs et Complexité Morphologique")
+        rapport.append("")
+        
+        mots_longs = [(mot, len(mot), self.nouveau_dictionnaire[mot]) for mot in mots if len(mot) >= 10]
+        mots_longs.sort(key=lambda x: x[1], reverse=True)
+        
+        rapport.append(f"### 6.1 Mots de 10 Lettres et Plus ({len(mots_longs)} mots)")
+        rapport.append("")
+        rapport.append("| Rang | Mot | Longueur | Fréquence |")
+        rapport.append("|------|-----|----------|-----------|")
+        
+        for i, (mot, longueur, freq) in enumerate(mots_longs[:30], 1):
+            rapport.append(f"| {i:2d} | **{mot}** | {longueur} lettres | {freq:,} |")
+        
+        rapport.append("")
+        
+        # ============================================================
+        # 8. COMPARAISON DIACHRONIQUE (si backup existe)
+        # ============================================================
+        if self.dictionnaire_actuel:
+            rapport.append("## 7. Évolution Diachronique du Lexique")
+            rapport.append("")
+            
+            anciens_mots = set(self.dictionnaire_actuel.keys())
+            nouveaux_mots_set = set(self.nouveau_dictionnaire.keys())
+            
+            mots_ajoutes = nouveaux_mots_set - anciens_mots
+            mots_supprimes = anciens_mots - nouveaux_mots_set
+            mots_conserves = anciens_mots & nouveaux_mots_set
+            
+            rapport.append(f"- **Mots conservés** : {len(mots_conserves):,} ({len(mots_conserves)/len(anciens_mots)*100:.1f}% de l'ancien dictionnaire)")
+            rapport.append(f"- **Mots ajoutés** : {len(mots_ajoutes):,}")
+            rapport.append(f"- **Mots supprimés** : {len(mots_supprimes):,}")
+            rapport.append("")
+            
+            if mots_ajoutes:
+                rapport.append("### 7.1 Nouveaux Mots Ajoutés (échantillon)")
+                rapport.append("")
+                echantillon = sorted(list(mots_ajoutes))[:50]
+                rapport.append(f"`{', '.join(echantillon)}`")
+                rapport.append("")
+        
+        # ============================================================
+        # 9. QUALITÉ ET VALIDATION
+        # ============================================================
+        rapport.append("## 8. Qualité et Validation Linguistique")
+        rapport.append("")
+        
+        # Mots suspects (très courts ou avec caractères inhabituels)
+        mots_suspects = [m for m in mots if len(m) == 2 or any(c.isdigit() for c in m)]
+        
+        rapport.append("### 8.1 Analyse de Qualité")
+        rapport.append("")
+        rapport.append(f"- **Mots de 2 lettres** : {len([m for m in mots if len(m) == 2]):,}")
+        rapport.append(f"- **Mots avec chiffres** : {len([m for m in mots if any(c.isdigit() for c in m)]):,}")
+        rapport.append(f"- **Cohérence orthographique** : {'✓ Bonne' if len(mots_suspects) < len(mots) * 0.05 else '⚠ À vérifier'}")
+        rapport.append("")
+        
+        # ============================================================
+        # 10. MÉTRIQUES LINGUISTIQUES AVANCÉES
+        # ============================================================
+        rapport.append("## 9. Métriques Linguistiques Avancées")
+        rapport.append("")
+        
+        # Entropie de Shannon (simplifiée)
+        import math
+        entropie = -sum((f/total_tokens) * math.log2(f/total_tokens) for f in frequences if f > 0)
+        
+        rapport.append(f"- **Type-Token Ratio (TTR)** : {ttr:.4f}")
+        rapport.append(f"- **Entropie lexicale (Shannon)** : {entropie:.2f} bits")
+        rapport.append(f"- **Diversité lexicale** : {'Très élevée' if entropie > 12 else 'Élevée' if entropie > 10 else 'Moyenne'}")
+        rapport.append("")
+        
+        # ============================================================
+        # 11. RECOMMANDATIONS
+        # ============================================================
+        rapport.append("## 10. Recommandations Linguistiques")
+        rapport.append("")
+        rapport.append("### 10.1 Forces du Corpus")
+        rapport.append("")
+        rapport.append(f"- Couverture lexicale importante ({len(mots):,} types)")
+        rapport.append(f"- Richesse des bigrammes ({len(self.stats_corpus.get('bigrammes', {})):,} patterns)")
+        rapport.append(f"- Présence des marqueurs TMA caractéristiques du créole")
+        rapport.append("")
+        
+        rapport.append("### 10.2 Axes d'Amélioration")
+        rapport.append("")
+        rapport.append("- Enrichir le vocabulaire technique et scientifique")
+        rapport.append("- Documenter les variantes orthographiques")
+        rapport.append("- Ajouter des métadonnées sémantiques (catégories grammaticales)")
+        rapport.append("- Développer un système de lemmatisation")
+        rapport.append("")
+        
+        # ============================================================
+        # 12. ANNEXES
+        # ============================================================
+        rapport.append("## Annexes")
+        rapport.append("")
+        rapport.append("### A. Références Bibliographiques")
+        rapport.append("")
+        rapport.append("- Bernabé, J. (1983). *Fondal-natal : Grammaire basilectale approchée des créoles guadeloupéen et martiniquais*.")
+        rapport.append("- Ludwig, R., Montbrand, D., Poullet, H., & Telchid, S. (2001). *Dictionnaire créole-français (Guadeloupe)*.")
+        rapport.append("- Hazaël-Massieux, M.-C. (2008). *Textes anciens en créole français de la Caraïbe*.")
+        rapport.append("")
+        
+        rapport.append("### B. Méthodologie")
+        rapport.append("")
+        rapport.append("**Tokenisation** : Expression régulière Unicode préservant les diacritiques créoles")
+        rapport.append("")
+        rapport.append("**N-grams** : Probabilités conditionnelles P(w₂|w₁) avec seuil de pertinence à 1%")
+        rapport.append("")
+        rapport.append("**Normalisation** : Conversion en minuscules, préservation des traits d'union")
+        rapport.append("")
+        
+        rapport.append("---")
+        rapport.append("")
+        rapport.append(f"*Rapport généré automatiquement par Kreyòl Potomitan™ Pipeline v{self.version}*")
+        rapport.append("")
+        rapport.append("*Pou an kreyòl ki ka viv é ka evolyé !*")
+        rapport.append("")
+        
+        # Sauvegarder le rapport
+        try:
+            with open(self.chemin_rapport, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(rapport))
+            
+            print(f"✅ Rapport linguistique généré : {self.chemin_rapport}")
+            print(f"   📊 {len(rapport)} lignes")
+            print(f"   📄 Taille : {os.path.getsize(self.chemin_rapport) / 1024:.1f} Ko")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erreur lors de la sauvegarde du rapport : {e}")
+            return False
     
     def sauvegarder_donnees(self):
         """Sauvegarde les nouvelles données"""
@@ -649,6 +1028,7 @@ class KreyolPipelineUnique:
             ("Génération N-grams", self.creer_ngrams),
             ("Analyse statistiques", self.analyser_statistiques),
             ("Analyse delta", self.analyser_delta),
+            ("Rapport linguistique", self.generer_rapport_linguistique),
             ("Sauvegarde", self.sauvegarder_donnees),
             ("Validation finale", self.valider_donnees),
         ]
@@ -689,6 +1069,7 @@ def main():
             print(" Kreyòl Gwadloup ka viv! ")
             print("✅ Dictionary files generated successfully")
             print(f"📊 Dictionary: {dict_count} words, {ngrams_count} N-grams")
+            print(f"📄 Rapport linguistique : {pipeline.chemin_rapport}")
             sys.exit(0)
         else:
             print("⚠️ PIPELINE TERMINÉ AVEC DES AVERTISSEMENTS")

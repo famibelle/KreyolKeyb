@@ -1,0 +1,318 @@
+# Analyse Lexicographique du Kreyòl Guadeloupéen
+
+## Métadonnées du Corpus
+
+- **Date de génération** : 06 November 2025 à 20:55
+- **Version du pipeline** : 3.0 - Pipeline Unique
+- **Source des données** : Dataset POTOMITAN/PawolKreyol-gfc (Hugging Face)
+- **Nombre de textes** : 427
+- **Tokens totaux** : 22,058
+- **Types lexicaux** : 3,680
+
+---
+
+## 1. Corpus et Échantillonnage
+
+### 1.1 Taille et Couverture
+
+- **Total des tokens** : 239,808
+- **Types lexicaux uniques** : 3,680
+- **Type-Token Ratio (TTR)** : 0.0153
+- **Richesse lexicale** : Faible
+
+## 2. Analyse Morphologique
+
+### 2.1 Distribution par Longueur
+
+| Longueur | Nombre de mots | Pourcentage |
+|----------|----------------|-------------|
+|  2 lettres |     82 |   2.2% █ |
+|  3 lettres |    303 |   8.2% ████ |
+|  4 lettres |    524 |  14.2% ███████ |
+|  5 lettres |    657 |  17.9% ████████ |
+|  6 lettres |    644 |  17.5% ████████ |
+|  7 lettres |    487 |  13.2% ██████ |
+|  8 lettres |    354 |   9.6% ████ |
+|  9 lettres |    251 |   6.8% ███ |
+| 10 lettres |    156 |   4.2% ██ |
+| 11 lettres |     78 |   2.1% █ |
+| 12 lettres |     56 |   1.5%  |
+| 13 lettres |     50 |   1.4%  |
+| 14 lettres |     15 |   0.4%  |
+| 15 lettres |     11 |   0.3%  |
+| 16 lettres |      6 |   0.2%  |
+| 17 lettres |      2 |   0.1%  |
+| 18 lettres |      1 |   0.0%  |
+| 19 lettres |      1 |   0.0%  |
+| 21 lettres |      1 |   0.0%  |
+| 22 lettres |      1 |   0.0%  |
+
+### 2.2 Mots Composés (avec trait d'union)
+
+- **Total** : 752 mots (20.4%)
+- **Exemples** : a-y, fi-la, an-nou, rann-nou, a-yo, an-mwen, a-w, kaz-la, ba-w, ba-y, fè-nou, lanmè-la, travayè-la, kapitalis-la, di-nou
+
+## 3. Analyse Phonographématique
+
+### 3.1 Caractères Diacritiques
+
+| Caractère | Fréquence | Usage |
+|-----------|-----------|-------|
+| **é** | 1,542 | Très fréquent
+| **è** | 818 | Très fréquent
+| **ò** | 333 | Très fréquent
+| **à** | 6 | Rare |
+| **ê** | 1 | Rare |
+| **ô** | 1 | Rare |
+
+### 3.2 Digrammes les Plus Fréquents
+
+| Digramme | Fréquence |
+|----------|-----------|
+| **an** | 866 |
+| **la** | 602 |
+| **ou** | 581 |
+| **on** | 420 |
+| **-l** | 332 |
+| **en** | 323 |
+| **ma** | 254 |
+| **ko** | 250 |
+| **nn** | 242 |
+| **ch** | 228 |
+| **ra** | 213 |
+| **é-** | 209 |
+| **yé** | 196 |
+| **ré** | 190 |
+| **té** | 189 |
+| **as** | 184 |
+| **al** | 183 |
+| **ka** | 168 |
+| **nm** | 167 |
+| **yo** | 165 |
+
+## 4. Analyse Lexicale Stratifiée
+
+### 4.1 Distribution de Fréquence (Loi de Zipf)
+
+- **Hapax legomena** (freq=1) : 0 mots (0.0%)
+- **Dis legomena** (freq=2) : 81 mots (2.2%)
+- **Mots rares** (freq 3-5) : 112 mots
+- **Mots fréquents** (freq 6-20) : 2,188 mots
+- **Mots très fréquents** (freq >20) : 1,299 mots
+
+### 4.2 Principe de Pareto
+
+- **635 mots** (17.3%) représentent **80%** des occurrences
+- **Vocabulaire fondamental** : Les 1000 mots les plus fréquents
+
+### 4.3 Vocabulaire Fondamental (Top 50)
+
+| Rang | Mot | Fréquence | % Cumul |
+|------|-----|-----------|---------|
+|  1 | **ka** | 12,174 | 5.08% |
+|  2 | **an** | 8,584 | 8.66% |
+|  3 | **sé** | 5,632 | 11.00% |
+|  4 | **on** | 5,418 | 13.26% |
+|  5 | **té** | 5,349 | 15.49% |
+|  6 | **yo** | 4,713 | 17.46% |
+|  7 | **pou** | 4,531 | 19.35% |
+|  8 | **nou** | 4,515 | 21.23% |
+|  9 | **pa** | 4,107 | 22.94% |
+| 10 | **ki** | 3,579 | 24.44% |
+| 11 | **mwen** | 3,242 | 25.79% |
+| 12 | **ou** | 2,929 | 27.01% |
+| 13 | **sa** | 2,616 | 28.10% |
+| 14 | **fè** | 2,557 | 29.17% |
+| 15 | **la** | 1,982 | 29.99% |
+| 16 | **di** | 1,834 | 30.76% |
+| 17 | **ni** | 1,800 | 31.51% |
+| 18 | **kon** | 1,756 | 32.24% |
+| 19 | **adan** | 1,653 | 32.93% |
+| 20 | **lè** | 1,630 | 33.61% |
+| 21 | **ké** | 1,595 | 34.28% |
+| 22 | **si** | 1,587 | 34.94% |
+| 23 | **moun** | 1,446 | 35.54% |
+| 24 | **tout** | 1,418 | 36.13% |
+| 25 | **pé** | 1,384 | 36.71% |
+| 26 | **a-y** | 1,288 | 37.25% |
+| 27 | **kou** | 1,237 | 37.76% |
+| 28 | **mé** | 1,152 | 38.24% |
+| 29 | **vwè** | 1,151 | 38.72% |
+| 30 | **menm** | 1,121 | 39.19% |
+| 31 | **zòt** | 1,047 | 39.63% |
+| 32 | **pran** | 982 | 40.04% |
+| 33 | **viktò** | 950 | 40.43% |
+| 34 | **jan** | 916 | 40.81% |
+| 35 | **tini** | 901 | 41.19% |
+| 36 | **ti** | 865 | 41.55% |
+| 37 | **pè** | 850 | 41.90% |
+| 38 | **san** | 841 | 42.26% |
+| 39 | **dé** | 782 | 42.58% |
+| 40 | **ja** | 743 | 42.89% |
+| 41 | **rivé** | 733 | 43.20% |
+| 42 | **épi** | 725 | 43.50% |
+| 43 | **fanm** | 678 | 43.78% |
+| 44 | **èvè** | 678 | 44.06% |
+| 45 | **men** | 658 | 44.34% |
+| 46 | **ba** | 643 | 44.61% |
+| 47 | **anba** | 619 | 44.87% |
+| 48 | **palé** | 592 | 45.11% |
+| 49 | **pyè** | 590 | 45.36% |
+| 50 | **fò** | 576 | 45.60% |
+
+## 5. Analyse Syntaxique et Collocations
+
+### 5.1 Bigrammes les Plus Fréquents
+
+| Rang | Bigramme | Fréquence |
+|------|----------|-----------|
+|  1 | **té ka** | 152 |
+|  2 | **ka fè** | 86 |
+|  3 | **yo ka** | 81 |
+|  4 | **an mwen** | 75 |
+|  5 | **sé on** | 59 |
+|  6 | **pè pyè** | 59 |
+|  7 | **an nou** | 58 |
+|  8 | **pa té** | 52 |
+|  9 | **an ka** | 47 |
+| 10 | **ou ka** | 47 |
+| 11 | **pa ka** | 45 |
+| 12 | **an té** | 42 |
+| 13 | **ki té** | 41 |
+| 14 | **nou ka** | 40 |
+| 15 | **ka di** | 39 |
+| 16 | **pa ni** | 39 |
+| 17 | **adan on** | 38 |
+| 18 | **ka pran** | 33 |
+| 19 | **pou nou** | 33 |
+| 20 | **yo té** | 33 |
+| 21 | **ka vwè** | 32 |
+| 22 | **té ni** | 31 |
+| 23 | **sé té** | 31 |
+| 24 | **pou yo** | 30 |
+| 25 | **moun ka** | 29 |
+| 26 | **ou pa** | 29 |
+| 27 | **ni on** | 27 |
+| 28 | **sa ki** | 27 |
+| 29 | **kou kou** | 27 |
+| 30 | **ou té** | 26 |
+
+### 5.2 Marqueurs Temps-Mode-Aspect (TMA)
+
+| Marqueur | Fonction | Fréquence | Collocations principales |
+|----------|----------|-----------|--------------------------|
+| **ka** | Aspect progressif/habituel | 12,174 | fè, di, pran |
+| **té** | Passé | 5,349 | ka, ni, ké |
+| **ké** | Futur | 1,595 | — |
+| **kay** | Futur | 121 | — |
+| **pa** | Négation | 4,107 | té, ka, ni |
+| **ja** | Déjà (accompli) | 743 | — |
+
+### 5.3 Exemples de Prédictions Contextuelles
+
+| Mot source | Prédictions (probabilité) |
+|------------|---------------------------|
+| **ka** | fè (0.08), di (0.04), pran (0.03), vwè (0.03), palé (0.02) |
+| **nou** | ka (0.10), ké (0.06), pa (0.05), pé (0.04), té (0.04) |
+| **mwen** | ka (0.09), té (0.07), pa (0.05), an (0.04), sé (0.04) |
+| **yo** | ka (0.18), té (0.07), pa (0.05), pé (0.03), sé (0.03) |
+| **an** | mwen (0.10), nou (0.08), ka (0.07), té (0.06), pa (0.02) |
+| **la** | ka (0.13), pou (0.04), ki (0.04), yo (0.03), an (0.03) |
+| **té** | ka (0.31), ni (0.06), ké (0.05), ja (0.03), pé (0.03) |
+| **pa** | té (0.14), ka (0.12), ni (0.10), tini (0.02), menm (0.02) |
+| **tout** | sé (0.12), biten (0.06), biten-la (0.04), ti (0.02), pakèt (0.02) |
+| **pou** | nou (0.08), yo (0.07), kou (0.03), fè (0.03), mwen (0.03) |
+
+## 6. Mots Longs et Complexité Morphologique
+
+### 6.1 Mots de 10 Lettres et Plus (378 mots)
+
+| Rang | Mot | Longueur | Fréquence |
+|------|-----|----------|-----------|
+|  1 | **diz-nèf-san-swasannsèt** | 22 lettres | 2 |
+|  2 | **sèvis-ladministrasyon** | 21 lettres | 15 |
+|  3 | **rèsponsabilité-lasa** | 19 lettres | 10 |
+|  4 | **lagyè-lendépandans** | 18 lettres | 15 |
+|  5 | **konkou-agrégasyon** | 17 lettres | 15 |
+|  6 | **propriyétè-fonsyé** | 17 lettres | 10 |
+|  7 | **toutmoun-bouliki** | 16 lettres | 17 |
+|  8 | **fanm-laplenn-lin** | 16 lettres | 15 |
+|  9 | **pawòl-senk-é-kat** | 16 lettres | 15 |
+| 10 | **konsititisyon-la** | 16 lettres | 15 |
+| 11 | **bazil-lanmòsibit** | 16 lettres | 2 |
+| 12 | **lawa-a-gran-tété** | 16 lettres | 2 |
+| 13 | **kréyòl-gwadloup** | 15 lettres | 60 |
+| 14 | **véridik-véritab** | 15 lettres | 30 |
+| 15 | **pipirit-chantan** | 15 lettres | 17 |
+| 16 | **pè-dè-bòn-famiy** | 15 lettres | 17 |
+| 17 | **lapèldéchanpyon** | 15 lettres | 17 |
+| 18 | **popilasyon-moun** | 15 lettres | 15 |
+| 19 | **sitiyasyon-lasa** | 15 lettres | 15 |
+| 20 | **konstitisyon-la** | 15 lettres | 15 |
+| 21 | **dèmen-spéra-dyé** | 15 lettres | 10 |
+| 22 | **tout-sòt-kalité** | 15 lettres | 10 |
+| 23 | **charlottesville** | 15 lettres | 6 |
+| 24 | **rèsponsabilité** | 14 lettres | 20 |
+| 25 | **gratèdpapyé-la** | 14 lettres | 20 |
+| 26 | **gratèdjouné-la** | 14 lettres | 20 |
+| 27 | **lagyè-sésésyon** | 14 lettres | 15 |
+| 28 | **konchonni-lasa** | 14 lettres | 15 |
+| 29 | **minis-lajistis** | 14 lettres | 15 |
+| 30 | **andidanbway-la** | 14 lettres | 10 |
+
+## 7. Évolution Diachronique du Lexique
+
+- **Mots conservés** : 3,680 (100.0% de l'ancien dictionnaire)
+- **Mots ajoutés** : 0
+- **Mots supprimés** : 0
+
+## 8. Qualité et Validation Linguistique
+
+### 8.1 Analyse de Qualité
+
+- **Mots de 2 lettres** : 82
+- **Mots avec chiffres** : 0
+- **Cohérence orthographique** : ✓ Bonne
+
+## 9. Métriques Linguistiques Avancées
+
+- **Type-Token Ratio (TTR)** : 0.0153
+- **Entropie lexicale (Shannon)** : 9.14 bits
+- **Diversité lexicale** : Moyenne
+
+## 10. Recommandations Linguistiques
+
+### 10.1 Forces du Corpus
+
+- Couverture lexicale importante (3,680 types)
+- Richesse des bigrammes (14,759 patterns)
+- Présence des marqueurs TMA caractéristiques du créole
+
+### 10.2 Axes d'Amélioration
+
+- Enrichir le vocabulaire technique et scientifique
+- Documenter les variantes orthographiques
+- Ajouter des métadonnées sémantiques (catégories grammaticales)
+- Développer un système de lemmatisation
+
+## Annexes
+
+### A. Références Bibliographiques
+
+- Bernabé, J. (1983). *Fondal-natal : Grammaire basilectale approchée des créoles guadeloupéen et martiniquais*.
+- Ludwig, R., Montbrand, D., Poullet, H., & Telchid, S. (2001). *Dictionnaire créole-français (Guadeloupe)*.
+- Hazaël-Massieux, M.-C. (2008). *Textes anciens en créole français de la Caraïbe*.
+
+### B. Méthodologie
+
+**Tokenisation** : Expression régulière Unicode préservant les diacritiques créoles
+
+**N-grams** : Probabilités conditionnelles P(w₂|w₁) avec seuil de pertinence à 1%
+
+**Normalisation** : Conversion en minuscules, préservation des traits d'union
+
+---
+
+*Rapport généré automatiquement par Kreyòl Potomitan™ Pipeline v3.0 - Pipeline Unique*
+
+*Pou an kreyòl ki ka viv é ka evolyé !*
