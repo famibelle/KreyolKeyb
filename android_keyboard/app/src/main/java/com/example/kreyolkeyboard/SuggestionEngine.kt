@@ -453,21 +453,22 @@ class SuggestionEngine(private val context: Context) {
             inputStream.close()
 
             val jsonObject = JSONObject(jsonString)
-            val predictionsObject = jsonObject.getJSONObject("predictions")
             
+            // Le fichier JSON est directement {mot: [{word, probability}]}
+            // Pas besoin de wrapper "predictions"
             val tempMap = mutableMapOf<String, List<Map<String, Any>>>()
             
-            val keys = predictionsObject.keys()
+            val keys = jsonObject.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
-                val predictionsArray = predictionsObject.getJSONArray(key)
+                val predictionsArray = jsonObject.getJSONArray(key)
                 val predictions = mutableListOf<Map<String, Any>>()
                 
                 for (i in 0 until predictionsArray.length()) {
                     val predictionObj = predictionsArray.getJSONObject(i)
                     val prediction = mapOf(
                         "word" to predictionObj.getString("word"),
-                        "prob" to predictionObj.getDouble("prob")
+                        "probability" to predictionObj.getDouble("probability")
                     )
                     predictions.add(prediction)
                 }
@@ -527,7 +528,7 @@ class SuggestionEngine(private val context: Context) {
                     val ngramList = ngramModel[bigram] ?: emptyList()
                     ngramList.forEach { ngramEntry ->
                         val word = ngramEntry["word"] as? String
-                        val prob = (ngramEntry["prob"] as? Number)?.toDouble() ?: 0.0
+                        val prob = (ngramEntry["probability"] as? Number)?.toDouble() ?: 0.0
                         
                         if (word != null && suggestions.none { it.first == word }) {
                             suggestions.add(Pair(word, prob + 0.2)) // Bonus pour bigram
@@ -543,7 +544,7 @@ class SuggestionEngine(private val context: Context) {
                 val ngramList = ngramModel[lastWord] ?: emptyList()
                 ngramList.forEach { ngramEntry ->
                     val word = ngramEntry["word"] as? String
-                    val prob = (ngramEntry["prob"] as? Number)?.toDouble() ?: 0.0
+                    val prob = (ngramEntry["probability"] as? Number)?.toDouble() ?: 0.0
                     
                     if (word != null && suggestions.none { it.first == word }) {
                         suggestions.add(Pair(word, prob))
@@ -559,7 +560,7 @@ class SuggestionEngine(private val context: Context) {
                     val ngramList = ngramModel[trigram] ?: emptyList()
                     ngramList.forEach { ngramEntry ->
                         val word = ngramEntry["word"] as? String
-                        val prob = (ngramEntry["prob"] as? Number)?.toDouble() ?: 0.0
+                        val prob = (ngramEntry["probability"] as? Number)?.toDouble() ?: 0.0
                         
                         if (word != null && suggestions.none { it.first == word }) {
                             suggestions.add(Pair(word, prob + 0.4)) // Bonus maximal pour trigram
