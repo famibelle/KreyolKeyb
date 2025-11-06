@@ -60,6 +60,9 @@ class KreyolPipelineUnique:
         self.chemin_dict = "../clavier_creole/assets/creole_dict.json"
         self.chemin_ngrams = "../clavier_creole/assets/creole_ngrams.json"
         self.chemin_rapport = "RAPPORT_LINGUISTIQUE.md"
+        # Chemins pour synchronisation Android
+        self.chemin_dict_android = "../android_keyboard/app/src/main/assets/creole_dict.json"
+        self.chemin_ngrams_android = "../android_keyboard/app/src/main/assets/creole_ngrams.json"
         self.hf_token = None
         self.textes_kreyol = []
         self.dictionnaire_actuel = {}
@@ -910,9 +913,20 @@ class KreyolPipelineUnique:
         # Sauvegarder le nouveau dictionnaire
         if self.nouveau_dictionnaire:
             os.makedirs(os.path.dirname(self.chemin_dict), exist_ok=True)
+            
+            # Format pour Flutter (dictionnaire simple mot -> fréquence)
             with open(self.chemin_dict, 'w', encoding='utf-8') as f:
                 json.dump(self.nouveau_dictionnaire, f, ensure_ascii=False, indent=2)
             print(f"✅ Dictionnaire sauvegardé: {len(self.nouveau_dictionnaire)} mots")
+            
+            # Format pour Android (array de paires [mot, fréquence])
+            # Ce format sera migré par l'app Android en { mot: {frequency: X, user_count: 0} }
+            dict_android_format = [[mot, freq] for mot, freq in self.nouveau_dictionnaire.items()]
+            android_dict_path = self.chemin_dict.replace('clavier_creole', 'android_keyboard/app/src/main')
+            os.makedirs(os.path.dirname(android_dict_path), exist_ok=True)
+            with open(android_dict_path, 'w', encoding='utf-8') as f:
+                json.dump(dict_android_format, f, ensure_ascii=False, indent=2)
+            print(f"✅ Dictionnaire Android sauvegardé: format array [[mot, freq], ...]")
         
         # Sauvegarder les nouveaux N-grams
         if self.nouveaux_ngrams:
@@ -920,6 +934,17 @@ class KreyolPipelineUnique:
             with open(self.chemin_ngrams, 'w', encoding='utf-8') as f:
                 json.dump(self.nouveaux_ngrams, f, ensure_ascii=False, indent=2)
             print(f"✅ N-grams sauvegardés: {len(self.nouveaux_ngrams)} prédictions")
+            
+            # Synchroniser avec Android
+            ngrams_android_path = self.chemin_ngrams.replace('clavier_creole', 'android_keyboard/app/src/main')
+            os.makedirs(os.path.dirname(ngrams_android_path), exist_ok=True)
+            with open(ngrams_android_path, 'w', encoding='utf-8') as f:
+                json.dump(self.nouveaux_ngrams, f, ensure_ascii=False, indent=2)
+            print(f"✅ N-grams Android sauvegardés")
+        
+        print("\n📱 SYNCHRONISATION TERMINÉE")
+        print("-" * 35)
+        print("🎉 Fichiers prêts pour le build APK !")
         
         return True
     

@@ -2,7 +2,7 @@
 
 ## Métadonnées du Corpus
 
-- **Date de génération** : 06 November 2025 à 20:55
+- **Date de génération** : 06 November 2025 à 21:23
 - **Version du pipeline** : 3.0 - Pipeline Unique
 - **Source des données** : Dataset POTOMITAN/PawolKreyol-gfc (Hugging Face)
 - **Nombre de textes** : 427
@@ -15,9 +15,9 @@
 
 ### 1.1 Taille et Couverture
 
-- **Total des tokens** : 239,808
+- **Total des tokens** : 305,982
 - **Types lexicaux uniques** : 3,680
-- **Type-Token Ratio (TTR)** : 0.0153
+- **Type-Token Ratio (TTR)** : 0.0120
 - **Richesse lexicale** : Faible
 
 ## 2. Analyse Morphologique
@@ -50,7 +50,7 @@
 ### 2.2 Mots Composés (avec trait d'union)
 
 - **Total** : 752 mots (20.4%)
-- **Exemples** : a-y, fi-la, an-nou, rann-nou, a-yo, an-mwen, a-w, kaz-la, ba-w, ba-y, fè-nou, lanmè-la, travayè-la, kapitalis-la, di-nou
+- **Exemples** : a-y, fi-la, an-nou, a-yo, rann-nou, an-mwen, a-w, kaz-la, ba-w, ba-y, travayè-la, kapitalis-la, fè-nou, di-nou, lanmè-la
 
 ## 3. Analyse Phonographématique
 
@@ -95,70 +95,70 @@
 ### 4.1 Distribution de Fréquence (Loi de Zipf)
 
 - **Hapax legomena** (freq=1) : 0 mots (0.0%)
-- **Dis legomena** (freq=2) : 81 mots (2.2%)
-- **Mots rares** (freq 3-5) : 112 mots
-- **Mots fréquents** (freq 6-20) : 2,188 mots
-- **Mots très fréquents** (freq >20) : 1,299 mots
+- **Dis legomena** (freq=2) : 0 mots (0.0%)
+- **Mots rares** (freq 3-5) : 81 mots
+- **Mots fréquents** (freq 6-20) : 2,096 mots
+- **Mots très fréquents** (freq >20) : 1,503 mots
 
 ### 4.2 Principe de Pareto
 
-- **635 mots** (17.3%) représentent **80%** des occurrences
+- **644 mots** (17.5%) représentent **80%** des occurrences
 - **Vocabulaire fondamental** : Les 1000 mots les plus fréquents
 
 ### 4.3 Vocabulaire Fondamental (Top 50)
 
 | Rang | Mot | Fréquence | % Cumul |
 |------|-----|-----------|---------|
-|  1 | **ka** | 12,174 | 5.08% |
-|  2 | **an** | 8,584 | 8.66% |
-|  3 | **sé** | 5,632 | 11.00% |
-|  4 | **on** | 5,418 | 13.26% |
-|  5 | **té** | 5,349 | 15.49% |
-|  6 | **yo** | 4,713 | 17.46% |
-|  7 | **pou** | 4,531 | 19.35% |
-|  8 | **nou** | 4,515 | 21.23% |
-|  9 | **pa** | 4,107 | 22.94% |
-| 10 | **ki** | 3,579 | 24.44% |
-| 11 | **mwen** | 3,242 | 25.79% |
-| 12 | **ou** | 2,929 | 27.01% |
-| 13 | **sa** | 2,616 | 28.10% |
-| 14 | **fè** | 2,557 | 29.17% |
-| 15 | **la** | 1,982 | 29.99% |
-| 16 | **di** | 1,834 | 30.76% |
-| 17 | **ni** | 1,800 | 31.51% |
-| 18 | **kon** | 1,756 | 32.24% |
-| 19 | **adan** | 1,653 | 32.93% |
-| 20 | **lè** | 1,630 | 33.61% |
-| 21 | **ké** | 1,595 | 34.28% |
-| 22 | **si** | 1,587 | 34.94% |
-| 23 | **moun** | 1,446 | 35.54% |
-| 24 | **tout** | 1,418 | 36.13% |
-| 25 | **pé** | 1,384 | 36.71% |
-| 26 | **a-y** | 1,288 | 37.25% |
-| 27 | **kou** | 1,237 | 37.76% |
-| 28 | **mé** | 1,152 | 38.24% |
-| 29 | **vwè** | 1,151 | 38.72% |
-| 30 | **menm** | 1,121 | 39.19% |
-| 31 | **zòt** | 1,047 | 39.63% |
-| 32 | **pran** | 982 | 40.04% |
-| 33 | **viktò** | 950 | 40.43% |
-| 34 | **jan** | 916 | 40.81% |
-| 35 | **tini** | 901 | 41.19% |
-| 36 | **ti** | 865 | 41.55% |
-| 37 | **pè** | 850 | 41.90% |
-| 38 | **san** | 841 | 42.26% |
-| 39 | **dé** | 782 | 42.58% |
-| 40 | **ja** | 743 | 42.89% |
-| 41 | **rivé** | 733 | 43.20% |
-| 42 | **épi** | 725 | 43.50% |
-| 43 | **fanm** | 678 | 43.78% |
-| 44 | **èvè** | 678 | 44.06% |
-| 45 | **men** | 658 | 44.34% |
-| 46 | **ba** | 643 | 44.61% |
-| 47 | **anba** | 619 | 44.87% |
-| 48 | **palé** | 592 | 45.11% |
-| 49 | **pyè** | 590 | 45.36% |
-| 50 | **fò** | 576 | 45.60% |
+|  1 | **ka** | 15,519 | 5.07% |
+|  2 | **an** | 10,729 | 8.58% |
+|  3 | **sé** | 7,177 | 10.92% |
+|  4 | **on** | 6,933 | 13.19% |
+|  5 | **té** | 6,834 | 15.42% |
+|  6 | **yo** | 6,063 | 17.40% |
+|  7 | **pou** | 5,812 | 19.30% |
+|  8 | **nou** | 5,712 | 21.17% |
+|  9 | **pa** | 5,244 | 22.88% |
+| 10 | **ki** | 4,569 | 24.38% |
+| 11 | **mwen** | 4,082 | 25.71% |
+| 12 | **ou** | 3,709 | 26.92% |
+| 13 | **sa** | 3,348 | 28.02% |
+| 14 | **fè** | 3,274 | 29.09% |
+| 15 | **la** | 2,531 | 29.92% |
+| 16 | **ni** | 2,313 | 30.67% |
+| 17 | **di** | 2,305 | 31.42% |
+| 18 | **kon** | 2,230 | 32.15% |
+| 19 | **adan** | 2,082 | 32.83% |
+| 20 | **ké** | 2,042 | 33.50% |
+| 21 | **lè** | 2,032 | 34.17% |
+| 22 | **si** | 2,016 | 34.82% |
+| 23 | **moun** | 1,836 | 35.42% |
+| 24 | **tout** | 1,802 | 36.01% |
+| 25 | **pé** | 1,756 | 36.59% |
+| 26 | **a-y** | 1,654 | 37.13% |
+| 27 | **kou** | 1,609 | 37.65% |
+| 28 | **mé** | 1,461 | 38.13% |
+| 29 | **vwè** | 1,454 | 38.61% |
+| 30 | **menm** | 1,433 | 39.07% |
+| 31 | **zòt** | 1,350 | 39.52% |
+| 32 | **pran** | 1,261 | 39.93% |
+| 33 | **viktò** | 1,235 | 40.33% |
+| 34 | **jan** | 1,177 | 40.72% |
+| 35 | **tini** | 1,147 | 41.09% |
+| 36 | **ti** | 1,105 | 41.45% |
+| 37 | **pè** | 1,096 | 41.81% |
+| 38 | **san** | 1,057 | 42.16% |
+| 39 | **dé** | 998 | 42.48% |
+| 40 | **épi** | 944 | 42.79% |
+| 41 | **ja** | 941 | 43.10% |
+| 42 | **rivé** | 940 | 43.41% |
+| 43 | **èvè** | 873 | 43.69% |
+| 44 | **fanm** | 849 | 43.97% |
+| 45 | **men** | 832 | 44.24% |
+| 46 | **ba** | 823 | 44.51% |
+| 47 | **anba** | 790 | 44.77% |
+| 48 | **pyè** | 767 | 45.02% |
+| 49 | **palé** | 763 | 45.27% |
+| 50 | **fò** | 744 | 45.51% |
 
 ## 5. Analyse Syntaxique et Collocations
 
@@ -201,12 +201,12 @@
 
 | Marqueur | Fonction | Fréquence | Collocations principales |
 |----------|----------|-----------|--------------------------|
-| **ka** | Aspect progressif/habituel | 12,174 | fè, di, pran |
-| **té** | Passé | 5,349 | ka, ni, ké |
-| **ké** | Futur | 1,595 | — |
-| **kay** | Futur | 121 | — |
-| **pa** | Négation | 4,107 | té, ka, ni |
-| **ja** | Déjà (accompli) | 743 | — |
+| **ka** | Aspect progressif/habituel | 15,519 | fè, di, pran |
+| **té** | Passé | 6,834 | ka, ni, ké |
+| **ké** | Futur | 2,042 | — |
+| **kay** | Futur | 148 | — |
+| **pa** | Négation | 5,244 | té, ka, ni |
+| **ja** | Déjà (accompli) | 941 | — |
 
 ### 5.3 Exemples de Prédictions Contextuelles
 
@@ -229,36 +229,36 @@
 
 | Rang | Mot | Longueur | Fréquence |
 |------|-----|----------|-----------|
-|  1 | **diz-nèf-san-swasannsèt** | 22 lettres | 2 |
-|  2 | **sèvis-ladministrasyon** | 21 lettres | 15 |
-|  3 | **rèsponsabilité-lasa** | 19 lettres | 10 |
-|  4 | **lagyè-lendépandans** | 18 lettres | 15 |
-|  5 | **konkou-agrégasyon** | 17 lettres | 15 |
-|  6 | **propriyétè-fonsyé** | 17 lettres | 10 |
-|  7 | **toutmoun-bouliki** | 16 lettres | 17 |
-|  8 | **fanm-laplenn-lin** | 16 lettres | 15 |
-|  9 | **pawòl-senk-é-kat** | 16 lettres | 15 |
-| 10 | **konsititisyon-la** | 16 lettres | 15 |
-| 11 | **bazil-lanmòsibit** | 16 lettres | 2 |
-| 12 | **lawa-a-gran-tété** | 16 lettres | 2 |
-| 13 | **kréyòl-gwadloup** | 15 lettres | 60 |
-| 14 | **véridik-véritab** | 15 lettres | 30 |
-| 15 | **pipirit-chantan** | 15 lettres | 17 |
-| 16 | **pè-dè-bòn-famiy** | 15 lettres | 17 |
-| 17 | **lapèldéchanpyon** | 15 lettres | 17 |
-| 18 | **popilasyon-moun** | 15 lettres | 15 |
-| 19 | **sitiyasyon-lasa** | 15 lettres | 15 |
-| 20 | **konstitisyon-la** | 15 lettres | 15 |
-| 21 | **dèmen-spéra-dyé** | 15 lettres | 10 |
-| 22 | **tout-sòt-kalité** | 15 lettres | 10 |
-| 23 | **charlottesville** | 15 lettres | 6 |
-| 24 | **rèsponsabilité** | 14 lettres | 20 |
-| 25 | **gratèdpapyé-la** | 14 lettres | 20 |
-| 26 | **gratèdjouné-la** | 14 lettres | 20 |
-| 27 | **lagyè-sésésyon** | 14 lettres | 15 |
-| 28 | **konchonni-lasa** | 14 lettres | 15 |
-| 29 | **minis-lajistis** | 14 lettres | 15 |
-| 30 | **andidanbway-la** | 14 lettres | 10 |
+|  1 | **diz-nèf-san-swasannsèt** | 22 lettres | 5 |
+|  2 | **sèvis-ladministrasyon** | 21 lettres | 18 |
+|  3 | **rèsponsabilité-lasa** | 19 lettres | 13 |
+|  4 | **lagyè-lendépandans** | 18 lettres | 18 |
+|  5 | **konkou-agrégasyon** | 17 lettres | 18 |
+|  6 | **propriyétè-fonsyé** | 17 lettres | 13 |
+|  7 | **toutmoun-bouliki** | 16 lettres | 20 |
+|  8 | **fanm-laplenn-lin** | 16 lettres | 18 |
+|  9 | **pawòl-senk-é-kat** | 16 lettres | 18 |
+| 10 | **konsititisyon-la** | 16 lettres | 18 |
+| 11 | **bazil-lanmòsibit** | 16 lettres | 5 |
+| 12 | **lawa-a-gran-tété** | 16 lettres | 5 |
+| 13 | **kréyòl-gwadloup** | 15 lettres | 72 |
+| 14 | **véridik-véritab** | 15 lettres | 36 |
+| 15 | **pipirit-chantan** | 15 lettres | 20 |
+| 16 | **pè-dè-bòn-famiy** | 15 lettres | 20 |
+| 17 | **lapèldéchanpyon** | 15 lettres | 20 |
+| 18 | **popilasyon-moun** | 15 lettres | 18 |
+| 19 | **sitiyasyon-lasa** | 15 lettres | 18 |
+| 20 | **konstitisyon-la** | 15 lettres | 18 |
+| 21 | **dèmen-spéra-dyé** | 15 lettres | 13 |
+| 22 | **tout-sòt-kalité** | 15 lettres | 13 |
+| 23 | **charlottesville** | 15 lettres | 9 |
+| 24 | **rèsponsabilité** | 14 lettres | 26 |
+| 25 | **gratèdpapyé-la** | 14 lettres | 26 |
+| 26 | **gratèdjouné-la** | 14 lettres | 26 |
+| 27 | **lagyè-sésésyon** | 14 lettres | 18 |
+| 28 | **konchonni-lasa** | 14 lettres | 18 |
+| 29 | **minis-lajistis** | 14 lettres | 18 |
+| 30 | **andidanbway-la** | 14 lettres | 13 |
 
 ## 7. Évolution Diachronique du Lexique
 
@@ -276,8 +276,8 @@
 
 ## 9. Métriques Linguistiques Avancées
 
-- **Type-Token Ratio (TTR)** : 0.0153
-- **Entropie lexicale (Shannon)** : 9.14 bits
+- **Type-Token Ratio (TTR)** : 0.0120
+- **Entropie lexicale (Shannon)** : 9.16 bits
 - **Diversité lexicale** : Moyenne
 
 ## 10. Recommandations Linguistiques
