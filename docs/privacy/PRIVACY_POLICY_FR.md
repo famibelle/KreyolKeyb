@@ -852,22 +852,4 @@ C'est pourquoi nous avons construit ce clavier de la bonne manière : **La confi
 
 ---
 
-*Cette politique de confidentialité est fournie en français. Une version anglaise est également disponible.*
-
-*To read this policy in English, visit: [PRIVACY_POLICY.md]*
-
----
-
-**Métadonnées du Document :**
-- **Fichier :** PRIVACY_POLICY_FR.md
-- **Version :** 2.0
-- **Dernière Mise à Jour :** 10 novembre 2025
-- **Langue :** Français (traduction anglaise disponible)
-- **Format :** Markdown
-- **Nombre de Mots :** ~8 500 mots
-- **Temps de Lecture :** ~35 minutes
-- **Public Cible :** Utilisateurs finaux, responsables de la confidentialité, régulateurs, examinateurs Google Play
-
----
-
 **FIN DE LA POLITIQUE DE CONFIDENTIALITÉ**
