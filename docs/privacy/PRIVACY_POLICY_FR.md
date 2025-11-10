@@ -89,7 +89,6 @@
 - ❌ Pas de services d'authentification utilisateur
 - ❌ Pas de SDK de traitement de paiement
 - ❌ Pas de services de localisation
-- ❌ Pas de services de notifications push (les notifications sont locales uniquement)
 
 **La seule interaction tierce est avec Google Play Services pour :**
 - Distribution et mises à jour de l'application
@@ -169,7 +168,7 @@ Les données suivantes existent **uniquement sur votre appareil** et ne sont **j
    - Votre choix de thème du clavier (schéma de couleurs)
    - Préférences de son et vibration
    - Personnalisations de la disposition
-   - Paramètres de gamification (activer/désactiver les notifications)
+   - Paramètres de gamification
    - Stockés localement dans Android SharedPreferences (stockage Android standard)
    - Ne quittent jamais votre appareil
 
@@ -264,18 +263,6 @@ Notre app demande les autorisations Android suivantes. Voici exactement pourquoi
 **Ce qu'elle NE PEUT PAS faire :** Ne peut pas accéder aux mots du dictionnaire existants d'autres apps  
 **Contrôle utilisateur :** Peut être révoquée dans Infos app > Autorisations ; peut supprimer les mots via Paramètres Android > Système > Langues et saisie > Dictionnaire personnel  
 **Emplacement des données :** Stockage système Android (partagé avec d'autres claviers si vous le choisissez)
-
-### 3️⃣ POST_NOTIFICATIONS (Optionnel - Android 13+)
-
-**Ce qu'elle fait :** Permet d'afficher des notifications à l'utilisateur  
-**Pourquoi nous en avons besoin :** Pour des notifications optionnelles comme :
-  - Récompenses de gamification (ex: "Vous avez atteint le niveau Ti moun !")
-  - Jalons d'apprentissage (ex: "100 mots appris !")
-  - Rappel de pratiquer (si activé dans les paramètres)
-**Impact sur la vie privée :** Aucun - les notifications sont générées localement basées sur des données locales  
-**Ce qu'elle NE PEUT PAS faire :** Ne peut pas envoyer de notifications à d'autres appareils ou collecter des données  
-**Contrôle utilisateur :** Peut être désactivée entièrement dans les paramètres de l'app ou les paramètres de notification Android  
-**Fréquence :** Minimale et optionnelle (peut être complètement désactivée)
 
 ### ❌ Autorisations que Nous NE Demandons PAS :
 
@@ -526,7 +513,6 @@ Notre app inclut des fonctionnalités de gamification optionnelles pour rendre l
 - **8 Niveaux :** Pipirit → Ti moun → Débrouya → An mitan → Kompè Lapen → Kompè Zamba → Potomitan → Benzo
 - **Suivi de Progression :** Compte combien de mots créoles uniques vous avez tapés
 - **Récompenses :** Débloque des badges pour des jalons (ex: "100 premiers mots")
-- **Notifications :** Messages de rappel et de célébration optionnels (peuvent être désactivés)
 
 ### Quelles Données Sont Utilisées :
 
@@ -559,7 +545,6 @@ Notre app inclut des fonctionnalités de gamification optionnelles pour rendre l
 - ✅ **Suivi de progression 100% local**
 - ✅ **Aucun compte requis**
 - ✅ **La progression se réinitialise si vous effacez les données de l'app** (pas de sauvegarde cloud)
-- ✅ **Peut désactiver les notifications** entièrement dans les paramètres
 
 
 ---
