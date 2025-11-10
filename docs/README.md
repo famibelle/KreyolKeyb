@@ -209,7 +209,7 @@ function switchLang(lang) {
 
 ## 🔒 Déclaration de confidentialité
 
-Consultez notre [Déclaration de confidentialité](https://famibelle.github.io/KreyolKeyb/privacy/) pour en savoir plus sur la manière dont vos données sont traitées.
+Consultez notre [Déclaration de confidentialité](https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html) pour en savoir plus sur la manière dont vos données sont traitées.
 
 TL;DR zero data collectée
 
