@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1E1E1E"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- En-tête avec titre et statistiques -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvTheme"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎯 ANIMAUX"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFC107"
+                android:gravity="start" />
+
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏱️ 00:00"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:layout_marginStart="16dp" />
+
+            <TextView
+                android:id="@+id/tvScore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏆 0/6"
+                android:textSize="16sp"
+                android:textColor="#4CAF50"
+                android:layout_marginStart="16dp" />
+
+        </LinearLayout>
+
+        <!-- Grille de mots mêlés -->
+        <GridView
+            android:id="@+id/wordSearchGrid"
+            android:layout_width="320dp"
+            android:layout_height="320dp"
+            android:numColumns="10"
+            android:horizontalSpacing="2dp"
+            android:verticalSpacing="2dp"
+            android:stretchMode="columnWidth"
+            android:background="#333333"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Instructions -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👆 Glissez votre doigt pour sélectionner les mots"
+            android:textSize="14sp"
+            android:textColor="#BBBBBB"
+            android:layout_marginBottom="16dp"
+            android:gravity="center" />
+
+        <!-- Liste des mots à trouver -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎯 MOTS À TROUVER"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FF5722"
+            android:layout_marginBottom="12dp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/wordsListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <!-- Les mots seront ajoutés dynamiquement -->
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <!-- Ligne de séparation -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#444444"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Boutons de contrôle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnNewGame"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎲 NOUVEAU JEU"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4CAF50"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnHint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="💡 INDICE"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#FF9800"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnThemes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎨 THÈMES"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#9C27B0"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Bouton fermer -->
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="❌ FERMER"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#FF5722"
+            android:layout_marginTop="8dp" />
+
+        <!-- Espace pour les animations de score -->
+        <LinearLayout
+            android:id="@+id/scoreAnimationContainer"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginTop="16dp">
+
+            <!-- Zone pour afficher les animations +XP -->
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

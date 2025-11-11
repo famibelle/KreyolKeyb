@@ -30,9 +30,11 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlin.random.Random
+import com.example.kreyolkeyboard.wordsearch.WordSearchActivity
+import android.widget.Toast
 
 class SettingsActivity : AppCompatActivity() {
-    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos
+    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos, 3 = mots mêlés
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
     
@@ -349,6 +351,11 @@ class SettingsActivity : AppCompatActivity() {
             tabContainer.addView(aboutTab)
             Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
             
+            // Tab Mots Mêlés
+            val wordSearchTab = createTab(3, "🎲", "Mots Mêlés")
+            tabContainer.addView(wordSearchTab)
+            Log.d("SettingsActivity", "Onglet Mots Mêlés créé et ajouté")
+            
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -489,10 +496,11 @@ class SettingsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         
-        // Tabs avec les 3 onglets
+        // Tabs avec les 4 onglets
         tabContainer.addView(createTab(0, "🚀", "Démarrage"))
         tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
         tabContainer.addView(createTab(2, "ℹ️", "À Propos"))
+        tabContainer.addView(createTab(3, "🎲", "Mots Mêlés"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -2100,7 +2108,7 @@ class SettingsActivity : AppCompatActivity() {
     // Adapter pour ViewPager2 avec swipe cyclique
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
         companion object {
-            const val REAL_COUNT = 3 // Nombre réel d'onglets
+            const val REAL_COUNT = 4 // Nombre réel d'onglets (ajout mots mêlés)
             const val VIRTUAL_COUNT = Int.MAX_VALUE // Nombre virtuel pour simuler l'infini
             const val START_POSITION = VIRTUAL_COUNT / 2 // Position de départ au milieu
         }
@@ -2108,12 +2116,13 @@ class SettingsActivity : AppCompatActivity() {
         override fun getItemCount(): Int = VIRTUAL_COUNT
         
         override fun createFragment(position: Int): Fragment {
-            // Utiliser le modulo pour revenir aux 3 vraies pages
+            // Utiliser le modulo pour revenir aux 4 vraies pages
             val realPosition = position % REAL_COUNT
             return when (realPosition) {
                 0 -> OnboardingFragment()
                 1 -> StatsFragment()
                 2 -> AboutFragment()
+                3 -> WordSearchFragment()
                 else -> OnboardingFragment()
             }
         }
@@ -2393,6 +2402,91 @@ class SettingsActivity : AppCompatActivity() {
                         scaleY = 1f
                     }
                 }
+            }
+        }
+    }
+    
+    // Fragment pour les mots mêlés
+    class WordSearchFragment : Fragment() {
+        override fun onCreateView(
+            inflater: android.view.LayoutInflater,
+            container: android.view.ViewGroup?,
+            savedInstanceState: android.os.Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+            
+            return LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(24, 32, 24, 32)
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+                gravity = Gravity.CENTER
+                
+                // Titre de la section
+                val titleView = TextView(activity).apply {
+                    text = "🎲 Mots Mêlés Kreyòl"
+                    textSize = 24f
+                    setTextColor(Color.parseColor("#333333"))
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setPadding(0, 0, 0, 24)
+                }
+                addView(titleView)
+                
+                // Description
+                val descView = TextView(activity).apply {
+                    text = "Amusez-vous à chercher des mots créoles cachés dans des grilles !\n\n" +
+                           "🎯 8 thèmes disponibles\n" +
+                           "🏆 Système de points\n" +
+                           "⏱️ Chronomètre intégré\n" +
+                           "📱 Interface tactile"
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#666666"))
+                    gravity = Gravity.CENTER
+                    setLineSpacing(0f, 1.3f)
+                    setPadding(16, 0, 16, 32)
+                }
+                addView(descView)
+                
+                // Bouton pour lancer le jeu
+                val playButton = Button(activity).apply {
+                    text = "🎮 JOUER MAINTENANT"
+                    textSize = 18f
+                    setTextColor(Color.WHITE)
+                    setBackgroundColor(Color.parseColor("#9C27B0"))
+                    setPadding(32, 20, 32, 20)
+                    setTypeface(null, Typeface.BOLD)
+                    
+                    setOnClickListener {
+                        try {
+                            val intent = Intent(activity, WordSearchActivity::class.java)
+                            activity.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e("WordSearchFragment", "Erreur lancement mots mêlés: ${e.message}")
+                            Toast.makeText(activity, "Erreur lors du lancement du jeu", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                addView(playButton)
+                
+                // Espace
+                val spacer = View(activity).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        32
+                    )
+                }
+                addView(spacer)
+                
+                // Statistiques de jeu (placeholder pour l'instant)
+                val statsView = TextView(activity).apply {
+                    text = "📊 Vos statistiques de jeu s'afficheront ici après avoir joué"
+                    textSize = 14f
+                    setTextColor(Color.parseColor("#999999"))
+                    gravity = Gravity.CENTER
+                    setPadding(16, 16, 16, 16)
+                    setBackgroundColor(Color.parseColor("#EEEEEE"))
+                }
+                addView(statsView)
             }
         }
     }

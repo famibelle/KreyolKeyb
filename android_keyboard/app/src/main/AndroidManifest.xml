@@ -41,7 +41,7 @@
                 android:resource="@xml/method" />
         </service>
 
-        <!-- Activity de configuration -->
+        <!-- Activity de configuration avec 4 onglets -->
         <activity
             android:name=".SettingsActivity"
             android:label="@string/app_name"
@@ -58,6 +58,18 @@
             android:name=".gamification.VocabularyStatsActivity"
             android:label="Statistiques Vocabulaire"
             android:theme="@style/Theme.AppCompat"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity des mots mêlés -->
+        <activity
+            android:name=".wordsearch.WordSearchActivity"
+            android:label="Mots Mêlés Kreyòl"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
