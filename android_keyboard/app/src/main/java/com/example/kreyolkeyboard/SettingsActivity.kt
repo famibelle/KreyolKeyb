@@ -31,7 +31,15 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlin.random.Random
 import com.example.kreyolkeyboard.wordsearch.WordSearchActivity
+import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
+import com.example.kreyolkeyboard.wordsearch.WordSearchPuzzle
+import com.example.kreyolkeyboard.wordsearch.WordSearchWord
+import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
+import com.example.kreyolkeyboard.wordsearch.WordSearchThemes
+import com.example.kreyolkeyboard.wordsearch.WordSearchGridAdapter
 import android.widget.Toast
+import android.widget.GridView
+import android.widget.ScrollView
 
 class SettingsActivity : AppCompatActivity() {
     private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos, 3 = mots mêlés
@@ -2408,6 +2416,15 @@ class SettingsActivity : AppCompatActivity() {
     
     // Fragment pour les mots mêlés
     class WordSearchFragment : Fragment() {
+        
+        private var currentPuzzle: WordSearchPuzzle? = null
+        private var startTime: Long = 0
+        private var wordsFound = 0
+        private lateinit var gridView: GridView
+        private lateinit var wordsListContainer: LinearLayout
+        private lateinit var tvTheme: TextView
+        private lateinit var tvScore: TextView
+        
         override fun onCreateView(
             inflater: android.view.LayoutInflater,
             container: android.view.ViewGroup?,
@@ -2415,79 +2432,195 @@ class SettingsActivity : AppCompatActivity() {
         ): View {
             val activity = requireActivity() as SettingsActivity
             
-            return LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(24, 32, 24, 32)
+            // ScrollView pour permettre le défilement si nécessaire
+            return ScrollView(activity).apply {
                 setBackgroundColor(Color.parseColor("#F5F5F5"))
-                gravity = Gravity.CENTER
                 
-                // Titre de la section
-                val titleView = TextView(activity).apply {
-                    text = "🎲 Mots Mêlés Kreyòl"
-                    textSize = 24f
-                    setTextColor(Color.parseColor("#333333"))
-                    setTypeface(null, Typeface.BOLD)
-                    gravity = Gravity.CENTER
-                    setPadding(0, 0, 0, 24)
-                }
-                addView(titleView)
-                
-                // Description
-                val descView = TextView(activity).apply {
-                    text = "Amusez-vous à chercher des mots créoles cachés dans des grilles !\n\n" +
-                           "🎯 8 thèmes disponibles\n" +
-                           "🏆 Système de points\n" +
-                           "⏱️ Chronomètre intégré\n" +
-                           "📱 Interface tactile"
-                    textSize = 16f
-                    setTextColor(Color.parseColor("#666666"))
-                    gravity = Gravity.CENTER
-                    setLineSpacing(0f, 1.3f)
-                    setPadding(16, 0, 16, 32)
-                }
-                addView(descView)
-                
-                // Bouton pour lancer le jeu
-                val playButton = Button(activity).apply {
-                    text = "🎮 JOUER MAINTENANT"
-                    textSize = 18f
-                    setTextColor(Color.WHITE)
-                    setBackgroundColor(Color.parseColor("#9C27B0"))
-                    setPadding(32, 20, 32, 20)
-                    setTypeface(null, Typeface.BOLD)
-                    
-                    setOnClickListener {
-                        try {
-                            val intent = Intent(activity, WordSearchActivity::class.java)
-                            activity.startActivity(intent)
-                        } catch (e: Exception) {
-                            Log.e("WordSearchFragment", "Erreur lancement mots mêlés: ${e.message}")
-                            Toast.makeText(activity, "Erreur lors du lancement du jeu", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-                addView(playButton)
-                
-                // Espace
-                val spacer = View(activity).apply {
+                val mainLayout = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(16, 16, 16, 16)
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        32
+                        LinearLayout.LayoutParams.WRAP_CONTENT
                     )
+                    
+                    // En-tête avec thème et score
+                    val headerLayout = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(8, 8, 8, 16)
+                        gravity = Gravity.CENTER_VERTICAL
+                        
+                        tvTheme = TextView(activity).apply {
+                            text = "� Chargement..."
+                            textSize = 16f
+                            setTextColor(Color.parseColor("#9C27B0"))
+                            setTypeface(null, Typeface.BOLD)
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                        }
+                        addView(tvTheme)
+                        
+                        tvScore = TextView(activity).apply {
+                            text = "⭐ 0"
+                            textSize = 16f
+                            setTextColor(Color.parseColor("#FF9800"))
+                            setTypeface(null, Typeface.BOLD)
+                            gravity = Gravity.END
+                        }
+                        addView(tvScore)
+                    }
+                    addView(headerLayout)
+                    
+                    // Grille de mots mêlés
+                    gridView = GridView(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            (resources.displayMetrics.density * 320).toInt() // Hauteur fixe
+                        )
+                        setPadding(8, 8, 8, 8)
+                        stretchMode = GridView.STRETCH_COLUMN_WIDTH
+                        setBackgroundColor(Color.WHITE)
+                    }
+                    addView(gridView)
+                    
+                    // Bouton nouvelle grille
+                    val btnNewGame = Button(activity).apply {
+                        text = "🔄 Nouvelle Grille"
+                        textSize = 14f
+                        setTextColor(Color.WHITE)
+                        setBackgroundColor(Color.parseColor("#9C27B0"))
+                        setPadding(24, 12, 24, 12)
+                        setTypeface(null, Typeface.BOLD)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, 16, 0, 16)
+                        }
+                        setOnClickListener {
+                            generateNewPuzzle()
+                        }
+                    }
+                    addView(btnNewGame)
+                    
+                    // Liste des mots à trouver
+                    val wordsTitle = TextView(activity).apply {
+                        text = "📝 Mots à trouver :"
+                        textSize = 16f
+                        setTextColor(Color.parseColor("#333333"))
+                        setTypeface(null, Typeface.BOLD)
+                        setPadding(8, 8, 8, 8)
+                    }
+                    addView(wordsTitle)
+                    
+                    wordsListContainer = LinearLayout(activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(8, 8, 8, 8)
+                        setBackgroundColor(Color.parseColor("#FFFFFF"))
+                    }
+                    addView(wordsListContainer)
                 }
-                addView(spacer)
                 
-                // Statistiques de jeu (placeholder pour l'instant)
-                val statsView = TextView(activity).apply {
-                    text = "📊 Vos statistiques de jeu s'afficheront ici après avoir joué"
-                    textSize = 14f
-                    setTextColor(Color.parseColor("#999999"))
-                    gravity = Gravity.CENTER
-                    setPadding(16, 16, 16, 16)
-                    setBackgroundColor(Color.parseColor("#EEEEEE"))
+                addView(mainLayout)
+                
+                // Générer la première grille après que la vue soit créée
+                post {
+                    generateNewPuzzle()
                 }
-                addView(statsView)
             }
+        }
+        
+        private fun generateNewPuzzle() {
+            try {
+                val activity = requireActivity() as SettingsActivity
+                
+                // Générer une nouvelle grille 8x8
+                currentPuzzle = WordSearchGenerator.generatePuzzle(
+                    theme = getCurrentTheme(),
+                    gridSize = 8,
+                    difficulty = WordSearchDifficulty.NORMAL
+                )
+                
+                // Afficher la grille
+                displayPuzzle(currentPuzzle!!)
+                
+                // Réinitialiser
+                startTime = System.currentTimeMillis()
+                wordsFound = 0
+                updateScore(0)
+                
+                Log.d("WordSearchFragment", "Nouvelle grille générée: ${currentPuzzle?.words?.size} mots")
+                
+            } catch (e: Exception) {
+                Log.e("WordSearchFragment", "Erreur génération: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erreur lors de la génération", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        private fun displayPuzzle(puzzle: WordSearchPuzzle) {
+            val activity = requireActivity() as SettingsActivity
+            
+            // Configurer l'adaptateur de la grille
+            val adapter = WordSearchGridAdapter(activity, puzzle)
+            adapter.setOnWordFoundListener { word ->
+                onWordFound(word)
+            }
+            gridView.adapter = adapter
+            gridView.numColumns = puzzle.gridSize
+            
+            // Afficher le thème
+            tvTheme.text = "🎯 ${WordSearchThemes.getThemeDisplayName(puzzle.theme)}"
+            
+            // Afficher la liste des mots
+            displayWordsList(puzzle.words)
+        }
+        
+        private fun displayWordsList(words: List<WordSearchWord>) {
+            wordsListContainer.removeAllViews()
+            val activity = requireActivity() as SettingsActivity
+            
+            words.forEach { word ->
+                val wordView = TextView(activity).apply {
+                    text = if (word.isFound) "✅ ${word.word.uppercase()}" else "📝 ${word.word.uppercase()}"
+                    textSize = 14f
+                    setPadding(12, 8, 12, 8)
+                    setTextColor(if (word.isFound) Color.parseColor("#4CAF50") else Color.parseColor("#333333"))
+                    setTypeface(null, if (word.isFound) Typeface.BOLD else Typeface.NORMAL)
+                }
+                wordsListContainer.addView(wordView)
+            }
+        }
+        
+        private fun onWordFound(word: String) {
+            wordsFound++
+            
+            // Mettre à jour la liste
+            currentPuzzle?.words?.find { it.word.equals(word, ignoreCase = true) }?.isFound = true
+            displayWordsList(currentPuzzle?.words ?: emptyList())
+            
+            // Calculer les points
+            val points = word.length * 10
+            updateScore(points)
+            
+            // Vérifier si tous les mots sont trouvés
+            if (wordsFound == currentPuzzle?.words?.size) {
+                Toast.makeText(requireContext(), "🎉 Félicitations ! Tous les mots trouvés !", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(requireContext(), "✅ Mot trouvé : $word (+$points pts)", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        private fun updateScore(points: Int) {
+            val currentScore = tvScore.text.toString().replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
+            val newScore = currentScore + points
+            tvScore.text = "⭐ $newScore"
+        }
+        
+        private fun getCurrentTheme(): String {
+            return WordSearchThemes.getAllThemes().random()
         }
     }
 }
