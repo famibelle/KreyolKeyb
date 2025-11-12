@@ -2438,7 +2438,7 @@ class SettingsActivity : AppCompatActivity() {
                 
                 val mainLayout = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
-                    setPadding(16, 16, 16, 16)
+                    setPadding(8, 8, 8, 8) // Réduction du padding de 16 à 8
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -2447,7 +2447,7 @@ class SettingsActivity : AppCompatActivity() {
                     // En-tête avec thème et score
                     val headerLayout = LinearLayout(activity).apply {
                         orientation = LinearLayout.HORIZONTAL
-                        setPadding(8, 8, 8, 16)
+                        setPadding(8, 4, 8, 8) // Réduction du padding
                         gravity = Gravity.CENTER_VERTICAL
                         
                         tvTheme = TextView(activity).apply {
@@ -2476,13 +2476,48 @@ class SettingsActivity : AppCompatActivity() {
                     
                     // Grille de mots mêlés
                     gridView = GridView(activity).apply {
+                        // Calculer la taille disponible pour la grille
+                        val screenWidth = resources.displayMetrics.widthPixels
+                        val availableWidth = screenWidth - 48
+                        
+                        // La grille est toujours 8x8
+                        val gridSize = 8
+                        // Calculer la taille d'une cellule en fonction de la largeur
+                        val cellSize = availableWidth / gridSize
+                        // Hauteur de la grille = 8 cellules + espacements + padding
+                        val gridHeight = (cellSize * gridSize) + (4 * (gridSize - 1)) + 24
+                        
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
-                            (resources.displayMetrics.density * 320).toInt() // Hauteur fixe
+                            gridHeight
                         )
-                        setPadding(8, 8, 8, 8)
+                        setPadding(12, 12, 12, 12)
                         stretchMode = GridView.STRETCH_COLUMN_WIDTH
-                        setBackgroundColor(Color.WHITE)
+                        setBackgroundColor(Color.parseColor("#F5F5F5")) // Fond gris très clair
+                        verticalSpacing = 4 // Espacement vertical entre les lignes
+                        horizontalSpacing = 4 // Espacement horizontal entre les colonnes
+                        
+                        // 🔧 FIX: Gérer les touches au niveau de la GridView pour permettre le swipe entre cellules
+                        setOnTouchListener { view, event ->
+                            // Demander au parent de ne pas intercepter les événements
+                            parent?.requestDisallowInterceptTouchEvent(true)
+                            
+                            // Calculer quelle cellule est touchée
+                            val position = pointToPosition(event.x.toInt(), event.y.toInt())
+                            
+                            if (position != android.widget.AdapterView.INVALID_POSITION) {
+                                val adapter = adapter as? WordSearchGridAdapter
+                                adapter?.handleTouchEvent(position, event)
+                            }
+                            
+                            // Réactiver l'interception après ACTION_UP ou ACTION_CANCEL
+                            if (event.action == android.view.MotionEvent.ACTION_UP ||
+                                event.action == android.view.MotionEvent.ACTION_CANCEL) {
+                                parent?.requestDisallowInterceptTouchEvent(false)
+                            }
+                            
+                            true // Consommer l'événement
+                        }
                     }
                     addView(gridView)
                     
@@ -2492,13 +2527,13 @@ class SettingsActivity : AppCompatActivity() {
                         textSize = 14f
                         setTextColor(Color.WHITE)
                         setBackgroundColor(Color.parseColor("#9C27B0"))
-                        setPadding(24, 12, 24, 12)
+                        setPadding(24, 10, 24, 10) // Réduction du padding vertical
                         setTypeface(null, Typeface.BOLD)
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         ).apply {
-                            setMargins(0, 16, 0, 16)
+                            setMargins(0, 8, 0, 8) // Réduction des marges de 16 à 8
                         }
                         setOnClickListener {
                             generateNewPuzzle()
@@ -2509,16 +2544,16 @@ class SettingsActivity : AppCompatActivity() {
                     // Liste des mots à trouver
                     val wordsTitle = TextView(activity).apply {
                         text = "📝 Mots à trouver :"
-                        textSize = 16f
+                        textSize = 14f // Réduction de 16 à 14
                         setTextColor(Color.parseColor("#333333"))
                         setTypeface(null, Typeface.BOLD)
-                        setPadding(8, 8, 8, 8)
+                        setPadding(8, 4, 8, 4) // Réduction du padding
                     }
                     addView(wordsTitle)
                     
                     wordsListContainer = LinearLayout(activity).apply {
                         orientation = LinearLayout.VERTICAL
-                        setPadding(8, 8, 8, 8)
+                        setPadding(8, 4, 8, 8) // Réduction du padding
                         setBackgroundColor(Color.parseColor("#FFFFFF"))
                     }
                     addView(wordsListContainer)

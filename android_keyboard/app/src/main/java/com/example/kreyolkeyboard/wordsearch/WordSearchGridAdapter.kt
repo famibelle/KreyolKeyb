@@ -44,45 +44,55 @@ class WordSearchGridAdapter(
     
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val textView = convertView as? TextView ?: TextView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(80, 80)
+            // Taille dynamique basée sur la largeur du parent
+            val cellSize = (parent?.width ?: 800) / puzzle.gridSize - 4 // -4 pour l'espacement
+            layoutParams = ViewGroup.LayoutParams(cellSize, cellSize)
             gravity = Gravity.CENTER
-            textSize = 18f
-            setBackgroundResource(android.R.drawable.btn_default)
+            textSize = 20f
             setPadding(4, 4, 4, 4)
         }
         
         // Afficher la lettre
         textView.text = getCharAt(position).toString()
         
-        // Appliquer les couleurs selon l'état
+        // Appliquer les couleurs selon l'état avec bordures
         when {
             foundCells.contains(position) -> {
-                // Mot déjà trouvé - vert
-                textView.setBackgroundColor(Color.parseColor("#4CAF50"))
+                // Mot déjà trouvé - vert avec bordure
+                textView.setBackgroundColor(Color.parseColor("#81C784"))
                 textView.setTextColor(Color.WHITE)
             }
             selectedCells.contains(position) -> {
-                // Sélection en cours - bleu
-                textView.setBackgroundColor(Color.parseColor("#2196F3"))
-                textView.setTextColor(Color.WHITE)
+                // Sélection en cours - jaune comme dans le screenshot
+                textView.setBackgroundColor(Color.parseColor("#FFE082"))
+                textView.setTextColor(Color.BLACK)
             }
             else -> {
-                // Normal - gris clair
-                textView.setBackgroundColor(Color.parseColor("#EEEEEE"))
+                // Normal - blanc avec bordure grise
+                textView.setBackgroundColor(Color.WHITE)
                 textView.setTextColor(Color.BLACK)
             }
         }
         
-        // Gérer les interactions tactiles
-        textView.setOnTouchListener { _, event ->
-            handleTouch(position, event)
-            true
-        }
+        // Ajouter une bordure visible à toutes les cellules
+        textView.setPadding(8, 8, 8, 8)
+        val drawable = android.graphics.drawable.GradientDrawable()
+        drawable.setColor(when {
+            foundCells.contains(position) -> Color.parseColor("#81C784")
+            selectedCells.contains(position) -> Color.parseColor("#FFE082")
+            else -> Color.WHITE
+        })
+        drawable.setStroke(1, Color.parseColor("#CCCCCC")) // Bordure grise de 1px
+        drawable.cornerRadius = 4f // Coins légèrement arrondis
+        textView.background = drawable
         
         return textView
     }
     
-    private fun handleTouch(position: Int, event: android.view.MotionEvent): Boolean {
+    /**
+     * Méthode publique pour gérer les événements tactiles depuis la GridView
+     */
+    fun handleTouchEvent(position: Int, event: android.view.MotionEvent): Boolean {
         when (event.action) {
             android.view.MotionEvent.ACTION_DOWN -> {
                 startSelection(position)
