@@ -1,5 +1,10 @@
 package com.example.kreyolkeyboard.wordsearch
 
+import android.content.Context
+import org.json.JSONArray
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
 /**
  * Classes de données pour le système de mots mêlés
  */
@@ -63,82 +68,49 @@ enum class WordSearchDifficulty {
 }
 
 /**
- * Thèmes de mots créoles disponibles
+ * Chargement des mots créoles depuis le dictionnaire
  */
 object WordSearchThemes {
     
-    val ANIMAUX = listOf(
-        "krab", "kochon", "bèf", "chat", "chyen", 
-        "kolibri", "malfini", "ti-nèg", "zanimo", "koq"
-    )
+    // Cache pour les mots chargés depuis le dictionnaire
+    private var cachedWords: List<String>? = null
     
-    val FRUITS = listOf(
-        "zanana", "korosòl", "mango", "papay", 
-        "zaboka", "sitwon", "zorany", "figbanan", "kannèl"
-    )
-    
-    val FAMILLE = listOf(
-        "manman", "papa", "granmoun", "timoun", 
-        "sè", "frè", "kouzen", "kouzin", "nènèn"
-    )
-    
-    val COULEURS = listOf(
-        "wouj", "vè", "jòn", "ble", "nwa", 
-        "blan", "woz", "violè", "mawonn"
-    )
-    
-    val METEO = listOf(
-        "soley", "lapli", "van", "cyclone", 
-        "chalè", "frè", "nouaj", "loraj", "koukou"
-    )
-    
-    val CORPS = listOf(
-        "tèt", "je", "bouch", "nen", "zòrèy", 
-        "kou", "bra", "men", "janm", "pye"
-    )
-    
-    val MAISON = listOf(
-        "kay", "chanm", "kizin", "salon", 
-        "lakou", "fenèt", "pòt", "twati", "galri"
-    )
-    
-    val TRANSPORT = listOf(
-        "machin", "bis", "moto", "bisiklèt", 
-        "bato", "avyon", "kamyon", "taksì"
-    )
-    
-    fun getThemeWords(theme: String): List<String> {
-        return when (theme.lowercase()) {
-            "animaux" -> ANIMAUX
-            "fruits" -> FRUITS
-            "famille" -> FAMILLE
-            "couleurs" -> COULEURS
-            "météo", "meteo" -> METEO
-            "corps" -> CORPS
-            "maison" -> MAISON
-            "transport" -> TRANSPORT
-            else -> ANIMAUX // Par défaut
+    /**
+     * Charge tous les mots du dictionnaire créole (3 à 8 lettres)
+     */
+    fun getThemeWords(theme: String, context: Context): List<String> {
+        // Utiliser le cache si disponible
+        cachedWords?.let { return it.shuffled() }
+        
+        val words = mutableListOf<String>()
+        
+        try {
+            val inputStream = context.assets.open("creole_dict.json")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val jsonContent = reader.readText()
+            reader.close()
+            
+            val jsonArray = JSONArray(jsonContent)
+            
+            for (i in 0 until jsonArray.length()) {
+                val wordArray = jsonArray.getJSONArray(i)
+                val word = wordArray.getString(0)
+                
+                // Ne garder que les mots de 3 à 8 lettres (pour tenir dans la grille 8x8)
+                if (word.length in 3..8) {
+                    words.add(word)
+                }
+            }
+            
+            // Mettre en cache
+            cachedWords = words
+            
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // En cas d'erreur, retourner quelques mots par défaut
+            return listOf("mwen", "nou", "yo", "kay", "lakou", "soley", "lapli", "van")
         }
-    }
-    
-    fun getThemeDisplayName(theme: String): String {
-        return when (theme.lowercase()) {
-            "animaux" -> "🐾 Animaux"
-            "fruits" -> "🥭 Fruits"
-            "famille" -> "👨‍👩‍👧‍👦 Famille"
-            "couleurs" -> "🌈 Couleurs"
-            "météo", "meteo" -> "🌤️ Météo"
-            "corps" -> "👤 Corps Humain"
-            "maison" -> "🏠 Maison"
-            "transport" -> "🚗 Transport"
-            else -> "🎯 Thème"
-        }
-    }
-    
-    fun getAllThemes(): List<String> {
-        return listOf(
-            "animaux", "fruits", "famille", "couleurs",
-            "météo", "corps", "maison", "transport"
-        )
+        
+        return words.shuffled()
     }
 }

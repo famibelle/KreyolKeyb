@@ -167,3 +167,13 @@ INSTALLATION_V6.0.0.md
 OPTIMISATION_MEMOIRE_A21S.md
 
 .github\workflows\build-apk-old.yml.disabled
+docs/FIX_AUTO_REFRESH_STATE.md
+docs/FIX_INPUT_METHOD_PICKER.md
+docs/FIX_SETTINGS_REFRESH.md
+RELEASE_NOTES_6.2.4.md
+SYNTHESE_6.1.6_to_6.2.4.md
+Corpus/La Jamaïque est mon Afrique Gerty DAMBURY.txt
+Corpus/LaJamaïqueestmonAfriqueGertyDAMBURY.txt
+Utilitaire/AdapationPourHuggingFace.py
+Corpus/
+NETTOYAGE_SYSTEMES_NIVEAUX.md

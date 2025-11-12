@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.wordsearch
 
+import android.content.Context
 import kotlin.random.Random
 
 /**
@@ -11,6 +12,7 @@ object WordSearchGenerator {
     private val ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     
     fun generatePuzzle(
+        context: Context,
         theme: String, 
         gridSize: Int = 8, 
         difficulty: WordSearchDifficulty = WordSearchDifficulty.NORMAL
@@ -19,8 +21,8 @@ object WordSearchGenerator {
         // Limiter la taille de grille à 8x8 maximum
         val actualGridSize = minOf(gridSize, 8)
         
-        // Récupérer les mots du thème
-        val availableWords = WordSearchThemes.getThemeWords(theme)
+        // Récupérer les mots du thème depuis le dictionnaire
+        val availableWords = WordSearchThemes.getThemeWords(theme, context)
         
         // Déterminer le nombre de mots selon la difficulté (réduit pour grille 8x8)
         val wordCount = when (difficulty) {

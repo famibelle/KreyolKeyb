@@ -2572,9 +2572,10 @@ class SettingsActivity : AppCompatActivity() {
             try {
                 val activity = requireActivity() as SettingsActivity
                 
-                // Générer une nouvelle grille 8x8
+                // Générer une nouvelle grille 8x8 avec des mots aléatoires du dictionnaire
                 currentPuzzle = WordSearchGenerator.generatePuzzle(
-                    theme = getCurrentTheme(),
+                    context = activity,
+                    theme = "kreyol", // Thème unique
                     gridSize = 8,
                     difficulty = WordSearchDifficulty.NORMAL
                 )
@@ -2606,8 +2607,8 @@ class SettingsActivity : AppCompatActivity() {
             gridView.adapter = adapter
             gridView.numColumns = puzzle.gridSize
             
-            // Afficher le thème
-            tvTheme.text = "🎯 ${WordSearchThemes.getThemeDisplayName(puzzle.theme)}"
+            // Afficher le titre simple sans thème
+            tvTheme.text = "🎯 Mots Créoles"
             
             // Afficher la liste des mots
             displayWordsList(puzzle.words)
@@ -2652,10 +2653,6 @@ class SettingsActivity : AppCompatActivity() {
             val currentScore = tvScore.text.toString().replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
             val newScore = currentScore + points
             tvScore.text = "⭐ $newScore"
-        }
-        
-        private fun getCurrentTheme(): String {
-            return WordSearchThemes.getAllThemes().random()
         }
     }
 }

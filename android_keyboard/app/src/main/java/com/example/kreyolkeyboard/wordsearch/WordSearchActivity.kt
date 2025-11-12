@@ -76,10 +76,11 @@ class WordSearchActivity : AppCompatActivity() {
     private fun generateNewPuzzle() {
         try {
             // Test rapide pour vérifier le système
-            WordSearchTest.runBasicTest()
+            WordSearchTest.runBasicTest(this)
             
             // Générer une nouvelle grille avec des mots créoles (8x8 max)
             currentPuzzle = WordSearchGenerator.generatePuzzle(
+                context = this,
                 theme = getCurrentTheme(),
                 gridSize = 8,
                 difficulty = WordSearchDifficulty.NORMAL
@@ -113,7 +114,7 @@ class WordSearchActivity : AppCompatActivity() {
         // Afficher la liste des mots à trouver
         displayWordsList(puzzle.words)
         
-        tvTheme.text = "🎯 ${WordSearchThemes.getThemeDisplayName(puzzle.theme)}"
+        tvTheme.text = "🎯 Mots Créoles"
     }
     
     private fun displayWordsList(words: List<WordSearchWord>) {

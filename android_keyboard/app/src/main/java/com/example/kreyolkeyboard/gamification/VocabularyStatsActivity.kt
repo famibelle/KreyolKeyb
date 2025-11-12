@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.gamification
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
@@ -7,6 +8,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.kreyolkeyboard.R
+import com.example.kreyolkeyboard.wordsearch.WordSearchActivity
 import java.io.File
 import org.json.JSONObject
 import android.util.Log
@@ -35,6 +37,11 @@ class VocabularyStatsActivity : AppCompatActivity() {
         // Bouton rafraîchir
         findViewById<Button>(R.id.btnRefresh)?.setOnClickListener {
             loadAndDisplayStats()
+        }
+        
+        // Bouton mots mêlés
+        findViewById<Button>(R.id.btnWordSearch)?.setOnClickListener {
+            launchWordSearchGame()
         }
         
         // Bouton fermer
@@ -206,5 +213,14 @@ class VocabularyStatsActivity : AppCompatActivity() {
     private fun displayError() {
         findViewById<TextView>(R.id.tvLevel)?.text = "⚠️ ERREUR"
         findViewById<TextView>(R.id.tvCoverage)?.text = "Impossible de charger les statistiques"
+    }
+    
+    private fun launchWordSearchGame() {
+        try {
+            val intent = Intent(this, WordSearchActivity::class.java)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors du lancement des mots mêlés: ${e.message}", e)
+        }
     }
 }

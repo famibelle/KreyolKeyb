@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.wordsearch
 
+import android.content.Context
 import android.util.Log
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
 import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
@@ -11,12 +12,13 @@ object WordSearchTest {
     
     private val TAG = "WordSearchTest"
     
-    fun runBasicTest(): Boolean {
+    fun runBasicTest(context: Context): Boolean {
         return try {
             Log.d(TAG, "🔧 Test de génération de mots mêlés...")
             
             // Test 1: Génération basique
             val puzzle = WordSearchGenerator.generatePuzzle(
+                context = context,
                 theme = "animaux",
                 gridSize = 8,
                 difficulty = WordSearchDifficulty.EASY
@@ -40,10 +42,6 @@ object WordSearchTest {
             }
             Log.d(TAG, "📋 Grille générée:\n$gridContent")
             
-            // Test 3: Thèmes disponibles
-            val themes = WordSearchThemes.getAllThemes()
-            Log.d(TAG, "🎨 Thèmes disponibles: $themes")
-            
             Log.d(TAG, "🎉 Tous les tests passent!")
             true
             
@@ -53,27 +51,24 @@ object WordSearchTest {
         }
     }
     
-    fun testAllThemes(): Boolean {
+    fun testAllThemes(context: Context): Boolean {
         return try {
-            val themes = WordSearchThemes.getAllThemes()
+            val words = WordSearchThemes.getThemeWords("kreyol", context)
+            Log.d(TAG, "🎯 Mots disponibles: ${words.size}")
             
-            themes.forEach { theme ->
-                val words = WordSearchThemes.getThemeWords(theme)
-                Log.d(TAG, "🎯 Thème '$theme': ${words.size} mots disponibles")
-                
-                val puzzle = WordSearchGenerator.generatePuzzle(
-                    theme = theme,
-                    gridSize = 10,
-                    difficulty = WordSearchDifficulty.NORMAL
+            val puzzle = WordSearchGenerator.generatePuzzle(
+                context = context,
+                theme = "kreyol",
+                gridSize = 10,
+                difficulty = WordSearchDifficulty.NORMAL
                 )
-                
-                Log.d(TAG, "   ✅ Puzzle généré avec ${puzzle.words.size} mots")
-            }
+            
+            Log.d(TAG, "   ✅ Puzzle généré avec ${puzzle.words.size} mots")
             
             true
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur test thèmes: ${e.message}", e)
+            Log.e(TAG, "❌ Erreur test: ${e.message}", e)
             false
         }
     }

@@ -5,6 +5,29 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.4.0] - 2025-11-12
+
+### ✨ Nouvelles fonctionnalités
+
+#### 🔤 Jeu de mots cachés (Word Search)
+- **Intégration dictionnaire** : Les mots sont maintenant pris directement depuis `creole_dict.json`
+  - Sélection aléatoire parmi les 14,722 mots disponibles
+  - Filtrage automatique des mots de 3 à 8 lettres pour compatibilité avec la grille 8×8
+  - Cache en mémoire pour optimiser les performances
+- **Interface simplifiée** : Affichage unifié "🎯 Mots Créoles"
+  - Suppression du système de catégorisation par thèmes
+  - Variété maximale grâce à la sélection aléatoire dans tout le dictionnaire
+
+### 🧹 Refactoring
+
+#### 🎯 Word Search
+- **Nettoyage code** : Simplification de l'architecture
+  - Suppression des listes de mots statiques par thème (ANIMAUX, FRUITS, etc.)
+  - Suppression des fonctions `getAllThemes()` et `getThemeDisplayName()`
+  - Fusion de `loadWordsFromDictionary()` dans `getThemeWords()`
+  - Retrait de la logique de filtrage par mots-clés
+  - Résultat : code plus simple, maintenance facilitée, variété maximale
+
 ## [6.3.0] - 2025-11-06
 
 ### ✨ Nouvelles fonctionnalités

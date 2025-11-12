@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1E1E1E">
+
+    <!-- Contenu principal -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <!-- Logo et titre -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🇬🇵"
+                android:textSize="48sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Klavyé Kréyòl Karukera"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#FFC107"
+                android:gravity="center"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Potomitan™"
+                android:textSize="16sp"
+                android:textColor="#BBBBBB"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Zone de test du clavier -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📝 TESTEZ LE CLAVIER"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:gravity="center"
+                android:layout_marginBottom="12dp" />
+
+            <EditText
+                android:id="@+id/test_input"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:hint="Tapez ici pour tester le clavier Kreyòl...\n\nEssayez des mots comme :\n• bonjou • mèsi • kijan ou ye"
+                android:inputType="textMultiLine"
+                android:background="#333333"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:padding="12dp"
+                android:gravity="top"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Instructions -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ℹ️ ACTIVATION DU CLAVIER"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FF9800"
+                android:gravity="center"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1️⃣ Allez dans Paramètres → Langue et saisie\n2️⃣ Sélectionnez 'Klavyé Kréyòl'\n3️⃣ Activez-le comme méthode de saisie\n4️⃣ Changez de clavier avec la notification"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:background="#444444"
+                android:padding="12dp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Statistiques rapides -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📊 VOCABULAIRE DISPONIBLE"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#2196F3"
+                android:gravity="center"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="32dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="✅ 3680+\nMots créoles"
+                    android:textSize="12sp"
+                    android:textColor="#4CAF50"
+                    android:gravity="center"
+                    android:background="#333333"
+                    android:padding="8dp"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🎯 8 Thèmes\nMots mêlés"
+                    android:textSize="12sp"
+                    android:textColor="#9C27B0"
+                    android:gravity="center"
+                    android:background="#333333"
+                    android:padding="8dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🏆 Système\nGamification"
+                    android:textSize="12sp"
+                    android:textColor="#FFC107"
+                    android:gravity="center"
+                    android:background="#333333"
+                    android:padding="8dp"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Barre d'onglets en bas -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#2E2E2E"
+        android:elevation="8dp">
+
+        <Button
+            android:id="@+id/btnTabKeyboard"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:text="⌨️\nClavier"
+            android:textColor="#FFC107"
+            android:textSize="12sp"
+            android:backgroundTint="#4A4A4A"
+            android:layout_margin="2dp" />
+
+        <Button
+            android:id="@+id/btnTabStats"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:text="📊\nStats"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:backgroundTint="#2E2E2E"
+            android:layout_margin="2dp" />
+
+        <Button
+            android:id="@+id/btnTabWordSearch"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:text="🎲\nMots Mêlés"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:backgroundTint="#2E2E2E"
+            android:layout_margin="2dp" />
+
+        <Button
+            android:id="@+id/btnTabSettings"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:text="⚙️\nParamètres"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:backgroundTint="#2E2E2E"
+            android:layout_margin="2dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

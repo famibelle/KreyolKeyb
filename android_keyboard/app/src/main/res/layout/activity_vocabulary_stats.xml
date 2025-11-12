@@ -160,6 +160,17 @@
             android:gravity="center"
             android:layout_marginBottom="32dp" />
 
+        <!-- Bouton Mots Mêlés -->
+        <Button
+            android:id="@+id/btnWordSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎲 JOUER AUX MOTS MÊLÉS"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#9C27B0"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
         <!-- Boutons -->
         <LinearLayout
             android:layout_width="match_parent"
