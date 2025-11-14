@@ -115,8 +115,7 @@ class WordSearchGridAdapter(
     }
     
     private fun startSelection(position: Int) {
-        if (foundCells.contains(position)) return
-        
+        // Autoriser de commencer sur une cellule déjà trouvée
         isSelecting = true
         selectionStart = position
         selectedCells.clear()
@@ -130,8 +129,9 @@ class WordSearchGridAdapter(
         // Calculer la ligne droite entre le début et la position actuelle
         val cellsInLine = getCellsInLine(selectionStart, position)
         
+        // Ne pas filtrer les cellules déjà trouvées - on peut les traverser
         selectedCells.clear()
-        selectedCells.addAll(cellsInLine.filter { !foundCells.contains(it) })
+        selectedCells.addAll(cellsInLine)
         notifyDataSetChanged()
     }
     
@@ -143,7 +143,7 @@ class WordSearchGridAdapter(
         // Vérifier si la sélection forme un mot valide
         val selectedWord = getSelectedWord()
         if (isValidWord(selectedWord)) {
-            // Mot trouvé !
+            // Mot trouvé ! Ajouter seulement les nouvelles cellules
             foundCells.addAll(selectedCells)
             onWordFoundListener?.invoke(selectedWord)
         }

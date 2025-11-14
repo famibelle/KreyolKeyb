@@ -7,12 +7,16 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.CountDownTimer
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -42,7 +46,7 @@ import android.widget.GridView
 import android.widget.ScrollView
 
 class SettingsActivity : AppCompatActivity() {
-    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos, 3 = mots mêlés
+    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos, 3 = mots mêlés, 4 = mots mélangés
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
     
@@ -364,6 +368,11 @@ class SettingsActivity : AppCompatActivity() {
             tabContainer.addView(wordSearchTab)
             Log.d("SettingsActivity", "Onglet Mots Mêlés créé et ajouté")
             
+            // Tab Mots Mélangés
+            val wordScrambleTab = createTab(4, "🔤", "Mots Mélangés")
+            tabContainer.addView(wordScrambleTab)
+            Log.d("SettingsActivity", "Onglet Mots Mélangés créé et ajouté")
+            
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -504,11 +513,12 @@ class SettingsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         
-        // Tabs avec les 4 onglets
+        // Tabs avec les 5 onglets
         tabContainer.addView(createTab(0, "🚀", "Démarrage"))
         tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
         tabContainer.addView(createTab(2, "ℹ️", "À Propos"))
         tabContainer.addView(createTab(3, "🎲", "Mots Mêlés"))
+        tabContainer.addView(createTab(4, "🔤", "Mots Mélangés"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -2116,7 +2126,7 @@ class SettingsActivity : AppCompatActivity() {
     // Adapter pour ViewPager2 avec swipe cyclique
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
         companion object {
-            const val REAL_COUNT = 4 // Nombre réel d'onglets (ajout mots mêlés)
+            const val REAL_COUNT = 5 // Nombre réel d'onglets (ajout mots mélangés)
             const val VIRTUAL_COUNT = Int.MAX_VALUE // Nombre virtuel pour simuler l'infini
             const val START_POSITION = VIRTUAL_COUNT / 2 // Position de départ au milieu
         }
@@ -2124,13 +2134,14 @@ class SettingsActivity : AppCompatActivity() {
         override fun getItemCount(): Int = VIRTUAL_COUNT
         
         override fun createFragment(position: Int): Fragment {
-            // Utiliser le modulo pour revenir aux 4 vraies pages
+            // Utiliser le modulo pour revenir aux 5 vraies pages
             val realPosition = position % REAL_COUNT
             return when (realPosition) {
                 0 -> OnboardingFragment()
                 1 -> StatsFragment()
                 2 -> AboutFragment()
                 3 -> WordSearchFragment()
+                4 -> WordScrambleFragment()
                 else -> OnboardingFragment()
             }
         }
@@ -2653,6 +2664,480 @@ class SettingsActivity : AppCompatActivity() {
             val currentScore = tvScore.text.toString().replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
             val newScore = currentScore + points
             tvScore.text = "⭐ $newScore"
+        }
+    }
+    
+    // Fragment pour le jeu de mots mélangés
+    class WordScrambleFragment : Fragment() {
+        private var rootView: ScrollView? = null
+        
+        private lateinit var tvTimer: TextView
+        private lateinit var tvScore: TextView
+        private lateinit var tvWordNumber: TextView
+        private lateinit var gridScrambled: GridView
+        private lateinit var gridAnswer: GridView
+        private lateinit var btnValidate: Button
+        private lateinit var btnSkip: Button
+        private lateinit var btnHint: Button
+        private lateinit var btnClear: Button
+        private lateinit var progressBar: ProgressBar
+        
+        private var scrambledAdapter: com.example.kreyolkeyboard.wordscramble.ScrambledLettersAdapter? = null
+        private var answerAdapter: com.example.kreyolkeyboard.wordscramble.AnswerLettersAdapter? = null
+        
+        private var currentWord: String = ""
+        private var scrambledLetters: List<Char> = listOf()
+        private val currentAnswer = mutableListOf<Char?>()
+        private val selectedPositions = mutableListOf<Int>()
+        
+        private var gameWords: List<String> = listOf()
+        private var currentWordIndex = 0
+        private var score = 0
+        private var difficulty = com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty.NORMAL
+        
+        private var countDownTimer: CountDownTimer? = null
+        private var timeRemaining = 30
+        
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+            
+            rootView = ScrollView(activity).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+                isFillViewport = true
+                
+                val mainLayout = LinearLayout(activity).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(32, 16, 32, 16)
+                    
+                    // En-tête avec timer et score
+                    val headerLayout = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        setBackgroundColor(Color.WHITE)
+                        setPadding(24, 24, 24, 24)
+                        elevation = 8f
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 32
+                        
+                        tvTimer = TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            text = "⏱️ 30s"
+                            textSize = 20f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(Color.BLACK)
+                        }
+                        addView(tvTimer)
+                        
+                        tvScore = TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            text = "Score: 0"
+                            textSize = 18f
+                            setTypeface(null, Typeface.BOLD)
+                            gravity = Gravity.END
+                            setTextColor(Color.parseColor("#4CAF50"))
+                        }
+                        addView(tvScore)
+                    }
+                    addView(headerLayout)
+                    
+                    // Numéro du mot et progression
+                    val progressLayout = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.VERTICAL
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 32
+                        
+                        tvWordNumber = TextView(activity).apply {
+                            text = "Mot 1/10"
+                            textSize = 16f
+                            setTypeface(null, Typeface.BOLD)
+                            setPadding(0, 0, 0, 16)
+                        }
+                        addView(tvWordNumber)
+                        
+                        progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                16
+                            )
+                            max = 10
+                            progress = 0
+                        }
+                        addView(progressBar)
+                    }
+                    addView(progressLayout)
+                    
+                    // Titre
+                    val title = TextView(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        text = "🔤 Remets les lettres dans l'ordre !"
+                        textSize = 18f
+                        setTypeface(null, Typeface.BOLD)
+                        gravity = Gravity.CENTER
+                        setTextColor(Color.parseColor("#1976D2"))
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 32
+                    }
+                    addView(title)
+                    
+                    // Label lettres disponibles
+                    val labelScrambled = TextView(activity).apply {
+                        text = "Lettres disponibles :"
+                        textSize = 14f
+                        setTypeface(null, Typeface.BOLD)
+                        setPadding(0, 0, 0, 16)
+                    }
+                    addView(labelScrambled)
+                    
+                    // Grille des lettres mélangées
+                    gridScrambled = GridView(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        numColumns = 5
+                        verticalSpacing = 16
+                        horizontalSpacing = 16
+                        stretchMode = GridView.STRETCH_COLUMN_WIDTH
+                        gravity = Gravity.CENTER
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 48
+                        
+                        setOnItemClickListener { _, _, position, _ ->
+                            if (!selectedPositions.contains(position)) {
+                                addLetterToAnswer(position)
+                            }
+                        }
+                    }
+                    addView(gridScrambled)
+                    
+                    // Label réponse
+                    val labelAnswer = TextView(activity).apply {
+                        text = "Ta réponse :"
+                        textSize = 14f
+                        setTypeface(null, Typeface.BOLD)
+                        setPadding(0, 0, 0, 16)
+                    }
+                    addView(labelAnswer)
+                    
+                    // Grille de la réponse
+                    gridAnswer = GridView(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        numColumns = 5
+                        verticalSpacing = 16
+                        horizontalSpacing = 16
+                        stretchMode = GridView.STRETCH_COLUMN_WIDTH
+                        gravity = Gravity.CENTER
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 48
+                        
+                        setOnItemClickListener { _, _, position, _ ->
+                            removeLetterFromAnswer(position)
+                        }
+                    }
+                    addView(gridAnswer)
+                    
+                    // Boutons d'action ligne 1
+                    val buttonRow1 = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER
+                        (layoutParams as LinearLayout.LayoutParams).bottomMargin = 24
+                        
+                        btnClear = Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            ).apply { setMargins(8, 0, 8, 0) }
+                            text = "🔄 Effacer"
+                            setBackgroundColor(Color.parseColor("#FF9800"))
+                            setTextColor(Color.WHITE)
+                            setOnClickListener { clearAnswer() }
+                        }
+                        addView(btnClear)
+                        
+                        btnHint = Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            ).apply { setMargins(8, 0, 8, 0) }
+                            text = "💡 Indice"
+                            setBackgroundColor(Color.parseColor("#FFC107"))
+                            setTextColor(Color.WHITE)
+                            setOnClickListener { showHint() }
+                        }
+                        addView(btnHint)
+                    }
+                    addView(buttonRow1)
+                    
+                    // Boutons d'action ligne 2
+                    val buttonRow2 = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER
+                        
+                        btnValidate = Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            ).apply { setMargins(8, 0, 8, 0) }
+                            text = "✅ Valider"
+                            setBackgroundColor(Color.parseColor("#4CAF50"))
+                            setTextColor(Color.WHITE)
+                            setTypeface(null, Typeface.BOLD)
+                            isEnabled = false
+                            setOnClickListener { validateAnswer() }
+                        }
+                        addView(btnValidate)
+                        
+                        btnSkip = Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            ).apply { setMargins(8, 0, 8, 0) }
+                            text = "⏭️ Passer"
+                            setBackgroundColor(Color.parseColor("#9E9E9E"))
+                            setTextColor(Color.WHITE)
+                            setOnClickListener { skipWord() }
+                        }
+                        addView(btnSkip)
+                    }
+                    addView(buttonRow2)
+                }
+                
+                addView(mainLayout)
+                
+                post {
+                    startNewGame()
+                }
+            }
+            
+            return rootView!!
+        }
+        
+        private fun startNewGame() {
+            score = 0
+            currentWordIndex = 0
+            
+            gameWords = com.example.kreyolkeyboard.wordscramble.WordScrambleData.loadWords(requireContext(), difficulty)
+            
+            if (gameWords.isEmpty()) {
+                Toast.makeText(requireContext(), "Erreur de chargement", Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            progressBar.max = gameWords.size
+            loadNextWord()
+        }
+        
+        private fun loadNextWord() {
+            if (currentWordIndex >= gameWords.size) {
+                endGame()
+                return
+            }
+            
+            currentWord = gameWords[currentWordIndex]
+            scrambledLetters = com.example.kreyolkeyboard.wordscramble.WordScrambleData.scrambleWord(currentWord)
+            
+            currentAnswer.clear()
+            selectedPositions.clear()
+            repeat(currentWord.length) { currentAnswer.add(null) }
+            
+            scrambledAdapter = com.example.kreyolkeyboard.wordscramble.ScrambledLettersAdapter(requireContext(), scrambledLetters)
+            answerAdapter = com.example.kreyolkeyboard.wordscramble.AnswerLettersAdapter(requireContext(), currentAnswer)
+            
+            gridScrambled.adapter = scrambledAdapter
+            gridAnswer.adapter = answerAdapter
+            
+            gridScrambled.numColumns = minOf(scrambledLetters.size, 5)
+            gridAnswer.numColumns = minOf(currentWord.length, 5)
+            
+            // Ajuster la hauteur des grilles
+            val numRowsScrambled = (scrambledLetters.size + 4) / 5
+            val numRowsAnswer = (currentWord.length + 4) / 5
+            gridScrambled.layoutParams.height = numRowsScrambled * 136 // 120 + 16 spacing
+            gridAnswer.layoutParams.height = numRowsAnswer * 136
+            
+            tvWordNumber.text = "Mot ${currentWordIndex + 1}/${gameWords.size}"
+            tvScore.text = "Score: $score"
+            progressBar.progress = currentWordIndex
+            
+            startTimer()
+        }
+        
+        private fun startTimer() {
+            countDownTimer?.cancel()
+            timeRemaining = com.example.kreyolkeyboard.wordscramble.WordScrambleData.getTimeForDifficulty(difficulty)
+            
+            countDownTimer = object : CountDownTimer((timeRemaining * 1000).toLong(), 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    timeRemaining = (millisUntilFinished / 1000).toInt()
+                    tvTimer.text = "⏱️ ${timeRemaining}s"
+                    
+                    if (timeRemaining <= 5) {
+                        tvTimer.setTextColor(Color.parseColor("#D32F2F"))
+                    } else {
+                        tvTimer.setTextColor(Color.BLACK)
+                    }
+                }
+                
+                override fun onFinish() {
+                    tvTimer.text = "⏱️ 0s"
+                    Toast.makeText(requireContext(), "Temps écoulé!", Toast.LENGTH_SHORT).show()
+                    skipWord()
+                }
+            }.start()
+        }
+        
+        private fun addLetterToAnswer(position: Int) {
+            val emptyIndex = currentAnswer.indexOfFirst { it == null }
+            if (emptyIndex != -1) {
+                currentAnswer[emptyIndex] = scrambledLetters[position]
+                selectedPositions.add(position)
+                
+                scrambledAdapter?.markAsSelected(position)
+                answerAdapter?.updateLetters(currentAnswer)
+                
+                if (currentAnswer.all { it != null }) {
+                    btnValidate.isEnabled = true
+                }
+            }
+        }
+        
+        private fun removeLetterFromAnswer(position: Int) {
+            if (position < currentAnswer.size && currentAnswer[position] != null) {
+                currentAnswer[position] = null
+                
+                if (position < selectedPositions.size) {
+                    selectedPositions.removeAt(position)
+                }
+                
+                val nonNullLetters = currentAnswer.filterNotNull().toMutableList()
+                currentAnswer.clear()
+                currentAnswer.addAll(nonNullLetters)
+                repeat(currentWord.length - nonNullLetters.size) { currentAnswer.add(null) }
+                
+                scrambledAdapter?.clearSelections()
+                selectedPositions.forEachIndexed { index, pos ->
+                    if (index < selectedPositions.size) {
+                        scrambledAdapter?.markAsSelected(pos)
+                    }
+                }
+                
+                answerAdapter?.updateLetters(currentAnswer)
+                btnValidate.isEnabled = false
+            }
+        }
+        
+        private fun validateAnswer() {
+            val answer = currentAnswer.filterNotNull().joinToString("")
+            
+            if (answer.equals(currentWord, ignoreCase = true)) {
+                val timeBonus = timeRemaining * 10
+                score += 100 + timeBonus
+                
+                countDownTimer?.cancel()
+                
+                Toast.makeText(requireContext(), "✅ Correct! +${100 + timeBonus} pts", Toast.LENGTH_SHORT).show()
+                
+                currentWordIndex++
+                loadNextWord()
+            } else {
+                Toast.makeText(requireContext(), "❌ Essaie encore!", Toast.LENGTH_SHORT).show()
+                clearAnswer()
+            }
+        }
+        
+        private fun skipWord() {
+            countDownTimer?.cancel()
+            Toast.makeText(requireContext(), "Le mot était: $currentWord", Toast.LENGTH_SHORT).show()
+            currentWordIndex++
+            loadNextWord()
+        }
+        
+        private fun showHint() {
+            val firstEmpty = currentAnswer.indexOfFirst { it == null }
+            if (firstEmpty != -1) {
+                val correctLetter = currentWord[firstEmpty]
+                
+                val posInScrambled = scrambledLetters.indexOfFirst { 
+                    it == correctLetter && !selectedPositions.contains(scrambledLetters.indexOf(it))
+                }
+                
+                if (posInScrambled != -1) {
+                    addLetterToAnswer(posInScrambled)
+                    score -= 20
+                    tvScore.text = "Score: $score"
+                    Toast.makeText(requireContext(), "Indice (-20 pts)", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        
+        private fun clearAnswer() {
+            currentAnswer.clear()
+            selectedPositions.clear()
+            repeat(currentWord.length) { currentAnswer.add(null) }
+            
+            scrambledAdapter?.clearSelections()
+            answerAdapter?.updateLetters(currentAnswer)
+            btnValidate.isEnabled = false
+        }
+        
+        private fun endGame() {
+            countDownTimer?.cancel()
+            
+            AlertDialog.Builder(requireContext())
+                .setTitle("🎉 Partie terminée!")
+                .setMessage("Score final: $score\nMots réussis: $currentWordIndex/${gameWords.size}")
+                .setPositiveButton("Rejouer") { _, _ ->
+                    startNewGame()
+                }
+                .setNegativeButton("OK", null)
+                .show()
+        }
+        
+        override fun onDestroyView() {
+            super.onDestroyView()
+            countDownTimer?.cancel()
+            rootView = null
         }
     }
 }

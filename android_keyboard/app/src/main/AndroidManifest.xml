@@ -76,6 +76,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Activity des mots mélangés -->
+        <activity
+            android:name=".wordscramble.WordScrambleActivity"
+            android:label="Mots Mélangés Kreyòl"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
