@@ -1242,7 +1242,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.4.0\n" +
+            text = "Version : 6.4.1\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"
