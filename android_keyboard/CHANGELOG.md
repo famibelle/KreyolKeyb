@@ -5,6 +5,59 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.4.1] - 2025-11-14
+
+### ✨ Nouvelles fonctionnalités
+
+#### 🔤 Jeu de mots mélangés (Word Scramble)
+- **Nouveau jeu intégré** : Retrouve l'ordre des lettres pour former des mots créoles
+  - Sélection aléatoire de 10 mots parmi les 3,680 du dictionnaire
+  - 3 niveaux de difficulté : Facile (4-5 lettres), Normal (5-7 lettres), Difficile (7-10 lettres)
+  - Indices visuels : première et dernière lettre pré-remplies automatiquement
+  - Score simple : 100 points par mot réussi
+  - Système d'indices : révèle la prochaine lettre (-20 points)
+  - Interface épurée sans pression temporelle
+
+#### 🎲 Amélioration jeu de mots cachés (Word Search)
+- **Interface optimisée** : Expérience de jeu améliorée
+  - Fix sélection diagonale : possibilité de croiser des mots déjà trouvés
+  - Meilleure réactivité tactile sur la grille 8×8
+
+### 📊 Statistiques et Progression
+
+#### 🔧 Corrections critiques
+- **Comptage précis du dictionnaire** : Affichage correct de "3,680 mots" au lieu de "0 mots"
+  - Le total est maintenant toujours chargé depuis `creole_dict.json`
+  - Plus de confusion avec le fichier d'usage utilisateur vide
+- **Niveau initial correct** : Fix affichage "Pipirit" avec 0 mots découverts
+  - Avant : affichait "Benzo (niveau maximum)" à tort
+  - Après : affiche correctement "Pipirit" et "55 mots restants pour Ti moun"
+- **Message de progression intelligent** : 
+  - Affiche "niveau maximum atteint" uniquement si vraiment à Benzo (100% du dictionnaire)
+  - Sinon affiche le niveau actuel avec progression vers le suivant
+
+### 🎨 Interface et Navigation
+
+#### 🔧 Réorganisation des onglets
+- **Nouvel ordre** : Démarrage → Kréyòl an mwen → Mots Mêlés → Mots Mélangés → À Propos
+  - L'onglet "À Propos" déplacé en dernière position pour meilleure ergonomie
+  - Les jeux regroupés au centre pour faciliter l'accès
+- **Navigation améliorée** : 5 onglets avec swipe cyclique maintenu
+
+### 🧹 Refactoring
+
+#### 🎯 Code
+- **Suppression du timer** : Jeu de mots mélangés sans contrainte de temps
+  - Retrait de `CountDownTimer` et toutes ses références
+  - Simplification du scoring (plus de bonus de temps)
+  - Interface header épurée : score centré uniquement
+- **Optimisation mémoire** : Meilleure gestion des lettres pré-remplies
+  - Les lettres de début et fin ne sont plus dupliquées dans les choix
+  - Fix restauration correcte après validation incorrecte
+- **Code cleaning** : -98 lignes, +70 insertions
+  - Suppression du code redondant lié au timer
+  - Simplification de la logique de validation
+
 ## [6.4.0] - 2025-11-12
 
 ### ✨ Nouvelles fonctionnalités
