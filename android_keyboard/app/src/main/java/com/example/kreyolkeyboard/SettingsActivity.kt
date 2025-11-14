@@ -358,20 +358,20 @@ class SettingsActivity : AppCompatActivity() {
             tabContainer.addView(statsTab)
             Log.d("SettingsActivity", "Onglet Statistiques créé et ajouté")
             
-            // Tab À Propos
-            val aboutTab = createTab(2, "ℹ️", "À Propos")
-            tabContainer.addView(aboutTab)
-            Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
-            
             // Tab Mots Mêlés
-            val wordSearchTab = createTab(3, "🎲", "Mots Mêlés")
+            val wordSearchTab = createTab(2, "🎲", "Mots Mêlés")
             tabContainer.addView(wordSearchTab)
             Log.d("SettingsActivity", "Onglet Mots Mêlés créé et ajouté")
             
             // Tab Mots Mélangés
-            val wordScrambleTab = createTab(4, "🔤", "Mots Mélangés")
+            val wordScrambleTab = createTab(3, "🔤", "Mots Mélangés")
             tabContainer.addView(wordScrambleTab)
             Log.d("SettingsActivity", "Onglet Mots Mélangés créé et ajouté")
+            
+            // Tab À Propos
+            val aboutTab = createTab(4, "ℹ️", "À Propos")
+            tabContainer.addView(aboutTab)
+            Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
             
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
@@ -516,9 +516,9 @@ class SettingsActivity : AppCompatActivity() {
         // Tabs avec les 5 onglets
         tabContainer.addView(createTab(0, "🚀", "Démarrage"))
         tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
-        tabContainer.addView(createTab(2, "ℹ️", "À Propos"))
-        tabContainer.addView(createTab(3, "🎲", "Mots Mêlés"))
-        tabContainer.addView(createTab(4, "🔤", "Mots Mélangés"))
+        tabContainer.addView(createTab(2, "🎲", "Mots Mêlés"))
+        tabContainer.addView(createTab(3, "🔤", "Mots Mélangés"))
+        tabContainer.addView(createTab(4, "ℹ️", "À Propos"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -1553,8 +1553,10 @@ class SettingsActivity : AppCompatActivity() {
         val progressMessage = TextView(this).apply {
             text = if (wordsRemaining > 0) {
                 "Votre niveau actuel est $levelName, plus que $wordsRemaining mot${if (wordsRemaining > 1) "s" else ""} restant${if (wordsRemaining > 1) "s" else ""} à découvrir pour passer au niveau suivant ($nextLevelName)"
-            } else {
+            } else if (levelName == "Benzo") {
                 "Vous avez atteint le niveau maximum : $levelName ! 👑"
+            } else {
+                "Votre niveau actuel est $levelName"
             }
             textSize = 16f
             setTextColor(Color.parseColor("#666666"))
@@ -1911,7 +1913,10 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadVocabularyStats(): VocabularyStats {
         Log.d("SettingsActivity", "🔍 Chargement des statistiques du vocabulaire")
         return try {
-            // D'abord essayer le fichier avec usage
+            // Toujours charger le total depuis le dictionnaire source
+            val totalDictWords = getTotalDictionaryWords()
+            
+            // Essayer le fichier avec usage
             val usageFile = File(filesDir, "creole_dict_with_usage.json")
             Log.d("SettingsActivity", "📂 Fichier usage existe: ${usageFile.exists()}")
             Log.d("SettingsActivity", "📂 Chemin fichier: ${usageFile.absolutePath}")
@@ -1922,7 +1927,6 @@ class SettingsActivity : AppCompatActivity() {
                 val jsonObject = JSONObject(jsonString)
                 Log.d("SettingsActivity", "🔑 Clés JSON trouvées: ${jsonObject.keys().asSequence().toList().size}")
                 
-                var totalWords = 0
                 var wordsDiscovered = 0
                 var totalUsages = 0
                 val wordUsages = mutableListOf<Pair<String, Int>>()
@@ -1930,8 +1934,6 @@ class SettingsActivity : AppCompatActivity() {
                 
                 val motsTrouves = mutableListOf<String>()
                 jsonObject.keys().forEach { word ->
-                    totalWords++
-                    
                     // Gérer les deux formats possibles
                     val userCount = try {
                         val rawValue = jsonObject.get(word)
@@ -1968,10 +1970,10 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 
                 Log.d("SettingsActivity", "Mots avec usage > 0: ${motsTrouves.joinToString(", ")}")
-                Log.d("SettingsActivity", "Total: $totalWords mots, Usage: $totalUsages, Découverts: $wordsDiscovered")
+                Log.d("SettingsActivity", "Total: $totalDictWords mots, Usage: $totalUsages, Découverts: $wordsDiscovered")
                 
                 val topWords = wordUsages.filter { it.first.length >= 3 }.sortedByDescending { it.second }.take(5)
-                val coverage = if (totalWords > 0) (wordsDiscovered.toFloat() / totalWords * 100) else 0f
+                val coverage = if (totalDictWords > 0) (wordsDiscovered.toFloat() / totalDictWords * 100) else 0f
                 
                 // Générer les mots à découvrir (utilisations <= 2 et longueur >= 3)
                 val wordsToDiscoverCandidates = jsonObject.keys().asSequence().toList().filter { word ->
@@ -1981,7 +1983,7 @@ class SettingsActivity : AppCompatActivity() {
                 val wordsToDiscoverList = wordsToDiscoverCandidates.shuffled().take(5)
                 
                 return VocabularyStats(
-                    totalWords,
+                    totalDictWords,
                     wordsDiscovered,
                     totalUsages,
                     topWords,
@@ -1995,9 +1997,9 @@ class SettingsActivity : AppCompatActivity() {
             val emptyUsageObject = JSONObject()
             usageFile.writeText(emptyUsageObject.toString())
             
-            // Retourner des statistiques complètement vides pour une vraie installation propre
+            // Retourner des statistiques avec le vrai total de mots du dictionnaire
             return VocabularyStats(
-                totalWords = 0,
+                totalWords = totalDictWords,
                 wordsDiscovered = 0,
                 totalUsages = 0,
                 topWords = emptyList(),
@@ -2101,25 +2103,18 @@ class SettingsActivity : AppCompatActivity() {
         cachedTotalWords?.let { return it }
         
         return try {
-            val usageFile = File(filesDir, "creole_dict_with_usage.json")
-            
-            val count = if (usageFile.exists()) {
-                val jsonString = usageFile.readText()
-                val jsonObject = JSONObject(jsonString)
-                jsonObject.keys().asSequence().count()
-            } else {
-                // Charger depuis les assets
-                val jsonString = assets.open("creole_dict.json").bufferedReader().use { it.readText() }
-                val jsonArray = org.json.JSONArray(jsonString)
-                jsonArray.length()
-            }
+            // Toujours charger le dictionnaire source depuis assets
+            // car creole_dict_with_usage.json peut être vide (nouveau install)
+            val jsonString = assets.open("creole_dict.json").bufferedReader().use { it.readText() }
+            val jsonArray = org.json.JSONArray(jsonString)
+            val count = jsonArray.length()
             
             cachedTotalWords = count
             Log.d("SettingsActivity", "📊 Total mots dictionnaire: $count")
             count
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur comptage mots: ${e.message}")
-            2833 // Fallback sur la valeur connue
+            14722 // Fallback sur la valeur connue du dictionnaire complet
         }
     }
     
@@ -2139,9 +2134,9 @@ class SettingsActivity : AppCompatActivity() {
             return when (realPosition) {
                 0 -> OnboardingFragment()
                 1 -> StatsFragment()
-                2 -> AboutFragment()
-                3 -> WordSearchFragment()
-                4 -> WordScrambleFragment()
+                2 -> WordSearchFragment()
+                3 -> WordScrambleFragment()
+                4 -> AboutFragment()
                 else -> OnboardingFragment()
             }
         }
@@ -2671,7 +2666,6 @@ class SettingsActivity : AppCompatActivity() {
     class WordScrambleFragment : Fragment() {
         private var rootView: ScrollView? = null
         
-        private lateinit var tvTimer: TextView
         private lateinit var tvScore: TextView
         private lateinit var tvWordNumber: TextView
         private lateinit var gridScrambled: GridView
@@ -2694,9 +2688,6 @@ class SettingsActivity : AppCompatActivity() {
         private var currentWordIndex = 0
         private var score = 0
         private var difficulty = com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty.NORMAL
-        
-        private var countDownTimer: CountDownTimer? = null
-        private var timeRemaining = 30
         
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -2721,42 +2712,24 @@ class SettingsActivity : AppCompatActivity() {
                     orientation = LinearLayout.VERTICAL
                     setPadding(32, 16, 32, 16)
                     
-                    // En-tête avec timer et score
+                    // En-tête avec score
                     val headerLayout = LinearLayout(activity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         )
                         orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
+                        gravity = Gravity.CENTER
                         setBackgroundColor(Color.WHITE)
                         setPadding(24, 24, 24, 24)
                         elevation = 8f
                         (layoutParams as LinearLayout.LayoutParams).bottomMargin = 32
                         
-                        tvTimer = TextView(activity).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                0,
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                1f
-                            )
-                            text = "⏱️ 30s"
-                            textSize = 20f
-                            setTypeface(null, Typeface.BOLD)
-                            setTextColor(Color.BLACK)
-                        }
-                        addView(tvTimer)
-                        
                         tvScore = TextView(activity).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                0,
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                1f
-                            )
                             text = "Score: 0"
-                            textSize = 18f
+                            textSize = 24f
                             setTypeface(null, Typeface.BOLD)
-                            gravity = Gravity.END
+                            gravity = Gravity.CENTER
                             setTextColor(Color.parseColor("#4CAF50"))
                         }
                         addView(tvScore)
@@ -2975,11 +2948,34 @@ class SettingsActivity : AppCompatActivity() {
             }
             
             currentWord = gameWords[currentWordIndex]
-            scrambledLetters = com.example.kreyolkeyboard.wordscramble.WordScrambleData.scrambleWord(currentWord)
+            var allScrambledLetters = com.example.kreyolkeyboard.wordscramble.WordScrambleData.scrambleWord(currentWord)
             
             currentAnswer.clear()
             selectedPositions.clear()
             repeat(currentWord.length) { currentAnswer.add(null) }
+            
+            // Pré-remplir la première et la dernière lettre
+            if (currentWord.isNotEmpty()) {
+                currentAnswer[0] = currentWord[0]
+                if (currentWord.length > 1) {
+                    currentAnswer[currentWord.length - 1] = currentWord[currentWord.length - 1]
+                }
+                
+                // Retirer la première et dernière lettre des lettres mélangées
+                val lettersToRemove = mutableListOf<Char>()
+                lettersToRemove.add(currentWord[0])
+                if (currentWord.length > 1) {
+                    lettersToRemove.add(currentWord[currentWord.length - 1])
+                }
+                
+                scrambledLetters = allScrambledLetters.toMutableList().apply {
+                    lettersToRemove.forEach { letter ->
+                        remove(letter)
+                    }
+                }
+            } else {
+                scrambledLetters = allScrambledLetters
+            }
             
             scrambledAdapter = com.example.kreyolkeyboard.wordscramble.ScrambledLettersAdapter(requireContext(), scrambledLetters)
             answerAdapter = com.example.kreyolkeyboard.wordscramble.AnswerLettersAdapter(requireContext(), currentAnswer)
@@ -2999,33 +2995,8 @@ class SettingsActivity : AppCompatActivity() {
             tvWordNumber.text = "Mot ${currentWordIndex + 1}/${gameWords.size}"
             tvScore.text = "Score: $score"
             progressBar.progress = currentWordIndex
-            
-            startTimer()
         }
-        
-        private fun startTimer() {
-            countDownTimer?.cancel()
-            timeRemaining = com.example.kreyolkeyboard.wordscramble.WordScrambleData.getTimeForDifficulty(difficulty)
-            
-            countDownTimer = object : CountDownTimer((timeRemaining * 1000).toLong(), 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    timeRemaining = (millisUntilFinished / 1000).toInt()
-                    tvTimer.text = "⏱️ ${timeRemaining}s"
-                    
-                    if (timeRemaining <= 5) {
-                        tvTimer.setTextColor(Color.parseColor("#D32F2F"))
-                    } else {
-                        tvTimer.setTextColor(Color.BLACK)
-                    }
-                }
-                
-                override fun onFinish() {
-                    tvTimer.text = "⏱️ 0s"
-                    Toast.makeText(requireContext(), "Temps écoulé!", Toast.LENGTH_SHORT).show()
-                    skipWord()
-                }
-            }.start()
-        }
+
         
         private fun addLetterToAnswer(position: Int) {
             val emptyIndex = currentAnswer.indexOfFirst { it == null }
@@ -3071,12 +3042,9 @@ class SettingsActivity : AppCompatActivity() {
             val answer = currentAnswer.filterNotNull().joinToString("")
             
             if (answer.equals(currentWord, ignoreCase = true)) {
-                val timeBonus = timeRemaining * 10
-                score += 100 + timeBonus
+                score += 100
                 
-                countDownTimer?.cancel()
-                
-                Toast.makeText(requireContext(), "✅ Correct! +${100 + timeBonus} pts", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "✅ Correct! +100 pts", Toast.LENGTH_SHORT).show()
                 
                 currentWordIndex++
                 loadNextWord()
@@ -3087,7 +3055,6 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         private fun skipWord() {
-            countDownTimer?.cancel()
             Toast.makeText(requireContext(), "Le mot était: $currentWord", Toast.LENGTH_SHORT).show()
             currentWordIndex++
             loadNextWord()
@@ -3116,14 +3083,20 @@ class SettingsActivity : AppCompatActivity() {
             selectedPositions.clear()
             repeat(currentWord.length) { currentAnswer.add(null) }
             
+            // Re-pré-remplir la première et dernière lettre
+            if (currentWord.isNotEmpty()) {
+                currentAnswer[0] = currentWord[0]
+                if (currentWord.length > 1) {
+                    currentAnswer[currentWord.length - 1] = currentWord[currentWord.length - 1]
+                }
+            }
+            
             scrambledAdapter?.clearSelections()
             answerAdapter?.updateLetters(currentAnswer)
             btnValidate.isEnabled = false
         }
         
         private fun endGame() {
-            countDownTimer?.cancel()
-            
             AlertDialog.Builder(requireContext())
                 .setTitle("🎉 Partie terminée!")
                 .setMessage("Score final: $score\nMots réussis: $currentWordIndex/${gameWords.size}")
@@ -3136,7 +3109,6 @@ class SettingsActivity : AppCompatActivity() {
         
         override fun onDestroyView() {
             super.onDestroyView()
-            countDownTimer?.cancel()
             rootView = null
         }
     }
