@@ -22,7 +22,7 @@
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard">
-    <img src="Screenshots\GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Get it on Google Play" width="25%">
+    <img src="Screenshots\GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Get it on Google Play" width="75%">
   </a>
 </div>
 
