@@ -5,6 +5,86 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.5.0] - 2025-11-17
+
+### ✨ Nouvelles fonctionnalités
+
+#### 🔤 Correction orthographique intelligente
+- **Détection automatique des fautes de frappe** : Le système de suggestions propose maintenant des corrections même quand vous faites des erreurs
+  - Algorithme de distance de Levenshtein intégré pour détecter les mots similaires
+  - Correction des lettres manquantes : "bonjo" → suggère "bonjou"
+  - Correction des lettres en trop : "mesli" → suggère "mèsi"
+  - Correction des lettres inversées ou incorrectes : "zanbi" → suggère "zanmi"
+  - Combinaison avec la tolérance aux accents : "kreyol" → suggère "kréyòl"
+  - Distance maximale de 2 modifications pour éviter les faux positifs
+  - Priorisation par fréquence d'utilisation des mots
+
+#### 🎯 Système de suggestions amélioré - Stratégie en cascade
+Le moteur de suggestions utilise maintenant une approche intelligente en 6 étapes :
+
+**1️⃣ Capture de saisie** (`InputProcessor.kt`)
+- Détection caractère par caractère lors de la frappe
+- Construction progressive du mot : "b" → "bo" → "bon" → "bonj" → "bonjo"
+- Déclenchement des suggestions via `onWordChanged()`
+
+**2️⃣ Recherche par préfixe** (Étape A - Rapide)
+- Recherche de mots commençant par l'input saisi
+- Tolérance aux accents intégrée (`AccentTolerantMatcher`)
+- Si des résultats trouvés → Retour immédiat
+
+**3️⃣ Correction orthographique** (Étape B - Nouvelle fonctionnalité)
+- Activée uniquement si recherche préfixe ne retourne rien ET input ≥ 3 lettres
+- Essai 1 : Calcul de distance avec normalisation des accents
+- Essai 2 : Calcul de distance sans normalisation
+- Algorithme de Levenshtein pour trouver mots à distance ≤ 2 modifications
+
+**4️⃣ Enrichissement contextuel** (N-grams)
+- Analyse de l'historique des mots précédemment saisis
+- Consultation du modèle `creole_ngrammes.json`
+- Bonus de +50 points pour suggestions contextuelles
+
+**5️⃣ Calcul des scores** (Formule avancée)
+```
+Score = Fréquence du mot
+      + 50 (si préfixe exact)
+      + (3 - distance_Levenshtein) × 15  [NOUVEAU]
+      + 10 (si mot court ≤ 6 lettres)
+      - 10 (si mot long > 12 lettres)
+      + 5 (si mot avec accents)
+```
+
+**6️⃣ Tri et affichage**
+- Fusion dictionnaire + N-grams + corrections
+- Tri par score décroissant
+- Limitation aux meilleures suggestions (5-10 résultats)
+- Affichage dans la barre de suggestions
+
+**Optimisations de performance** :
+- ⚡ Pré-filtrage par longueur de mot (±2 caractères)
+- 🔄 Traitement asynchrone (`CoroutineScope`) pour ne pas bloquer l'UI
+- 💾 Cache pour calculs répétés (`calculateCached()`)
+- 🎯 Recherche intelligente : rapide d'abord, puissante ensuite
+
+### 🧪 Tests et qualité
+
+#### ✅ Suite de tests complète
+- **16 tests unitaires** validant la correction orthographique avec le dictionnaire créole réel
+- Tests de fautes courantes : lettres manquantes, en trop, inversées
+- Tests de mots typiques : salutations, famille, verbes, mots courants
+- Validation des performances (< 100ms pour recherche)
+- Couverture des cas limites et edge cases
+
+### 🛠️ Technique
+
+#### 📦 Nouveaux fichiers
+- `LevenshteinDistance.kt` : Utilitaire de calcul de distance et recherche de corrections
+- `SimpleDictionaryTest.kt` : Suite de tests basée sur le dictionnaire créole
+- Dépendances de test ajoutées : JUnit 4.13.2, Kotlin Test 1.9.22
+
+#### 🔧 Modifications
+- `SuggestionEngine.kt` : Intégration de la correction orthographique automatique
+- `build.gradle` : Incrémentation de version et ajout des dépendances de test
+
 ## [6.4.1] - 2025-11-14
 
 ### ✨ Nouvelles fonctionnalités
