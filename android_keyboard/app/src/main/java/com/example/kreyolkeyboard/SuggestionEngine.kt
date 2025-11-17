@@ -491,7 +491,7 @@ class SuggestionEngine(private val context: Context) {
     
     /**
      * Obtient les suggestions depuis le dictionnaire avec support AccentTolerantMatcher
-     * 🎯 NOUVELLE FONCTIONNALITÉ: Recherche insensible aux accents
+     * 🎯 NOUVELLE FONCTIONNALITÉ: Recherche insensible aux accents + correction orthographique
      */
     private fun getDictionarySuggestions(input: String): List<Pair<String, Int>> {
         if (input.length < MIN_WORD_LENGTH) return emptyList()
@@ -503,9 +503,61 @@ class SuggestionEngine(private val context: Context) {
             MAX_SUGGESTIONS * 2
         )
         
+        // ✨ Si aucune correspondance par préfixe, essayer la correction orthographique
+        if (accentTolerantMatches.isEmpty() && input.length >= 3) {
+            Log.d(TAG, "🔍 Aucune correspondance par préfixe pour '$input', tentative de correction orthographique...")
+            return getSpellCorrectionSuggestions(input)
+        }
+        
         Log.d(TAG, "🔍 Recherche '$input': ${accentTolerantMatches.size} suggestions trouvées")
         
         return accentTolerantMatches
+    }
+    
+    /**
+     * Obtient les suggestions de correction orthographique en utilisant la distance de Levenshtein
+     * 🔧 CORRECTION ORTHOGRAPHIQUE: Trouve les mots les plus proches même avec des fautes
+     * 
+     * Utilisé comme solution de secours lorsque la recherche par préfixe ne retourne rien.
+     * Détecte et corrige:
+     * - Les lettres mélangées: "bonjo" → "bonjou"
+     * - Les fautes d'orthographe: "mesli" → "mèsi"
+     * - Les lettres manquantes/en trop: "kreyol" → "kréyòl"
+     * 
+     * @param input Le mot saisi par l'utilisateur (potentiellement mal orthographié)
+     * @return Liste de suggestions triées par pertinence (distance + fréquence)
+     */
+    private fun getSpellCorrectionSuggestions(input: String): List<Pair<String, Int>> {
+        if (input.length < 3) return emptyList()
+        
+        // Essayer d'abord avec la normalisation des accents (combinaison puissante)
+        val normalizedMatches = LevenshteinDistance.findClosestMatchesNormalized(
+            input = input,
+            dictionary = dictionary,
+            normalizer = { str -> AccentTolerantMatcher.normalize(str) },
+            maxDistance = 2,
+            maxResults = MAX_SUGGESTIONS
+        )
+        
+        // Si on trouve des correspondances normalisées, les retourner
+        if (normalizedMatches.isNotEmpty()) {
+            Log.d(TAG, "✓ Correction orthographique (normalisée) pour '$input': ${normalizedMatches.take(3).map { it.first }}")
+            return normalizedMatches
+        }
+        
+        // Sinon, essayer sans normalisation (peut détecter d'autres types d'erreurs)
+        val directMatches = LevenshteinDistance.findClosestMatches(
+            input = input,
+            dictionary = dictionary,
+            maxDistance = 2,
+            maxResults = MAX_SUGGESTIONS
+        )
+        
+        if (directMatches.isNotEmpty()) {
+            Log.d(TAG, "✓ Correction orthographique (directe) pour '$input': ${directMatches.take(3).map { it.first }}")
+        }
+        
+        return directMatches
     }
     
     /**
@@ -613,23 +665,44 @@ class SuggestionEngine(private val context: Context) {
     
     /**
      * Calcule un score de pertinence pour une suggestion du dictionnaire
+     * ✨ Amélioration: Prend en compte la distance de Levenshtein pour les corrections orthographiques
      */
-    private fun calculateDictionaryScore(word: String, input: String, frequency: Int): Double {
+    private fun calculateDictionaryScore(
+        word: String, 
+        input: String, 
+        frequency: Int,
+        levenshteinDistance: Int = 0
+    ): Double {
         var score = frequency.toDouble()
         
-        // Bonus si le mot commence exactement par l'input
+        // Bonus si le mot commence exactement par l'input (correspondance par préfixe)
         if (word.startsWith(input, ignoreCase = true)) {
-            score += 20.0
+            score += 50.0  // Augmenté pour favoriser les correspondances par préfixe
+        }
+        
+        // Bonus pour les corrections orthographiques (basé sur la distance de Levenshtein)
+        if (levenshteinDistance > 0) {
+            // Plus la distance est petite, meilleur est le match
+            // Distance 1 (1 lettre de différence) = +30 points
+            // Distance 2 (2 lettres de différence) = +15 points
+            val correctionBonus = (3 - levenshteinDistance) * 15.0
+            score += correctionBonus
+            Log.d(TAG, "📝 Correction '$input' → '$word' (distance=$levenshteinDistance, bonus=$correctionBonus)")
         }
         
         // Bonus pour les mots courts (plus faciles à taper)
         if (word.length <= 6) {
-            score += 5.0
+            score += 10.0
         }
         
         // Malus pour les mots très longs
         if (word.length > 12) {
             score -= 10.0
+        }
+        
+        // Bonus pour les mots avec accents (encourage l'apprentissage de l'orthographe correcte)
+        if (AccentTolerantMatcher.hasAccents(word)) {
+            score += 5.0
         }
         
         return score
