@@ -5,6 +5,23 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.5.1] - 2025-11-19
+
+### 🐛 Corrections de bugs
+
+#### 🔤 Préservation des majuscules/minuscules dans les suggestions
+- **Correction majeure** : Les suggestions respectent maintenant le pattern de casse de votre saisie
+  - Si vous tapez "kaBr", les suggestions affichent "kaBrit" (pas "kabrit")
+  - Si vous tapez "BONJ", les suggestions affichent "BONJOU" (tout en majuscules)
+  - Si vous tapez "Zan", les suggestions affichent "Zanmi" (première lettre en majuscule)
+  - La casse est préservée à l'insertion du mot sélectionné
+  - Fonctionne dans tous les modes (dictionnaire, bilingue, contextuel)
+
+### 🔧 Améliorations techniques
+- Ajout de `applyCasingPattern()` dans `SuggestionEngine.kt` pour appliquer intelligemment la casse
+- Correction dans `mergeAndRankSuggestions()`, `getKreyolSuggestions()`, `getFrenchSuggestions()`
+- Modification de `InputProcessor.processSuggestionSelection()` pour ne plus écraser la casse
+
 ## [6.5.0] - 2025-11-17
 
 ### ✨ Nouvelles fonctionnalités

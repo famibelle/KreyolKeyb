@@ -293,21 +293,20 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
             inputConnection.deleteSurroundingText(currentWord.length, 0)
         }
         
-        // 🔥 CORRECTION BUG CASSE : Préserver la casse intentionnelle
-        val finalSuggestion = applyCaseToSuggestion(suggestion, currentWord)
-        Log.d(TAG, "Casse préservée dans InputProcessor: '$currentWord' -> '$finalSuggestion'")
+        // ✅ La suggestion arrive déjà avec la bonne casse depuis SuggestionEngine
+        Log.d(TAG, "Suggestion avec casse préservée: '$currentWord' -> '$suggestion'")
         
         // Insérer la suggestion avec un espace automatique
-        inputConnection.commitText("$finalSuggestion ", 1)
+        inputConnection.commitText("$suggestion ", 1)
         
         // Finaliser le mot (le tracking se fera dans finalizeCurrentWord)
-        currentWord = finalSuggestion
+        currentWord = suggestion
         finalizeCurrentWord()
         
         // Gérer la capitalisation automatique après l'espace
         handleAutoCapitalization()
         
-        Log.d(TAG, "Suggestion sélectionnée: '$finalSuggestion' (avec espace automatique)")
+        Log.d(TAG, "Suggestion sélectionnée: '$suggestion' (avec espace automatique)")
         return true
     }
     

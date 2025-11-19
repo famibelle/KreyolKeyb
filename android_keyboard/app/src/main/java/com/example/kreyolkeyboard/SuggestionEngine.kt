@@ -22,6 +22,50 @@ class SuggestionEngine(private val context: Context) {
         private const val MAX_WORD_HISTORY = 5
         private const val MIN_WORD_LENGTH = 2
         
+        /**
+         * Applique le pattern de casse (majuscules/minuscules) de l'input à un mot suggéré
+         * Exemples:
+         * - input="kaBr", suggestion="kabrit" → "kaBrit"
+         * - input="BONJ", suggestion="bonjou" → "BONJOU"
+         * - input="Bon", suggestion="bonjou" → "Bonjou"
+         */
+        private fun applyCasingPattern(input: String, suggestion: String): String {
+            if (input.isEmpty() || suggestion.isEmpty()) return suggestion
+            
+            val result = StringBuilder()
+            
+            // Cas 1: Tout en majuscules
+            if (input.all { it.isUpperCase() || !it.isLetter() }) {
+                return suggestion.uppercase()
+            }
+            
+            // Cas 2: Première lettre majuscule seulement
+            if (input.length >= 1 && input[0].isUpperCase() && 
+                input.drop(1).all { it.isLowerCase() || !it.isLetter() }) {
+                return suggestion.replaceFirstChar { it.uppercase() }
+            }
+            
+            // Cas 3: Pattern mixte - appliquer caractère par caractère
+            for (i in suggestion.indices) {
+                if (i < input.length) {
+                    val inputChar = input[i]
+                    val suggestionChar = suggestion[i]
+                    
+                    result.append(
+                        when {
+                            inputChar.isUpperCase() -> suggestionChar.uppercase()
+                            inputChar.isLowerCase() -> suggestionChar.lowercase()
+                            else -> suggestionChar
+                        }
+                    )
+                } else {
+                    // Au-delà de la longueur de l'input, garder la casse originale
+                    result.append(suggestion[i])
+                }
+            }
+            
+            return result.toString()
+        }
 
     }
     
@@ -153,7 +197,10 @@ class SuggestionEngine(private val context: Context) {
                 mergeAndRankSuggestions(dictionarySuggestions, ngramSuggestions, input)
             }
             
-            suggestionListener?.onSuggestionsReady(suggestions)
+            // Appliquer la casse de l'input aux suggestions
+            val casedSuggestions = suggestions.map { applyCasingPattern(input, it) }
+            
+            suggestionListener?.onSuggestionsReady(casedSuggestions)
         }
     }
     
@@ -183,10 +230,15 @@ class SuggestionEngine(private val context: Context) {
                 createBilingualSuggestions(input)
             }
             
+            // Appliquer la casse de l'input aux suggestions
+            val casedSuggestions = suggestions.map { suggestion ->
+                suggestion.copy(word = applyCasingPattern(input, suggestion.word))
+            }
+            
             // Notifier avec les deux formats pour compatibilité
-            val simpleWords = suggestions.map { it.word }
+            val simpleWords = casedSuggestions.map { it.word }
             suggestionListener?.onSuggestionsReady(simpleWords)
-            suggestionListener?.onBilingualSuggestionsReady(suggestions)
+            suggestionListener?.onBilingualSuggestionsReady(casedSuggestions)
             
             Log.d(TAG, "🎯 Suggestions bilingues pour '$input': ${simpleWords}")
         }
@@ -238,11 +290,12 @@ class SuggestionEngine(private val context: Context) {
             allKreyol[word] = currentScore + 50f  // Bonus contextuel
         }
         
-        // Convertir en BilingualSuggestion et appliquer boost kreyòl
+        // Convertir en BilingualSuggestion et appliquer boost kreyòl + casse
         return allKreyol.entries
             .map { (word, score) ->
+                val casedWord = applyCasingPattern(input, word)
                 val adjustedScore = bilingualConfig.adjustScoreByLanguage(score, SuggestionLanguage.KREYOL)
-                BilingualSuggestion(word, adjustedScore, SuggestionLanguage.KREYOL, SuggestionSource.HYBRID)
+                BilingualSuggestion(casedWord, adjustedScore, SuggestionLanguage.KREYOL, SuggestionSource.HYBRID)
             }
             .sortedByDescending { it.score }
             .take(bilingualConfig.maxKreyolSuggestions)
@@ -260,11 +313,12 @@ class SuggestionEngine(private val context: Context) {
         val frenchWords = frenchDictionary.getSuggestions(input)
         
         return frenchWords.map { word ->
+            val casedWord = applyCasingPattern(input, word)
             val frequency = frenchDictionary.getWordFrequency(word)
             val baseScore = calculateDictionaryScore(word, input, frequency)
             val adjustedScore = bilingualConfig.adjustScoreByLanguage(baseScore.toFloat(), SuggestionLanguage.FRENCH)
             
-            BilingualSuggestion(word, adjustedScore, SuggestionLanguage.FRENCH, SuggestionSource.DICTIONARY)
+            BilingualSuggestion(casedWord, adjustedScore, SuggestionLanguage.FRENCH, SuggestionSource.DICTIONARY)
         }.sortedByDescending { it.score }
     }
     
@@ -339,7 +393,7 @@ class SuggestionEngine(private val context: Context) {
                     }
                     .sortedByDescending { it.second }
                     .take(MAX_SUGGESTIONS)
-                    .map { it.first }
+                    .map { applyCasingPattern(input, it.first) }
             }
             
             Log.d(TAG, "Suggestions dictionnaire: $suggestions")
@@ -644,15 +698,17 @@ class SuggestionEngine(private val context: Context) {
         
         // Ajouter les suggestions du dictionnaire avec score basé sur la fréquence et la position
         dictionarySuggestions.forEach { (word, frequency) ->
+            val casedWord = applyCasingPattern(input, word)
             val score = calculateDictionaryScore(word, input, frequency)
-            allSuggestions[word] = score
+            allSuggestions[casedWord] = score
         }
         
         // Ajouter les suggestions N-gram avec un bonus de contexte
         ngramSuggestions.forEach { word ->
-            val currentScore = allSuggestions[word] ?: 0.0
+            val casedWord = applyCasingPattern(input, word)
+            val currentScore = allSuggestions[casedWord] ?: 0.0
             val ngramBonus = 50.0 // Bonus pour les suggestions contextuelles
-            allSuggestions[word] = currentScore + ngramBonus
+            allSuggestions[casedWord] = currentScore + ngramBonus
         }
         
         // Trier par score et retourner les meilleures
