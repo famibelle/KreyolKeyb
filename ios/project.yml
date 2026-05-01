@@ -1,0 +1,93 @@
+name: KreyolKeyb
+
+options:
+  bundleIdPrefix: com.potomitan
+  deploymentTarget:
+    iOS: "16.0"
+  defaultConfig: Release
+  xcodeVersion: "15"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+configs:
+  Debug:   debug
+  Release: release
+
+targets:
+
+  # ── App principale ─────────────────────────────────────────────────────────
+  KreyolKeyb:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+
+    sources:
+      - path: KreyolKeyb/App
+      - path: KreyolKeyb/Core
+      - path: KreyolKeyb/Models
+      - path: KreyolKeyb/Gamification
+      - path: KreyolKeyb/Games
+      - path: KreyolKeyb/Views
+      - path: KreyolKeyb/Resources
+        buildPhase: resources
+        type: folder
+
+    resources:
+      - path: ../android_keyboard/app/src/main/assets/creole_dict.json
+      - path: ../android_keyboard/app/src/main/assets/creole_ngrams.json
+      - path: ../android_keyboard/app/src/main/assets/french_simple_dict.json
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.potomitan.kreyolkeyb
+        INFOPLIST_FILE: KreyolKeyb/App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: KreyolKeyb/App/KreyolKeyb.entitlements
+      configs:
+        Debug:
+          CODE_SIGN_IDENTITY: "iPhone Developer"
+          CODE_SIGNING_ALLOWED: "YES"
+        Release:
+          CODE_SIGN_IDENTITY: "iPhone Distribution"
+          CODE_SIGNING_ALLOWED: "YES"
+
+    dependencies:
+      - target: KreyolKeybExtension
+
+  # ── Keyboard Extension ─────────────────────────────────────────────────────
+  KreyolKeybExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+
+    sources:
+      - path: KreyolKeyb/KeyboardExtension
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+      - path: KreyolKeyb/Core
+      - path: KreyolKeyb/Models
+      - path: KreyolKeyb/Gamification
+
+    resources:
+      - path: ../android_keyboard/app/src/main/assets/creole_dict.json
+      - path: ../android_keyboard/app/src/main/assets/creole_ngrams.json
+      - path: ../android_keyboard/app/src/main/assets/french_simple_dict.json
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.potomitan.kreyolkeyb.keyboard
+        INFOPLIST_FILE: KreyolKeyb/KeyboardExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: KreyolKeyb/KeyboardExtension/KreyolKeyb.entitlements
+      configs:
+        Debug:
+          CODE_SIGN_IDENTITY: "iPhone Developer"
+          CODE_SIGNING_ALLOWED: "YES"
+        Release:
+          CODE_SIGN_IDENTITY: "iPhone Distribution"
+          CODE_SIGNING_ALLOWED: "YES"
