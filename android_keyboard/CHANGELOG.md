@@ -5,6 +5,37 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2026-07-03
+
+### ✨ Nouvelles fonctionnalités
+
+#### 🎯 Intégration de la distance de Levenshtein dans le scoring
+- **Propagation complète de la distance** : `LevenshteinDistance` retourne désormais `(mot, fréquence, distance)` au lieu de perdre la distance
+- **Formule de score améliorée** : `(3-distance)×100000` — une correction à 1 édition bat toujours une correction à 2 éditions
+- **Exemple concret** : "mesli" propose désormais "mèsi" (d=1) avant "mésyé" (d=2 plus fréquent)
+- **Testabilité** : `calculateDictionaryScore` déplacé dans companion object, 4 tests `SuggestionScoringTest` ajoutés
+
+### 🚀 Performances
+
+#### ⚡ Optimisations du moteur de suggestions
+- **Normalisation accents optimisée** : Table char→char au lieu de regex (~37 000 compilations de regex évitées par frappe)
+- **Formes normalisées précalculées** : au chargement du dictionnaire
+- **Bonus préfixe insensible aux accents** : "fe" favorise désormais "fè"
+- **Annulation des suggestions précédentes** : à chaque frappe (plus de résultats périmés)
+- **Suggestions dès la 1ère lettre** : `MIN_WORD_LENGTH` passé de 2 à 1 (ka, an, sé…)
+- **Tests retirés du démarrage production** : remplacés par des tests JVM (`AccentTolerantMatcherTest`)
+
+### 📚 Documentation
+
+- **Rapport d'audit complet** : Analyse du pipeline de suggestions (bugs, performance, confidentialité, qualité prédictive) avec addendum sur les quick wins appliqués
+- **CLAUDE.md** : Guide pour Claude Code (architecture, commandes de build, pièges du build local)
+
+### 🧹 Nettoyage
+
+- **Code mort supprimé** : stratégies bigram/trigram (modèle unigramme uniquement), cache Levenshtein, `applyCaseToSuggestion`
+- **Suite de tests réparée** : `returnDefaultValues`, dépendance org.json de test, assertions de distance corrigées
+- **659 lignes supprimées, 182 ajoutées**
+
 ## [6.5.1] - 2025-11-19
 
 ### 🐛 Corrections de bugs
