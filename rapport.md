@@ -196,6 +196,8 @@ Les 7 quick wins ont été appliqués et vérifiés (`compileDebugKotlin`, `asse
 | 6 | Code mort | Supprimés : `applyCaseToSuggestion()`, cache Levenshtein (`calculateCached`/`clearCache`), paramètre `levenshteinDistance` de `calculateDictionaryScore`, stratégies bigram/trigram de `getNgramSuggestions()` (le modèle n'a que des clés unigrammes), `getSuggestionListener()`, `calculateMatchScore()`/`getDebugInfo()`/`runTests()` du matcher. |
 | 7 | Suggestions dès 1 lettre | `MIN_WORD_LENGTH` passé de 2 à 1 : `ka`, `an`, `sé`… sont proposés dès la première frappe. |
 
+**Chantier G (partie classement) appliqué également** : la distance de Levenshtein est désormais propagée jusqu'au score (`LevenshteinDistance` renvoie `(mot, fréquence, distance)`, `calculateDictionaryScore` donne un poids dominant à la distance). Vérifié sur émulateur : « mesli » propose désormais `mèsi` (distance 1) en première position, devant `mésyé`/`mépri` (distance 2, plus fréquents). Le second volet du chantier (auto-correction à l'espace, corrections mêlées aux résultats préfixe) reste à faire.
+
 **Découverte en passant — la suite de tests n'a jamais été verte** (25 échecs préexistants sur `main`) pour deux raisons corrigées au passage :
 - `android.util.Log` et `org.json` sont des stubs en test JVM → ajout de `unitTests.returnDefaultValues = true` et de la dépendance `testImplementation 'org.json:json:20240303'` (`app/build.gradle`) ;
 - plusieurs assertions de distance étaient fausses (l'auteur supposait que les accents ne comptent pas comme édition : `calculate("mesli","mèsi")` vaut 2, pas 1) → attentes corrigées dans `LevenshteinDistanceTest.kt`.

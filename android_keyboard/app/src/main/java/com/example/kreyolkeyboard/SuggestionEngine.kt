@@ -67,6 +67,53 @@ class SuggestionEngine(private val context: Context) {
             return result.toString()
         }
 
+        /**
+         * Calcule un score de pertinence pour une suggestion du dictionnaire
+         * `internal` (et non private) pour être testable en JVM sans Context
+         *
+         * @param levenshteinDistance 0 pour une correspondance par préfixe ;
+         *        > 0 pour une correction orthographique (distance d'édition)
+         */
+        internal fun calculateDictionaryScore(
+            word: String,
+            input: String,
+            frequency: Int,
+            levenshteinDistance: Int = 0
+        ): Double {
+            var score = frequency.toDouble()
+
+            // Corrections orthographiques : la distance prime sur tout le reste.
+            // Le poids (100 000) dépasse toute fréquence du dictionnaire (~15 500 max) :
+            // une correction à 1 édition bat toujours une correction à 2 éditions,
+            // quelle que soit leur fréquence ("mesli" → "mèsi" avant "mésyé")
+            if (levenshteinDistance > 0) {
+                score += (3 - levenshteinDistance) * 100_000.0
+            }
+
+            // Bonus si le mot commence par l'input, comparaison insensible aux accents :
+            // taper "fe" doit favoriser "fè" autant que "fenmen", sinon les graphies
+            // créoles correctes sont systématiquement déclassées
+            if (AccentTolerantMatcher.startsWith(input, word)) {
+                score += 50.0  // Augmenté pour favoriser les correspondances par préfixe
+            }
+
+            // Bonus pour les mots courts (plus faciles à taper)
+            if (word.length <= 6) {
+                score += 10.0
+            }
+
+            // Malus pour les mots très longs
+            if (word.length > 12) {
+                score -= 10.0
+            }
+
+            // Bonus pour les mots avec accents (encourage l'apprentissage de l'orthographe correcte)
+            if (AccentTolerantMatcher.hasAccents(word)) {
+                score += 5.0
+            }
+
+            return score
+        }
     }
     
     // Données du moteur kreyòl (existant)
@@ -278,8 +325,8 @@ class SuggestionEngine(private val context: Context) {
         val allKreyol = mutableMapOf<String, Float>()
         
         // Ajouter suggestions dictionnaire
-        dictionaryMatches.forEach { (word, frequency) ->
-            val score = calculateDictionaryScore(word, input, frequency)
+        dictionaryMatches.forEach { (word, frequency, distance) ->
+            val score = calculateDictionaryScore(word, input, frequency, distance)
             allKreyol[word] = score.toFloat()
         }
         
@@ -386,10 +433,10 @@ class SuggestionEngine(private val context: Context) {
             val suggestions = withContext(Dispatchers.Default) {
                 val dictionaryMatches = getDictionarySuggestions(input)
                 
-                // Trier uniquement par score de dictionnaire (fréquence + proximité)
+                // Trier uniquement par score de dictionnaire (fréquence + proximité + distance)
                 dictionaryMatches
-                    .map { (word, frequency) -> 
-                        Pair(word, calculateDictionaryScore(word, input, frequency))
+                    .map { (word, frequency, distance) ->
+                        Pair(word, calculateDictionaryScore(word, input, frequency, distance))
                     }
                     .sortedByDescending { it.second }
                     .take(MAX_SUGGESTIONS)
@@ -550,17 +597,18 @@ class SuggestionEngine(private val context: Context) {
      * Obtient les suggestions depuis le dictionnaire (recherche par préfixe insensible aux accents)
      * avec correction orthographique en secours
      */
-    private fun getDictionarySuggestions(input: String): List<Pair<String, Int>> {
+    private fun getDictionarySuggestions(input: String): List<Triple<String, Int, Int>> {
         if (input.length < MIN_WORD_LENGTH) return emptyList()
 
         // Recherche préfixe sur les formes normalisées précalculées.
         // `dictionary` est trié par fréquence décroissante : les premiers matches
         // sont les meilleurs, on peut s'arrêter dès qu'on en a assez.
+        // Distance 0 = correspondance par préfixe (pas une correction).
         val normalizedInput = AccentTolerantMatcher.normalize(input)
-        val matches = mutableListOf<Pair<String, Int>>()
+        val matches = mutableListOf<Triple<String, Int, Int>>()
         for (i in dictionary.indices) {
             if (normalizedWords[i].startsWith(normalizedInput)) {
-                matches.add(dictionary[i])
+                matches.add(Triple(dictionary[i].first, dictionary[i].second, 0))
                 if (matches.size >= MAX_SUGGESTIONS * 2) break
             }
         }
@@ -584,9 +632,9 @@ class SuggestionEngine(private val context: Context) {
      * - Les lettres manquantes/en trop: "kreyol" → "kréyòl"
      * 
      * @param input Le mot saisi par l'utilisateur (potentiellement mal orthographié)
-     * @return Liste de suggestions triées par pertinence (distance + fréquence)
+     * @return Liste de (mot, fréquence, distance) triée par pertinence (distance + fréquence)
      */
-    private fun getSpellCorrectionSuggestions(input: String): List<Pair<String, Int>> {
+    private fun getSpellCorrectionSuggestions(input: String): List<Triple<String, Int, Int>> {
         if (input.length < 3) return emptyList()
         
         // Essayer d'abord avec la normalisation des accents (combinaison puissante)
@@ -649,16 +697,16 @@ class SuggestionEngine(private val context: Context) {
      * Fusionne et classe les suggestions par pertinence
      */
     private fun mergeAndRankSuggestions(
-        dictionarySuggestions: List<Pair<String, Int>>,
+        dictionarySuggestions: List<Triple<String, Int, Int>>,
         ngramSuggestions: List<String>,
         input: String
     ): List<String> {
         val allSuggestions = mutableMapOf<String, Double>()
-        
+
         // Ajouter les suggestions du dictionnaire avec score basé sur la fréquence et la position
-        dictionarySuggestions.forEach { (word, frequency) ->
+        dictionarySuggestions.forEach { (word, frequency, distance) ->
             val casedWord = applyCasingPattern(input, word)
-            val score = calculateDictionaryScore(word, input, frequency)
+            val score = calculateDictionaryScore(word, input, frequency, distance)
             allSuggestions[casedWord] = score
         }
         
@@ -676,41 +724,6 @@ class SuggestionEngine(private val context: Context) {
             .sortedByDescending { it.value }
             .take(MAX_SUGGESTIONS)
             .map { it.key }
-    }
-    
-    /**
-     * Calcule un score de pertinence pour une suggestion du dictionnaire
-     */
-    private fun calculateDictionaryScore(
-        word: String,
-        input: String,
-        frequency: Int
-    ): Double {
-        var score = frequency.toDouble()
-
-        // Bonus si le mot commence par l'input, comparaison insensible aux accents :
-        // taper "fe" doit favoriser "fè" autant que "fenmen", sinon les graphies
-        // créoles correctes sont systématiquement déclassées
-        if (AccentTolerantMatcher.startsWith(input, word)) {
-            score += 50.0  // Augmenté pour favoriser les correspondances par préfixe
-        }
-
-        // Bonus pour les mots courts (plus faciles à taper)
-        if (word.length <= 6) {
-            score += 10.0
-        }
-        
-        // Malus pour les mots très longs
-        if (word.length > 12) {
-            score -= 10.0
-        }
-        
-        // Bonus pour les mots avec accents (encourage l'apprentissage de l'orthographe correcte)
-        if (AccentTolerantMatcher.hasAccents(word)) {
-            score += 5.0
-        }
-        
-        return score
     }
     
     /**

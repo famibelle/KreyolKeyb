@@ -92,7 +92,7 @@ object LevenshteinDistance {
      * @param maxDistance Maximum allowed Levenshtein distance (default: 2)
      * @param maxResults Maximum number of suggestions to return (default: 5)
      * @param lengthTolerance Maximum length difference to consider (default: 2)
-     * @return List of (word, frequency) pairs sorted by relevance
+     * @return List of (word, frequency, distance) triples sorted by relevance
      */
     fun findClosestMatches(
         input: String,
@@ -100,7 +100,7 @@ object LevenshteinDistance {
         maxDistance: Int = 2,
         maxResults: Int = 5,
         lengthTolerance: Int = 2
-    ): List<Pair<String, Int>> {
+    ): List<Triple<String, Int, Int>> {
         
         if (input.isEmpty()) return emptyList()
         
@@ -125,8 +125,7 @@ object LevenshteinDistance {
                     .thenByDescending { it.second }  // Then by frequency (higher is better)
             )
             .take(maxResults)
-            .map { Pair(it.first, it.second) }  // Convert back to (word, frequency) pairs
-        
+
         if (matches.isNotEmpty()) {
             Log.d(TAG, "✓ Found ${matches.size} corrections for '$input': ${matches.take(3).map { it.first }}")
         } else {
@@ -145,7 +144,7 @@ object LevenshteinDistance {
      * @param normalizer Function to normalize accents
      * @param maxDistance Maximum allowed distance
      * @param maxResults Maximum number of suggestions
-     * @return List of (word, frequency) pairs sorted by relevance
+     * @return List of (word, frequency, distance) triples sorted by relevance
      */
     fun findClosestMatchesNormalized(
         input: String,
@@ -153,7 +152,7 @@ object LevenshteinDistance {
         normalizer: (String) -> String,
         maxDistance: Int = 2,
         maxResults: Int = 5
-    ): List<Pair<String, Int>> {
+    ): List<Triple<String, Int, Int>> {
         
         if (input.isEmpty()) return emptyList()
         
@@ -179,8 +178,7 @@ object LevenshteinDistance {
                     .thenByDescending { it.second }
             )
             .take(maxResults)
-            .map { Pair(it.first, it.second) }
-        
+
         Log.d(TAG, "Normalized spell check '$input': ${matches.size} matches found")
         
         return matches
