@@ -186,28 +186,4 @@ object LevenshteinDistance {
         return matches
     }
     
-    /**
-     * Simple caching mechanism for repeated distance calculations.
-     * Useful when checking the same word multiple times in a session.
-     */
-    private val cache = mutableMapOf<Pair<String, String>, Int>()
-    
-    /**
-     * Cached version of calculate() for better performance with repeated queries.
-     */
-    fun calculateCached(s1: String, s2: String): Int {
-        val key = Pair(s1.lowercase(), s2.lowercase())
-        return cache.getOrPut(key) {
-            calculate(s1, s2)
-        }
-    }
-    
-    /**
-     * Clears the distance calculation cache.
-     * Call this periodically to prevent memory growth.
-     */
-    fun clearCache() {
-        cache.clear()
-        Log.d(TAG, "Distance cache cleared")
-    }
 }

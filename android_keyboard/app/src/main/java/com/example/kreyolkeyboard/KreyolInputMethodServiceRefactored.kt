@@ -221,10 +221,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 }
                 isInitialized = true
                 Log.d(TAG, "✅ Moteur de suggestions initialisé (mode: ${if (isLowEnd) "A21s optimisé" else "standard"})")
-                
-                // 🎯 NOUVEAU: Tests AccentTolerantMatching
-                runAccentTolerantTests()
-                
+
                 // 🎯 DÉSACTIVÉ TEMPORAIREMENT: Support bilingue (retour couleurs d'origine)
                 // suggestionEngine.enableBilingualSupport()
                 Log.d(TAG, "🎯 Mode suggestions avec AccentTolerantMatching activé")
@@ -473,8 +470,6 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     override fun onModeChanged(isNumeric: Boolean, isCapital: Boolean, isCapsLock: Boolean) {
-        Log.e("SHIFT_REAL_DEBUG", "🚨 onModeChanged CALLED! isNumeric=$isNumeric, isCapital=$isCapital, isCapsLock=$isCapsLock")
-        
         // ✅ Vérifier si le mode numérique a changé (avant de mettre à jour les états)
         val currentNumericMode = keyboardLayoutManager.isNumericMode()
         val needsLayoutRefresh = currentNumericMode != isNumeric
@@ -973,94 +968,4 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         return padding
     }
     
-    /**
-     * 🧪 Tests AccentTolerantMatching au démarrage du clavier
-     */
-    private fun runAccentTolerantTests() {
-        serviceScope.launch {
-            try {
-                Log.i(TAG, "🧪 Lancement des tests AccentTolerantMatching...")
-                
-                val testRunner = AccentTolerantMatchingTest(this@KreyolInputMethodServiceRefactored)
-                val testsSuccess = testRunner.runAllTests()
-                
-                if (testsSuccess) {
-                    Log.i(TAG, "✅ Tous les tests AccentTolerantMatching réussis!")
-                    
-                    // Test de performance
-                    val perfTime = testRunner.testPerformance()
-                    Log.i(TAG, "⏱️ Performance OK: ${perfTime}ms pour 100 recherches")
-                    
-                } else {
-                    Log.w(TAG, "⚠️ Certains tests AccentTolerantMatching ont échoué - fonctionnalité disponible mais non optimale")
-                }
-                
-                // Tests spécifiques aux cas d'usage créoles
-                testCreoleSpecificCases()
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Erreur lors des tests AccentTolerantMatching: ${e.message}", e)
-            }
-        }
-    }
-    
-    /**
-     * Tests spécifiques pour les mots créoles fréquents
-     */
-    private suspend fun testCreoleSpecificCases() {
-        try {
-            Log.d(TAG, "🔍 Test des cas créoles spécifiques...")
-            
-            val testCases = mapOf(
-                "kre" to "kréyòl",
-                "fe" to "fè", 
-                "te" to "té",
-                "bon" to "bon",
-                "epi" to "épi",
-                "ou" to "où"
-            )
-            
-            for ((input, expectedWord) in testCases) {
-                // Simuler une recherche de suggestion
-                val suggestions = mutableListOf<String>()
-                
-                // Utiliser un callback temporaire pour capturer les suggestions
-                val originalListener = suggestionEngine.getSuggestionListener()
-                suggestionEngine.setSuggestionListener(object : SuggestionEngine.SuggestionListener {
-                    override fun onSuggestionsReady(newSuggestions: List<String>) {
-                        suggestions.addAll(newSuggestions)
-                    }
-                    override fun onBilingualSuggestionsReady(suggestions: List<BilingualSuggestion>) {}
-                    override fun onDictionaryLoaded(wordCount: Int) {}
-                    override fun onNgramModelLoaded() {}
-                    override fun onFrenchDictionaryLoaded(wordCount: Int) {}
-                    override fun onModeChanged(newMode: SuggestionEngine.SuggestionMode) {}
-                })
-                
-                // Générer les suggestions
-                suggestionEngine.generateSuggestions(input)
-                
-                // Attendre un peu pour les suggestions asynchrones
-                delay(100)
-                
-                // Vérifier si le mot attendu est trouvé (directement ou via normalisation)
-                val found = suggestions.any { suggestion ->
-                    AccentTolerantMatcher.matches(suggestion, expectedWord) || 
-                    suggestion.equals(expectedWord, ignoreCase = true)
-                }
-                
-                if (found) {
-                    Log.d(TAG, "✅ '$input' → Trouvé '$expectedWord' dans $suggestions")
-                } else {
-                    Log.w(TAG, "⚠️ '$input' → '$expectedWord' NON trouvé dans $suggestions")
-                }
-                
-                // Restaurer l'ancien listener
-                originalListener?.let { suggestionEngine.setSuggestionListener(it) }
-            }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur lors des tests créoles spécifiques: ${e.message}", e)
-        }
-    }
 }

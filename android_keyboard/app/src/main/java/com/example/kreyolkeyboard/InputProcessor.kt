@@ -217,29 +217,24 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
      * Traite la touche Majuscule
      */
     private fun handleShift(): Boolean {
-        Log.e("SHIFT_REAL_DEBUG", "🚨🚨🚨 HANDLESHIFT CALLED IN INPUTPROCESSOR! 🚨🚨🚨")
         when {
             !isCapitalMode && !isCapsLock -> {
                 // Première pression - majuscule simple
                 isCapitalMode = true
                 isCapsLock = false
-                Log.e("SHIFT_REAL_DEBUG", "🚨 MODE: CAPITAL SIMPLE")
             }
             isCapitalMode && !isCapsLock -> {
                 // Deuxième pression - verrouillage majuscule
                 isCapitalMode = true
                 isCapsLock = true
-                Log.e("SHIFT_REAL_DEBUG", "🚨 MODE: CAPS LOCK")
             }
             else -> {
                 // Troisième pression - retour normal
                 isCapitalMode = false
                 isCapsLock = false
-                Log.e("SHIFT_REAL_DEBUG", "🚨 MODE: NORMAL")
             }
         }
-        
-        Log.e("SHIFT_REAL_DEBUG", "🚨 Calling processorListener?.onModeChanged()")
+
         processorListener?.onModeChanged(isNumericMode, isCapitalMode, isCapsLock)
         Log.d(TAG, "Shift traité - Capital: $isCapitalMode, CapsLock: $isCapsLock")
         return true
@@ -308,30 +303,6 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
         
         Log.d(TAG, "Suggestion sélectionnée: '$suggestion' (avec espace automatique)")
         return true
-    }
-    
-    /**
-     * 🔥 CORRECTION BUG CASSE : Applique la casse intentionnelle de l'utilisateur à la suggestion
-     * Préserve la majuscule intentionnelle (Shift/Caps) lors de l'application des suggestions
-     */
-    private fun applyCaseToSuggestion(suggestion: String, currentInput: String): String {
-        if (suggestion.isEmpty() || currentInput.isEmpty()) {
-            return suggestion
-        }
-        
-        // Analyser la casse du premier caractère tapé par l'utilisateur
-        val firstInputChar = currentInput.first()
-        val isIntentionalCapital = firstInputChar.isUpperCase()
-        
-        Log.d(TAG, "🔍 Analyse casse InputProcessor: input='$currentInput', premier char='$firstInputChar', majuscule intentionnelle=$isIntentionalCapital")
-        
-        return if (isIntentionalCapital) {
-            // L'utilisateur a volontairement commencé en majuscule → capitaliser la suggestion
-            suggestion.lowercase().replaceFirstChar { it.uppercase() }
-        } else {
-            // L'utilisateur a tapé en minuscule → garder la suggestion en minuscule
-            suggestion.lowercase()
-        }
     }
     
     /**

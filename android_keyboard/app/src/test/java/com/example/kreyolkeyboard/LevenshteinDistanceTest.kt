@@ -46,9 +46,9 @@ class LevenshteinDistanceTest {
         assertTrue(LevenshteinDistance.calculate("kreyol", "kréyòl") > 0)
         assertTrue(LevenshteinDistance.calculate("mesi", "mèsi") > 0)
         
-        // Lettres en trop
-        assertEquals(1, LevenshteinDistance.calculate("mesli", "mèsi"))  // 'l' en trop
-        assertEquals(1, LevenshteinDistance.calculate("souplle", "souplé"))  // 'l' en trop
+        // Lettres en trop (l'accent manquant compte aussi pour 1 édition)
+        assertEquals(2, LevenshteinDistance.calculate("mesli", "mèsi"))  // 'l' en trop + e→è
+        assertEquals(2, LevenshteinDistance.calculate("souplle", "souplé"))  // 'l' en trop + e→é
     }
 
     @Test
@@ -63,7 +63,7 @@ class LevenshteinDistanceTest {
     fun testLargerDistances() {
         // Distances plus grandes (mots très différents)
         assertEquals(3, LevenshteinDistance.calculate("chat", "chien"))
-        assertEquals(5, LevenshteinDistance.calculate("bonjou", "bonswa"))
+        assertEquals(3, LevenshteinDistance.calculate("bonjou", "bonswa"))  // j→s, o→w, u→a
         
         // Mots complètement différents
         assertTrue(LevenshteinDistance.calculate("bonjou", "mèsi") > 3)
@@ -127,24 +127,24 @@ class LevenshteinDistanceTest {
 
     @Test
     fun testFindClosestMatchesWithFrequency() {
-        // Dictionnaire avec plusieurs mots à distance 1
+        // Dictionnaire avec plusieurs mots proches de "bonjo"
         val dictionary = listOf(
-            Pair("bonbon", 50),   // distance 1, fréquence moyenne
+            Pair("bonbon", 50),   // distance 2, fréquence moyenne
             Pair("bonjou", 100),  // distance 1, haute fréquence
-            Pair("bondye", 30)    // distance 1, basse fréquence
+            Pair("bondye", 30)    // distance 3, exclu (maxDistance = 2)
         )
-        
+
         val matches = LevenshteinDistance.findClosestMatches(
             input = "bonjo",
             dictionary = dictionary,
             maxDistance = 2,
             maxResults = 3
         )
-        
-        // Devrait trouver tous les mots à distance 1
-        assertEquals(3, matches.size)
-        
-        // "bonjou" devrait être en premier (même distance mais fréquence plus haute)
+
+        // Devrait trouver les mots à distance ≤ 2
+        assertEquals(2, matches.size)
+
+        // "bonjou" devrait être en premier (distance la plus faible)
         assertEquals("bonjou", matches[0].first)
     }
 
@@ -204,37 +204,6 @@ class LevenshteinDistanceTest {
     }
 
     @Test
-    fun testCachedCalculation() {
-        // Première calcul
-        val distance1 = LevenshteinDistance.calculateCached("bonjou", "bonjo")
-        
-        // Deuxième calcul (devrait utiliser le cache)
-        val distance2 = LevenshteinDistance.calculateCached("bonjou", "bonjo")
-        
-        // Les résultats doivent être identiques
-        assertEquals(distance1, distance2)
-        assertEquals(1, distance1)
-        
-        // Test avec l'ordre inversé (clé normalisée)
-        val distance3 = LevenshteinDistance.calculateCached("bonjo", "bonjou")
-        assertEquals(distance1, distance3)
-    }
-
-    @Test
-    fun testClearCache() {
-        // Ajouter quelques calculs au cache
-        LevenshteinDistance.calculateCached("bonjou", "bonjo")
-        LevenshteinDistance.calculateCached("mèsi", "mesi")
-        
-        // Vider le cache (ne devrait pas lever d'exception)
-        LevenshteinDistance.clearCache()
-        
-        // Recalculer (devrait fonctionner)
-        val distance = LevenshteinDistance.calculateCached("bonjou", "bonjo")
-        assertEquals(1, distance)
-    }
-
-    @Test
     fun testRealWorldKreyolExamples() {
         // Exemples réels de fautes en créole
         
@@ -250,19 +219,19 @@ class LevenshteinDistanceTest {
         // "zanmi" au lieu de "zanmi" (correct)
         assertEquals(0, LevenshteinDistance.calculate("zanmi", "zanmi"))
         
-        // "kounen" au lieu de "kounye a" (2 mots différents, distance importante)
-        assertTrue(LevenshteinDistance.calculate("kounen", "kounye") > 2)
+        // "kounen" au lieu de "kounye" (e→y puis n→e)
+        assertEquals(2, LevenshteinDistance.calculate("kounen", "kounye"))
     }
 
     @Test
     fun testMaxDistanceFiltering() {
         val dictionary = listOf(
             Pair("bonjou", 100),    // distance 1
-            Pair("bonswa", 80),     // distance 4
-            Pair("bondye", 70),     // distance 2
-            Pair("mèsi", 60)        // distance 6+
+            Pair("bonswa", 80),     // distance 3
+            Pair("bondye", 70),     // distance 3
+            Pair("mèsi", 60)        // distance 5
         )
-        
+
         // maxDistance = 1 : devrait trouver seulement "bonjou"
         val matches1 = LevenshteinDistance.findClosestMatches(
             input = "bonjo",
@@ -271,15 +240,15 @@ class LevenshteinDistanceTest {
         )
         assertEquals(1, matches1.size)
         assertEquals("bonjou", matches1.first().first)
-        
-        // maxDistance = 2 : devrait trouver "bonjou" et "bondye"
-        val matches2 = LevenshteinDistance.findClosestMatches(
+
+        // maxDistance = 3 : devrait trouver "bonjou", "bonswa" et "bondye"
+        val matches3 = LevenshteinDistance.findClosestMatches(
             input = "bonjo",
             dictionary = dictionary,
-            maxDistance = 2
+            maxDistance = 3
         )
-        assertEquals(2, matches2.size)
-        assertTrue(matches2.any { it.first == "bonjou" })
-        assertTrue(matches2.any { it.first == "bondye" })
+        assertEquals(3, matches3.size)
+        assertTrue(matches3.any { it.first == "bonswa" })
+        assertTrue(matches3.any { it.first == "bondye" })
     }
 }
