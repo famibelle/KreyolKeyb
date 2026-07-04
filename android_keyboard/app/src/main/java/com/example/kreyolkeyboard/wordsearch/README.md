@@ -8,12 +8,12 @@ Module de jeu de mots mêlés intégré au clavier créole KreyolKeyb. Cette fon
 
 ```
 wordsearch/
-├── WordSearchActivity.kt          # Activité principale du jeu
 ├── WordSearchModels.kt           # Classes de données et thèmes
 ├── WordSearchGenerator.kt        # Générateur de grilles
-├── WordSearchGridAdapter.kt      # Adaptateur pour la grille tactile
-└── WordSearchTest.kt            # Tests de validation
+└── WordSearchGridAdapter.kt      # Adaptateur pour la grille tactile
 ```
+
+L'UI du jeu est l'onglet « Mots Mêlés » de `SettingsActivity` (`WordSearchFragment`), qui consomme directement ces trois classes. Il n'existe plus d'Activity standalone : `WordSearchActivity.kt` et `WordSearchTest.kt` ont été supprimés (doublon non maintenu, cf. `rapport_ux.md`).
 
 ## Fonctionnalités
 
@@ -48,29 +48,14 @@ wordsearch/
 - **Score** : Progression des mots trouvés
 
 ### Contrôles
-- **🎲 Nouveau Jeu** : Génère une nouvelle grille
-- **💡 Indice** : Affiche un hint pour le prochain mot
-- **🎨 Thèmes** : Sélecteur de thème
-- **❌ Fermer** : Retour à l'écran précédent
+- **🔄 Nouvelle grille** : Génère une nouvelle grille
+
+Les boutons Indice/Thèmes/Fermer existaient sur l'ancienne Activity standalone mais n'étaient jamais implémentés (TODO no-op) ; ils ont été retirés avec la suppression de cette Activity plutôt que masqués.
 
 ## Intégration
 
 ### Lancement depuis l'app
-L'activité est accessible depuis `VocabularyStatsActivity` via le bouton :
-```kotlin
-🎲 JOUER AUX MOTS MÊLÉS
-```
-
-### Manifest Android
-```xml
-<activity
-    android:name=".wordsearch.WordSearchActivity"
-    android:label="Mots Mêlés Kreyòl"
-    android:theme="@style/Theme.AppCompat"
-    android:screenOrientation="portrait"
-    android:exported="true">
-</activity>
-```
+Le jeu est accessible directement via l'onglet « Mots Mêlés 🎲 » de l'écran Paramètres (`SettingsActivity`), sans passer par une Activity ni une entrée de manifest dédiée.
 
 ## Algorithme de génération
 
@@ -85,14 +70,6 @@ L'activité est accessible depuis `VocabularyStatsActivity` via le bouton :
 2. Calcul de la ligne droite entre début et fin
 3. Extraction du mot formé
 4. Validation contre la liste des mots cachés
-
-## Tests
-
-Le module `WordSearchTest` valide :
-- Génération correcte des grilles
-- Placement des mots dans toutes les directions
-- Fonctionnement de tous les thèmes
-- Intégrité de la grille finale
 
 ## TODO / Améliorations futures
 

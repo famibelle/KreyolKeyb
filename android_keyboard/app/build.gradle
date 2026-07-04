@@ -126,6 +126,10 @@ android {
         // sans cette option, chaque Log.d lève "Method d not mocked"
         unitTests.returnDefaultValues = true
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

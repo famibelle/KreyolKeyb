@@ -34,7 +34,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlin.random.Random
-import com.example.kreyolkeyboard.wordsearch.WordSearchActivity
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
 import com.example.kreyolkeyboard.wordsearch.WordSearchPuzzle
 import com.example.kreyolkeyboard.wordsearch.WordSearchWord
@@ -1242,7 +1241,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val versionText = TextView(this).apply {
-            text = "Version : 6.5.1\n" +
+            text = "Version : ${BuildConfig.VERSION_NAME}\n" +
                     "© Potomitan™ - Clavier Kréyòl Karukera\n\n" +
                     "🏝️ Fait avec ❤️ pour la Guadeloupe\n" +
                     "Préservons notre langue créole pour les générations futures !"
@@ -2457,7 +2456,7 @@ class SettingsActivity : AppCompatActivity() {
                         gravity = Gravity.CENTER_VERTICAL
                         
                         tvTheme = TextView(activity).apply {
-                            text = "� Chargement..."
+                            text = "⏳ Chargement..."
                             textSize = 16f
                             setTextColor(Color.parseColor("#9C27B0"))
                             setTypeface(null, Typeface.BOLD)
@@ -2749,6 +2748,7 @@ class SettingsActivity : AppCompatActivity() {
                             text = "Mot 1/10"
                             textSize = 16f
                             setTypeface(null, Typeface.BOLD)
+                            setTextColor(Color.parseColor("#333333"))
                             setPadding(0, 0, 0, 16)
                         }
                         addView(tvWordNumber)
@@ -2785,6 +2785,7 @@ class SettingsActivity : AppCompatActivity() {
                         text = "Lettres disponibles :"
                         textSize = 14f
                         setTypeface(null, Typeface.BOLD)
+                        setTextColor(Color.parseColor("#333333"))
                         setPadding(0, 0, 0, 16)
                     }
                     addView(labelScrambled)
@@ -2815,6 +2816,7 @@ class SettingsActivity : AppCompatActivity() {
                         text = "Ta réponse :"
                         textSize = 14f
                         setTypeface(null, Typeface.BOLD)
+                        setTextColor(Color.parseColor("#333333"))
                         setPadding(0, 0, 0, 16)
                     }
                     addView(labelAnswer)
