@@ -358,16 +358,19 @@ class KeyboardLayoutManager(private val context: Context) {
      * Configure les interactions tactiles pour un bouton
      */
     private fun setupButtonInteractions(button: View, key: String) {
-        button.setOnClickListener {
-            interactionListener?.onKeyPress(key)
-        }
-        
         // 🌐 Appui long personnalisé pour la barre d'espace (1 seconde)
         if (key == " ") {
+            // Pas de setOnClickListener ici : setupSpaceLongPress() gère déjà le clic
+            // court via son OnTouchListener. Les deux coexistant provoquaient un double
+            // appel à onKeyPress() (l'OnTouchListener ne consomme jamais l'événement, donc
+            // le clic natif se déclenchait aussi) → double espace inséré à chaque frappe.
             button.setOnLongClickListener(null) // Désactiver le listener par défaut
             setupSpaceLongPress(button, key)
         } else {
-            button.setOnLongClickListener { 
+            button.setOnClickListener {
+                interactionListener?.onKeyPress(key)
+            }
+            button.setOnLongClickListener {
                 interactionListener?.onLongPress(key, button)
                 true
             }
