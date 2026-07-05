@@ -350,12 +350,14 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 startWordDeletion()
             }
             " " -> {
-                // 🌐 NOUVELLE FEATURE: Changement de clavier avec appui long sur barre d'espace
-                Log.d(TAG, "🌐 Appui long sur barre d'espace - Changement de clavier")
-                
+                // 🌐 Appui long sur barre d'espace : afficher le sélecteur de claviers
+                // (plutôt que de basculer silencieusement vers le "prochain" clavier,
+                // ce qui surprenait l'utilisateur en changeant d'IME sans prévenir)
+                Log.d(TAG, "🌐 Appui long sur barre d'espace - Affichage du sélecteur de claviers")
+
                 val shouldSwitch = inputProcessor.processSpaceLongPress()
                 if (shouldSwitch) {
-                    switchToNextKeyboard()
+                    showKeyboardPicker()
                 }
             }
             else -> {
@@ -838,32 +840,22 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     // ===== CHANGEMENT DE CLAVIER (APPUI LONG BARRE D'ESPACE) =====
     
     /**
-     * 🌐 Change vers le prochain clavier IME disponible
-     * Utilisé lors de l'appui long sur la barre d'espace (pattern UX standard Android)
-     * 
-     * Méthode directe : switchToNextInputMethod avec le token de la fenêtre
+     * 🌐 Affiche le sélecteur système de clavier (liste des IME installés)
+     * Utilisé lors de l'appui long sur la barre d'espace.
+     *
+     * On affiche toujours le sélecteur plutôt que de basculer directement vers le
+     * "prochain" clavier : un changement silencieux d'IME (ex. bascule vers Gboard sans
+     * confirmation) après un simple appui d'1 seconde surprend l'utilisateur, qui peut
+     * se retrouver sur un autre clavier sans comprendre pourquoi. Le sélecteur laisse
+     * le choix explicitement, comme le globe des claviers Android standards.
      */
-    private fun switchToNextKeyboard() {
+    private fun showKeyboardPicker() {
         try {
-            Log.d(TAG, "🌐 Changement vers prochain clavier...")
+            Log.d(TAG, "🌐 Affichage du sélecteur de claviers")
             val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            
-            // Essayer d'abord switchToNextInputMethod
-            val token = window.window?.attributes?.token
-            if (token != null) {
-                val switched = inputMethodManager.switchToNextInputMethod(token, false)
-                Log.d(TAG, if (switched) "✅ Changement réussi" else "⚠️ Changement échoué, fallback picker")
-                
-                if (!switched) {
-                    // Fallback: afficher le sélecteur
-                    inputMethodManager.showInputMethodPicker()
-                }
-            } else {
-                Log.d(TAG, "⚠️ Token null, utilisation picker")
-                inputMethodManager.showInputMethodPicker()
-            }
+            inputMethodManager.showInputMethodPicker()
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur changement clavier: ${e.message}", e)
+            Log.e(TAG, "❌ Erreur affichage sélecteur de claviers: ${e.message}", e)
         }
     }
 
