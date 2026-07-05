@@ -758,8 +758,26 @@ class SettingsActivity : AppCompatActivity() {
         step3Card.addView(testEditText)
         
         mainLayout.addView(step3Card)
+        mainLayout.addView(createSpacing(12))
+
+        // ÉTAPE 4 : Activer la vérification orthographique système (découverte)
+        val isSpellCheckerOn = isSpellCheckerSelected()
+        val step4Card = createStepCard(
+            stepNumber = 4,
+            isCompleted = isSpellCheckerOn,
+            isLocked = false, // indépendant des étapes 1-3 : fonctionne même sans activer le clavier Kréyòl
+            icon = "🔤",
+            title = "Corriger l'orthographe partout",
+            description = "Activez le correcteur Kréyòl pour ne plus voir vos mots créoles (et français) soulignés en rouge dans Messages, Notes et ailleurs",
+            buttonText = if (isSpellCheckerOn) "✓ Activé" else "Ouvrir les paramètres",
+            buttonEnabled = !isSpellCheckerOn,
+            buttonAction = {
+                openSpellCheckerSettings()
+            }
+        )
+        mainLayout.addView(step4Card)
         mainLayout.addView(createSpacing(24))
-        
+
         // Section "Astuce" si tout est configuré
         if (isEnabled && isSelected) {
             val tipCard = createCard("#FFF9E6")
@@ -1440,6 +1458,37 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
+    // Fonction pour vérifier si notre correcteur orthographique est sélectionné
+    fun isSpellCheckerSelected(): Boolean {
+        return try {
+            val current = Settings.Secure.getString(contentResolver, "selected_spell_checker")
+            current?.contains(packageName) == true
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur vérification correcteur sélectionné: ${e.message}")
+            false
+        }
+    }
+
+    // Fonction pour ouvrir les paramètres où choisir le correcteur orthographique
+    private fun openSpellCheckerSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            Toast.makeText(this,
+                "Dans 'Langues et saisie', ouvrez 'Vérification orthographique' et choisissez 'Correcteur Kréyòl Karukera'",
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur ouverture paramètres correcteur: ${e.message}")
+            try {
+                startActivity(Intent(Settings.ACTION_SETTINGS))
+            } catch (ex: Exception) {
+                Toast.makeText(this, "Impossible d'ouvrir les paramètres", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     // Fonction pour ouvrir les paramètres de clavier
     private fun openKeyboardSettings() {
         try {
@@ -2187,9 +2236,10 @@ class SettingsActivity : AppCompatActivity() {
                     val activity = requireActivity() as SettingsActivity
                     val currentEnabled = activity.isKeyboardEnabled()
                     val currentSelected = activity.isKeyboardSelected()
-                    
+                    val currentSpellCheckerOn = activity.isSpellCheckerSelected()
+
                     // Rafraîchir uniquement si l'état a changé
-                    if (shouldRefresh(currentEnabled, currentSelected)) {
+                    if (shouldRefresh(currentEnabled, currentSelected, currentSpellCheckerOn)) {
                         refreshContent()
                     }
                     
@@ -2208,21 +2258,24 @@ class SettingsActivity : AppCompatActivity() {
         
         private var lastKnownEnabled = false
         private var lastKnownSelected = false
-        
-        private fun shouldRefresh(currentEnabled: Boolean, currentSelected: Boolean): Boolean {
-            val hasChanged = currentEnabled != lastKnownEnabled || currentSelected != lastKnownSelected
+        private var lastKnownSpellCheckerOn = false
+
+        private fun shouldRefresh(currentEnabled: Boolean, currentSelected: Boolean, currentSpellCheckerOn: Boolean): Boolean {
+            val hasChanged = currentEnabled != lastKnownEnabled || currentSelected != lastKnownSelected || currentSpellCheckerOn != lastKnownSpellCheckerOn
             lastKnownEnabled = currentEnabled
             lastKnownSelected = currentSelected
+            lastKnownSpellCheckerOn = currentSpellCheckerOn
             return hasChanged
         }
-        
+
         private fun refreshContent() {
             val activity = requireActivity() as SettingsActivity
             lastKnownEnabled = activity.isKeyboardEnabled()
             lastKnownSelected = activity.isKeyboardSelected()
+            lastKnownSpellCheckerOn = activity.isSpellCheckerSelected()
             rootView?.removeAllViews()
             rootView?.addView(activity.createOnboardingContent())
-            Log.d("SettingsActivity", "🔄 Contenu de l'onboarding rafraîchi (enabled=$lastKnownEnabled, selected=$lastKnownSelected)")
+            Log.d("SettingsActivity", "🔄 Contenu de l'onboarding rafraîchi (enabled=$lastKnownEnabled, selected=$lastKnownSelected, spellChecker=$lastKnownSpellCheckerOn)")
         }
     }
     

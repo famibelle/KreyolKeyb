@@ -41,6 +41,20 @@
                 android:resource="@xml/method" />
         </service>
 
+        <!-- Service de vérification orthographique système (spell checker) -->
+        <service
+            android:name=".KreyolSpellCheckerService"
+            android:label="@string/spellchecker_name"
+            android:permission="android.permission.BIND_TEXT_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.textservice.SpellCheckerService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.textservice.scs"
+                android:resource="@xml/kreyol_spellchecker" />
+        </service>
+
         <!-- Activity de configuration avec 4 onglets -->
         <activity
             android:name=".SettingsActivity"

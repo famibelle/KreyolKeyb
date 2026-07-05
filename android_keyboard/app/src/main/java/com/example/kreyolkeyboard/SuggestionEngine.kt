@@ -114,6 +114,16 @@ class SuggestionEngine(private val context: Context) {
 
             return score
         }
+
+        /**
+         * Correspondance EXACTE (insensible aux accents) d'un mot dans une liste de formes
+         * déjà normalisées. `internal` (et non private) pour être testable en JVM sans
+         * Context — cœur logique de `isKnownWord()`.
+         */
+        internal fun isWordKnown(word: String, normalizedWords: List<String>): Boolean {
+            if (word.isBlank()) return true // ponctuation/chiffres isolés : ne pas souligner
+            return normalizedWords.contains(AccentTolerantMatcher.normalize(word))
+        }
     }
     
     // Données du moteur kreyòl (existant)
@@ -513,7 +523,29 @@ class SuggestionEngine(private val context: Context) {
             Log.e(TAG, "Erreur lors de l'ajout du mot: ${e.message}", e)
         }
     }
-    
+
+    /**
+     * Correspondance EXACTE (insensible aux accents) dans le dictionnaire créole OU
+     * français — contrairement à getDictionarySuggestions() qui fait une recherche par
+     * préfixe. Utilisé par KreyolSpellCheckerService pour décider si un mot doit être
+     * souligné comme faute par le correcteur orthographique système.
+     */
+    fun isKnownWord(word: String): Boolean {
+        if (isWordKnown(word, normalizedWords)) return true
+        return ::frenchDictionary.isInitialized && frenchDictionary.containsWord(word)
+    }
+
+    /**
+     * Suggestions de correction pour un mot absent des deux dictionnaires, en réutilisant
+     * telle quelle la logique Levenshtein + scoring existante (chantier G) — la casse de
+     * `word` est reportée sur chaque suggestion, comme pour la frappe normale.
+     */
+    fun getSpellingSuggestions(word: String, maxResults: Int = MAX_SUGGESTIONS): List<String> {
+        return getSpellCorrectionSuggestions(word)
+            .take(maxResults)
+            .map { applyCasingPattern(word, it.first) }
+    }
+
     /**
      * Charge le dictionnaire depuis les assets
      */
