@@ -26,6 +26,12 @@
   </a>
 </div>
 
+## 🛠️ Notes générales sur le fonctionnement actuel
+
+Envie de savoir où en est vraiment le projet côté code (points forts, limitations connues, pistes d'amélioration) ? Toutes les notes techniques rédigées pendant le développement sont regroupées sur une page dédiée.
+
+👉 [**Consulter les notes techniques**](https://famibelle.github.io/KreyolKeyb/notes_techniques.html)
+
 ## 🧪 Rejoindre le programme de tests bêta
 
 Envie de tester les nouveautés en avant-première (comme le correcteur orthographique Kréyòl) avant tout le monde ?
