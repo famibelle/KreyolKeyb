@@ -26,6 +26,12 @@
   </a>
 </div>
 
+## 🧪 Rejoindre le programme de tests bêta
+
+Envie de tester les nouveautés en avant-première (comme le correcteur orthographique Kréyòl) avant tout le monde ?
+
+👉 [**Rejoindre les beta-testeurs**](https://famibelle.github.io/KreyolKeyb/beta_onboarding.html)
+
 ## 🎮 Système de progression et de gamification
 
 **Klavyé Kréyòl Karukera** ne se contente pas de fluidifier l'écriture du Kréyòl : il **suit votre progression** et vous accompagne dans votre maîtrise du kréyòl !
