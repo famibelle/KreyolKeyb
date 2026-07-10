@@ -11,7 +11,7 @@
 - **03 juillet 2026** — [Rapport d'Audit et d'Amélioration de la Gamification](#rapport-daudit-et-damélioration-de-la-gamification) ✅ : Audit de la gamification (niveaux, tracking, jeux)
 - **04 juillet 2026** — [Rapport d'audit UX — Écrans de l'application Klavyé Kréyòl Karukera](#rapport-daudit-ux-écrans-de-lapplication-klavyé-kréyòl-karukera) ✅ : Audit UX des écrans de l'application
 - **09 juillet 2026** — [Rapport de test — Suggestions du clavier Kréyòl Karukera en conditions réelles](#rapport-de-test-suggestions-du-clavier-kréyòl-karukera-en-conditions-réelles) ✅ : Test end-to-end des suggestions sur 50 phrases, post-version 7.0.1 — complété le même jour par une mesure de rapidité et une analyse de la progression caractère par caractère
-- **10 juillet 2026** — [Rapport de test — Impact de l'enrichissement du dataset POTOMITAN/PawolKreyol-gfc](#rapport-de-test-impact-de-lenrichissement-du-dataset-potomitanpawolkreyol-gfc) : régénération du dictionnaire depuis un corpus enrichi (427→703 textes) et re-test comparatif du même protocole de 50 phrases — croissance du dictionnaire sans régression, mais les 3 trous de vocabulaire identifiés le 09/07 persistent
+- **10 juillet 2026** — [Rapport de test — Impact de l'enrichissement du dataset POTOMITAN/PawolKreyol-gfc](#rapport-de-test-impact-de-lenrichissement-du-dataset-potomitanpawolkreyol-gfc) : deux cycles de régénération le même jour (427→703 puis 703→2383 textes) et re-tests comparatifs du même protocole de 50 phrases — croissance du dictionnaire sans régression à chaque fois, mais les 3 trous de vocabulaire identifiés le 09/07 persistent aux deux cycles ; pollution par noms propres détectée au second cycle
 - **10 juillet 2026** — [Dictionnaire des trous de vocabulaire — kréyòl Gwadloupéyen](./dictionnaire_vocabulaire_manquant.html) : liste de 48 mots courants confirmés absents du dictionnaire (vérifiés par script), organisée par thème, pour orienter un enrichissement ciblé du dataset plutôt que générique
 
 ---
@@ -1704,7 +1704,7 @@ Les deux nouveaux axes confirment et complètent la première passe :
 
 > 🗓️ **Date du rapport :** 10 juillet 2026
 >
-> ✅ **Statut :** Enrichissement du dictionnaire confirmé sans régression (+363 mots, +320 prédictions n-grams), mais les 3 trous de vocabulaire déjà connus (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) persistent — l'enrichissement générique du corpus ne les a pas couverts.
+> ✅ **Statut :** Deux cycles d'enrichissement le 10/07 (703 puis 2383 textes), tous deux confirmés sans régression (+363 puis +868 mots). Les 3 trous de vocabulaire déjà connus (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) persistent aux deux cycles — même un enrichissement ciblé (phrases de sécurité) n'a pas suffi car ces mots précis n'étaient dans aucun texte ajouté. Pollution par noms propres (`wilyàm`, `ana`, `kévin`) détectée au second cycle, à corriger.
 
 # Rapport de test — Impact de l'enrichissement du dataset POTOMITAN/PawolKreyol-gfc
 
@@ -1845,7 +1845,7 @@ Captures conservées pour les phrases 1, 2, 3, 10, 20, 22, 23, 30, 40, 42, 50, a
 
 Le bug de casse déjà documenté le 09/07 (première suggestion en MAJUSCULES sur le tout premier caractère d'un message, ex. `VWÈ, VIKTÒ, VLÉ` pour « van ka soufflé ») a été observé à nouveau à l'identique — non lié à l'enrichissement, toujours ouvert dans `applyCasingPattern()`.
 
-## Conclusion
+## Conclusion (1ʳᵉ passe, 703 textes)
 
 L'enrichissement du dataset (427 → 703 textes, +64,6%) a produit une croissance mesurée mais réelle du dictionnaire embarqué (+363 mots, +9,9%) et des n-grams (+320 prédictions, +8,9%), sans aucune régression : 43 des 50 phrases de test ont des suggestions identiques à avant, les 7 phrases modifiées ne font qu'ajouter de nouvelles options sans supplanter les suggestions correctes déjà en place, et aucun ralentissement n'est mesurable.
 
@@ -1854,4 +1854,18 @@ En revanche, les **3 trous de vocabulaire identifiés le 09/07 persistent à l'i
 ### Suite donnée : dictionnaire ciblé des trous de vocabulaire
 
 Plutôt que de continuer à enrichir le dataset de façon générique, une liste de **48 mots courants confirmés absents** du dictionnaire (vérifiés programmatiquement, organisés par thème : verbes, famille, nourriture, météo, temps, émotions, adjectifs, objets du foyer, santé, école, animaux) a été établie pour orienter un enrichissement **ciblé** — voir [Dictionnaire des trous de vocabulaire — kréyòl Gwadloupéyen](./dictionnaire_vocabulaire_manquant.html). Cette liste part de connaissances linguistiques générales (pas d'un corpus) et **doit être validée par des locuteurs natifs** avant toute intégration ; elle inclut la marche à suivre pour transformer ces mots en textes puis en enrichissement effectif du dataset `POTOMITAN/PawolKreyol-gfc`.
+
+## Addendum — Second cycle d'enrichissement ciblé (2383 textes, 10 juillet 2026, 16:33 CEST)
+
+Un lot de 1 680 phrases (curées séparément à partir d'un dataset de traduction privé, dont 53 phrases de sécurité/premiers secours) a été ajouté au dataset `PawolKreyol-gfc` le jour même (703 → **2383 textes**). Le pipeline a été rejoué, l'APK reconstruit, et le même protocole de 50 phrases rejoué une troisième fois pour mesurer l'impact de ce second cycle.
+
+**Résumé** : dictionnaire 4 043 → **4 911 mots** (+868, +21,5%), n-grams 3 902 → **4 232 prédictions** (+330, +8,5%), 0 mot supprimé. Un enrichissement ciblé fait donc croître le dictionnaire proportionnellement bien plus qu'un enrichissement générique (+21,5% de mots pour ce cycle contre +9,9% lors du premier).
+
+**Les 3 trous historiques persistent une troisième fois** (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) : les 1 680 phrases ajoutées ne contenaient tout simplement pas ces graphies précises. Enseignement confirmé : cibler un *thème* (sécurité, quotidien) ne suffit pas à combler un trou de vocabulaire *précis* — il faut que le mot exact apparaisse dans un texte ajouté.
+
+En revanche, une partie du vocabulaire des phrases de sécurité est bien détectable : `blesé`, `doktè`, `rimèd`, `vitman`, `évakwasyon` sont désormais dans le dictionnaire — preuve que l'approche fonctionne quand le mot cible est effectivement présent dans le texte source.
+
+**⚠️ Nouveau problème détecté** : des noms de personnages fictifs issus de dialogues pédagogiques (`wilyàm`, `ana`, `kévin`) sont désormais dans le dictionnaire et apparaissent en concurrence avec du vocabulaire réel dans les suggestions (ex. « mwen la wi » propose désormais `wi, wilyàm, wilyam, wifi`). À filtrer avant un prochain cycle d'enrichissement à partir de contenu dialogué.
+
+Rapport complet avec tableau des 11 phrases modifiées et détails méthodologiques : [`rapport_test_dataset_enrichi_2026-07-10.md`](https://github.com/famibelle/KreyolKeyb/blob/main/rapport_test_dataset_enrichi_2026-07-10.md#addendum--second-cycle-denrichissement-ciblé-2383-textes-10-juillet-2026-1633-cest).
 

@@ -137,8 +137,70 @@ Captures conservées pour les phrases 1, 2, 3, 10, 20, 22, 23, 30, 40, 42, 50, a
 
 Le bug de casse déjà documenté le 09/07 (première suggestion en MAJUSCULES sur le tout premier caractère d'un message, ex. `VWÈ, VIKTÒ, VLÉ` pour « van ka soufflé ») a été observé à nouveau à l'identique — non lié à l'enrichissement, toujours ouvert dans `applyCasingPattern()`.
 
-## Conclusion
+## Conclusion (1ʳᵉ passe, 703 textes)
 
 L'enrichissement du dataset (427 → 703 textes, +64,6%) a produit une croissance mesurée mais réelle du dictionnaire embarqué (+363 mots, +9,9%) et des n-grams (+320 prédictions, +8,9%), sans aucune régression : 43 des 50 phrases de test ont des suggestions identiques à avant, les 7 phrases modifiées ne font qu'ajouter de nouvelles options sans supplanter les suggestions correctes déjà en place, et aucun ralentissement n'est mesurable.
 
 En revanche, les **3 trous de vocabulaire identifiés le 09/07 persistent à l'identique** (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) : l'enrichissement générique du corpus n'a pas ciblé ces mots précis. Pour les combler, il faudrait soit ajouter spécifiquement des textes contenant ce vocabulaire courant au dataset source, soit les insérer manuellement dans `creole_dict.json`.
+
+## Addendum — Second cycle d'enrichissement ciblé (2383 textes, 10 juillet 2026, 16:33 CEST)
+
+Suite au premier passage, 1680 phrases supplémentaires (issues du dataset privé `POTOMITAN/potomitan-gcf-fr-translation`, dont 53 phrases de sécurité/premiers secours catégorisées) ont été ajoutées au dataset `PawolKreyol-gfc` (427 → 703 → **2383 textes**). Le pipeline a été rejoué, l'APK reconstruit, et le **même protocole de 50 phrases** rejoué une troisième fois dans une nouvelle conversation Google Messages, pour mesurer l'impact de ce second cycle par rapport au premier (703 textes).
+
+### Résumé
+
+| | 703 textes (10/07 matin) | 2383 textes (10/07 après-midi) | Delta |
+|---|---|---|---|
+| Mots du dictionnaire | 4 043 | 4 911 | +868 (+21,5%) |
+| Mots supprimés | — | — | 0 |
+| Prédictions n-grammes | 3 902 | 4 232 | +330 (+8,5%) |
+
+Cette fois, l'ajout de textes **ciblés** (phrases de sécurité + vocabulaire courant issu d'un cours de créole) produit une croissance du dictionnaire proportionnellement bien plus forte (+21,5%) que le premier enrichissement générique (+9,9% pour +64,6% de textes en plus) — cohérent avec l'hypothèse que du contenu choisi délibérément apporte plus de vocabulaire nouveau que des textes ajoutés sans ciblage.
+
+### Les 3 trous historiques persistent encore
+
+| Mot | Présent après 2383 textes ? |
+|---|---|
+| `blòké` | ❌ Absent |
+| `apeti` / `lapeti` | ❌ Absent |
+| `nwit` / `lannwit` | ❌ Absent |
+
+Confirmé à nouveau en conditions réelles : « Bon apeti » → `avèti, apési, pati, péyi, pété` (inchangé), « Bon nwit » → `nuit, ni, dwèt, wi, pit` (inchangé), « Wout la blòké » → `baké, blo, blé, blagé, lòdè` (inchangé, capture d'écran à l'appui).
+
+**Constat important : même un enrichissement délibéré et ciblé peut manquer sa cible si les mots précis ne sont pas explicitly présents dans les textes ajoutés.** Les 1680 phrases ajoutées ce cycle ne contenaient tout simplement pas ces 5 graphies — la leçon du premier passage se confirme : combler un trou de vocabulaire connu nécessite d'écrire/choisir des textes contenant explicitement le mot ciblé, pas seulement d'ajouter du volume ou même du contenu thématiquement pertinent.
+
+### Vocabulaire des phrases de sécurité : succès partiel
+
+Une partie du vocabulaire des phrases de sécurité ajoutées est bien détectable dans le nouveau dictionnaire : `blesé` (2), `doktè` (6), `rimèd` (13), `vitman` (39), `évakwasyon` (1), `sékou-la` (1, sous forme composée seulement — `sékou` seul reste absent). C'est la preuve que l'approche « texte ciblé » fonctionne quand le mot exact apparaît dans le texte ajouté.
+
+### Comparaison des 50 phrases — 703 → 2383 textes
+
+11 phrases sur 50 montrent une évolution des suggestions (contre 7 lors du premier cycle), toutes par ajout de nouvelles options sans régression :
+
+| # | Phrase | Suggestions à 703 textes | Suggestions à 2383 textes |
+|---|---|---|---|
+| 4 | mwen la wi | wi | wi, **wilyàm**, **wilyam**, **wifi** |
+| 5 | ou byen | byen, byendéfwa, byenmèsi | byen, byendéfwa, byenmèsi, **byenbonjou**, **byenbonswè** |
+| 9 | ou vlé manjé | manjé, manjé-la | manjé, manjé-la, **manje**, **manjé-lasa** |
+| 10 | mwen fen | fen, fenfon, fenyan | fen, fenfon, **fenèt**, fenyan |
+| 11 | an bwè an tigout dlo | dlo, dlo-la, dlo-a | dlo, dlo-la, dlo-a, **dlo-lanmè-la**, **dlo-pisin-la** |
+| 20 | an renmen'w | *(0 — artefact de mesure, voir addendum précédent)* | wouvè, wayayay, woy, wi, woulé *(confirme l'artefact : suggestions bien présentes)* |
+| 24 | dòmi byen | byen, byendéfwa, byenmèsi | byen, byendéfwa, byenmèsi, **byenbonjou**, **byenbonswè** |
+| 26 | vini isi | isidan, isi | isidan, isi, **isit** |
+| 32 | an ka péché pwason | pwason | pwason, **pwason-la** |
+| 33 | sé bon manjé | manjé, manjé-la | manjé, manjé-la, **manje**, **manjé-lasa** |
+| 47 | van ka soufflé | souflé, soufè, souplé | souflé, soufè, souplé, **souplè** |
+
+### ⚠️ Pollution par noms propres détectée
+
+La phrase 4 (« mwen la wi ») révèle un problème de qualité des données : **`wilyàm` (8 occurrences) et `wilyam` (1) apparaissent maintenant comme suggestions**, en concurrence avec le mot légitime `wi`. Ces mots viennent des dialogues du cours Assimil inclus dans l'extraction (personnages « Anna », « William », « Kévin » utilisés comme exemples pédagogiques) — non filtrés avant l'ajout au corpus `PawolKreyol-gfc`, contrairement à la liste affichée sur la [page des trous de vocabulaire](https://famibelle.github.io/KreyolKeyb/dictionnaire_vocabulaire_manquant.html) où ces noms avaient bien été exclus. `ana` (13 occurrences) et `kévin` (6) sont également désormais dans le dictionnaire, bien qu'ils n'apparaissent pas encore dans le top des suggestions des 50 phrases testées.
+
+**Recommandation** : avant un prochain cycle d'enrichissement à partir de contenu pédagogique/dialogué, filtrer les noms de personnages fictifs pour éviter qu'ils ne concurrencent du vocabulaire réel dans les suggestions.
+
+### Rapidité
+
+Latence moyenne : -83,8ms (703 textes) → -133,3ms (2383 textes) ; écart-type 105,8ms → 74,9ms. Toujours dans le bruit de mesure ADB/horloge (~100-200ms), sans signal de ralentissement réel — le dictionnaire reste largement sous la taille où une différence de performance serait attendue sur un appareil mobile moderne.
+
+### Conclusion mise à jour
+
+Ce second cycle confirme les enseignements du premier tout en les affinant : un enrichissement **ciblé** (phrases de sécurité + vocabulaire choisi) fait croître le dictionnaire proportionnellement bien plus qu'un enrichissement générique, sans aucune régression sur les 50 phrases de test. Mais **cibler un thème ne suffit pas à combler un trou de vocabulaire précis** — les 3 mots-trous historiques (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) restent absents faute d'avoir été explicitement inclus dans les textes ajoutés. Un nouveau problème est apparu : la **pollution par noms propres** provenant de contenu pédagogique non filtré, à corriger avant le prochain cycle.
