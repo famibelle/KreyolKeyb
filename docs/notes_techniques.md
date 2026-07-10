@@ -13,6 +13,7 @@
 - **09 juillet 2026** — [Rapport de test — Suggestions du clavier Kréyòl Karukera en conditions réelles](#rapport-de-test-suggestions-du-clavier-kréyòl-karukera-en-conditions-réelles) ✅ : Test end-to-end des suggestions sur 50 phrases, post-version 7.0.1 — complété le même jour par une mesure de rapidité et une analyse de la progression caractère par caractère
 - **10 juillet 2026** — [Rapport de test — Impact de l'enrichissement du dataset POTOMITAN/PawolKreyol-gfc](#rapport-de-test-impact-de-lenrichissement-du-dataset-potomitanpawolkreyol-gfc) : deux cycles de régénération le même jour (427→703 puis 703→2383 textes) et re-tests comparatifs du même protocole de 50 phrases — croissance du dictionnaire sans régression à chaque fois, mais les 3 trous de vocabulaire identifiés le 09/07 persistent aux deux cycles ; pollution par noms propres détectée au second cycle
 - **10 juillet 2026** — [Dictionnaire des trous de vocabulaire — kréyòl Gwadloupéyen](./dictionnaire_vocabulaire_manquant.html) : liste de 48 mots courants confirmés absents du dictionnaire (vérifiés par script), organisée par thème, pour orienter un enrichissement ciblé du dataset plutôt que générique
+- **10 juillet 2026** — [Version 7.0.2 publiée](#version-702--dictionnaire-enrichi) ✅ : release GitHub avec APK/AAB signés, notes de version générées depuis le CHANGELOG, dictionnaire embarqué 3 680 → 4 911 mots
 
 ---
 
@@ -1868,4 +1869,39 @@ En revanche, une partie du vocabulaire des phrases de sécurité est bien détec
 **⚠️ Nouveau problème détecté** : des noms de personnages fictifs issus de dialogues pédagogiques (`wilyàm`, `ana`, `kévin`) sont désormais dans le dictionnaire et apparaissent en concurrence avec du vocabulaire réel dans les suggestions (ex. « mwen la wi » propose désormais `wi, wilyàm, wilyam, wifi`). À filtrer avant un prochain cycle d'enrichissement à partir de contenu dialogué.
 
 Rapport complet avec tableau des 11 phrases modifiées et détails méthodologiques : [`rapport_test_dataset_enrichi_2026-07-10.md`](https://github.com/famibelle/KreyolKeyb/blob/main/rapport_test_dataset_enrichi_2026-07-10.md#addendum--second-cycle-denrichissement-ciblé-2383-textes-10-juillet-2026-1633-cest).
+
+---
+
+> 🗓️ **Date du rapport :** 10 juillet 2026
+>
+> ✅ **Statut :** Release publiée, build et signature réussis, 4 artefacts disponibles (APK/AAB × debug/release).
+
+# Version 7.0.2 — Dictionnaire enrichi
+
+Suite aux deux cycles d'enrichissement documentés ci-dessus, la version **7.0.2** (`versionCode 70002`) a été publiée le 10 juillet 2026 : [voir la release GitHub](https://github.com/famibelle/KreyolKeyb/releases/tag/v7.0.2).
+
+## Contenu de la release
+
+- **Dictionnaire créole** : 3 680 → **4 911 mots** (+33%)
+- **N-grammes prédictifs** : 3 582 → **4 232 prédictions** contextuelles
+- **Vocabulaire de sécurité/premiers secours** ajouté (`blesé`, `doktè`, `rimèd`, `évakwasyon`, `vitman`...)
+- Aucune régression détectée sur le test de 50 phrases créoles du quotidien
+
+## Artefacts publiés
+
+| Fichier | Usage |
+|---|---|
+| `KreyolKeyboard-Release-v7.0.2.aab` | À uploader sur Google Play Console |
+| `KreyolKeyboard-Release-v7.0.2.apk` | Installation directe, signé production |
+| `KreyolKeyboard-Debug-v7.0.2.aab` / `.apk` | Build de développement |
+
+Les notes de version ont été générées automatiquement depuis [`android_keyboard/CHANGELOG.md`](https://github.com/famibelle/KreyolKeyb/blob/main/android_keyboard/CHANGELOG.md) par le workflow `build-apk.yml` (job `create-release`, déclenché par le tag `v7.0.2`), et sont directement réutilisables pour la fiche Google Play Store.
+
+## Limites connues, non résolues dans cette version
+
+Documentées en détail dans les rapports ci-dessus, non corrigées dans le code à ce stade :
+
+- Les 3 trous de vocabulaire historiques persistent (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`)
+- Bug de casse mineur sur la toute première suggestion d'un message (majuscules intempestives)
+- Pollution du dictionnaire par des noms de personnages fictifs (`wilyàm`, `ana`, `kévin`) issus de contenu pédagogique non filtré
 
