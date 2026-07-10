@@ -12,6 +12,7 @@
 - **04 juillet 2026** — [Rapport d'audit UX — Écrans de l'application Klavyé Kréyòl Karukera](#rapport-daudit-ux-écrans-de-lapplication-klavyé-kréyòl-karukera) ✅ : Audit UX des écrans de l'application
 - **09 juillet 2026** — [Rapport de test — Suggestions du clavier Kréyòl Karukera en conditions réelles](#rapport-de-test-suggestions-du-clavier-kréyòl-karukera-en-conditions-réelles) ✅ : Test end-to-end des suggestions sur 50 phrases, post-version 7.0.1 — complété le même jour par une mesure de rapidité et une analyse de la progression caractère par caractère
 - **10 juillet 2026** — [Rapport de test — Impact de l'enrichissement du dataset POTOMITAN/PawolKreyol-gfc](#rapport-de-test-impact-de-lenrichissement-du-dataset-potomitanpawolkreyol-gfc) : régénération du dictionnaire depuis un corpus enrichi (427→703 textes) et re-test comparatif du même protocole de 50 phrases — croissance du dictionnaire sans régression, mais les 3 trous de vocabulaire identifiés le 09/07 persistent
+- **10 juillet 2026** — [Dictionnaire des trous de vocabulaire — kréyòl Gwadloupéyen](./dictionnaire_vocabulaire_manquant.html) : liste de 48 mots courants confirmés absents du dictionnaire (vérifiés par script), organisée par thème, pour orienter un enrichissement ciblé du dataset plutôt que générique
 
 ---
 
@@ -1849,4 +1850,8 @@ Le bug de casse déjà documenté le 09/07 (première suggestion en MAJUSCULES s
 L'enrichissement du dataset (427 → 703 textes, +64,6%) a produit une croissance mesurée mais réelle du dictionnaire embarqué (+363 mots, +9,9%) et des n-grams (+320 prédictions, +8,9%), sans aucune régression : 43 des 50 phrases de test ont des suggestions identiques à avant, les 7 phrases modifiées ne font qu'ajouter de nouvelles options sans supplanter les suggestions correctes déjà en place, et aucun ralentissement n'est mesurable.
 
 En revanche, les **3 trous de vocabulaire identifiés le 09/07 persistent à l'identique** (`blòké`, `apeti`/`lapeti`, `nwit`/`lannwit`) : l'enrichissement générique du corpus n'a pas ciblé ces mots précis. Pour les combler, il faudrait soit ajouter spécifiquement des textes contenant ce vocabulaire courant au dataset source, soit les insérer manuellement dans `creole_dict.json`.
+
+### Suite donnée : dictionnaire ciblé des trous de vocabulaire
+
+Plutôt que de continuer à enrichir le dataset de façon générique, une liste de **48 mots courants confirmés absents** du dictionnaire (vérifiés programmatiquement, organisés par thème : verbes, famille, nourriture, météo, temps, émotions, adjectifs, objets du foyer, santé, école, animaux) a été établie pour orienter un enrichissement **ciblé** — voir [Dictionnaire des trous de vocabulaire — kréyòl Gwadloupéyen](./dictionnaire_vocabulaire_manquant.html). Cette liste part de connaissances linguistiques générales (pas d'un corpus) et **doit être validée par des locuteurs natifs** avant toute intégration ; elle inclut la marche à suivre pour transformer ces mots en textes puis en enrichissement effectif du dataset `POTOMITAN/PawolKreyol-gfc`.
 
