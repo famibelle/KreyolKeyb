@@ -5,6 +5,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.2] - 2026-07-10
+
+### 📚 Dictionnaire enrichi
+
+- **Dictionnaire créole passé de 3 680 à 4 911 mots** (+33%) grâce à un enrichissement du corpus source (427 → 2 383 textes)
+- **Vocabulaire de sécurité et premiers secours** ajouté : blesé, doktè, rimèd, évakwasyon, vitman et bien d'autres, pour être compris même dans les situations urgentes
+- **Prédictions contextuelles enrichies** : 3 582 → 4 232 suggestions basées sur le contexte de la phrase
+- Qualité des suggestions validée sur un test de 50 phrases créoles du quotidien : aucune régression, temps de réponse toujours instantané
+
 ## [7.0.0] - 2026-07-03
 
 ### ✨ Nouvelles fonctionnalités
