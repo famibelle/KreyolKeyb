@@ -46,7 +46,7 @@ import android.widget.GridView
 import android.widget.ScrollView
 
 class SettingsActivity : AppCompatActivity() {
-    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = à propos, 5 = guide
+    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = guide, 5 = à propos
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
     
@@ -369,15 +369,15 @@ class SettingsActivity : AppCompatActivity() {
             tabContainer.addView(wordScrambleTab)
             Log.d("SettingsActivity", "Onglet Mots Mélangés créé et ajouté")
             
-            // Tab À Propos
-            val aboutTab = createTab(4, "ℹ️", "À Propos")
-            tabContainer.addView(aboutTab)
-            Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
-
             // Tab Guide
-            val guideTab = createTab(5, "📖", "Guide")
+            val guideTab = createTab(4, "📖", "Guide")
             tabContainer.addView(guideTab)
             Log.d("SettingsActivity", "Onglet Guide créé et ajouté")
+
+            // Tab À Propos
+            val aboutTab = createTab(5, "ℹ️", "À Propos")
+            tabContainer.addView(aboutTab)
+            Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
 
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
@@ -524,8 +524,8 @@ class SettingsActivity : AppCompatActivity() {
         tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
         tabContainer.addView(createTab(2, "🎲", "Mots Mêlés"))
         tabContainer.addView(createTab(3, "🔤", "Mots Mélangés"))
-        tabContainer.addView(createTab(4, "ℹ️", "À Propos"))
-        tabContainer.addView(createTab(5, "📖", "Guide"))
+        tabContainer.addView(createTab(4, "📖", "Guide"))
+        tabContainer.addView(createTab(5, "ℹ️", "À Propos"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -2285,8 +2285,8 @@ class SettingsActivity : AppCompatActivity() {
                 1 -> StatsFragment()
                 2 -> WordSearchFragment()
                 3 -> WordScrambleFragment()
-                4 -> AboutFragment()
-                5 -> GuideFragment()
+                4 -> GuideFragment()
+                5 -> AboutFragment()
                 else -> OnboardingFragment()
             }
         }
