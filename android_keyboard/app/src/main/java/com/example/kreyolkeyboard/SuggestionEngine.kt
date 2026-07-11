@@ -29,13 +29,16 @@ class SuggestionEngine(private val context: Context) {
          * - input="BONJ", suggestion="bonjou" → "BONJOU"
          * - input="Bon", suggestion="bonjou" → "Bonjou"
          */
-        private fun applyCasingPattern(input: String, suggestion: String): String {
+        internal fun applyCasingPattern(input: String, suggestion: String): String {
             if (input.isEmpty() || suggestion.isEmpty()) return suggestion
-            
+
             val result = StringBuilder()
-            
-            // Cas 1: Tout en majuscules
-            if (input.all { it.isUpperCase() || !it.isLetter() }) {
+
+            // Cas 1: Tout en majuscules — au moins 2 lettres, sinon une seule
+            // majuscule initiale (shift automatique) mettrait toute la
+            // suggestion en capitales ("B" → "BÈL" au lieu de "Bèl")
+            val letters = input.filter { it.isLetter() }
+            if (letters.length >= 2 && letters.all { it.isUpperCase() }) {
                 return suggestion.uppercase()
             }
             
