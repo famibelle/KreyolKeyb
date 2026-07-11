@@ -37,6 +37,14 @@ Un `Toast` unique (« Kréyòl a klavyé a ! Apiyé lontan asi on lèt pou wè a
 
 `KreyolKeybPlayStore/texts/description.md` complétée avec le lien vers la politique de confidentialité et le rappel explicite des 3 étapes d'activation (Paramètres > Langues et saisie > Claviers virtuels).
 
+## 6. Nouvel onglet « Guide »
+
+Un 6ᵉ onglet a été ajouté (`GuideFragment`), un guide détaillé de l'utilisateur : écriture en kréyòl, accents par appui long, suggestions/autocomplétion, correction orthographique système, chiffres/symboles, les 2 jeux de vocabulaire, les 8 niveaux de progression (Pipirit → Benzo), et une FAQ courte (clavier invisible, changer de clavier, confidentialité).
+
+![Barre d'onglets à 6 éléments](./ameliorations_onboarding_2026-07-11_screenshots/06_nouvel_onglet_guide_tabbar.png)
+![Contenu du guide](./ameliorations_onboarding_2026-07-11_screenshots/07_guide_contenu.png)
+![FAQ du guide](./ameliorations_onboarding_2026-07-11_screenshots/08_guide_faq.png)
+
 ## Vérification
 
-Build + suite de tests unitaires au vert après chaque changement. Parcours complet rejoué manuellement sur l'émulateur `kreyol_test` (état vierge reproduit).
+Build + suite de tests unitaires au vert après chaque changement. Parcours complet rejoué manuellement sur l'émulateur `kreyol_test` (état vierge reproduit). Navigation cyclique entre les 6 onglets vérifiée (tab bar et contenu toujours synchronisés).

@@ -46,7 +46,7 @@ import android.widget.GridView
 import android.widget.ScrollView
 
 class SettingsActivity : AppCompatActivity() {
-    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = à propos, 3 = mots mêlés, 4 = mots mélangés
+    private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = à propos, 5 = guide
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
     
@@ -373,7 +373,12 @@ class SettingsActivity : AppCompatActivity() {
             val aboutTab = createTab(4, "ℹ️", "À Propos")
             tabContainer.addView(aboutTab)
             Log.d("SettingsActivity", "Onglet À Propos créé et ajouté")
-            
+
+            // Tab Guide
+            val guideTab = createTab(5, "📖", "Guide")
+            tabContainer.addView(guideTab)
+            Log.d("SettingsActivity", "Onglet Guide créé et ajouté")
+
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -514,12 +519,13 @@ class SettingsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         
-        // Tabs avec les 5 onglets
+        // Tabs avec les 6 onglets
         tabContainer.addView(createTab(0, "🚀", "Démarrage"))
         tabContainer.addView(createTab(1, "📊", "Kréyòl an mwen"))
         tabContainer.addView(createTab(2, "🎲", "Mots Mêlés"))
         tabContainer.addView(createTab(3, "🔤", "Mots Mélangés"))
         tabContainer.addView(createTab(4, "ℹ️", "À Propos"))
+        tabContainer.addView(createTab(5, "📖", "Guide"))
         
         // Ligne de séparation en bas
         val separator = View(this).apply {
@@ -1259,7 +1265,134 @@ class SettingsActivity : AppCompatActivity() {
 
         return mainLayout
     }
-    
+
+    fun createGuideContent(): LinearLayout {
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 32, 24, 32)
+            setBackgroundColor(Color.parseColor("#F5F5F5"))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val guideTitle = TextView(this).apply {
+            text = "📖 Guide de l'utilisateur"
+            textSize = 20f
+            setTextColor(Color.parseColor("#0080FF"))
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 16)
+        }
+        mainLayout.addView(guideTitle)
+        mainLayout.addView(createSpacing(8))
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "✍️ Écrire en Kréyòl",
+            "Le clavier démarre en mode alphabétique. La première lettre de chaque " +
+                    "message prend automatiquement une majuscule, comme sur un clavier classique."
+        )
+
+        addGuideSection(
+            mainLayout, "#F0F8E8", "🔤 Accents et caractères spéciaux",
+            "Appuyez longuement sur une lettre pour faire apparaître ses variantes accentuées " +
+                    "(é, è, à, ò...) et caractères spéciaux du kréyòl. Glissez le doigt vers l'accent voulu " +
+                    "puis relâchez."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "💡 Suggestions et autocomplétion",
+            "Une barre de suggestions apparaît au-dessus du clavier dès que vous tapez. " +
+                    "Les mots en Kréyòl sont prioritaires ; le français prend le relais à partir de " +
+                    "3 lettres si aucun mot créole ne correspond. Touchez un mot suggéré pour le compléter " +
+                    "instantanément, espace inclus."
+        )
+
+        addGuideSection(
+            mainLayout, "#F0F8E8", "✅ Correction orthographique partout",
+            "Activez le correcteur Kréyòl dans les paramètres système (onglet Démarrage, étape 4) " +
+                    "pour que vos mots créoles et français ne soient plus soulignés en rouge dans Messages, " +
+                    "Notes et les autres applications."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "🔢 Chiffres et symboles",
+            "Le bouton « 123 » en bas à gauche du clavier bascule vers les chiffres et symboles usuels. " +
+                    "La ponctuation de base (virgule, point, apostrophe) reste accessible directement " +
+                    "sur le clavier alphabétique."
+        )
+
+        addGuideSection(
+            mainLayout, "#F0F8E8", "🎮 Jeux de vocabulaire",
+            "Deux jeux (onglets « Mots Mêlés » et « Mots Mélangés ») aident à mémoriser du vocabulaire " +
+                    "créole en s'amusant, à partir des mots déjà présents dans le dictionnaire du clavier."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "🏆 Progression",
+            "Chaque mot que vous tapez fait progresser votre maîtrise du kréyòl, visible dans l'onglet " +
+                    "« Kréyòl an mwen ». Huit niveaux culturels jalonnent le parcours : Pipirit, Ti moun, " +
+                    "Débrouya, An mitan, Kompè Lapen, Kompè Zamba, Potomitan, Benzo."
+        )
+
+        val faqCard = createCard("#FFF8E1")
+        val faqTitle = TextView(this).apply {
+            text = "❓ Questions fréquentes"
+            textSize = 18f
+            setTextColor(Color.parseColor("#5D4037"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+        val faqText = TextView(this).apply {
+            text = "Le clavier créole n'apparaît pas quand je tape ?\n" +
+                    "→ Vérifiez qu'il est bien sélectionné (pas seulement activé) : onglet Démarrage, " +
+                    "étape 2, ou appui long sur la barre d'espace pour changer de clavier à tout moment.\n\n" +
+                    "Comment revenir à un autre clavier ponctuellement ?\n" +
+                    "→ Appui long sur la barre d'espace, puis choisissez un autre clavier dans la liste.\n\n" +
+                    "Mes données sont-elles envoyées quelque part ?\n" +
+                    "→ Non : le clavier fonctionne entièrement en local."
+            textSize = 14f
+            setTextColor(Color.parseColor("#5D4037"))
+            setLineSpacing(0f, 1.3f)
+        }
+        val faqPrivacyLink = TextView(this).apply {
+            text = "Lire la politique de confidentialité"
+            textSize = 14f
+            setTextColor(Color.parseColor("#0080FF"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 12, 0, 0)
+            setOnClickListener { openPrivacyPolicy() }
+        }
+        faqCard.addView(faqTitle)
+        faqCard.addView(faqText)
+        faqCard.addView(faqPrivacyLink)
+        mainLayout.addView(faqCard)
+
+        return mainLayout
+    }
+
+    private fun addGuideSection(parent: LinearLayout, backgroundColor: String, title: String, body: String) {
+        val card = createCard(backgroundColor)
+        val titleView = TextView(this).apply {
+            text = title
+            textSize = 18f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+        val bodyView = TextView(this).apply {
+            text = body
+            textSize = 14f
+            setTextColor(Color.parseColor("#333333"))
+            setLineSpacing(0f, 1.3f)
+        }
+        card.addView(titleView)
+        card.addView(bodyView)
+        parent.addView(card)
+        parent.addView(createSpacing(16))
+    }
+
     // Helpers pour créer les éléments UI
     private fun createCard(backgroundColor: String): LinearLayout {
         return LinearLayout(this).apply {
@@ -2109,7 +2242,7 @@ class SettingsActivity : AppCompatActivity() {
     // Adapter pour ViewPager2 avec swipe cyclique
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
         companion object {
-            const val REAL_COUNT = 5 // Nombre réel d'onglets (ajout mots mélangés)
+            const val REAL_COUNT = 6 // Nombre réel d'onglets (ajout du guide utilisateur)
             const val VIRTUAL_COUNT = Int.MAX_VALUE // Nombre virtuel pour simuler l'infini
             const val START_POSITION = VIRTUAL_COUNT / 2 // Position de départ au milieu
         }
@@ -2125,6 +2258,7 @@ class SettingsActivity : AppCompatActivity() {
                 2 -> WordSearchFragment()
                 3 -> WordScrambleFragment()
                 4 -> AboutFragment()
+                5 -> GuideFragment()
                 else -> OnboardingFragment()
             }
         }
@@ -2232,7 +2366,21 @@ class SettingsActivity : AppCompatActivity() {
             return scrollView
         }
     }
-    
+
+    // Fragment pour le guide de l'utilisateur
+    class GuideFragment : Fragment() {
+        override fun onCreateView(
+            inflater: android.view.LayoutInflater,
+            container: android.view.ViewGroup?,
+            savedInstanceState: android.os.Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+            val scrollView = ScrollView(activity)
+            scrollView.addView(activity.createGuideContent())
+            return scrollView
+        }
+    }
+
     // Fragment pour les statistiques
     class StatsFragment : Fragment() {
         override fun onCreateView(
