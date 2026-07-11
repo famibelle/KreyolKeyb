@@ -1300,6 +1300,7 @@ class SettingsActivity : AppCompatActivity() {
                     "(é, è, à, ò...) et caractères spéciaux du kréyòl. Glissez le doigt vers l'accent voulu " +
                     "puis relâchez."
         )
+        addGuideImage(mainLayout, R.drawable.guide_screenshot_accents, "Popup d'accents sur la lettre e")
 
         addGuideSection(
             mainLayout, "#FFFFFF", "💡 Suggestions et autocomplétion",
@@ -1308,6 +1309,7 @@ class SettingsActivity : AppCompatActivity() {
                     "3 lettres si aucun mot créole ne correspond. Touchez un mot suggéré pour le compléter " +
                     "instantanément, espace inclus."
         )
+        addGuideImage(mainLayout, R.drawable.guide_screenshot_suggestions, "Barre de suggestions active")
 
         addGuideSection(
             mainLayout, "#F0F8E8", "✅ Correction orthographique partout",
@@ -1322,6 +1324,7 @@ class SettingsActivity : AppCompatActivity() {
                     "La ponctuation de base (virgule, point, apostrophe) reste accessible directement " +
                     "sur le clavier alphabétique."
         )
+        addGuideImage(mainLayout, R.drawable.guide_screenshot_numeric, "Mode chiffres et symboles")
 
         addGuideSection(
             mainLayout, "#F0F8E8", "🎮 Jeux de vocabulaire",
@@ -1389,6 +1392,31 @@ class SettingsActivity : AppCompatActivity() {
         }
         card.addView(titleView)
         card.addView(bodyView)
+        parent.addView(card)
+        parent.addView(createSpacing(16))
+    }
+
+    private fun addGuideImage(parent: LinearLayout, drawableResId: Int, description: String) {
+        val card = createCard("#FFFFFF")
+        val image = ImageView(this).apply {
+            setImageResource(drawableResId)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = description
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val caption = TextView(this).apply {
+            text = description
+            textSize = 12f
+            setTextColor(Color.parseColor("#888888"))
+            gravity = Gravity.CENTER
+            setPadding(0, 8, 0, 0)
+        }
+        card.addView(image)
+        card.addView(caption)
         parent.addView(card)
         parent.addView(createSpacing(16))
     }
