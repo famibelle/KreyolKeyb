@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.5] - 2026-07-11
+
+### ✨ Guide de l'utilisateur
+
+- **Nouvel onglet « Guide »** (6ᵉ onglet, 📖) : écriture en kréyòl, accents par appui long, suggestions et autocomplétion, correction orthographique système, chiffres/symboles, les 2 jeux de vocabulaire, les 8 niveaux de progression (Pipirit → Benzo), et une FAQ courte (clavier invisible, changer de clavier, confidentialité)
+
 ## [7.0.4] - 2026-07-11
 
 ### ✨ Tunnel d'activation amélioré
