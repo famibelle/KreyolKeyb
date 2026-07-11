@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.HorizontalScrollView
 import android.widget.Button
+import android.widget.Toast
 import android.graphics.Color
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -41,7 +42,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     companion object {
         private const val TAG = "KreyolIME-Potomitan™"
         private const val MAX_SUGGESTIONS = 3  // 🔧 Retour à 3 suggestions (couleurs d'origine)
-        
+        private const val ONBOARDING_PREFS = "kreyol_onboarding_prefs"
+        private const val PREF_FIRST_REAL_USE_TIP_SHOWN = "first_real_use_tip_shown"
+
         // 🔧 FIX SAMSUNG A21S: Détection appareils low-end
         private fun isLowEndDevice(context: Context): Boolean {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
@@ -635,6 +638,30 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             keyboardLayoutManager.updateKeyboardDisplay()
             Log.d(TAG, "✅ Mode alphabétique garanti lors du démarrage de la saisie")
         }
+
+        maybeShowFirstRealUseTip(info)
+    }
+
+    /**
+     * Confirmation de succès + astuce accents, affichée une seule fois, la
+     * première fois que le clavier est réellement utilisé en dehors de
+     * l'écran de test intégré à l'app (Klavyé Kréyòl elle-même) — un
+     * utilisateur qui bascule directement vers Messages après avoir
+     * sélectionné le clavier ne voyait jusqu'ici aucun signal de succès.
+     */
+    private fun maybeShowFirstRealUseTip(info: EditorInfo?) {
+        val targetPackage = info?.packageName ?: return
+        if (targetPackage == packageName) return // écran de test intégré à l'app, pas un vrai usage
+
+        val prefs = getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(PREF_FIRST_REAL_USE_TIP_SHOWN, false)) return
+
+        Toast.makeText(
+            this,
+            "Kréyòl a klavyé a ! Apiyé lontan asi on lèt pou wè aksan yo (é, è, à, ò...)",
+            Toast.LENGTH_LONG
+        ).show()
+        prefs.edit().putBoolean(PREF_FIRST_REAL_USE_TIP_SHOWN, true).apply()
     }
     
     override fun onFinishInput() {

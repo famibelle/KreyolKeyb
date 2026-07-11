@@ -52,6 +52,12 @@ Ce clavier s'appuie sur les travaux des plus grands défenseurs du kréyòl :
 • Code source ouvert et auditable
 • Fonctionnement 100% local
 • Permissions minimales requises
+• Politique de confidentialité complète : https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html
+
+⚙️ ACTIVATION EN 3 ÉTAPES
+• Ouvre Paramètres > Langues et saisie > Claviers virtuels
+• Active "Klavyé Kréyòl Karukera" (Android affichera un avertissement standard, montré pour tout clavier tiers — normal, et sans rapport avec une quelconque collecte de données ici)
+• Sélectionne-le comme clavier actif
 
 🌍 IMPACT CULTUREL
 

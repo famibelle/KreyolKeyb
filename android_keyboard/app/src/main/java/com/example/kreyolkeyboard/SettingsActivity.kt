@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -58,7 +59,8 @@ class SettingsActivity : AppCompatActivity() {
         private var lastSaveTime = 0L
         private const val SAVE_INTERVAL_MS = 30000L // 30 secondes
         private const val MAX_PENDING_UPDATES = 50 // Limite pour éviter l'accumulation
-        
+        const val PRIVACY_POLICY_URL = "https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html"
+
         private var saveExecutor: ScheduledExecutorService? = null
         
         // Fonction statique pour mettre à jour l'usage d'un mot (appelée depuis le clavier)
@@ -629,7 +631,40 @@ class SettingsActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 12)
         }
         mainLayout.addView(stepsTitle)
-        
+
+        // Carte d'explication avant l'avertissement système Android, affichée
+        // uniquement tant que le clavier n'est pas encore activé : le
+        // dialogue "ce clavier peut collecter tout ce que vous tapez..." est
+        // affiché par Android pour tout clavier tiers, sans que l'app ne
+        // puisse le personnaliser — on prépare l'utilisateur avant qu'il
+        // n'apparaisse plutôt que de le laisser le découvrir sans contexte.
+        if (!isEnabled) {
+            val privacyNoticeCard = createCard("#FFF8E1")
+
+            val privacyNoticeText = TextView(this).apply {
+                text = "ℹ️ En activant le clavier, Android affichera un avertissement standard " +
+                        "montré pour tous les claviers tiers. Klavyé Kréyòl ne collecte aucune donnée : " +
+                        "tout reste sur votre téléphone."
+                textSize = 13f
+                setTextColor(Color.parseColor("#5D4037"))
+                setLineSpacing(0f, 1.2f)
+            }
+
+            val privacyNoticeLink = TextView(this).apply {
+                text = "Lire la politique de confidentialité"
+                textSize = 13f
+                setTextColor(Color.parseColor("#0080FF"))
+                setTypeface(null, Typeface.BOLD)
+                setPadding(0, 12, 0, 0)
+                setOnClickListener { openPrivacyPolicy() }
+            }
+
+            privacyNoticeCard.addView(privacyNoticeText)
+            privacyNoticeCard.addView(privacyNoticeLink)
+            mainLayout.addView(privacyNoticeCard)
+            mainLayout.addView(createSpacing(12))
+        }
+
         // ÉTAPE 1 : Activer le clavier
         val step1Card = createStepCard(
             stepNumber = 1,
@@ -893,91 +928,6 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         return mainLayout
-    }
-    
-    // Fonction pour créer la barre de statut dynamique
-    private fun createStatusBar(isEnabled: Boolean, isSelected: Boolean): LinearLayout {
-        val statusBar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(20, 16, 20, 16)
-            gravity = Gravity.CENTER_VERTICAL
-            setBackgroundColor(
-                when {
-                    isEnabled && isSelected -> Color.parseColor("#4CAF50") // Vert
-                    isEnabled -> Color.parseColor("#FFA726") // Orange
-                    else -> Color.parseColor("#FF6B35") // Rouge-orange
-                }
-            )
-        }
-        
-        val icon = TextView(this).apply {
-            text = when {
-                isEnabled && isSelected -> "✅"
-                isEnabled -> "🔄"
-                else -> "⚠️"
-            }
-            textSize = 24f
-            setPadding(0, 0, 16, 0)
-        }
-        
-        val textContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-        }
-        
-        val title = TextView(this).apply {
-            text = when {
-                isEnabled && isSelected -> "Tout est prêt !"
-                isEnabled -> "Presque prêt !"
-                else -> "Action requise"
-            }
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            setTypeface(null, Typeface.BOLD)
-        }
-        
-        val subtitle = TextView(this).apply {
-            text = when {
-                isEnabled && isSelected -> "Vous pouvez taper en Kréyòl partout"
-                isEnabled -> "Sélectionnez le clavier pour l'utiliser"
-                else -> "Activez le clavier pour commencer"
-            }
-            textSize = 13f
-            setTextColor(Color.WHITE)
-            alpha = 0.9f
-        }
-        
-        textContainer.addView(title)
-        textContainer.addView(subtitle)
-        
-        statusBar.addView(icon)
-        statusBar.addView(textContainer)
-        
-        // Bouton d'action si nécessaire
-        if (!isEnabled || !isSelected) {
-            val actionButton = Button(this).apply {
-                text = if (!isEnabled) "Activer →" else "Sélectionner →"
-                textSize = 14f
-                setBackgroundColor(Color.WHITE)
-                setTextColor(if (!isEnabled) Color.parseColor("#FF6B35") else Color.parseColor("#FFA726"))
-                setPadding(20, 10, 20, 10)
-                setTypeface(null, Typeface.BOLD)
-                setOnClickListener {
-                    if (!isEnabled) {
-                        openKeyboardSettings()
-                    } else {
-                        openInputMethodPicker()
-                    }
-                }
-            }
-            statusBar.addView(actionButton)
-        }
-        
-        return statusBar
     }
     
     // Fonction pour créer la barre de progression
@@ -1272,7 +1222,41 @@ class SettingsActivity : AppCompatActivity() {
         infoCard.addView(infoTitle)
         infoCard.addView(versionText)
         mainLayout.addView(infoCard)
-        
+        mainLayout.addView(createSpacing(16))
+
+        // Confidentialité
+        val privacyCard = createCard("#FFF8E1")
+
+        val privacyTitle = TextView(this).apply {
+            text = "🔒 Confidentialité"
+            textSize = 18f
+            setTextColor(Color.parseColor("#5D4037"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+
+        val privacyText = TextView(this).apply {
+            text = "Zéro collecte de données personnelles : ce clavier fonctionne entièrement " +
+                    "en local, rien de ce que vous tapez ne quitte votre téléphone."
+            textSize = 14f
+            setTextColor(Color.parseColor("#5D4037"))
+            setLineSpacing(0f, 1.3f)
+        }
+
+        val privacyLink = TextView(this).apply {
+            text = "Lire la politique de confidentialité"
+            textSize = 14f
+            setTextColor(Color.parseColor("#0080FF"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 12, 0, 0)
+            setOnClickListener { openPrivacyPolicy() }
+        }
+
+        privacyCard.addView(privacyTitle)
+        privacyCard.addView(privacyText)
+        privacyCard.addView(privacyLink)
+        mainLayout.addView(privacyCard)
+
         return mainLayout
     }
     
@@ -1381,60 +1365,7 @@ class SettingsActivity : AppCompatActivity() {
         return card
     }
     
-    
-    // Fonction pour créer la bannière d'activation
-    private fun createActivationBanner(): LinearLayout {
-        val banner = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.parseColor("#FF6B35")) // Orange vif
-            setPadding(24, 16, 24, 16)
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        
-        val icon = TextView(this).apply {
-            text = "⚠️"
-            textSize = 24f
-            setPadding(0, 0, 16, 0)
-        }
-        
-        val textContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
-        }
-        
-        val title = TextView(this).apply {
-            text = "Clavier non activé"
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        
-        val subtitle = TextView(this).apply {
-            text = "Activez le clavier pour commencer à taper"
-            textSize = 13f
-            setTextColor(Color.parseColor("#FFFFFF"))
-            alpha = 0.9f
-        }
-        
-        val activateButton = Button(this).apply {
-            text = "Activer maintenant"
-            setBackgroundColor(Color.WHITE)
-            setTextColor(Color.parseColor("#FF6B35"))
-            setPadding(24, 12, 24, 12)
-            setOnClickListener {
-                openKeyboardSettings()
-            }
-        }
-        
-        textContainer.addView(title)
-        textContainer.addView(subtitle)
-        banner.addView(icon)
-        banner.addView(textContainer)
-        banner.addView(activateButton)
-        
-        return banner
-    }
-    
+
     // Fonction pour vérifier si le clavier est activé
     fun isKeyboardEnabled(): Boolean {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -1512,6 +1443,15 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
+    private fun openPrivacyPolicy() {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur ouverture politique de confidentialité: ${e.message}")
+            Toast.makeText(this, "Impossible d'ouvrir la politique de confidentialité", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Fonction pour ouvrir le sélecteur de méthode d'entrée (clavier)
     private fun openInputMethodPicker() {
         try {

@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Klavyé Kréyòl</string>
     <string name="app_name_full">Klavyé Kréyòl Karukera • Potomitan™</string>
-    <string name="keyboard_name">Klavyé Kréyòl Karukera Potomitan™</string>
+    <string name="keyboard_name">Klavyé Kréyòl Karukera</string>
     <string name="keyboard_description">Clavier créole pour la Guadeloupe avec suggestions de mots et accents • Potomitan™</string>
     <string name="settings_title">Paramètres Klavyé Kréyòl • Potomitan™</string>
     <string name="spell_checker_name">Correcteur Kreyòl Karukera</string>
     <string name="spellchecker_name">Correcteur Kreyòl Karukera • Potomitan™</string>
-    <string name="subtype_kreyol">Klavyé Kréyòl Karukera Potomitan™</string>
+    <string name="subtype_kreyol">Klavyé Kréyòl Karukera</string>
     <string name="subtype_kreyol_description">Kréyòl Gwadloup</string>
 </resources>
