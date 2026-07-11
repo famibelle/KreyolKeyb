@@ -5,6 +5,13 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.3] - 2026-07-11
+
+### 🐛 Correction
+
+- **Casse des suggestions sous majuscule automatique corrigée** : taper une suggestion juste après la première lettre d'un message (majuscule automatique active) mettait le mot entier en MAJUSCULES ("B" → "BÈL" au lieu de "Bèl"). Une seule lettre majuscule initiale applique désormais une casse de titre, comme attendu.
+- Découvert par une simulation automatisée de frappe s'appuyant exclusivement sur les suggestions (982 mots) : 54 messages sur 134 étaient concernés.
+
 ## [7.0.2] - 2026-07-10
 
 ### 📚 Dictionnaire enrichi
