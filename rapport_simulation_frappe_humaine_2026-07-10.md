@@ -236,6 +236,15 @@ Deux cas isolés parmi les 134 messages montrent une perte ou un déplacement de
 
 Une capture a été prise tous les ~15-20 messages, plus une capture montrant la barre de suggestions active en cours de frappe (`suggestions_actives.png`) — dossier [`rapport_simulation_frappe_humaine_2026-07-10_screenshots/`](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/).
 
+### Démonstration : un tap de suggestion, avant/après
+
+L'usage des suggestions par le simulateur (colonne « Autocomplétion tapée avec succès », 51 mots sur 982) est peu visible à l'œil nu pendant un test de 40 minutes qui défile vite — il ne concerne qu'environ 1 mot sur 7-8, et l'action est instantanée. Voici une démonstration ciblée, rejouée manuellement sur l'émulateur juste après le test, reproduisant exactement un des 51 cas réels du journal (message 5, mot « dòmi », `an bizwen repozé` → suivi immédiatement du mot « dòmi » dans le message suivant) :
+
+| Avant le tap | Après le tap |
+|---|---|
+| ![Avant](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/demo_avant_tap.png) | ![Après](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/demo_apres_tap.png) |
+| Champ : `Dòm` (3 lettres tapées). Barre de suggestions : `Dòmi`, `Domino`, `Dominasyon`. | Un seul tap sur la 1ʳᵉ suggestion → champ : `Dòmi ` (mot complété + espace inséré automatiquement), nouvelle barre de suggestions déjà prête pour le mot suivant. |
+
 ## Conclusion
 
 Cette simulation de frappe humaine — la première de cette série de tests à inclure fautes, corrections et usage réel des suggestions plutôt qu'une frappe parfaite — montre un clavier globalement robuste face à des erreurs réalistes : **76,9 % des messages arrivent parfaitement corrects** malgré 8,7 % de mots fautés, et l'exactitude caractère par caractère atteint **98,8 %**. La correction floue (Levenshtein) rattrape environ une faute sur deux quand on la sollicite, et l'autocomplétion est adoptée dans un cas sur deux quand le mot visé est disponible. Aucun ralentissement mesurable n'a été observé malgré la charge de test nettement supérieure aux passages précédents (982 mots avec mesure systématique, contre 50 phrases mesurées ponctuellement).
