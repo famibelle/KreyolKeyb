@@ -1930,6 +1930,8 @@ Tous les tests précédents (50 phrases, 09-10 juillet) simulaient une **frappe 
 
 ## Méthodologie
 
+**Environnement de test** : émulateur Android, AVD `kreyol_test`.
+
 ### Modèle de faute de frappe
 
 - **Touches voisines calculées géométriquement** à partir des coordonnées réelles des touches du clavier (distance euclidienne), pas d'une table AZERTY supposée.
@@ -2098,7 +2100,7 @@ Les messages marqués ⚠️ ont été envoyés avec au moins un caractère diff
 | Messages envoyés identiques au texte visé | 103 / 134 (**76,9 %**) |
 | Exactitude au niveau caractère (Levenshtein) | **98,79 %** |
 | Distance de Levenshtein moyenne par message | 0,39 caractère |
-| Pire cas | 4 caractères d'écart (sur 134 messages) |
+| Pire cas | 4 caractères d'écart (sur 134 messages) — message « Chak chanson i ka touché kè mwen. » |
 
 Malgré des fautes de frappe délibérément injectées sur 8,7 % des mots, plus de 3 messages sur 4 arrivent **parfaitement corrects** grâce aux corrections manuelles et aux suggestions — un signal positif sur l'utilité réelle du correcteur.
 
@@ -2120,7 +2122,7 @@ Sur les 103 mots où une tentative d'autocomplétion a eu lieu (suggestion véri
 
 ### Fautes de frappe : que deviennent-elles ?
 
-Sur les 85 mots avec une faute injectée (substitution par touche voisine géométrique 36 %, omission 39 %, inversion 25 %) :
+Sur les 85 mots avec une faute injectée (distribution observée sur cet échantillon : substitution par touche voisine géométrique 36 %, omission 39 %, inversion 25 % — à comparer à la cible du modèle 50 % / 30 % / 20 %, l'écart restant dans la variance attendue pour n=85) :
 
 | Devenir | Nombre | % |
 |---|---|---|
@@ -2130,7 +2132,7 @@ Sur les 85 mots avec une faute injectée (substitution par touche voisine géom�
 | Envoyée telle quelle (l'utilisateur ne corrige pas, délibéré) | 18 | 21,2 % |
 | **Total envoyé avec la faute encore présente** | **33** | **38,8 %** |
 
-Sur les 31 tentatives de récupération via suggestion (35 % des 85 fautes), le mot visé apparaissait effectivement dans la liste **51,6 % du temps** — le correcteur flou (distance de Levenshtein) rattrape environ une faute sur deux qu'on lui présente, le reste nécessitant une correction manuelle.
+Sur les 31 tentatives de récupération via suggestion (36,5 % des 85 fautes), le mot visé apparaissait effectivement dans la liste **51,6 % du temps** — le correcteur flou (distance de Levenshtein) rattrape environ une faute sur deux qu'on lui présente, le reste nécessitant une correction manuelle.
 
 ### Latence
 
@@ -2150,6 +2152,15 @@ Deux cas isolés parmi les 134 messages montrent une perte ou un déplacement de
 ## Captures d'écran
 
 Une capture a été prise tous les ~15-20 messages, plus une capture montrant la barre de suggestions active en cours de frappe (`suggestions_actives.png`) — dossier [`rapport_simulation_frappe_humaine_2026-07-10_screenshots/`](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/).
+
+### Démonstration : un tap de suggestion, avant/après
+
+L'usage des suggestions par le simulateur (colonne « Autocomplétion tapée avec succès », 51 mots sur 982) est peu visible à l'œil nu pendant un test de 40 minutes qui défile vite — il ne concerne qu'environ 1 mot sur 7-8, et l'action est instantanée. Voici une démonstration ciblée, rejouée manuellement sur l'émulateur juste après le test, reproduisant exactement un des 51 cas réels du journal (message 5, mot « dòmi », `an bizwen repozé` → suivi immédiatement du mot « dòmi » dans le message suivant) :
+
+| Avant le tap | Après le tap |
+|---|---|
+| ![Avant](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/demo_avant_tap.png) | ![Après](./rapport_simulation_frappe_humaine_2026-07-10_screenshots/demo_apres_tap.png) |
+| Champ : `Dòm` (3 lettres tapées). Barre de suggestions : `Dòmi`, `Domino`, `Dominasyon`. | Un seul tap sur la 1ʳᵉ suggestion → champ : `Dòmi ` (mot complété + espace inséré automatiquement), nouvelle barre de suggestions déjà prête pour le mot suivant. |
 
 ## Conclusion
 
