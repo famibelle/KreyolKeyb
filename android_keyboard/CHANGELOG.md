@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.4] - 2026-07-11
+
+### ✨ Tunnel d'activation amélioré
+
+- **Carte explicative avant l'avertissement système Android** : prévient l'utilisateur que l'avertissement de collecte de données est standard pour tout clavier tiers, avec un lien direct vers la politique de confidentialité ("zéro collecte")
+- **Lien vers la politique de confidentialité** ajouté également dans l'onglet À Propos
+- **Nom du clavier raccourci** dans les paramètres système : n'est plus tronqué dans la liste des claviers ni dans le sélecteur
+- **Confirmation + astuce accents au premier usage réel** du clavier en dehors de l'app (une seule fois)
+- Nettoyage de code mort (`createActivationBanner`/`createStatusBar`, jamais utilisés)
+
 ## [7.0.3] - 2026-07-11
 
 ### 🐛 Correction
