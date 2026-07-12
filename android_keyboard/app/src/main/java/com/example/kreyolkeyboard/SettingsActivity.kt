@@ -42,6 +42,13 @@ import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
 import com.example.kreyolkeyboard.wordsearch.WordSearchThemes
 import com.example.kreyolkeyboard.wordsearch.WordSearchGridAdapter
 import com.google.android.play.core.review.ReviewManagerFactory
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
+import androidx.core.content.FileProvider
+import java.io.FileOutputStream
 import android.widget.Toast
 import android.widget.GridView
 import android.widget.ScrollView
@@ -1802,6 +1809,9 @@ class SettingsActivity : AppCompatActivity() {
         
         // Calcul des mots restants pour le niveau suivant
         val (nextLevelName, wordsRemaining) = getNextLevelInfo(stats.wordsDiscovered)
+
+        // Célébration + carte partageable si un niveau vient d'être franchi
+        maybeCelebrateLevelUp(stats.wordsDiscovered, levelEmoji, levelName)
         
         // 🔍 DEBUG: Log pour vérifier les calculs
         val thresholdsDebug = calculateGaussianThresholds()
@@ -2308,8 +2318,173 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     /**
+     * Index du niveau actuel (0 = Pipirit ... 7 = Benzo), même logique que getCurrentLevel()
+     */
+    private fun getCurrentLevelIndex(wordsDiscovered: Int): Int {
+        val thresholds = calculateGaussianThresholds()
+        for (i in 7 downTo 1) {
+            if (wordsDiscovered >= thresholds[i]) return i
+        }
+        return 0
+    }
+
+    /**
+     * Affiche la célébration de passage de niveau avec carte partageable.
+     * Ne se déclenche que sur une progression réelle : au premier passage,
+     * le niveau courant est mémorisé silencieusement (pas de célébration
+     * rétroactive pour un utilisateur existant).
+     */
+    private fun maybeCelebrateLevelUp(wordsDiscovered: Int, levelEmoji: String, levelName: String) {
+        try {
+            val prefs = getSharedPreferences("kreyol_gamification_prefs", Context.MODE_PRIVATE)
+            val currentIndex = getCurrentLevelIndex(wordsDiscovered)
+            val lastCelebrated = prefs.getInt("last_celebrated_level_index", -1)
+
+            if (lastCelebrated == -1) {
+                prefs.edit().putInt("last_celebrated_level_index", currentIndex).apply()
+                return
+            }
+            if (currentIndex <= lastCelebrated) return
+
+            prefs.edit().putInt("last_celebrated_level_index", currentIndex).apply()
+
+            val cardBitmap = buildLevelCardBitmap(levelEmoji, levelName, wordsDiscovered)
+
+            val preview = ImageView(this).apply {
+                setImageBitmap(cardBitmap)
+                adjustViewBounds = true
+                setPadding(32, 24, 32, 8)
+            }
+
+            AlertDialog.Builder(this)
+                .setTitle("🎉 Bravo ! Ou vansé !")
+                .setMessage("Ou rivé nivo $levelName ! Partage ta carte pour montrer ton kréyòl.")
+                .setView(preview)
+                .setPositiveButton("Partager 📤") { _, _ -> shareLevelCard(cardBitmap, levelName) }
+                .setNegativeButton("Plus tard", null)
+                .show()
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur célébration de niveau: ${e.message}")
+        }
+    }
+
+    /**
+     * Dessine la carte de niveau partageable (1080×1350, format portrait réseaux sociaux)
+     */
+    private fun buildLevelCardBitmap(levelEmoji: String, levelName: String, wordsDiscovered: Int): Bitmap {
+        val width = 1080
+        val height = 1350
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val cx = width / 2f
+
+        // Fond dégradé mer des Caraïbes
+        val bgPaint = Paint().apply {
+            shader = LinearGradient(
+                0f, 0f, 0f, height.toFloat(),
+                Color.parseColor("#0E6E76"), Color.parseColor("#052E33"),
+                Shader.TileMode.CLAMP
+            )
+        }
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
+
+        // Soleil décoratif en haut à droite
+        val sunPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#33F6E9D2")
+        }
+        canvas.drawCircle(width - 120f, 130f, 190f, sunPaint)
+
+        // Eyebrow
+        val eyebrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#E3AE5E")
+            textSize = 42f
+            textAlign = Paint.Align.CENTER
+            letterSpacing = 0.18f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+        canvas.drawText("NIVO AN MWEN AN KRÉYÒL", cx, 240f, eyebrowPaint)
+
+        // Emoji du niveau
+        val emojiPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = 280f
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(levelEmoji, cx, 620f, emojiPaint)
+
+        // Nom du niveau
+        val namePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 116f
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+        canvas.drawText(levelName, cx, 790f, namePaint)
+
+        // Compteur de mots
+        val statsPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#DDEEEE")
+            textSize = 54f
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("$wordsDiscovered mo kréyòl découvert !", cx, 900f, statsPaint)
+
+        // Séparateur
+        val linePaint = Paint().apply { color = Color.parseColor("#33FFFFFF"); strokeWidth = 3f }
+        canvas.drawLine(cx - 220f, 1010f, cx + 220f, 1010f, linePaint)
+
+        // Pied de carte
+        val footerBoldPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 56f
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+        canvas.drawText("Klavyé Kréyòl Karukera", cx, 1120f, footerBoldPaint)
+
+        val footerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#A9D4D6")
+            textSize = 42f
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("Klavyé gratui asi Google Play 🏝️", cx, 1195f, footerPaint)
+
+        return bitmap
+    }
+
+    /**
+     * Enregistre la carte dans le cache et ouvre le sélecteur de partage
+     * (image + texte avec lien tracké utm_source=level_share)
+     */
+    private fun shareLevelCard(bitmap: Bitmap, levelName: String) {
+        try {
+            val imagesDir = File(cacheDir, "images").apply { mkdirs() }
+            val imageFile = File(imagesDir, "nivo_kreyol.png")
+            FileOutputStream(imageFile).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", imageFile)
+
+            val message = "An rivé nivo $levelName asi Klavyé Kréyòl Karukera ! 🏝️ É wou, ki nivo a'w ?\n" +
+                    "Télécharge le clavier gratuitement :\n" +
+                    "https://play.google.com/store/apps/details?id=$packageName" +
+                    "&referrer=utm_source%3Dlevel_share%26utm_campaign%3Dlaunch10k"
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, message)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, "Partager ma carte de niveau"))
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur partage carte de niveau: ${e.message}")
+            Toast.makeText(this, "Impossible de partager la carte", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
      * Calcule les seuils de niveau de façon dynamique selon la taille du dictionnaire
-     * 
+     *
      * Progression motivante basée sur des pourcentages du dictionnaire total:
      * - Pipirit (début): 0% - démarrage
      * - Ti moun: 1.5% - premiers pas (rapide à atteindre!)

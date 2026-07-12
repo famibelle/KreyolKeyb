@@ -55,6 +55,17 @@
                 android:resource="@xml/kreyol_spellchecker" />
         </service>
 
+        <!-- Partage de fichiers (carte de niveau) sans exposer de chemin réel -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- Activity de configuration avec 4 onglets -->
         <activity
             android:name=".SettingsActivity"
