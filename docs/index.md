@@ -78,7 +78,7 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
   document.getElementById('g-next').textContent = fmt(next);
   document.getElementById('g-daily').textContent = fmt(s.daily_target);
   document.getElementById('g-asof').textContent = 'MAJ ' + s.as_of;
-  document.getElementById('g-remaining').textContent = 'Rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
+  document.getElementById('g-remaining').textContent = 'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
   document.getElementById('g-fill').style.width = pct + '%';
 }).catch(function(){});
 </script>

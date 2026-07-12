@@ -48,7 +48,7 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
   var pct = Math.max(2, Math.min(100, ((s.current - base) / (next - base)) * 100));
   document.getElementById('g-current').textContent = fmt(s.current);
   document.getElementById('g-next').textContent = fmt(next);
-  document.getElementById('g-remaining').textContent = 'Rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
+  document.getElementById('g-remaining').textContent = 'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
   document.getElementById('g-fill').style.width = pct + '%';
 }).catch(function(){});
 </script>
