@@ -1176,7 +1176,43 @@ class SettingsActivity : AppCompatActivity() {
         missionCard.addView(missionText)
         mainLayout.addView(missionCard)
         mainLayout.addView(createSpacing(16))
-        
+
+        // Partage
+        val shareCard = createCard("#E8F5FF")
+
+        val shareTitle = TextView(this).apply {
+            text = "📣 Fè lanmou pou kréyòl la !"
+            textSize = 18f
+            setTextColor(Color.parseColor("#0080FF"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+
+        val shareText = TextView(this).apply {
+            text = "Ce clavier grandit grâce au bouche-à-oreille. Partage-le avec ta famille " +
+                    "et tes amis créolophones : chaque partage aide notre langue à exister davantage " +
+                    "sur les téléphones."
+            textSize = 14f
+            setTextColor(Color.parseColor("#333333"))
+            setLineSpacing(0f, 1.3f)
+            setPadding(0, 0, 0, 16)
+        }
+
+        val shareButton = Button(this).apply {
+            text = "📤 Partager l'application"
+            textSize = 15f
+            setBackgroundColor(Color.parseColor("#0080FF"))
+            setTextColor(Color.WHITE)
+            setPadding(24, 24, 24, 24)
+            setOnClickListener { shareApp() }
+        }
+
+        shareCard.addView(shareTitle)
+        shareCard.addView(shareText)
+        shareCard.addView(shareButton)
+        mainLayout.addView(shareCard)
+        mainLayout.addView(createSpacing(16))
+
         // Sources littéraires
         val sourcesCard = createCard("#F0F8E8")
         
@@ -1610,6 +1646,24 @@ class SettingsActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture politique de confidentialité: ${e.message}")
             Toast.makeText(this, "Impossible d'ouvrir la politique de confidentialité", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Fonction pour partager l'application (bouche-à-oreille)
+    private fun shareApp() {
+        val message = "Mwen ka sèvi ak Klavyé Kréyòl Karukera pou ekri kréyòl asi telefòn mwen ! 🏝️\n" +
+                "Sé on klavyé Android gratis ki ba w sigjesyon mo an kréyòl Gwadloup.\n\n" +
+                "Télécharge-le gratuitement :\n" +
+                "https://play.google.com/store/apps/details?id=$packageName"
+        try {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+            startActivity(Intent.createChooser(intent, "Partager Klavyé Kréyòl Karukera"))
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur partage application: ${e.message}")
+            Toast.makeText(this, "Impossible de partager pour le moment", Toast.LENGTH_SHORT).show()
         }
     }
 
