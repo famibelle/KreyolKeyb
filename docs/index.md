@@ -1,5 +1,5 @@
 ---
-title: "Clavier Créole Guadeloupéen pour Android — Klavyé Kréyòl Karukera"
+title: "Clavier Créole Guadeloupéen pour Android : Klavyé Kréyòl Karukera"
 description: "Le clavier Android intelligent pour écrire en kréyòl guadeloupéen : suggestions bilingues créole/français, accents par appui long, 100 % hors ligne et gratuit."
 lang: fr
 ---
@@ -12,7 +12,7 @@ lang: fr
   <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a>
 </nav>
 
-# Klavyé Kréyòl Karukera — le clavier créole guadeloupéen pour Android
+# Klavyé Kréyòl Karukera, le clavier créole guadeloupéen pour Android
 
 **Écrire en kréyòl sur son téléphone, sans galérer.** Klavyé Kréyòl Karukera
 est un clavier Android **gratuit, open source et 100 % hors ligne** qui
@@ -54,7 +54,7 @@ Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
 
 ## Un projet de préservation linguistique
 
-Le créole est parlé par **1,6 million de locuteurs en France** — et pourtant
+Le créole est parlé par **1,6 million de locuteurs en France**. Et pourtant
 sa place institutionnelle reste fragile : en octobre 2025, il a même été
 retiré de l'agrégation des langues de France, déclenchant une mobilisation
 des enseignants et des élus.
@@ -69,7 +69,7 @@ guadeloupéen ses lettres de noblesse.
 
 <div id="dl-gauge" style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin:16px 0;">
   <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-    <span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;"><span id="g-current">…</span> <small style="font-size:14px;font-weight:400;color:#666;">téléchargements — prochain palier : <span id="g-next">…</span></small></span>
+    <span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;"><span id="g-current">…</span> <small style="font-size:14px;font-weight:400;color:#666;">téléchargements · prochain palier : <span id="g-next">…</span></small></span>
     <span style="font-weight:700;color:#C94A3B;">Objectif du jour : <span id="g-daily">60</span> 📲</span>
   </div>
   <div style="height:16px;border-radius:999px;background:#DDEEEE;overflow:hidden;">
@@ -111,5 +111,5 @@ clic, et quoi dire si vous appelez une radio.
 
 ---
 
-🏝️ *Potomitan™ — Teknoloji pou tout moun.
+🏝️ *Potomitan™, Teknoloji pou tout moun.
 « An kréyòl nou ka palé, an kréyòl nou ka rivé ! »*
