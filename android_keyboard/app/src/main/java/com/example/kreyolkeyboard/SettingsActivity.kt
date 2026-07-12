@@ -41,6 +41,7 @@ import com.example.kreyolkeyboard.wordsearch.WordSearchWord
 import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
 import com.example.kreyolkeyboard.wordsearch.WordSearchThemes
 import com.example.kreyolkeyboard.wordsearch.WordSearchGridAdapter
+import com.google.android.play.core.review.ReviewManagerFactory
 import android.widget.Toast
 import android.widget.GridView
 import android.widget.ScrollView
@@ -274,8 +275,43 @@ class SettingsActivity : AppCompatActivity() {
         mainLayout.addView(viewPager)
         
         setContentView(mainLayout)
-        
+
         Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
+
+        maybeAskForReview()
+    }
+
+    /**
+     * Demande d'avis Google Play (In-App Review), déclenchée seulement après
+     * un vrai usage du clavier (flag posé par le service IME) et à partir de
+     * la 2ᵉ ouverture de l'app — le moment où l'utilisateur revient de lui-même.
+     * L'API Play limite elle-même la fréquence d'affichage ; on ne tente
+     * qu'une fois pour ne pas consommer le quota inutilement.
+     */
+    private fun maybeAskForReview() {
+        // Mêmes clés que dans KreyolInputMethodServiceRefactored
+        val prefs = getSharedPreferences("kreyol_onboarding_prefs", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("first_real_use_tip_shown", false)) return
+        if (prefs.getBoolean("review_flow_requested", false)) return
+
+        val openCount = prefs.getInt("settings_open_count_after_use", 0) + 1
+        prefs.edit().putInt("settings_open_count_after_use", openCount).apply()
+        if (openCount < 2) return
+
+        try {
+            val manager = ReviewManagerFactory.create(this)
+            manager.requestReviewFlow().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    prefs.edit().putBoolean("review_flow_requested", true).apply()
+                    manager.launchReviewFlow(this, task.result)
+                    Log.d("SettingsActivity", "Flux d'avis Google Play lancé")
+                } else {
+                    Log.d("SettingsActivity", "Flux d'avis indisponible: ${task.exception?.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur demande d'avis: ${e.message}")
+        }
     }
     
     override fun onSaveInstanceState(outState: Bundle) {
@@ -1654,7 +1690,8 @@ class SettingsActivity : AppCompatActivity() {
         val message = "Mwen ka sèvi ak Klavyé Kréyòl Karukera pou ekri kréyòl asi telefòn mwen ! 🏝️\n" +
                 "Sé on klavyé Android gratis ki ba w sigjesyon mo an kréyòl Gwadloup.\n\n" +
                 "Télécharge-le gratuitement :\n" +
-                "https://play.google.com/store/apps/details?id=$packageName"
+                "https://play.google.com/store/apps/details?id=$packageName" +
+                "&referrer=utm_source%3Din_app_share%26utm_campaign%3Dlaunch10k"
         try {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
