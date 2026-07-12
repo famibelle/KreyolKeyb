@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.7] - 2026-07-12
+
+### 📣 Partage
+
+- **Bouton « Partager l'application »** dans l'onglet À Propos : ouvre le sélecteur de partage natif Android avec un message pré-rempli (créole + lien Play Store), pour encourager le bouche-à-oreille
+
 ## [7.0.6] - 2026-07-11
 
 ### ✨ Guide illustré et navigation
