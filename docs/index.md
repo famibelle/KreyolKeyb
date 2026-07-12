@@ -51,6 +51,16 @@ langue à exister dans le numérique. Le dictionnaire et les suggestions
 s'appuient sur les œuvres d'écrivains, de linguistes et d'artistes qui ont
 donné au créole guadeloupéen ses lettres de noblesse.
 
+## Vin Anbasadè ! 📣
+
+**Vous voulez aider le kréyòl à rayonner ?** Notre page ambassadeurs vous
+donne tout : les contacts des médias locaux, les emails pré-remplis en un
+clic, et quoi dire si vous appelez une radio.
+
+<div align="center" style="margin: 16px 0;">
+  <a href="ambassade.html" style="display:inline-block; background:#0E6E76; color:#fff; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:bold;">🏝️ Devenir ambassadeur du Klavyé Kréyòl</a>
+</div>
+
 **Pou laprès :** [dossier de presse / press kit](presskit.html)
 
 ---
