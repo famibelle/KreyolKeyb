@@ -105,7 +105,7 @@ footer a{color:var(--sea);}
   <div class="gauge-card">
     <div class="gauge-head">
       <span class="gauge-num"><span id="g-current">…</span> <small>téléchargements · prochain palier : <span id="g-next">…</span></small></span>
-      <span class="gauge-target">Objectif du jour : <span id="g-daily">60</span> 📲</span>
+      <span class="gauge-target">Objectif du jour : <span id="g-daily">10</span> 📲</span>
     </div>
     <div class="gauge-bar"><div class="gauge-fill" id="g-fill" style="width:1%"></div></div>
     <div class="gauge-meta">
@@ -215,7 +215,6 @@ Google Play : https://play.google.com/store/apps/details?id=com.potomitan.kreyol
     var pct = Math.max(2, Math.min(100, ((s.current - base) / (next - base)) * 100));
     document.getElementById('g-current').textContent = fmt(s.current);
     document.getElementById('g-next').textContent = fmt(next);
-    document.getElementById('g-daily').textContent = fmt(s.daily_target);
     document.getElementById('g-asof').textContent = 'MAJ ' + s.as_of;
     document.getElementById('g-remaining').textContent =
       'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
