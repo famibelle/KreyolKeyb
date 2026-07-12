@@ -57,6 +57,7 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 | RCI Guadeloupe | `rcigua@yahoo.fr` / `accueil971@radiocaraibes.com` · ligne info 0590 89 44 44 | Radio n°1, Les Abymes |
 | Guadeloupe la 1ère | Formulaire : la1ere.franceinfo.fr/guadeloupe/contact.html · standard 0590 60 96 96 | TV + radio publiques, Baie-Mahault |
 | Le Courrier de Guadeloupe | lecourrierdeguadeloupe.com/nous-rejoindre | Presse écrite indépendante |
+| Canal 10 (télévision locale) | `canal10redaction@gmail.com` · 0590 26 73 03 | Chaîne TV locale, Baie-Mahault. Angle image pour un sujet culturel |
 
 ### Éducation & institutions
 
