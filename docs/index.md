@@ -109,6 +109,14 @@ clic, et quoi dire si vous appelez une radio.
 
 **Pou laprès :** [dossier de presse / press kit](presskit.html)
 
+## Contacts
+
+Une question, une proposition, un partenariat ? Écrivez à
+**[contact@potomitan.io](mailto:contact@potomitan.io)**.
+
+Le code source est ouvert et public sur
+[GitHub](https://github.com/famibelle/KreyolKeyb).
+
 ---
 
 🏝️ *Potomitan™, Teknoloji pou tout moun.
