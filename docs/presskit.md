@@ -4,6 +4,14 @@ description: "Kit presse du premier clavier Android intelligent dédié au kréy
 lang: fr
 ---
 
+<nav style="text-align:center;padding:10px 0;margin-bottom:18px;border-bottom:1px solid #ddd;font-size:15px;">
+  <a href="index.html">🏠 Accueil</a> ·
+  <a href="ambassade.html">📣 Vin Anbasadè</a> ·
+  <strong>📰 Presse</strong> ·
+  <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpresse%26utm_campaign%3Dlaunch10k">📲 Télécharger</a> ·
+  <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a>
+</nav>
+
 # Dossier de presse — Klavyé Kréyòl Karukera
 
 *Dernière mise à jour : juillet 2026*
@@ -89,11 +97,12 @@ Les suggestions s'appuient sur les œuvres de :
 ## Visuels
 
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
-- [Captures d'écran](Screenshots/) (suggestions, accents, jeux)
+- [Captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux)
 - Logo Potomitan disponible sur demande
 
 ## Contact
 
 **Médhi Famibelle** — Potomitan™
 [GitHub du projet](https://github.com/famibelle/KreyolKeyb) ·
-[Page du projet](https://famibelle.github.io/KreyolKeyb/)
+[Page du projet](index.html) ·
+[Devenir ambassadeur](ambassade.html)
