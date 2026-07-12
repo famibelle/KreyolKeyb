@@ -64,7 +64,8 @@ jobs:
           elif [ "$NEW" -ge 1000 ];   then COLOR=yellowgreen
           else COLOR=orange
           fi
-          PRETTY=$(printf "%'d / %'d" "$NEW" "$GOAL" | sed "s/,/ /g")
+          group() { echo "$1" | rev | sed 's/\([0-9]\{3\}\)/\1 /g' | rev | sed 's/^ *//'; }
+          PRETTY="$(group $NEW) / $(group $GOAL)"
           jq -n --arg m "$PRETTY" --arg c "$COLOR" \
              '{schemaVersion:1, label:"📲 téléchargements", message:$m, color:$c}' > "$BADGE"
 
