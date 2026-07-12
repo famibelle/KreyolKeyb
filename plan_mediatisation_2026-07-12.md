@@ -58,6 +58,9 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 | Guadeloupe la 1ère | Formulaire : la1ere.franceinfo.fr/guadeloupe/contact.html · standard 0590 60 96 96 | TV + radio publiques, Baie-Mahault |
 | Le Courrier de Guadeloupe | lecourrierdeguadeloupe.com/nous-rejoindre | Presse écrite indépendante |
 | Canal 10 (télévision locale) | `canal10redaction@gmail.com` · 0590 26 73 03 | Chaîne TV locale, Baie-Mahault. Angle image pour un sujet culturel |
+| Trace FM Guadeloupe | `antenne@trace.fm` · 0590 25 18 94 | Radio jeune public, mêmes locaux que France-Antilles (Baie-Mahault) |
+| Zouk Radio | `contact@zoukradio.fm` · 0590 93 09 58 | Radio musicale grand public, Pointe-à-Pitre |
+| NRJ Guadeloupe / NRJ Antilles | Formulaire : nrjantilles.com/contact · 0590 83 96 96 | Studio Grand Camp, Les Abymes |
 
 ### Éducation & institutions
 
@@ -66,6 +69,7 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 | Université des Antilles · Licence/Master Études créoles | `lsh-creole-pedagogie@univ-antilles.fr` | Responsable pédagogique créole |
 | CRILLASH (labo de recherche lettres/langues) | `mirella.pelage@univ-antilles.fr` · 0596 72 75 00 | Secrétariat, campus Schoelcher |
 | Académie de Guadeloupe · LVR Créole | pedagogie.ac-guadeloupe.fr (page Langues Vivantes Régionales) | Prescripteurs : profs de créole (CAPES créole) |
+| Rectorat de l'académie de la Guadeloupe | `ce.rectorat@ac-guadeloupe.fr` · 0590 47 81 00 | Autorité académique de tutelle. Lien direct avec l'actualité de l'agrégation créole |
 | Région Guadeloupe | regionguadeloupe.fr | Leur site a une version créole → sensibilité avérée au sujet |
 
 ### Associations créolophones
