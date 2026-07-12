@@ -2,6 +2,20 @@
 
 **Objectif :** 10 000 téléchargements. **Budget :** 5 €.
 
+## Calibration (données réelles au 12/07/2026)
+
+- La fiche Play Store affiche aujourd'hui **100+ téléchargements** : l'objectif
+  est donc un **×100**, pas une simple accélération.
+- Benchmark : les claviers créole haïtien génériques (thèmes/photo keyboards,
+  sans intelligence linguistique) dépassent les 100 k installations — mais le
+  créole haïtien compte ~11 M de locuteurs. Rapporté aux ~400 k habitants de
+  la Guadeloupe + la diaspora antillaise en métropole (plusieurs centaines de
+  milliers de personnes), 10 000 ≈ 1-2 % du public adressable. **Ambitieux
+  mais atteignable** — à condition de toucher la diaspora, pas seulement
+  l'archipel.
+- Aucun concurrent direct n'existe pour le kréyòl guadeloupéen avec
+  suggestions intelligentes : l'angle « premier et seul » est factuel.
+
 ## Constat de départ
 
 5 € ne finance aucune campagne publicitaire efficace : les enchères minimales
@@ -33,6 +47,48 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 | Product Hunt | Faible | 0 € | Lancement gratuit, trafic ponctuel + backlink |
 | Fiche Play Store (ASO) | Faible | 0 € | Déjà bien rédigée ; ajouter une courte vidéo de démo augmente la conversion |
 
+## Carnet d'adresses vérifié (recherche web du 12/07/2026)
+
+### Presse & radio
+
+| Média | Contact | Note |
+|---|---|---|
+| France-Antilles Guadeloupe | `redaction@franceantilles.fr` — 0590 25 18 88 | Email direct rédaction |
+| RCI Guadeloupe | `rcigua@yahoo.fr` / `accueil971@radiocaraibes.com` — ligne info 0590 89 44 44 | Radio n°1, Les Abymes |
+| Guadeloupe la 1ère | Formulaire : la1ere.franceinfo.fr/guadeloupe/contact.html — standard 0590 60 96 96 | TV + radio publiques, Baie-Mahault |
+| Le Courrier de Guadeloupe | lecourrierdeguadeloupe.com/nous-rejoindre | Presse écrite indépendante |
+
+### Éducation & institutions
+
+| Cible | Contact | Note |
+|---|---|---|
+| Université des Antilles — Licence/Master Études créoles | `lsh-creole-pedagogie@univ-antilles.fr` | Responsable pédagogique créole |
+| CRILLASH (labo de recherche lettres/langues) | `mirella.pelage@univ-antilles.fr` — 0596 72 75 00 | Secrétariat, campus Schoelcher |
+| Académie de Guadeloupe — LVR Créole | pedagogie.ac-guadeloupe.fr (page Langues Vivantes Régionales) | Prescripteurs : profs de créole (CAPES créole) |
+| Région Guadeloupe | regionguadeloupe.fr | Leur site a une version créole → sensibilité avérée au sujet |
+
+### Associations créolophones
+
+| Association | Localisation | Note |
+|---|---|---|
+| Lang Kréyol Gwadloup an Bannzil | Allée de la Distillerie, Baie-Mahault | Promotion du créole : événements, concours, projets média |
+
+### L'atout maître : le calendrier
+
+La **Jounen Entènasyonal Kréyòl (28 octobre)** et le mois du créole (octobre)
+sont LE moment où tous les médias antillais cherchent des sujets créole. Un
+clavier kréyòl open source est un sujet clé en main pour eux. Pitcher la
+presse **fin septembre / début octobre** multiplie les chances de reprise —
+c'est le meilleur multiplicateur gratuit du plan.
+
+## Calendrier phasé
+
+| Phase | Période | Actions | Cible cumulée |
+|---|---|---|---|
+| 1. Cercle proche | Juillet-août 2026 | WhatsApp, groupes Facebook diaspora, bouton partage in-app (livré en 7.0.7) | 500–1 000 |
+| 2. Prescripteurs | Septembre (rentrée) | Profs de créole (académie), Université des Antilles, associations, auteurs du corpus | 2 000–3 000 |
+| 3. Pic médiatique | Octobre (mois du créole, Jounen kréyòl 28/10) | Pitch presse France-Antilles + RCI + la 1ère, posts réseaux coordonnés, Show HN / Product Hunt en parallèle | 6 000–10 000 |
+
 ## Messages prêts à copier-coller
 
 ### Post Facebook / groupe diaspora
@@ -63,6 +119,8 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 ### Email de pitch presse (court)
 
 > Objet : Un clavier Android pour écrire en kréyòl guadeloupéen
+> *(variante octobre : « Pour la Jounen Kréyòl, un clavier pour écrire
+> en kréyòl gwadloupéyen sur son téléphone »)*
 >
 > Bonjour,
 >
