@@ -93,10 +93,10 @@ c'est le meilleur multiplicateur gratuit du plan.
 
 ### Post Facebook / groupe diaspora
 
-> 🏝️ Ou ka galéré pou ékri an kréyòl asi telefòn ou ? Klavyé Kréyòl Karukera
-> sé an klavyé Android GRATIS ki ba w sigjesyon mo an kréyòl Gwadloup, tiré
+> 🏝️ Ou ka galéré pou ékri an kréyòl asi téléfòn a'w ? Klavyé Kréyòl Karukera
+> sé on klavyé Android GRATUI ki ba'w sigjesyon mo an kréyòl Gwadloup, tiré
 > asi tèks Sylviane Telchid, Max Rippon, Sonny Rupaire é lòt gran défansè kréyòl la.
-> Zéro kolekt données, kòd sous ouvè, gratis toubannman.
+> Zéro kolekt données, kòd sous ouvè, gratui toubannman.
 > 👉 [lien Play Store]
 
 ### Statut / message WhatsApp
@@ -136,7 +136,7 @@ c'est le meilleur multiplicateur gratuit du plan.
 
 ### Légende Instagram / TikTok
 
-> Ékri an kréyòl san ou pa ni pè fè fot 🇬🇵 Nouvo klavyé gratis ki ka édé w
+> Ékri an kréyòl san ou pa ni pè fè fot 🇬🇵 Nouvo klavyé gratui ki ka édé'w
 > ékri kréyòl Gwadloup — sigjesyon otantik, san pyèj, san kolekt données.
 > Lien an bio 👆 #kreyol #gwada #guadeloupe #kréyòl #patwa #languecreole
 

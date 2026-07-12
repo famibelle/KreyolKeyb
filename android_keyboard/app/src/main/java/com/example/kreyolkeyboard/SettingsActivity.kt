@@ -1687,8 +1687,8 @@ class SettingsActivity : AppCompatActivity() {
 
     // Fonction pour partager l'application (bouche-à-oreille)
     private fun shareApp() {
-        val message = "Mwen ka sèvi ak Klavyé Kréyòl Karukera pou ekri kréyòl asi telefòn mwen ! 🏝️\n" +
-                "Sé on klavyé Android gratis ki ba w sigjesyon mo an kréyòl Gwadloup.\n\n" +
+        val message = "Mwen ka sèvi épi Klavyé Kréyòl Karukera pou ékri kréyòl asi téléfòn an mwen ! 🏝️\n" +
+                "Sé on klavyé Android gratui ki ba'w sigjesyon mo an kréyòl Gwadloup.\n\n" +
                 "Télécharge-le gratuitement :\n" +
                 "https://play.google.com/store/apps/details?id=$packageName" +
                 "&referrer=utm_source%3Din_app_share%26utm_campaign%3Dlaunch10k"
