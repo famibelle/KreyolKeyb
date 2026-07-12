@@ -1,5 +1,5 @@
 ---
-title: "Dossier de presse — Klavyé Kréyòl Karukera, clavier créole guadeloupéen"
+title: "Dossier de presse : Klavyé Kréyòl Karukera, clavier créole guadeloupéen"
 description: "Kit presse du premier clavier Android intelligent dédié au kréyòl guadeloupéen : faits clés, visuels, contact."
 lang: fr
 ---
@@ -12,7 +12,7 @@ lang: fr
   <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a>
 </nav>
 
-# Dossier de presse — Klavyé Kréyòl Karukera
+# Dossier de presse : Klavyé Kréyòl Karukera
 
 *Dernière mise à jour : juillet 2026*
 
@@ -20,14 +20,14 @@ lang: fr
 
 **Klavyé Kréyòl Karukera est le premier clavier Android intelligent dédié au
 créole guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
-partir d'un corpus littéraire créole authentique — gratuit, open source, et
+partir d'un corpus littéraire créole authentique. Gratuit, open source, et
 sans aucune collecte de données.
 
 ## Le contexte d'actualité : une langue fragilisée par l'institution
 
 En octobre 2025, le ministère de l'Éducation nationale a **retiré le créole
 de l'agrégation des langues de France** (session 2026), alors que le basque,
-le catalan et l'occitan y restaient — une décision dénoncée par le député
+le catalan et l'occitan y restaient, une décision dénoncée par le député
 guadeloupéen Olivier Serva comme « une injustice criante », et contre
 laquelle enseignants et élus se sont mobilisés. Le ministère a promis une
 réouverture pour la session 2027, attendue au tournant à la rentrée 2026.
@@ -36,7 +36,7 @@ Le créole est pourtant parlé par **1,6 million de locuteurs en France**.
 
 **Klavyé Kréyòl Karukera est la réponse de la société civile** : pendant que
 la place institutionnelle du créole recule, un projet citoyen, gratuit et
-open source équipe la langue pour le numérique — là où elle se joue
+open source équipe la langue pour le numérique, là où elle se joue
 désormais chaque jour, dans les SMS et les réseaux sociaux de centaines de
 milliers de créolophones.
 
@@ -45,7 +45,7 @@ milliers de créolophones.
 Les claviers standards (Gboard, Samsung...) ne connaissent pas le créole
 guadeloupéen : ils soulignent chaque mot en rouge, « corrigent » le kréyòl
 vers le français et découragent celles et ceux qui veulent écrire dans leur
-langue. Résultat : le créole recule dans les usages numériques quotidiens —
+langue. Résultat : le créole recule dans les usages numériques quotidiens :
 SMS, WhatsApp, réseaux sociaux.
 
 ## La réponse
@@ -75,7 +75,7 @@ Les suggestions s'appuient sur les œuvres de :
 |---|---|
 | Plateforme | Android 5.0+ (iOS en préparation) |
 | Prix | Gratuit, sans pub, sans achat intégré |
-| Données personnelles | Aucune collecte — fonctionnement 100 % hors ligne |
+| Données personnelles | Aucune collecte, fonctionnement 100 % hors ligne |
 | Licence | Open source (MIT), code sur [GitHub](https://github.com/famibelle/KreyolKeyb) |
 | Éditeur | Potomitan™ |
 | Téléchargement | [Google Play](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpresse%26utm_campaign%3Dlaunch10k) |
@@ -84,7 +84,7 @@ Les suggestions s'appuient sur les œuvres de :
 
 - **L'affaire de l'agrégation** : pendant que le créole est retiré des
   concours, la société civile construit gratuitement les outils numériques
-  qui le font vivre — le contre-exemple positif de la polémique
+  qui le font vivre : le contre-exemple positif de la polémique
 - **Patrimoine × tech** : quand l'intelligence des claviers se met au service
   d'une langue régionale
 - **Jounen Entènasyonal Kréyòl (28 octobre)** : un outil concret pour écrire
@@ -102,7 +102,7 @@ Les suggestions s'appuient sur les œuvres de :
 
 ## Contact
 
-**Médhi Famibelle** — Potomitan™
+**Médhi Famibelle**, Potomitan™
 [GitHub du projet](https://github.com/famibelle/KreyolKeyb) ·
 [Page du projet](index.html) ·
 [Devenir ambassadeur](ambassade.html)
