@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.10] - 2026-07-13
+
+### 📣 Croissance et gamification
+
+- **Bouton « Noter l'application »** dans l'onglet À Propos, à côté du partage : ouvre la fiche Play Store (lien direct, avec repli automatique si la Play Store n'est pas disponible)
+- **Carte de niveau partageable** : à chaque passage de niveau (Pipirit → Benzo), une carte illustrée générée à la volée célèbre la progression et peut être partagée en un clic
+- **Correction du créole** : le titre de la carte de partage disait littéralement « faire l'amour pour le créole ». Remplacé par « Ba kréyòl la lanmou'w ! » (donne ton amour au créole)
+
 ## [7.0.9] - 2026-07-12
 
 ### ✏️ Correction linguistique
