@@ -1243,9 +1243,20 @@ class SettingsActivity : AppCompatActivity() {
             setOnClickListener { shareApp() }
         }
 
+        val rateButton = Button(this).apply {
+            text = "⭐ Noter l'application"
+            textSize = 15f
+            setBackgroundColor(Color.parseColor("#FFB300"))
+            setTextColor(Color.parseColor("#333333"))
+            setPadding(24, 24, 24, 24)
+            setOnClickListener { openPlayStoreListing() }
+        }
+
         shareCard.addView(shareTitle)
         shareCard.addView(shareText)
         shareCard.addView(shareButton)
+        shareCard.addView(createSpacing(12))
+        shareCard.addView(rateButton)
         mainLayout.addView(shareCard)
         mainLayout.addView(createSpacing(16))
 
@@ -1682,6 +1693,21 @@ class SettingsActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture politique de confidentialité: ${e.message}")
             Toast.makeText(this, "Impossible d'ouvrir la politique de confidentialité", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Ouvre la fiche Play Store pour noter l'app (complément de l'In-App Review, soumis à quota)
+    private fun openPlayStoreListing() {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+        } catch (e: Exception) {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+            } catch (ex: Exception) {
+                Log.e("SettingsActivity", "Erreur ouverture fiche Play Store: ${ex.message}")
+                Toast.makeText(this, "Play Store indisponible", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

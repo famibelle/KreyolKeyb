@@ -148,6 +148,56 @@ c'est le meilleur multiplicateur gratuit du plan.
 - Gratuit, open source, zéro collecte de données, fonctionnement 100 % local
 - Disponible sur Google Play : `com.potomitan.kreyolkeyboard`
 
+## Au-delà de 10 000 : les moteurs continus (ajout du 12/07/2026)
+
+Le plan initial culmine sur un pic unique (octobre). Pour **dépasser**
+10 000, il faut des moteurs qui tournent en continu après le pic.
+
+### Rythme requis
+
+Dépasser 10 000 d'ici fin 2026 = **~60 installations/jour en moyenne**
+à partir d'octobre (avec les phases 1-2 réalisées). Jalon intermédiaire :
+**50 avis à 4,5+ avant fin octobre** — c'est le carburant du classement
+Play Store, plus important que n'importe quel post.
+
+### Nouveaux canaux vérifiés (recherche du 12/07)
+
+| Cible | Contact | Levier |
+|---|---|---|
+| **potomitan.info** (site de référence des cultures créoles) | 0596 61 19 56 — accepte les soumissions de ressources | Backlink + audience ultra-qualifiée ; le nom Potomitan™ crée une reconnaissance immédiate |
+| **potomitan.io / VwaKréyòl** (traducteur fr↔créole gwadloup) | Équipe : Brigitte Démocrite, **Monique Famibelle**, Yisselda Rhoc | Allié naturel (même écosystème POTOMITAN, lien familial probable) : bannière croisée traducteur ↔ clavier, relais communauté VwaKréyòl |
+| **KEPKAA — Mois du Créole à Montréal** (octobre) | `kepkaa@videotron.ca` — 514 750-8800 | 2ᵉ pic d'octobre : diaspora créolophone canadienne |
+| **Tropiques FM** (radio antillaise, Paris 92.6 FM) | tropiquesfm.com — 4 bd des Îles, Issy-les-Moulineaux | Diaspora antillaise d'Île-de-France (le plus gros bassin hors archipel) |
+
+### Distribution alternative (gratuite)
+
+- **IzzyOnDroid** : dépôt compatible F-Droid alimenté automatiquement par
+  les releases GitHub (déjà en place !). Soumission = une simple issue sur
+  leur dépôt. Audience open source androïd militante → bouche-à-oreille tech.
+- **F-Droid officiel** (plus tard) : plus exigeant (build reproductible)
+  mais crédibilité maximale pour un projet de préservation linguistique.
+
+### Fiche Play Store : exploiter la console
+
+- **Fiches localisées** : ajouter une fiche **anglais** (« Guadeloupean
+  Creole keyboard ») et **créole haïtien (ht)** — la langue la plus proche
+  disponible dans la console — pour capter les recherches « creole keyboard »
+  de toute la Caraïbe et des US.
+- **Expériences de fiche** (A/B testing natif de la Play Console) : tester
+  icône et première capture dès ~1 000 visites/mois.
+
+### Backlog produit growth (à développer ensuite)
+
+- **Partage de badge de progression** : chaque passage de niveau (Pipirit →
+  Benzo) génère une carte partageable — boucle virale liée à la gamification
+  existante.
+- **« Mo a jou »** (mot du jour) : notification quotidienne avec un mot
+  créole + sa source littéraire, partageable. Rétention + contenu social
+  automatique.
+- Livré le 12/07 : bouton **« ⭐ Noter l'application »** dans l'onglet
+  À Propos (lien direct `market://`), complément de l'In-App Review soumis
+  à quota.
+
 ## Sur les 5 €
 
 À ce niveau, la publicité en ligne n'a pas de retour mesurable. Deux usages
