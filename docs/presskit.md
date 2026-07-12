@@ -15,6 +15,23 @@ créole guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
 partir d'un corpus littéraire créole authentique — gratuit, open source, et
 sans aucune collecte de données.
 
+## Le contexte d'actualité : une langue fragilisée par l'institution
+
+En octobre 2025, le ministère de l'Éducation nationale a **retiré le créole
+de l'agrégation des langues de France** (session 2026), alors que le basque,
+le catalan et l'occitan y restaient — une décision dénoncée par le député
+guadeloupéen Olivier Serva comme « une injustice criante », et contre
+laquelle enseignants et élus se sont mobilisés. Le ministère a promis une
+réouverture pour la session 2027, attendue au tournant à la rentrée 2026.
+
+Le créole est pourtant parlé par **1,6 million de locuteurs en France**.
+
+**Klavyé Kréyòl Karukera est la réponse de la société civile** : pendant que
+la place institutionnelle du créole recule, un projet citoyen, gratuit et
+open source équipe la langue pour le numérique — là où elle se joue
+désormais chaque jour, dans les SMS et les réseaux sociaux de centaines de
+milliers de créolophones.
+
 ## Le problème
 
 Les claviers standards (Gboard, Samsung...) ne connaissent pas le créole
@@ -57,6 +74,9 @@ Les suggestions s'appuient sur les œuvres de :
 
 ## Angles possibles
 
+- **L'affaire de l'agrégation** : pendant que le créole est retiré des
+  concours, la société civile construit gratuitement les outils numériques
+  qui le font vivre — le contre-exemple positif de la polémique
 - **Patrimoine × tech** : quand l'intelligence des claviers se met au service
   d'une langue régionale
 - **Jounen Entènasyonal Kréyòl (28 octobre)** : un outil concret pour écrire

@@ -46,10 +46,16 @@ Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
 
 ## Un projet de préservation linguistique
 
-Ce n'est pas juste un clavier : chaque message écrit en kréyòl aide notre
-langue à exister dans le numérique. Le dictionnaire et les suggestions
-s'appuient sur les œuvres d'écrivains, de linguistes et d'artistes qui ont
-donné au créole guadeloupéen ses lettres de noblesse.
+Le créole est parlé par **1,6 million de locuteurs en France** — et pourtant
+sa place institutionnelle reste fragile : en octobre 2025, il a même été
+retiré de l'agrégation des langues de France, déclenchant une mobilisation
+des enseignants et des élus.
+
+Ce n'est donc pas juste un clavier : **chaque message écrit en kréyòl aide
+notre langue à exister** dans le numérique, là où elle se joue désormais
+chaque jour. Le dictionnaire et les suggestions s'appuient sur les œuvres
+d'écrivains, de linguistes et d'artistes qui ont donné au créole
+guadeloupéen ses lettres de noblesse.
 
 ## La jauge des 10 000 📲
 

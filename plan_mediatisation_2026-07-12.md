@@ -73,6 +73,31 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 |---|---|---|
 | Lang Kréyol Gwadloup an Bannzil | Allée de la Distillerie, Baie-Mahault | Promotion du créole : événements, concours, projets média |
 
+### L'angle d'actualité : l'affaire de l'agrégation (ajout du 12/07/2026)
+
+En octobre 2025, le ministère de l'Éducation nationale a **retiré le créole
+de l'agrégation des langues de France** (session 2026) — basque, catalan et
+occitan maintenus. Le député guadeloupéen **Olivier Serva** a dénoncé « une
+injustice criante… j'aurais pu dire raciste aussi » ; enseignants et élus se
+sont mobilisés (« la contre-attaque s'organise », France-Antilles,
+27/10/2025). Le ministère a promis une réouverture pour la **session 2027**
+— promesse qui sera vérifiée **à la rentrée 2026**, pile pendant nos
+phases 2-3 : les médias re-couvriront le sujet à ce moment-là.
+
+Le pitch qui en découle : *« 1,6 million de locuteurs, mais une langue qu'on
+retire des concours. Pendant ce temps, la société civile construit
+gratuitement les outils numériques qui la font vivre. »* Le clavier est le
+contre-exemple positif de la polémique — les journalistes adorent.
+
+Deux cibles supplémentaires :
+
+| Cible | Contact | Pourquoi |
+|---|---|---|
+| **Olivier Serva**, député de la Guadeloupe | Formulaire assemblee-nationale.fr + permanence en Guadeloupe | Il porte publiquement le combat du créole : un projet citoyen concret est un atout pour son plaidoyer |
+| **Julien Sartre**, journaliste France-Antilles (Paris) | Via redaction@franceantilles.fr, à son attention | Il suit le dossier créole/agrégation : le clavier est la suite naturelle de son article |
+
+Sources : [franceinfo, 27/10/2025](https://www.franceinfo.fr/france/langues-regionale/le-creole-retire-de-la-liste-de-l-agregation-des-langues-de-france-une-injustice-raciste-denonce-le-depute-guadeloupeen-olivier-serva_7578493.html) · [France-Antilles, 27/10/2025](https://www.guadeloupe.franceantilles.fr/actualite/culture/retrait-du-creole-de-lagregation-la-contre-attaque-sorganise-1055478.php)
+
 ### L'atout maître : le calendrier
 
 La **Jounen Entènasyonal Kréyòl (28 octobre)** et le mois du créole (octobre)
@@ -138,6 +163,11 @@ champ `current` (chiffre lu dans la Play Console).
 > propose des suggestions de mots en kréyòl guadeloupéen, construites à
 > partir des textes de [Sylviane Telchid, Max Rippon, Sonny Rupaire...].
 > Zéro collecte de données, fonctionnement 100 % local.
+>
+> Alors que la place du créole dans les concours nationaux fait débat
+> (retrait de l'agrégation en octobre 2025, réouverture promise pour 2027),
+> ce projet citoyen montre l'autre voie : équiper la langue — 1,6 million
+> de locuteurs en France — pour le numérique où elle se joue chaque jour.
 >
 > Disponible sur Google Play : [lien]
 > Code source : [lien GitHub]
