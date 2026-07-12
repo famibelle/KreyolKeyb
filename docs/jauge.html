@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jauge de téléchargements — Klavyé Kréyòl Karukera</title>
+<style>
+/* Widget embarquable : à intégrer via
+   <iframe src="https://famibelle.github.io/KreyolKeyb/jauge.html"
+           style="width:100%;max-width:420px;height:150px;border:0;" loading="lazy"
+           title="Téléchargements Klavyé Kréyòl"></iframe> */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  background:transparent;padding:8px;
+}
+a.widget{
+  display:block;text-decoration:none;color:#1C2624;
+  background:#fff;border:1px solid rgba(28,38,36,.15);border-radius:12px;
+  padding:14px 16px;
+}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+.num small{font-size:12px;font-weight:400;color:#4B5750;}
+.bar{height:12px;border-radius:999px;background:#DDEEEE;overflow:hidden;}
+.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0E6E76,#C97F1E);min-width:6px;width:2%;transition:width .8s ease;}
+.meta{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;color:#4B5750;margin-top:7px;flex-wrap:wrap;}
+.meta b{color:#C94A3B;}
+</style>
+</head>
+<body>
+<a class="widget" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpotomitan_io%26utm_campaign%3Dlaunch10k" target="_blank" rel="noopener">
+  <div class="head">
+    <span class="num"><span id="g-current">…</span> <small>téléchargements — palier : <span id="g-next">…</span></small></span>
+  </div>
+  <div class="bar"><div class="fill" id="g-fill"></div></div>
+  <div class="meta">
+    <span id="g-remaining">Klavyé Kréyòl Karukera 🏝️</span>
+    <span><b>Objectif : 10 000</b></span>
+  </div>
+</a>
+<script>
+fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
+  var fmt = function(n){ return n.toLocaleString('fr-FR'); };
+  var base = Math.floor(s.current / 100) * 100;
+  var next = Math.min(base + 100, s.goal);
+  if (next <= s.current) { next = Math.min(s.current + 100, s.goal); base = next - 100; }
+  var pct = Math.max(2, Math.min(100, ((s.current - base) / (next - base)) * 100));
+  document.getElementById('g-current').textContent = fmt(s.current);
+  document.getElementById('g-next').textContent = fmt(next);
+  document.getElementById('g-remaining').textContent = 'Rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
+  document.getElementById('g-fill').style.width = pct + '%';
+}).catch(function(){});
+</script>
+</body>
+</html>
