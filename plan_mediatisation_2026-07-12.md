@@ -81,13 +81,23 @@ clavier kréyòl open source est un sujet clé en main pour eux. Pitcher la
 presse **fin septembre / début octobre** multiplie les chances de reprise —
 c'est le meilleur multiplicateur gratuit du plan.
 
-## Calendrier phasé
+## Calendrier phasé — 🚀 démarrage immédiat (12 juillet 2026)
 
-| Phase | Période | Actions | Cible cumulée |
-|---|---|---|---|
-| 1. Cercle proche | Juillet-août 2026 | WhatsApp, groupes Facebook diaspora, bouton partage in-app (livré en 7.0.7) | 500–1 000 |
-| 2. Prescripteurs | Septembre (rentrée) | Profs de créole (académie), Université des Antilles, associations, auteurs du corpus | 2 000–3 000 |
-| 3. Pic médiatique | Octobre (mois du créole, Jounen kréyòl 28/10) | Pitch presse France-Antilles + RCI + la 1ère, posts réseaux coordonnés, Show HN / Product Hunt en parallèle | 6 000–10 000 |
+Le plan ne démarre pas en octobre : **il a commencé le 12 juillet**. Chaque
+phase a son objectif journalier ; la **jauge publique** (README GitHub,
+landing page, page ambassadeurs — alimentée par `docs/stats/downloads.json`)
+rend la progression visible de tous.
+
+| Phase | Période | Objectif/jour | Actions | Cible cumulée |
+|---|---|---|---|---|
+| 1. Cercle proche | **Maintenant** → fin août | **15/jour** | WhatsApp, groupes Facebook diaspora, bouton partage in-app (7.0.7+), page ambassadeurs à diffuser | ~1 000 |
+| 2. Prescripteurs | Septembre (rentrée) → mi-octobre | **40/jour** | Profs de créole (académie), Université des Antilles, associations, auteurs du corpus, intro Lab'An Nou / Orange AG via POTOMITAN | ~3 000 |
+| 3. Pic médiatique | Mi-octobre (Jounen kréyòl 28/10) → décembre | **100/jour** | Pitch presse France-Antilles + RCI + la 1ère + KEPKAA Montréal, posts réseaux coordonnés, Show HN / Product Hunt | **10 000+** |
+
+La jauge se met à jour automatiquement chaque jour (palier public de la
+fiche Play, GitHub Action `update-download-stats.yml`) et manuellement avec
+le chiffre exact : Actions → « Update download stats » → Run workflow →
+champ `current` (chiffre lu dans la Play Console).
 
 ## Messages prêts à copier-coller
 

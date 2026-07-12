@@ -1,5 +1,10 @@
 #  Klavyé Kréyòl Karukera : Clavier intelligent pour la saisie en **kréyòl Guadeloupéen** avec suggestions de mots.
 
+[![Téléchargements](https://img.shields.io/endpoint?url=https%3A%2F%2Ffamibelle.github.io%2FKreyolKeyb%2Fstats%2Fbadge.json&style=for-the-badge)](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dgithub%26utm_campaign%3Dlaunch10k)
+[![Vin Anbasadè](https://img.shields.io/badge/📣_Vin_Anbasadè-aidez_le_kréyòl-C94A3B?style=for-the-badge)](https://famibelle.github.io/KreyolKeyb/ambassade.html)
+
+> 🎯 **Objectif : 10 000 téléchargements** — la jauge ci-dessus progresse chaque jour. [Devenez ambassadeur](https://famibelle.github.io/KreyolKeyb/ambassade.html) : contacts des médias locaux et messages prêts à envoyer.
+
 **Klavyé Kréyòl Karukera** est un clavier Android intelligent conçu pour répondre à un besoin fondamental : permettre aux Guadeloupéens d’écrire facilement en **Kréyòl Guadeloupéen** sur leur smartphone, avec fluidité, authenticité et fierté.
 
 

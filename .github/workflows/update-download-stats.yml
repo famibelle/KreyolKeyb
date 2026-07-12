@@ -1,0 +1,81 @@
+name: 📊 Update download stats
+
+# Met à jour la jauge publique de téléchargements (docs/stats/) :
+# - chaque jour : lit le palier public de la fiche Play Store (100+, 500+, 1K+...)
+#   et relève le compteur si le palier dépasse la valeur actuelle
+# - manuellement : lancer le workflow avec le chiffre exact lu dans la Play Console
+#   (Actions → Update download stats → Run workflow → champ "current")
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      current:
+        description: 'Nombre exact de téléchargements (depuis la Play Console)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update downloads.json and badge.json
+        env:
+          MANUAL_CURRENT: ${{ github.event.inputs.current }}
+        run: |
+          set -e
+          FILE=docs/stats/downloads.json
+          BADGE=docs/stats/badge.json
+          CURRENT=$(jq -r '.current' "$FILE")
+          NEW=$CURRENT
+          SOURCE=$(jq -r '.source' "$FILE")
+
+          if [ -n "$MANUAL_CURRENT" ]; then
+            NEW=$MANUAL_CURRENT
+            SOURCE="Play Console (exact)"
+          else
+            PAGE=$(curl -sL "https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=en_US" || true)
+            TIER=$(echo "$PAGE" | grep -oE '[0-9][0-9,.]*[KM]?\+.{0,300}Downloads' | head -1 | grep -oE '^[0-9][0-9,.]*[KM]?' || true)
+            case "$TIER" in
+              *K) FLOOR=$(echo "$TIER" | sed 's/K//' | awk '{print int($1*1000)}');;
+              *M) FLOOR=$(echo "$TIER" | sed 's/M//' | awk '{print int($1*1000000)}');;
+              '') FLOOR=0;;
+              *)  FLOOR=$(echo "$TIER" | tr -d ',.');;
+            esac
+            echo "Palier Play Store détecté: ${TIER:-aucun} (plancher: $FLOOR)"
+            if [ "$FLOOR" -gt "$NEW" ]; then
+              NEW=$FLOOR
+              SOURCE="palier public Play Store"
+            fi
+          fi
+
+          TODAY=$(date -u +%Y-%m-%d)
+          jq --argjson c "$NEW" --arg d "$TODAY" --arg s "$SOURCE" \
+             '.current = $c | .as_of = $d | .source = $s' "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE"
+
+          GOAL=$(jq -r '.goal' "$FILE")
+          if   [ "$NEW" -ge "$GOAL" ]; then COLOR=brightgreen
+          elif [ "$NEW" -ge 5000 ];   then COLOR=yellow
+          elif [ "$NEW" -ge 1000 ];   then COLOR=yellowgreen
+          else COLOR=orange
+          fi
+          PRETTY=$(printf "%'d / %'d" "$NEW" "$GOAL" | sed "s/,/ /g")
+          jq -n --arg m "$PRETTY" --arg c "$COLOR" \
+             '{schemaVersion:1, label:"📲 téléchargements", message:$m, color:$c}' > "$BADGE"
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet docs/stats/; then
+            echo "Aucun changement"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/stats/
+          git commit -m "chore: MAJ jauge de téléchargements [skip ci]"
+          git push

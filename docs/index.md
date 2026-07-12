@@ -51,6 +51,33 @@ langue à exister dans le numérique. Le dictionnaire et les suggestions
 s'appuient sur les œuvres d'écrivains, de linguistes et d'artistes qui ont
 donné au créole guadeloupéen ses lettres de noblesse.
 
+## La jauge des 10 000 📲
+
+<div id="dl-gauge" style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin:16px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+    <span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;"><span id="g-current">…</span> <small style="font-size:14px;font-weight:400;color:#666;">/ <span id="g-goal">10 000</span> téléchargements</small></span>
+    <span style="font-weight:700;color:#C94A3B;">Objectif du jour : <span id="g-daily">60</span> 📲</span>
+  </div>
+  <div style="height:16px;border-radius:999px;background:#DDEEEE;overflow:hidden;">
+    <div id="g-fill" style="height:100%;border-radius:999px;background:linear-gradient(90deg,#0E6E76,#C97F1E);min-width:8px;width:1%;transition:width .8s ease;"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12.5px;color:#666;margin-top:8px;">
+    <span>An nou ay ! Chaque téléchargement fait vivre le kréyòl 🏝️</span>
+    <span id="g-asof"></span>
+  </div>
+</div>
+
+<script>
+fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
+  var fmt = function(n){ return n.toLocaleString('fr-FR'); };
+  document.getElementById('g-current').textContent = fmt(s.current);
+  document.getElementById('g-goal').textContent = fmt(s.goal);
+  document.getElementById('g-daily').textContent = fmt(s.daily_target);
+  document.getElementById('g-asof').textContent = 'Mis à jour le ' + s.as_of;
+  document.getElementById('g-fill').style.width = Math.max(1, Math.min(100, (s.current / s.goal) * 100)) + '%';
+}).catch(function(){});
+</script>
+
 ## Vin Anbasadè ! 📣
 
 **Vous voulez aider le kréyòl à rayonner ?** Notre page ambassadeurs vous
