@@ -1,9 +1,9 @@
-# Pack ASO — à coller dans la Play Console lors de la publication 7.0.7
+# Pack ASO : textes à coller dans la Play Console
 
 ## Titre de l'app (30 caractères max)
 
 La fiche actuelle s'appelle « Klavyé Kréyòl Guadeloupe ». Problème : personne
-ne tape « klavyé » dans la recherche Play Store — les gens cherchent
+ne tape « klavyé » dans la recherche Play Store : les gens cherchent
 **« clavier créole »**. Le titre est le facteur de classement n°1 de la
 recherche Play. Proposition (30 caractères pile, garde l'identité kréyòl ET
 capte la recherche française) :
@@ -16,14 +16,26 @@ Klavyé Kréyòl – Clavier Créole
 
 Actuelle (73 car.) : `Clavier créole guadeloupéen avec accents, suggestions et design tropical`
 
-Proposée (76 car.) — remplace « design tropical » (personne ne cherche ça)
+Proposée (76 car.), remplace « design tropical » (personne ne cherche ça)
 par « hors ligne » (argument confidentialité + mot-clé) :
 
 ```
 Clavier créole guadeloupéen : suggestions kréyòl, accents, 100 % hors ligne
 ```
 
-## Notes de version 7.0.7 (à coller dans « Nouveautés »)
+## Notes de version 7.0.10 (à coller dans « Nouveautés »)
+
+263 caractères, largement sous la limite de 500 imposée par la Play Console.
+
+```
+📣 Nouveau : partage l'appli et donne ton avis en un clic depuis l'onglet À Propos.
+🎉 Chaque niveau atteint (Pipirit → Benzo) génère une carte à partager avec tes amis.
+✨ Petites corrections de textes en créole.
+
+Ba kréyòl la lanmou'w : télécharge, note, partage !
+```
+
+## Notes de version 7.0.7 (déjà publiées)
 
 ```
 📤 Nouveau bouton « Partager l'application » : ba kréyòl la lanmou'w !
