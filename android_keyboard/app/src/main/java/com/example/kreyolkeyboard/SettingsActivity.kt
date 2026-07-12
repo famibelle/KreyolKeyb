@@ -1224,7 +1224,7 @@ class SettingsActivity : AppCompatActivity() {
         val shareCard = createCard("#E8F5FF")
 
         val shareTitle = TextView(this).apply {
-            text = "📣 Fè lanmou pou kréyòl la !"
+            text = "📣 Ba kréyòl la lanmou'w !"
             textSize = 18f
             setTextColor(Color.parseColor("#0080FF"))
             setTypeface(null, Typeface.BOLD)

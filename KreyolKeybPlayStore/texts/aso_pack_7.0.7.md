@@ -26,7 +26,7 @@ Clavier créole guadeloupéen : suggestions kréyòl, accents, 100 % hors ligne
 ## Notes de version 7.0.7 (à coller dans « Nouveautés »)
 
 ```
-📤 Nouveau bouton « Partager l'application » : fè lanmou pou kréyòl la !
+📤 Nouveau bouton « Partager l'application » : ba kréyòl la lanmou'w !
 📖 Guide illustré avec captures du clavier (accents, suggestions, chiffres)
 ℹ️ Navigation améliorée entre les onglets
 ```
