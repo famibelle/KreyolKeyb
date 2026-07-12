@@ -165,7 +165,7 @@ Play Store, plus important que n'importe quel post.
 | Cible | Contact | Levier |
 |---|---|---|
 | **potomitan.info** (site de référence des cultures créoles) | 0596 61 19 56 — accepte les soumissions de ressources | Backlink + audience ultra-qualifiée ; le nom Potomitan™ crée une reconnaissance immédiate |
-| **potomitan.io / VwaKréyòl** (traducteur fr↔créole gwadloup) | Équipe : Brigitte Démocrite, **Monique Famibelle**, Yisselda Rhoc | Allié naturel (même écosystème POTOMITAN, lien familial probable) : bannière croisée traducteur ↔ clavier, relais communauté VwaKréyòl |
+| **potomitan.io / VwaKréyòl** — ✅ **partenariat déjà actif** : le clavier figure dans potomitan.io/#applications | Équipe : Brigitte Démocrite, **Monique Famibelle**, Yisselda Rhoc | À optimiser : (1) faire pointer leur lien vers l'URL trackée `utm_source=potomitan_io` pour mesurer ce canal ; (2) relais par la communauté VwaKréyòl ; (3) emprunter leurs portes déjà ouvertes — **Lab'An Nou (Préfecture de Guadeloupe)** et **Orange Antilles-Guyane** (qui leur a consacré une capsule vidéo) : une intro par l'équipe POTOMITAN vaut mieux qu'un contact à froid |
 | **KEPKAA — Mois du Créole à Montréal** (octobre) | `kepkaa@videotron.ca` — 514 750-8800 | 2ᵉ pic d'octobre : diaspora créolophone canadienne |
 | **Tropiques FM** (radio antillaise, Paris 92.6 FM) | tropiquesfm.com — 4 bd des Îles, Issy-les-Moulineaux | Diaspora antillaise d'Île-de-France (le plus gros bassin hors archipel) |
 
