@@ -1,4 +1,4 @@
-# Plan de médiatisation — Klavyé Kréyòl Karukera
+# Plan de médiatisation : Klavyé Kréyòl Karukera
 
 **Objectif :** 10 000 téléchargements. **Budget :** 5 €.
 
@@ -7,11 +7,11 @@
 - La fiche Play Store affiche aujourd'hui **100+ téléchargements** : l'objectif
   est donc un **×100**, pas une simple accélération.
 - Benchmark : les claviers créole haïtien génériques (thèmes/photo keyboards,
-  sans intelligence linguistique) dépassent les 100 k installations — mais le
+  sans intelligence linguistique) dépassent les 100 k installations, mais le
   créole haïtien compte ~11 M de locuteurs. Rapporté aux ~400 k habitants de
   la Guadeloupe + la diaspora antillaise en métropole (plusieurs centaines de
   milliers de personnes), 10 000 ≈ 1-2 % du public adressable. **Ambitieux
-  mais atteignable** — à condition de toucher la diaspora, pas seulement
+  mais atteignable** : à condition de toucher la diaspora, pas seulement
   l'archipel.
 - Aucun concurrent direct n'existe pour le kréyòl guadeloupéen avec
   suggestions intelligentes : l'angle « premier et seul » est factuel.
@@ -29,7 +29,7 @@ Ce que j'ai livré dans le code cette session, pour amorcer le bouche-à-oreille
 un bouton **« Partager l'application »** dans l'onglet À Propos
 (`SettingsActivity.kt`), qui ouvre le sélecteur de partage natif Android avec
 un message pré-rempli (créole + lien Play Store). C'est le seul levier viral
-qu'on peut réellement automatiser depuis le code — le reste demande une
+qu'on peut réellement automatiser depuis le code : le reste demande une
 action humaine (poster, écrire, appeler) que je ne peux pas exécuter à ta
 place (pas de compte réseaux sociaux, pas d'accès e-mail).
 
@@ -40,7 +40,7 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 | Groupes Facebook diaspora (Guadeloupe, Martinique, Guyane) | Faible | 0 € | Audience déjà concentrée, forte affinité culturelle, partage naturel |
 | WhatsApp (statut personnel + groupes familiaux/associatifs) | Très faible | 0 € | Canal n°1 de communication dans la diaspora antillaise |
 | Presse locale (France-Antilles, Guadeloupe la 1ère, RCI Guadeloupe, Antilla) | Moyen | 0 € | Portée large, angle « patrimoine + tech » vendeur |
-| Auteurs/artistes cités dans l'app (Telchid, Rippon, Rupaire, Fontes, Boisdur...) | Moyen | 0 € | Ils sont valorisés par le projet — partage naturellement motivé, boucle de reconnaissance |
+| Auteurs/artistes cités dans l'app (Telchid, Rippon, Rupaire, Fontes, Boisdur...) | Moyen | 0 € | Ils sont valorisés par le projet : partage naturellement motivé, boucle de reconnaissance |
 | Milieu éducatif (Université des Antilles, dépt. Créole, profs de CAPES créole) | Moyen | 0 € | Public captif, usage pédagogique légitime, prescripteurs |
 | Communautés tech (Hacker News Show HN, r/programming, r/opensource) | Faible | 0 € | Angle open-source + préservation linguistique très bien reçu sur HN |
 | Réseaux créolophones (Instagram/TikTok, hashtags #kreyol #gwada #guadeloupe) | Moyen | 0 € | Format court, viral, jeune public |
@@ -53,18 +53,18 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 
 | Média | Contact | Note |
 |---|---|---|
-| France-Antilles Guadeloupe | `redaction@franceantilles.fr` — 0590 25 18 88 | Email direct rédaction |
-| RCI Guadeloupe | `rcigua@yahoo.fr` / `accueil971@radiocaraibes.com` — ligne info 0590 89 44 44 | Radio n°1, Les Abymes |
-| Guadeloupe la 1ère | Formulaire : la1ere.franceinfo.fr/guadeloupe/contact.html — standard 0590 60 96 96 | TV + radio publiques, Baie-Mahault |
+| France-Antilles Guadeloupe | `redaction@franceantilles.fr` · 0590 25 18 88 | Email direct rédaction |
+| RCI Guadeloupe | `rcigua@yahoo.fr` / `accueil971@radiocaraibes.com` · ligne info 0590 89 44 44 | Radio n°1, Les Abymes |
+| Guadeloupe la 1ère | Formulaire : la1ere.franceinfo.fr/guadeloupe/contact.html · standard 0590 60 96 96 | TV + radio publiques, Baie-Mahault |
 | Le Courrier de Guadeloupe | lecourrierdeguadeloupe.com/nous-rejoindre | Presse écrite indépendante |
 
 ### Éducation & institutions
 
 | Cible | Contact | Note |
 |---|---|---|
-| Université des Antilles — Licence/Master Études créoles | `lsh-creole-pedagogie@univ-antilles.fr` | Responsable pédagogique créole |
-| CRILLASH (labo de recherche lettres/langues) | `mirella.pelage@univ-antilles.fr` — 0596 72 75 00 | Secrétariat, campus Schoelcher |
-| Académie de Guadeloupe — LVR Créole | pedagogie.ac-guadeloupe.fr (page Langues Vivantes Régionales) | Prescripteurs : profs de créole (CAPES créole) |
+| Université des Antilles · Licence/Master Études créoles | `lsh-creole-pedagogie@univ-antilles.fr` | Responsable pédagogique créole |
+| CRILLASH (labo de recherche lettres/langues) | `mirella.pelage@univ-antilles.fr` · 0596 72 75 00 | Secrétariat, campus Schoelcher |
+| Académie de Guadeloupe · LVR Créole | pedagogie.ac-guadeloupe.fr (page Langues Vivantes Régionales) | Prescripteurs : profs de créole (CAPES créole) |
 | Région Guadeloupe | regionguadeloupe.fr | Leur site a une version créole → sensibilité avérée au sujet |
 
 ### Associations créolophones
@@ -76,18 +76,17 @@ place (pas de compte réseaux sociaux, pas d'accès e-mail).
 ### L'angle d'actualité : l'affaire de l'agrégation (ajout du 12/07/2026)
 
 En octobre 2025, le ministère de l'Éducation nationale a **retiré le créole
-de l'agrégation des langues de France** (session 2026) — basque, catalan et
+de l'agrégation des langues de France** (session 2026) : basque, catalan et
 occitan maintenus. Le député guadeloupéen **Olivier Serva** a dénoncé « une
 injustice criante… j'aurais pu dire raciste aussi » ; enseignants et élus se
 sont mobilisés (« la contre-attaque s'organise », France-Antilles,
-27/10/2025). Le ministère a promis une réouverture pour la **session 2027**
-— promesse qui sera vérifiée **à la rentrée 2026**, pile pendant nos
+27/10/2025). Le ministère a promis une réouverture pour la **session 2027**, promesse qui sera vérifiée **à la rentrée 2026**, pile pendant nos
 phases 2-3 : les médias re-couvriront le sujet à ce moment-là.
 
 Le pitch qui en découle : *« 1,6 million de locuteurs, mais une langue qu'on
 retire des concours. Pendant ce temps, la société civile construit
 gratuitement les outils numériques qui la font vivre. »* Le clavier est le
-contre-exemple positif de la polémique — les journalistes adorent.
+contre-exemple positif de la polémique : les journalistes adorent.
 
 Deux cibles supplémentaires :
 
@@ -103,14 +102,13 @@ Sources : [franceinfo, 27/10/2025](https://www.franceinfo.fr/france/langues-regi
 La **Jounen Entènasyonal Kréyòl (28 octobre)** et le mois du créole (octobre)
 sont LE moment où tous les médias antillais cherchent des sujets créole. Un
 clavier kréyòl open source est un sujet clé en main pour eux. Pitcher la
-presse **fin septembre / début octobre** multiplie les chances de reprise —
-c'est le meilleur multiplicateur gratuit du plan.
+presse **fin septembre / début octobre** multiplie les chances de reprise : c'est le meilleur multiplicateur gratuit du plan.
 
-## Calendrier phasé — 🚀 démarrage immédiat (12 juillet 2026)
+## Calendrier phasé : 🚀 démarrage immédiat (12 juillet 2026)
 
 Le plan ne démarre pas en octobre : **il a commencé le 12 juillet**. Chaque
 phase a son objectif journalier ; la **jauge publique** (README GitHub,
-landing page, page ambassadeurs — alimentée par `docs/stats/downloads.json`)
+landing page, page ambassadeurs : alimentée par `docs/stats/downloads.json`)
 rend la progression visible de tous.
 
 | Phase | Période | Objectif/jour | Actions | Cible cumulée |
@@ -136,8 +134,7 @@ champ `current` (chiffre lu dans la Play Console).
 
 ### Statut / message WhatsApp
 
-> J'utilise Klavyé Kréyòl Karukera pour écrire en créole sur mon téléphone —
-> clavier Android gratuit, suggestions basées sur de vrais textes créoles.
+> J'utilise Klavyé Kréyòl Karukera pour écrire en créole sur mon téléphone : > clavier Android gratuit, suggestions basées sur de vrais textes créoles.
 > Ça vaut le coup si tu écris en créole : [lien Play Store]
 
 ### Show HN (Hacker News)
@@ -166,8 +163,8 @@ champ `current` (chiffre lu dans la Play Console).
 >
 > Alors que la place du créole dans les concours nationaux fait débat
 > (retrait de l'agrégation en octobre 2025, réouverture promise pour 2027),
-> ce projet citoyen montre l'autre voie : équiper la langue — 1,6 million
-> de locuteurs en France — pour le numérique où elle se joue chaque jour.
+> ce projet citoyen montre l'autre voie : équiper la langue : 1,6 million
+> de locuteurs en France : pour le numérique où elle se joue chaque jour.
 >
 > Disponible sur Google Play : [lien]
 > Code source : [lien GitHub]
@@ -177,10 +174,10 @@ champ `current` (chiffre lu dans la Play Console).
 ### Légende Instagram / TikTok
 
 > Ékri an kréyòl san ou pa ni pè fè fot 🇬🇵 Nouvo klavyé gratui ki ka édé'w
-> ékri kréyòl Gwadloup — sigjesyon otantik, san pyèj, san kolekt données.
+> ékri kréyòl Gwadloup : sigjesyon otantik, san pyèj, san kolekt données.
 > Lien an bio 👆 #kreyol #gwada #guadeloupe #kréyòl #patwa #languecreole
 
-## Kit presse — faits clés
+## Kit presse : faits clés
 
 - Premier clavier Android intelligent dédié au kréyòl guadeloupéen
 - Dictionnaire de 1 800+ mots, modèle n-gram construit sur un corpus littéraire créole authentique
@@ -197,17 +194,17 @@ Le plan initial culmine sur un pic unique (octobre). Pour **dépasser**
 
 Dépasser 10 000 d'ici fin 2026 = **~60 installations/jour en moyenne**
 à partir d'octobre (avec les phases 1-2 réalisées). Jalon intermédiaire :
-**50 avis à 4,5+ avant fin octobre** — c'est le carburant du classement
+**50 avis à 4,5+ avant fin octobre** : c'est le carburant du classement
 Play Store, plus important que n'importe quel post.
 
 ### Nouveaux canaux vérifiés (recherche du 12/07)
 
 | Cible | Contact | Levier |
 |---|---|---|
-| **potomitan.info** (site de référence des cultures créoles) | 0596 61 19 56 — accepte les soumissions de ressources | Backlink + audience ultra-qualifiée ; le nom Potomitan™ crée une reconnaissance immédiate |
-| **potomitan.io / VwaKréyòl** — ✅ **partenariat déjà actif** : le clavier figure dans potomitan.io/#applications | Équipe : Brigitte Démocrite, **Monique Famibelle**, Yisselda Rhoc | À optimiser : (1) faire pointer leur lien vers l'URL trackée `utm_source=potomitan_io` pour mesurer ce canal ; (2) relais par la communauté VwaKréyòl ; (3) emprunter leurs portes déjà ouvertes — **Lab'An Nou (Préfecture de Guadeloupe)** et **Orange Antilles-Guyane** (qui leur a consacré une capsule vidéo) : une intro par l'équipe POTOMITAN vaut mieux qu'un contact à froid |
-| **KEPKAA — Mois du Créole à Montréal** (octobre) | `kepkaa@videotron.ca` — 514 750-8800 | 2ᵉ pic d'octobre : diaspora créolophone canadienne |
-| **Tropiques FM** (radio antillaise, Paris 92.6 FM) | tropiquesfm.com — 4 bd des Îles, Issy-les-Moulineaux | Diaspora antillaise d'Île-de-France (le plus gros bassin hors archipel) |
+| **potomitan.info** (site de référence des cultures créoles) | 0596 61 19 56 : accepte les soumissions de ressources | Backlink + audience ultra-qualifiée ; le nom Potomitan™ crée une reconnaissance immédiate |
+| **potomitan.io / VwaKréyòl** : ✅ **partenariat déjà actif** : le clavier figure dans potomitan.io/#applications | Équipe : Brigitte Démocrite, **Monique Famibelle**, Yisselda Rhoc | À optimiser : (1) faire pointer leur lien vers l'URL trackée `utm_source=potomitan_io` pour mesurer ce canal ; (2) relais par la communauté VwaKréyòl ; (3) emprunter leurs portes déjà ouvertes : **Lab'An Nou (Préfecture de Guadeloupe)** et **Orange Antilles-Guyane** (qui leur a consacré une capsule vidéo) : une intro par l'équipe POTOMITAN vaut mieux qu'un contact à froid |
+| **KEPKAA. Mois du Créole à Montréal** (octobre) | `kepkaa@videotron.ca` : 514 750-8800 | 2ᵉ pic d'octobre : diaspora créolophone canadienne |
+| **Tropiques FM** (radio antillaise, Paris 92.6 FM) | tropiquesfm.com : 4 bd des Îles, Issy-les-Moulineaux | Diaspora antillaise d'Île-de-France (le plus gros bassin hors archipel) |
 
 ### Distribution alternative (gratuite)
 
@@ -220,8 +217,8 @@ Play Store, plus important que n'importe quel post.
 ### Fiche Play Store : exploiter la console
 
 - **Fiches localisées** : ajouter une fiche **anglais** (« Guadeloupean
-  Creole keyboard ») et **créole haïtien (ht)** — la langue la plus proche
-  disponible dans la console — pour capter les recherches « creole keyboard »
+  Creole keyboard ») et **créole haïtien (ht)** : la langue la plus proche
+  disponible dans la console : pour capter les recherches « creole keyboard »
   de toute la Caraïbe et des US.
 - **Expériences de fiche** (A/B testing natif de la Play Console) : tester
   icône et première capture dès ~1 000 visites/mois.
@@ -229,7 +226,7 @@ Play Store, plus important que n'importe quel post.
 ### Backlog produit growth (à développer ensuite)
 
 - **Partage de badge de progression** : chaque passage de niveau (Pipirit →
-  Benzo) génère une carte partageable — boucle virale liée à la gamification
+  Benzo) génère une carte partageable : boucle virale liée à la gamification
   existante.
 - **« Mo a jou »** (mot du jour) : notification quotidienne avec un mot
   créole + sa source littéraire, partageable. Rétention + contenu social
@@ -253,7 +250,7 @@ plus utiles si tu veux quand même les dépenser :
   ajoutes des liens trackés (UTM) dans chaque post
 - GitHub (étoiles, forks) comme signal secondaire d'intérêt côté tech
 
-## Checklist — ce qui reste à faire humainement
+## Checklist : ce qui reste à faire humainement
 
 - [ ] Poster dans 3-5 groupes Facebook diaspora Guadeloupe/Martinique
 - [ ] Partager sur WhatsApp (statut + groupes)
