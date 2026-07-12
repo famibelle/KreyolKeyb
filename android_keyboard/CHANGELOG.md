@@ -5,6 +5,13 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.8] - 2026-07-12
+
+### ⭐ Avis et mesure d'audience
+
+- **Demande d'avis Google Play in-app** (API officielle In-App Review) : la boîte de notation s'affiche après un vrai usage du clavier et à partir de la 2ᵉ ouverture de l'app
+- **Lien de partage tracké** : le bouton « Partager l'application » ajoute `utm_source=in_app_share` pour mesurer les installations issues du bouche-à-oreille dans la Play Console
+
 ## [7.0.7] - 2026-07-12
 
 ### 📣 Partage
