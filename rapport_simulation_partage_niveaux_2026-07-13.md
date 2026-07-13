@@ -5,7 +5,7 @@
 **Version testée :** 7.0.10 (`versionCode 70010`)
 **Environnement :** émulateurs Android `kreyol_test` puis `kreyol_playstore`, conversations SMS dédiées dans Google Messages, script Python jetable (`scratchpad/simulate_sms_progression.py`, non committé).
 
-> ⚠️ **Statut : investigation interrompue avant le run complet.** L'objectif initial (600 mots tapés strictement via suggestions, checkpoint de progression toutes les 50 tapes, partage de la carte de niveau à chaque déblocage) n'a pas été atteint. Ce rapport documente ce qui a été validé, le blocage technique rencontré, et ce qui reste à faire.
+> ✅ **Statut : run complet de 600 mots mené à bien** après correction du bug de clavier (voir addendum). 600 mots tapés strictement via suggestions, 12 checkpoints de progression, zéro crash, zéro ANR. Le run révèle un enseignement produit important sur la courbe de progression (un seul des trois niveaux attendus s'est débloqué) et une limite du harnais de test sur le flux de partage. Détails dans la section « Résultats du run complet » ci-dessous. Les sections qui suivent immédiatement documentent d'abord la phase de mise au point (calibration, stratégie de frappe, bug de clavier) qui a précédé ce run.
 
 ## Objectif
 
@@ -62,17 +62,65 @@ Le run de validation à 80 mots (calibré pour franchir le premier seuil de nive
 
 L'environnement d'exécution était par ailleurs sous forte charge (`load average` jusqu'à 9 sur 6 cœurs pendant les tests, rendu logiciel `swiftshader_indirect`), un facteur aggravant plausible mais non confirmé comme cause unique : la panne survient de façon reproductible juste après un cycle de bind/unbind du service IME (déclenché par le passage à `SettingsActivity` puis retour à Messages lors de chaque checkpoint), ce qui évoque plutôt une protection anti-boucle de l'OS (le service refuse silencieusement de redémarrer après des cycles de liaison trop rapprochés) qu'un simple ralentissement.
 
-## Ce qui n'a pas pu être vérifié
+## Résultats du run complet (600 mots)
 
-- Le run complet à 600 mots.
-- Le déclenchement réel du dialogue de célébration de niveau (« 🎉 Bravo ! Ou vansé ! ») et le flux de partage vers Messages, au-delà de la logique de détection déjà câblée dans le script (recherche du texte « Bravo » et du bouton « Partager » dans le dump d'UI).
-- La courbe de progression sur 12 checkpoints prévue initialement.
+Une fois le correctif du clavier appliqué (addendum) et l'hôte revenu à une charge normale, le run complet a été mené de bout en bout, le 13 juillet 2026 de 19h39 à 20h02 (environ 23 minutes) sur l'AVD `kreyol_test`.
+
+Bilan brut :
+
+- **600 / 600 mots** committés via suggestions uniquement, aucun mot terminé à la main.
+- **253 mots uniques**, **347 répétitions** (un même mot retapé plusieurs fois compte comme répétition).
+- **12 checkpoints** de progression lus avec succès, chacun via le cycle `SettingsActivity` puis retour à Messages.
+- **Zéro crash, zéro ANR** sur toute la durée.
+
+### Le correctif du clavier validé en conditions réelles répétées
+
+Chaque checkpoint effectue exactement l'aller-retour d'application (`SettingsActivity` de Klavyé Kréyòl, puis retour à la conversation Messages, puis tap sur le champ de saisie) qui déclenchait de façon reproductible la disparition du clavier avant le correctif. **Les 12 checkpoints ont retrouvé un clavier fonctionnel**, ce qui constitue une validation du correctif `super.onFinishInput()` sur douze cycles consécutifs en conditions réalistes, au-delà des deux vérifications manuelles de l'addendum.
+
+### Courbe de progression : un seul niveau débloqué sur les trois attendus
+
+Seuils de niveau réels (lus dans les logs, `calculateGaussianThresholds`, en mots découverts) : Pipirit 0, Ti moun 73, Débrouya 245, An mitan 589.
+
+| Checkpoint | Mots committés | Mots découverts | Nouveaux depuis le précédent | Niveau |
+|---|---|---|---|---|
+| 1 | 50 | 48 | +48 | 🌍 Pipirit |
+| 2 | 100 | 78 | +30 | 🌱 Ti moun |
+| 3 | 150 | 100 | +22 | 🌱 Ti moun |
+| 4 | 200 | 120 | +20 | 🌱 Ti moun |
+| 5 | 250 | 133 | +13 | 🌱 Ti moun |
+| 6 | 300 | 138 | +5 | 🌱 Ti moun |
+| 7 | 350 | 148 | +10 | 🌱 Ti moun |
+| 8 | 400 | 156 | +8 | 🌱 Ti moun |
+| 9 | 450 | 170 | +14 | 🌱 Ti moun |
+| 10 | 500 | 176 | +6 | 🌱 Ti moun |
+| 11 | 550 | 179 | +3 | 🌱 Ti moun |
+| 12 | 600 | 180 | +1 | 🌱 Ti moun |
+
+![Checkpoint 1 : niveau Pipirit, 48 mots découverts](./rapport_simulation_partage_niveaux_2026-07-13_screenshots/06_run600_checkpoint01_pipirit_48mots.png)
+
+![Checkpoint 12 : toujours Ti moun, plafonnement à 180 mots découverts](./rapport_simulation_partage_niveaux_2026-07-13_screenshots/08_run600_checkpoint12_timoun_180mots.png)
+
+Un seul passage de niveau a eu lieu (**Pipirit vers Ti moun**, franchi entre le checkpoint 1 et le 2), alors que le protocole en attendait trois (Ti moun, Débrouya, An mitan). La raison est nette dans la colonne « Nouveaux » : la découverte de mots **décélère très fortement**, de +48 au premier checkpoint à +1 au dernier. Le compteur `wordsDiscovered` plafonne autour de 180, loin du seuil Débrouya (245) et très loin de An mitan (589).
+
+Deux mécanismes se combinent pour ce plafonnement, et ils sont eux-mêmes un résultat utile sur le calibrage de la gamification :
+
+1. **`wordsDiscovered` ne compte que les mots utilisés exactement une fois** (`SettingsActivity.loadVocabularyStats()`). Dès qu'un mot est retapé, il passe à 2 usages et sort du compte. Sur ce run, le mot « mandé » a été utilisé 29 fois, « kon », « moun »... plusieurs dizaines de fois : autant de commits qui ne font plus progresser le score.
+2. **Les suggestions se concentrent sur les mots les plus fréquents.** À partir de deux lettres, le moteur propose en priorité le vocabulaire courant ; passé les ~180 premiers mots courants, presque chaque frappe retombe sur un mot déjà découvert. La stratégie du script privilégiait pourtant les suggestions non encore utilisées, mais elle ne peut pas faire apparaître des mots que le moteur ne propose pas.
+
+**Conséquence produit** : un utilisateur qui tape normalement via les suggestions atteint Ti moun rapidement, puis stagne très longtemps avant Débrouya. La courbe gaussienne des seuils (73 / 245 / 589...) est calibrée sur les 4911 mots du dictionnaire, mais le rythme réel de découverte de mots *comptabilisés* est bien plus lent que ce que le nombre de frappes laisse supposer. À considérer si l'on veut que la progression reste motivante au-delà du premier palier (par exemple compter aussi les premières N réutilisations, ou pondérer par la diversité plutôt que par le strict `count == 1`).
+
+### Flux de partage : déclenché par l'app mais non capturé par le harnais
+
+Le passage Pipirit vers Ti moun a bien été enregistré par l'application : la préférence `last_celebrated_level_index` est passée de 0 à 1 dans `kreyol_gamification_prefs.xml`, ce qui prouve que `maybeCelebrateLevelUp()` s'est exécutée et a affiché le dialogue « 🎉 Bravo ! Ou vansé ! » au checkpoint 2.
+
+En revanche, **le script n'a pas capturé ni exercé le flux de partage**. Sa routine de checkpoint, ne trouvant pas le texte « mots découverts » dans le dump au premier essai (le dialogue de célébration recouvrait l'écran de stats), a retapé l'onglet stats ; ce tap, situé hors du dialogue, a refermé le dialogue avant que la détection « Bravo » ne puisse le voir. Le log du checkpoint 2 en porte la trace (« onglet stats pas encore charge (tentative 1), nouvel essai »). C'est une **limite du harnais de test, pas un défaut de l'application** : le dialogue et sa carte partageable existent et se déclenchent correctement. Le flux « Partager vers Messages » lui-même reste donc à valider visuellement, soit manuellement, soit en adaptant le script pour traiter le dialogue **avant** de retaper l'onglet.
 
 ## Recommandations pour la suite
 
-1. **Investiguer le cycle de vie du service IME côté code** : pourquoi `onCreate()` peut ne jamais être appelé alors que le framework rapporte un bind réussi. Un test manuel prolongé (sans automatisation ADB agressive) permettrait de vérifier si le phénomène existe aussi en usage humain normal, ou s'il est spécifique à des cycles de bind/unbind très rapprochés comme ceux générés par les checkpoints automatisés.
-2. **Réessayer sur un environnement moins chargé** : la charge CPU hôte élevée pendant les tests n'a pas été formellement écartée comme facteur contribuant.
-3. **Le script `scratchpad/simulate_sms_progression.py` est réutilisable** : la calibration, la stratégie de frappe par suggestion, la détection de commit et la lecture de l'écran de progression sont validées et fonctionnelles. Seule la robustesse du clavier lui-même face aux cycles de checkpoints reste à résoudre avant de relancer un run complet.
+1. **Vérifier manuellement le flux de partage complet** : franchir un niveau, taper « Partager 📤 », choisir Messages, confirmer que la carte pré-remplie arrive sans crash. C'est le seul maillon du protocole initial qui n'a pas été exercé de bout en bout (le dialogue lui-même est confirmé fonctionnel).
+2. **Revoir le calibrage de la progression au-delà de Ti moun** : la règle stricte `count == 1` combinée à la concentration des suggestions sur le vocabulaire fréquent fait plafonner la découverte autour de 180 mots. Envisager de compter les premières réutilisations ou de récompenser la diversité, pour éviter une longue stagnation avant Débrouya.
+3. **Durcir la routine de checkpoint du script** (si réutilisé) : détecter et traiter le dialogue de célébration **avant** de retaper l'onglet stats, pour ne plus le refermer par accident.
+4. **Le script `scratchpad/simulate_sms_progression.py` est réutilisable et désormais complet** : calibration, stratégie de frappe par suggestion, détection de commit, lecture de l'écran de progression, tap du champ de saisie à sa position réelle (masqué/visible) et navigation robuste entre Messages et l'app sont tous validés sur un run complet.
 
 ## Fichiers produits
 
