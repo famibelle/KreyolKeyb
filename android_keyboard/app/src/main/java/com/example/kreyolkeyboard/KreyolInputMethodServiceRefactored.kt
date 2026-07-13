@@ -665,11 +665,14 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     override fun onFinishInput() {
-        // 🔧 FIX: Ne PAS appeler super.onFinishInput() pour garder le clavier actif
-        // Cela empêche Android de détruire le service IME après un ENTER
-        Log.d(TAG, "onFinishInput - Clavier reste actif (super.onFinishInput() non appelé)")
-        
-        // Nettoyer seulement l'état local
+        // Sauter super.onFinishInput() cassait le cycle de vie interne du service :
+        // après un changement d'app (et retour), le framework ne rappelait plus
+        // jamais onStartInput()/onStartInputView(), laissant le clavier invisible
+        // indéfiniment. onEvaluateInputViewShown() (plus bas) retourne déjà
+        // toujours true, ce qui est la bonne façon de garder le clavier affiché.
+        super.onFinishInput()
+        Log.d(TAG, "onFinishInput")
+
         accentHandler.dismissAccentPopup()
         inputProcessor.resetState()
     }
