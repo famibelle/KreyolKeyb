@@ -36,8 +36,11 @@ La décision a provoqué une mobilisation forte : lettre ouverte du SPEG
 (Syndicat des Personnels de l'Éducation en Guadeloupe), dénonciation du
 député guadeloupéen Olivier Serva et du SE-Unsa Martinique, qui y voit « un
 recul grave pour la reconnaissance institutionnelle du créole gagnée de
-haute lutte », et deux questions déposées à l'Assemblée nationale. Le
-créole est pourtant parlé par **1,6 million de locuteurs en France**.
+haute lutte », deux questions déposées à l'Assemblée nationale, et une
+[motion du CESECEM (Conseil Économique, Social, Environnemental et de la
+Culture de Martinique)](https://www.youtube.com/watch?v=mNfkT2xpxR4) votée
+en réaction à la suspension. Le créole est pourtant parlé par **1,6 million
+de locuteurs en France**.
 
 Le paradoxe est saisissant dans les chiffres de l'Éducation nationale
 elle-même : les effectifs en créole **au primaire ont bondi de 92 % entre
@@ -113,7 +116,18 @@ Les suggestions s'appuient sur les œuvres de :
 
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
 - [Captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux)
+- [Motion du CESECEM sur la suspension de l'agrégation de créole](https://www.youtube.com/watch?v=mNfkT2xpxR4) (vidéo)
 - Logo Potomitan disponible sur demande
+
+## Sources
+
+- [Suspension de l'agrégation de créole en 2026](https://www.cafepedagogique.net/2025/11/04/suspension-de-lagregation-de-creole-en-2026/) · Café pédagogique
+- [Le créole retiré du concours de l'agrégation des langues de France : le SPEG monte au créneau](https://la1ere.franceinfo.fr/guadeloupe/le-creole-retire-du-concours-de-l-agregation-des-langues-de-france-le-speg-monte-au-creneau-1632566.html) · la1ère Guadeloupe
+- [Concours de l'agrégation 2026 : Le SPEG et le député Serva dénoncent l'absence du créole, contrairement au breton, au corse et à l'occitan](https://la1ere.franceinfo.fr/guadeloupe/concours-de-l-agregation-le-speg-et-le-depute-serva-denoncent-l-absence-du-creole-contrairement-au-breton-au-corse-et-a-l-occitan-1632029.html) · la1ère Guadeloupe
+- [Suspension de l'agrégation de créole : une « décision inadmissible »](https://www.franceguyane.fr/actualite/education-sante-environnement/suspension-de-lagregation-de-creole-une-decision-inadmissible-1054425.php) · France-Guyane
+- [Créole à l'école : l'élan brisé](https://lecourrierdeguadeloupe.com/creole-a-lecole-lelan-brise/) · Le Courrier de Guadeloupe
+- [A la découverte des langues régionales : le créole (Guadeloupe et Martinique)](https://www.vousnousils.fr/2026/02/19/a-la-decouverte-des-langues-regionales-le-creole-guadeloupe-et-martinique-700875) · VousNousIls, février 2026
+- [Guadeloupe. Lang Kréyol : vers un changement de paradigme ?](https://caraibcreolenews.com/guadeloupe-lang-kreyol-vers-un-changement-de-paradigme/) · Caraib Creole News
 
 ## Contact
 
