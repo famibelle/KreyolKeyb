@@ -14,7 +14,7 @@ lang: fr
 
 # Dossier de presse : Klavyé Kréyòl Karukera
 
-*Dernière mise à jour : juillet 2026*
+*Dernière mise à jour : 14 juillet 2026*
 
 ## En une phrase
 
@@ -25,14 +25,25 @@ sans aucune collecte de données.
 
 ## Le contexte d'actualité : une langue fragilisée par l'institution
 
-En octobre 2025, le ministère de l'Éducation nationale a **retiré le créole
-de l'agrégation des langues de France** (session 2026), alors que le basque,
-le catalan et l'occitan y restaient, une décision dénoncée par le député
-guadeloupéen Olivier Serva comme « une injustice criante », et contre
-laquelle enseignants et élus se sont mobilisés. Le ministère a promis une
-réouverture pour la session 2027, attendue au tournant à la rentrée 2026.
+Le créole avait pourtant été inscrit au programme 2026 de l'**agrégation des
+langues de France le 13 juin 2025**, avant d'en être écarté début octobre,
+alors que le breton, le corse et l'occitan y restent. Le ministère justifie
+ce retrait par une programmation pluriannuelle limitant à trois le nombre de
+concours de langues régionales ouverts par session. Le CAPES créole, lui,
+reste ouvert en 2026.
 
-Le créole est pourtant parlé par **1,6 million de locuteurs en France**.
+La décision a provoqué une mobilisation forte : lettre ouverte du SPEG
+(Syndicat des Personnels de l'Éducation en Guadeloupe), dénonciation du
+député guadeloupéen Olivier Serva et du SE-Unsa Martinique, qui y voit « un
+recul grave pour la reconnaissance institutionnelle du créole gagnée de
+haute lutte », et deux questions déposées à l'Assemblée nationale. Le
+créole est pourtant parlé par **1,6 million de locuteurs en France**.
+
+Le paradoxe est saisissant dans les chiffres de l'Éducation nationale
+elle-même : les effectifs en créole **au primaire ont bondi de 92 % entre
+2021 et 2023** (4 643 à 8 896 écoliers), portés par la demande des familles,
+pendant que ceux du lycée chutaient de 43,7 %, la faute à la réforme du bac
+plus qu'à un désamour de la langue.
 
 **Klavyé Kréyòl Karukera est la réponse de la société civile** : pendant que
 la place institutionnelle du créole recule, un projet citoyen, gratuit et
@@ -93,6 +104,10 @@ Les suggestions s'appuient sur les œuvres de :
   CAPES créole) et leurs élèves
 - **Open source citoyen** : un projet indépendant, auditable, sans modèle
   publicitaire
+- **Les racines du kréyòl** : en février 2026, des chercheurs créolistes
+  (dont Tony Mango sur Radyo Tanbou) annoncent explorer les origines
+  africaines réelles de la langue mère du côté des langues congolaises, un
+  écho direct au corpus littéraire créole sur lequel s'appuie le clavier
 
 ## Visuels
 
