@@ -136,3 +136,6 @@ Les suggestions s'appuient sur les œuvres de :
 [GitHub du projet](https://github.com/famibelle/KreyolKeyb) ·
 [Page du projet](index.html) ·
 [Devenir ambassadeur](ambassade.html)
+
+Une question, une proposition, un partenariat ? Écrivez à
+**[contact@potomitan.io](mailto:contact@potomitan.io)**.
