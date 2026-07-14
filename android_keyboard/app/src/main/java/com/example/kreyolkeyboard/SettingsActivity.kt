@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard
 
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -2473,6 +2474,13 @@ class SettingsActivity : AppCompatActivity() {
                 type = "image/png"
                 putExtra(Intent.EXTRA_STREAM, uri)
                 putExtra(Intent.EXTRA_TEXT, message)
+                // Le flag FLAG_GRANT_READ_URI_PERMISSION ne s'applique qu'à l'URI
+                // porté par setData()/ClipData, pas à EXTRA_STREAM seul. Sans ClipData,
+                // sous Android 14 l'aperçu du sélecteur ET l'app cible (ex. Messages)
+                // reçoivent un SecurityException et l'image ne s'attache pas (le partage
+                // retombe en SMS texte). On expose donc l'URI via ClipData pour que la
+                // permission de lecture soit bien propagée.
+                clipData = ClipData.newUri(contentResolver, "nivo_kreyol.png", uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(Intent.createChooser(intent, "Partager ma carte de niveau"))
