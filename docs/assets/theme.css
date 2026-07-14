@@ -1,0 +1,160 @@
+/* Palette guadeloupéenne partagée : Klavyé Kréyòl Karukera
+   Clair par défaut, sombre via prefers-color-scheme, forçable via
+   data-theme="dark"/"light" sur <html> (posé par theme.js / le bouton). */
+
+:root {
+  --paper: #F5F2EA;
+  --ink: #1C2624;
+  --ink-soft: #4B5750;
+  --sea: #0E6E76;
+  --sea-soft: #DDEEEE;
+  --hibiscus: #C94A3B;
+  --hibiscus-soft: #F7E2DE;
+  --sun: #C97F1E;
+  --sun-soft: #F6E9D2;
+  --line: rgba(28, 38, 36, 0.13);
+  --card: #FFFFFF;
+  --stripe: rgba(28, 38, 36, 0.04);
+  --gradient: linear-gradient(135deg, var(--sea), var(--hibiscus));
+  --mono: ui-monospace, "SF Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #101817;
+    --ink: #EDEAE1;
+    --ink-soft: #A7B3AC;
+    --sea: #5FC7CE;
+    --sea-soft: #173436;
+    --hibiscus: #F0897C;
+    --hibiscus-soft: #3A211E;
+    --sun: #E3AE5E;
+    --sun-soft: #3A2E17;
+    --line: rgba(237, 234, 225, 0.14);
+    --card: #182120;
+    --stripe: rgba(237, 234, 225, 0.05);
+  }
+}
+
+/* Forçage manuel : gagne sur la préférence système dans les deux sens
+   car déclaré après le bloc media query ci-dessus. */
+:root[data-theme="dark"] {
+  --paper: #101817;
+  --ink: #EDEAE1;
+  --ink-soft: #A7B3AC;
+  --sea: #5FC7CE;
+  --sea-soft: #173436;
+  --hibiscus: #F0897C;
+  --hibiscus-soft: #3A211E;
+  --sun: #E3AE5E;
+  --sun-soft: #3A2E17;
+  --line: rgba(237, 234, 225, 0.14);
+  --card: #182120;
+  --stripe: rgba(237, 234, 225, 0.05);
+}
+
+:root[data-theme="light"] {
+  --paper: #F5F2EA;
+  --ink: #1C2624;
+  --ink-soft: #4B5750;
+  --sea: #0E6E76;
+  --sea-soft: #DDEEEE;
+  --hibiscus: #C94A3B;
+  --hibiscus-soft: #F7E2DE;
+  --sun: #C97F1E;
+  --sun-soft: #F6E9D2;
+  --line: rgba(28, 38, 36, 0.13);
+  --card: #FFFFFF;
+  --stripe: rgba(28, 38, 36, 0.04);
+}
+
+/* Écrase le thème Primer par défaut de GitHub Pages sur les pages
+   Markdown (index.md, presskit.md), qui impose sinon un fond/texte clairs
+   figés indépendants de nos variables. */
+body,
+.markdown-body {
+  background-color: var(--paper) !important;
+  color: var(--ink) !important;
+}
+.markdown-body a { color: var(--sea); }
+.markdown-body a:hover { color: var(--hibiscus); }
+.markdown-body hr { background-color: var(--line); border: 0; height: 1px; }
+.markdown-body table th,
+.markdown-body table td { border-color: var(--line); }
+.markdown-body table tr:nth-child(2n) { background-color: var(--stripe); }
+.markdown-body table th { background-color: var(--sea-soft); }
+.markdown-body code,
+.markdown-body pre { background-color: var(--sea-soft); color: var(--ink); }
+.markdown-body h1 a { color: inherit; }
+
+/* Nav partagée (index.md, presskit.md, ambassade.html) */
+nav.site {
+  text-align: center;
+  padding: 10px 0;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+nav.site a { color: var(--sea); text-decoration: none; font-weight: 600; }
+nav.site a:hover { text-decoration: underline; }
+nav.site strong { color: var(--ink); }
+
+/* Boutons et cartes partagés */
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 11px 16px;
+  border: 1.5px solid var(--sea);
+  color: var(--sea);
+  background: transparent;
+  font-family: inherit;
+}
+.btn:hover { background: var(--sea-soft); }
+.btn:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+.btn.primary { background: var(--sea); color: var(--paper); border-color: var(--sea); }
+.btn.primary:hover { filter: brightness(1.08); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+/* Bouton de bascule clair/sombre : lien de nav ou position fixe selon la page */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+.theme-toggle:hover { border-color: var(--sea); }
+.theme-toggle:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+
+.theme-toggle.fixed {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}

@@ -10,22 +10,34 @@
            style="width:100%;max-width:420px;height:150px;border:0;" loading="lazy"
            title="Téléchargements Klavyé Kréyòl"></iframe> */
 *{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --w-ink:#1C2624; --w-ink-soft:#4B5750; --w-card:#fff;
+  --w-line:rgba(28,38,36,.15); --w-track:#DDEEEE;
+  --w-sea:#0E6E76; --w-sun:#C97F1E; --w-hibiscus:#C94A3B;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --w-ink:#EDEAE1; --w-ink-soft:#A7B3AC; --w-card:#182120;
+    --w-line:rgba(237,234,225,.16); --w-track:#173436;
+    --w-sea:#5FC7CE; --w-sun:#E3AE5E; --w-hibiscus:#F0897C;
+  }
+}
 body{
   font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   background:transparent;padding:8px;
 }
 a.widget{
-  display:block;text-decoration:none;color:#1C2624;
-  background:#fff;border:1px solid rgba(28,38,36,.15);border-radius:12px;
+  display:block;text-decoration:none;color:var(--w-ink);
+  background:var(--w-card);border:1px solid var(--w-line);border-radius:12px;
   padding:14px 16px;
 }
 .head{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
-.num small{font-size:12px;font-weight:400;color:#4B5750;}
-.bar{height:12px;border-radius:999px;background:#DDEEEE;overflow:hidden;}
-.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0E6E76,#C97F1E);min-width:6px;width:2%;transition:width .8s ease;}
-.meta{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;color:#4B5750;margin-top:7px;flex-wrap:wrap;}
-.meta b{color:#C94A3B;}
+.num small{font-size:12px;font-weight:400;color:var(--w-ink-soft);}
+.bar{height:12px;border-radius:999px;background:var(--w-track);overflow:hidden;}
+.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--w-sea),var(--w-sun));min-width:6px;width:2%;transition:width .8s ease;}
+.meta{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;color:var(--w-ink-soft);margin-top:7px;flex-wrap:wrap;}
+.meta b{color:var(--w-hibiscus);}
 </style>
 </head>
 <body>

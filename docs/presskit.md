@@ -4,12 +4,13 @@ description: "Kit presse du premier clavier Android intelligent dédié au kréy
 lang: fr
 ---
 
-<nav style="text-align:center;padding:10px 0;margin-bottom:18px;border-bottom:1px solid #ddd;font-size:15px;">
+<nav class="site">
   <a href="index.html">🏠 Accueil</a> ·
   <a href="ambassade.html">📣 Vin Anbasadè</a> ·
   <strong>📰 Presse</strong> ·
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpresse%26utm_campaign%3Dlaunch10k">📲 Télécharger</a> ·
-  <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a>
+  <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a> ·
+  <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
 </nav>
 
 # Dossier de presse : Klavyé Kréyòl Karukera

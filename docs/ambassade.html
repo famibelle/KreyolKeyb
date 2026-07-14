@@ -6,24 +6,10 @@
 <title>Vin Anbasadè ! Aidez Klavyé Kréyòl à se faire connaître</title>
 <meta name="description" content="Chaque personne peut aider le clavier créole guadeloupéen à se faire connaître : contacts des médias locaux, textes prêts à envoyer, messages à partager en un clic.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="assets/theme.css">
+<script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+<script defer src="assets/theme.js"></script>
 <style>
-:root{
-  --paper:#F5F2EA; --ink:#1C2624; --ink-soft:#4B5750;
-  --sea:#0E6E76; --sea-soft:#DDEEEE;
-  --hibiscus:#C94A3B; --hibiscus-soft:#F7E2DE;
-  --sun:#C97F1E; --sun-soft:#F6E9D2;
-  --line:rgba(28,38,36,0.13); --card:#FFFFFF;
-  --mono: ui-monospace, "SF Mono", Consolas, monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --paper:#101817; --ink:#EDEAE1; --ink-soft:#A7B3AC;
-    --sea:#5FC7CE; --sea-soft:#173436;
-    --hibiscus:#F0897C; --hibiscus-soft:#3A211E;
-    --sun:#E3AE5E; --sun-soft:#3A2E17;
-    --line:rgba(237,234,225,0.14); --card:#182120;
-  }
-}
 *{box-sizing:border-box;}
 body{
   margin:0; padding:0 18px 70px;
@@ -94,7 +80,8 @@ footer a{color:var(--sea);}
   <strong>📣 Vin Anbasadè</strong> ·
   <a href="presskit.html">📰 Presse</a> ·
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dambassade%26utm_campaign%3Dlaunch10k">📲 Télécharger</a> ·
-  <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a>
+  <a href="https://github.com/famibelle/KreyolKeyb">💻 GitHub</a> ·
+  <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
 </nav>
 
 <header>

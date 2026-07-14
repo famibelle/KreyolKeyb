@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feedback - Klavyé Kréyòl</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+    <script defer src="assets/theme.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,7 +16,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,7 +25,8 @@
         }
 
         .container {
-            background: white;
+            background: var(--card);
+            color: var(--ink);
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 500px;
@@ -37,14 +41,14 @@
         }
 
         .header h1 {
-            color: #667eea;
+            color: var(--sea);
             font-size: 28px;
             margin-bottom: 10px;
             padding-right: 100px;
         }
 
         .header p {
-            color: #666;
+            color: var(--ink-soft);
             font-size: 16px;
         }
 
@@ -52,8 +56,8 @@
             position: absolute;
             top: 0;
             right: 0;
-            background: #f0f0f0;
-            border: 2px solid #e0e0e0;
+            background: var(--stripe);
+            border: 2px solid var(--line);
             border-radius: 20px;
             padding: 5px;
             display: flex;
@@ -69,25 +73,27 @@
             font-weight: 600;
             font-size: 13px;
             transition: all 0.3s ease;
-            color: #666;
+            color: var(--ink-soft);
         }
 
         .lang-btn.active {
-            background: #667eea;
-            color: white;
+            background: var(--sea);
+            color: var(--paper);
         }
 
         .lang-btn:hover:not(.active) {
-            background: #e0e0e0;
+            background: var(--line);
         }
 
         textarea {
             width: 100%;
             padding: 15px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--line);
             border-radius: 12px;
             font-size: 15px;
             font-family: inherit;
+            background: var(--card);
+            color: var(--ink);
             resize: vertical;
             min-height: 150px;
             transition: all 0.3s ease;
@@ -95,15 +101,15 @@
 
         textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--sea);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--sea) 15%, transparent);
         }
 
         .submit-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--gradient);
+            color: var(--paper);
             border: none;
             border-radius: 12px;
             font-size: 16px;
@@ -115,7 +121,7 @@
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px color-mix(in srgb, var(--sea) 30%, transparent);
         }
 
         .submit-btn:active {
@@ -160,6 +166,7 @@
     </style>
 </head>
 <body>
+    <button type="button" class="theme-toggle fixed" aria-label="Changer de thème">🌙</button>
     <div class="container">
         <div class="header">
             <div class="lang-switch">
