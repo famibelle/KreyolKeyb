@@ -92,7 +92,8 @@ Les suggestions s'appuient sur les œuvres de :
 | Prix | Gratuit, sans pub, sans achat intégré |
 | Données personnelles | Aucune collecte, fonctionnement 100 % hors ligne |
 | Licence | Open source (MIT), code sur [GitHub](https://github.com/famibelle/KreyolKeyb) |
-| Éditeur | Potomitan™ |
+| Éditeur | [Potomitan™](https://potomitan.io) |
+| Écosystème | Développe aussi [POTOMITAN](https://potomitan.io), traducteur d'urgence français ↔ créole |
 | Téléchargement | [Google Play](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpresse%26utm_campaign%3Dlaunch10k) |
 
 ## Angles possibles
@@ -112,6 +113,14 @@ Les suggestions s'appuient sur les œuvres de :
   (dont Tony Mango sur Radyo Tanbou) annoncent explorer les origines
   africaines réelles de la langue mère du côté des langues congolaises, un
   écho direct au corpus littéraire créole sur lequel s'appuie le clavier
+- **Un écosystème, pas un produit isolé** : Klavyé Kréyòl s'inscrit dans
+  l'écosystème Potomitan™, qui développe aussi
+  [POTOMITAN](https://potomitan.io), un traducteur d'urgence
+  français ↔ créole soutenu par la Préfecture de Guadeloupe (Lab'An Nou) et
+  présenté par Orange Antilles-Guyane, déjà couvert par France-Antilles
+  (« POTOMITAN, l'IA qui parle créole »). Écrire le kréyòl (le clavier) et
+  le traduire (POTOMITAN) : deux réponses complémentaires au même vide
+  numérique
 
 ## Visuels
 

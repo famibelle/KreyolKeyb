@@ -66,6 +66,15 @@ chaque jour. Le dictionnaire et les suggestions s'appuient sur les œuvres
 d'écrivains, de linguistes et d'artistes qui ont donné au créole
 guadeloupéen ses lettres de noblesse.
 
+## Un écosystème créole plus large
+
+Klavyé Kréyòl Karukera fait partie de l'écosystème **Potomitan™**, qui
+développe aussi [POTOMITAN](https://potomitan.io), un traducteur
+français ↔ créole guadeloupéen pensé pour les urgences et les démarches
+administratives (soutenu par la Préfecture de Guadeloupe via Lab'An Nou,
+présenté par Orange Antilles-Guyane). Deux outils, une même mission :
+faire vivre le kréyòl dans le numérique, à l'écrit comme à l'oral.
+
 ## La jauge des 10 000 📲
 
 <div id="dl-gauge" class="card" style="margin:16px 0;">
