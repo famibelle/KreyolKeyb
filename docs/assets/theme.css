@@ -81,6 +81,11 @@ body,
 .markdown-body hr { background-color: var(--line); border: 0; height: 1px; }
 .markdown-body table th,
 .markdown-body table td { border-color: var(--line); }
+/* Le thème par défaut de GitHub Pages fixe `background-color:#fff` sur
+   TOUTES les lignes (pas seulement les zébrées) : sans cette règle, les
+   lignes impaires restent blanches en dark mode et le texte clair y
+   devient illisible (blanc sur blanc). */
+.markdown-body table tr { background-color: var(--card); }
 .markdown-body table tr:nth-child(2n) { background-color: var(--stripe); }
 .markdown-body table th { background-color: var(--sea-soft); }
 .markdown-body code,
