@@ -539,11 +539,14 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     /**
-     * Affiche les suggestions dans la barre de suggestions
+     * Affiche les suggestions dans la barre de suggestions (mode simple : dictionnaire
+     * hors bilingue, ou prédictions contextuelles n-gram — toutes deux Kreyòl uniquement).
+     * Réutilise le même style de puce pleine arrondie que le mode bilingue, pour éviter
+     * qu'un second look (l'ancien rectangle bleu pastel) ne cohabite avec le premier.
      */
     private fun displaySuggestions(suggestions: List<String>) {
         Log.d(TAG, "displaySuggestions appelé avec ${suggestions.size} suggestions: ${suggestions.joinToString(", ")}")
-        // Mode simple (prédictions contextuelles) : pas de français, la 2e rangée reste masquée
+        // Mode simple : pas de français, la 2e rangée reste masquée
         frenchRow?.removeAllViews()
         frenchRowScroll?.visibility = View.GONE
         suggestionsView?.let { container ->
@@ -551,33 +554,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             container.removeAllViews()
 
             suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
-                val suggestionButton = Button(this).apply {
-                    text = suggestion
-                    textSize = 14f
-                    setTextColor(Color.parseColor("#333333"))  // Couleur d'origine
-                    setBackgroundColor(Color.parseColor("#E3F2FD"))  // Fond d'origine
-                    setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
-                    
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT
-                    ).apply {
-                        setMargins(dpToPx(4), 0, dpToPx(4), 0)
-                    }
-                    
-                    setOnClickListener {
-                        inputProcessor.processSuggestionSelection(suggestion)
-                        
-                        // 🔧 FIX SAMSUNG A21S: Réduire délai et utiliser serviceScope
-                        serviceScope.launch {
-                            delay(150) // Délai réduit pour performance A21s
-                            suggestionEngine.setSuggestionMode(SuggestionEngine.SuggestionMode.CONTEXTUAL)
-                            suggestionEngine.generateContextualSuggestions()
-                        }
-                    }
-                }
-                
-                container.addView(suggestionButton)
+                addSuggestionChip(container, BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL))
             }
         }
     }
