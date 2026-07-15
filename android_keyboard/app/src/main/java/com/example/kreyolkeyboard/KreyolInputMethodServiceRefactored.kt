@@ -15,10 +15,7 @@ import android.widget.HorizontalScrollView
 import android.widget.Button
 import android.widget.Toast
 import android.graphics.Color
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
-import android.text.style.RelativeSizeSpan
+import android.graphics.drawable.GradientDrawable
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -545,45 +542,63 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     /**
-     * 🎯 Affiche les suggestions bilingues : puces pleines (vert Kreyòl / bleu Français),
-     * texte blanc, micro-label KR/FR — contraste renforcé pour distinguer la langue
-     * même en vision périphérique ou en plein soleil.
+     * 🎯 Affiche les suggestions bilingues : puces arrondies pleines (vert Kreyòl /
+     * bleu Français), texte blanc. Un seul label KR/FR par groupe de langue (pas par
+     * puce) précède la série de suggestions correspondante.
      */
     private fun displayBilingualSuggestions(suggestions: List<BilingualSuggestion>) {
         Log.d(TAG, "displayBilingualSuggestions appelé avec ${suggestions.size} suggestions bilingues")
         suggestionsView?.let { container ->
             container.removeAllViews()
 
+            var lastLanguage: SuggestionLanguage? = null
+
             suggestions.take(MAX_SUGGESTIONS).forEach { bilingualSuggestion ->
-                val suggestionButton = Button(this).apply {
-                    val label = bilingualSuggestion.getShortLabel()
-                    val fullText = "$label ${bilingualSuggestion.word}"
-                    text = SpannableString(fullText).apply {
-                        setSpan(RelativeSizeSpan(0.68f), 0, label.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        setSpan(ForegroundColorSpan(KeyboardColors.CHIP_LABEL), 0, label.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (bilingualSuggestion.language != lastLanguage) {
+                    val groupLabel = TextView(this).apply {
+                        text = bilingualSuggestion.getShortLabel()
+                        textSize = 10f
+                        setTextColor(KeyboardColors.TEXT_SECONDARY)
+                        setPadding(dpToPx(4), 0, dpToPx(2), 0)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT
+                        ).apply {
+                            gravity = android.view.Gravity.CENTER_VERTICAL
+                        }
                     }
+                    container.addView(groupLabel)
+                    lastLanguage = bilingualSuggestion.language
+                }
+
+                val suggestionButton = Button(this).apply {
+                    text = bilingualSuggestion.word
                     textSize = 14f
                     setTextColor(KeyboardColors.CHIP_TEXT)
 
-                    // 🎨 Fond plein selon la langue (contraste renforcé)
+                    // 🎨 Puce arrondie pleine selon la langue (contraste renforcé)
                     val bgColor = bilingualSuggestion.getColor()
-                    setBackgroundColor(bgColor)
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = dpToPx(16).toFloat()
+                        setColor(bgColor)
+                    }
 
                     val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
                     Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
 
-                    setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
-                    
+                    setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
+
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.MATCH_PARENT
                     ).apply {
-                        setMargins(dpToPx(4), 0, dpToPx(4), 0)
+                        setMargins(dpToPx(3), 0, dpToPx(4), 0)
                     }
-                    
+
                     setOnClickListener {
                         inputProcessor.processSuggestionSelection(bilingualSuggestion.word)
-                        
+
                         // 🔧 FIX SAMSUNG A21S: Performance optimisée
                         serviceScope.launch {
                             delay(150)
@@ -592,10 +607,10 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                         }
                     }
                 }
-                
+
                 container.addView(suggestionButton)
             }
-            
+
             Log.d(TAG, "✅ ${suggestions.size} suggestions bilingues affichées avec couleurs")
         }
     }

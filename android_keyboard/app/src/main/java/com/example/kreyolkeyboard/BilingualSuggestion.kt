@@ -76,7 +76,6 @@ object KeyboardColors {
     val TEXT_PRIMARY = Color.parseColor("#212529")        // Texte principal
     val TEXT_SECONDARY = Color.parseColor("#6C757D")      // Texte secondaire
     val CHIP_TEXT = Color.parseColor("#FFFFFF")           // Texte des puces (fond plein)
-    val CHIP_LABEL = Color.argb(180, 255, 255, 255)       // Micro-label KR/FR (blanc atténué)
 }
 
 /**
