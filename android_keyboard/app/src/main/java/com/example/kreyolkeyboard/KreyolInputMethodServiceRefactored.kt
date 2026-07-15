@@ -41,7 +41,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     
     companion object {
         private const val TAG = "KreyolIME-Potomitan™"
-        private const val MAX_SUGGESTIONS = 3  // 🔧 Retour à 3 suggestions (couleurs d'origine)
+        private const val MAX_SUGGESTIONS = 5  // 3 Kreyòl + 2 Français (mode bilingue)
         private const val ONBOARDING_PREFS = "kreyol_onboarding_prefs"
         private const val PREF_FIRST_REAL_USE_TIP_SHOWN = "first_real_use_tip_shown"
 
@@ -225,9 +225,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 isInitialized = true
                 Log.d(TAG, "✅ Moteur de suggestions initialisé (mode: ${if (isLowEnd) "A21s optimisé" else "standard"})")
 
-                // 🎯 DÉSACTIVÉ TEMPORAIREMENT: Support bilingue (retour couleurs d'origine)
-                // suggestionEngine.enableBilingualSupport()
-                Log.d(TAG, "🎯 Mode suggestions avec AccentTolerantMatching activé")
+                // 🟢🔵 Support bilingue Kreyòl + Français (Kreyòl-first, Français dès 3 lettres)
+                suggestionEngine.enableBilingualSupport()
+                Log.d(TAG, "🎯 Mode suggestions bilingue avec AccentTolerantMatching activé")
                 
                 // Démarrer monitoring mémoire sur A21s
                 if (isLowEnd) {
@@ -389,8 +389,8 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     override fun onBilingualSuggestionsReady(suggestions: List<BilingualSuggestion>) {
-        // 🔄 DÉSACTIVÉ: Mode bilingue temporairement désactivé (retour couleurs d'origine)
-        Log.d(TAG, "🔄 Mode bilingue désactivé - utilisation suggestions simples")
+        Log.d(TAG, "🎯 Affichage suggestions bilingues: ${suggestions.joinToString(", ") { "${it.word}(${it.language})" }}")
+        displayBilingualSuggestions(suggestions)
     }
     
     override fun onDictionaryLoaded(wordCount: Int) {
