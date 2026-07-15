@@ -5,6 +5,13 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.12] - 2026-07-15
+
+### 🌍 Bilinguisme Kreyòl + Français
+
+- **Suggestions bilingues réactivées** : le clavier propose désormais aussi des suggestions en français (en bleu), en plus du kréyòl (en vert), à partir de 3 lettres tapées. Le kréyòl reste toujours prioritaire (3 premières positions). Jusqu'ici cette fonctionnalité existait dans le code depuis la v5.3.1 mais n'avait jamais été activée : il fallait changer complètement de clavier (Play Store) pour écrire en français.
+- **Dictionnaire français nettoyé** : 700 entrées réduites à 662 mots uniques (38 doublons supprimés, ex. « dire », « professeur », « riche » comptés deux fois), qui pouvaient faire perdre une suggestion pertinente au profit d'un doublon.
+
 ## [7.0.10] - 2026-07-13
 
 ### 📣 Croissance et gamification
