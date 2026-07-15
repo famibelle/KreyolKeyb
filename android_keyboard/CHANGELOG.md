@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.1] - 2026-07-15
+
+### 🐛 Correction du compteur de mots découverts
+
+- **Statistiques de vocabulaire corrigées** : l'onglet Stats affichait « 0 mots découverts » malgré des centaines d'utilisations enregistrées, découvert en rejouant une conversation complète sur émulateur. `loadVocabularyStats()` ne comptait un mot comme « découvert » que s'il avait été tapé exactement une fois (`userCount == 1`) ; dès qu'un mot était réutilisé, il disparaissait du compteur et de la liste « Mots Découverts ». Aligné sur la définition déjà correcte utilisée ailleurs dans le code (`CreoleDictionaryWithUsage.getDiscoveredWordsCount()` : un mot est découvert dès qu'il a été utilisé au moins une fois)
+
 ## [7.1.0] - 2026-07-15
 
 ### 🌍 Bilinguisme Kreyòl + Français

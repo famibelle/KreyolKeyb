@@ -2234,14 +2234,13 @@ class SettingsActivity : AppCompatActivity() {
                         totalUsages += userCount
                         wordUsages.add(Pair(word, userCount))
                         motsTrouves.add("$word($userCount)")
-                        
-                        // Compter comme "découvert" seulement si utilisé exactement 1 fois
-                        if (userCount == 1) {
-                            wordsDiscovered++
-                            // Ne garder que les mots de 3 lettres ou plus pour l'affichage
-                            if (word.length >= 3) {
-                                discoveredWords.add(word)
-                            }
+
+                        // Un mot est "découvert" dès qu'il a été utilisé au moins une fois
+                        // (même définition que CreoleDictionaryWithUsage.getDiscoveredWordsCount())
+                        wordsDiscovered++
+                        // Ne garder que les mots de 3 lettres ou plus pour l'affichage
+                        if (word.length >= 3) {
+                            discoveredWords.add(word)
                         }
                     }
                 }
