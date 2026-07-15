@@ -15,6 +15,10 @@ import android.widget.HorizontalScrollView
 import android.widget.Button
 import android.widget.Toast
 import android.graphics.Color
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -541,32 +545,33 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     /**
-     * 🎯 Affiche les suggestions bilingues avec couleurs (Vert Kreyòl / Bleu Français)
+     * 🎯 Affiche les suggestions bilingues : puces pleines (vert Kreyòl / bleu Français),
+     * texte blanc, micro-label KR/FR — contraste renforcé pour distinguer la langue
+     * même en vision périphérique ou en plein soleil.
      */
     private fun displayBilingualSuggestions(suggestions: List<BilingualSuggestion>) {
         Log.d(TAG, "displayBilingualSuggestions appelé avec ${suggestions.size} suggestions bilingues")
         suggestionsView?.let { container ->
             container.removeAllViews()
-            
+
             suggestions.take(MAX_SUGGESTIONS).forEach { bilingualSuggestion ->
                 val suggestionButton = Button(this).apply {
-                    text = bilingualSuggestion.word
-                    textSize = 14f
-                    
-                    // 🎨 Couleur selon la langue
-                    val textColor = bilingualSuggestion.getColor()
-                    setTextColor(textColor)
-                    
-                    // Debug: Vérifier la couleur appliquée
-                    val colorHex = String.format("#%06X", 0xFFFFFF and textColor)
-                    val languageName = when(bilingualSuggestion.language) {
-                        SuggestionLanguage.KREYOL -> "KREYOL"
-                        SuggestionLanguage.FRENCH -> "FRENCH"
+                    val label = bilingualSuggestion.getShortLabel()
+                    val fullText = "$label ${bilingualSuggestion.word}"
+                    text = SpannableString(fullText).apply {
+                        setSpan(RelativeSizeSpan(0.68f), 0, label.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(ForegroundColorSpan(KeyboardColors.CHIP_LABEL), 0, label.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
-                    Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': $languageName → couleur $colorHex")
-                    
-                    // Fond plus subtil pour mettre en valeur la couleur du texte
-                    setBackgroundColor(Color.parseColor("#F8F9FA"))
+                    textSize = 14f
+                    setTextColor(KeyboardColors.CHIP_TEXT)
+
+                    // 🎨 Fond plein selon la langue (contraste renforcé)
+                    val bgColor = bilingualSuggestion.getColor()
+                    setBackgroundColor(bgColor)
+
+                    val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
+                    Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
+
                     setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
                     
                     layoutParams = LinearLayout.LayoutParams(
