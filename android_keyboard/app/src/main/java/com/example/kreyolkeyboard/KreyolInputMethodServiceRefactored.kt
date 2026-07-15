@@ -65,6 +65,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     
     // Vues principales
     private var suggestionsView: LinearLayout? = null
+    private var kreyolRow: LinearLayout? = null
+    private var frenchRow: LinearLayout? = null
+    private var frenchRowScroll: HorizontalScrollView? = null
     private var mainKeyboardView: View? = null
     
     // État du service
@@ -287,27 +290,62 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     /**
-     * Crée la zone des suggestions
+     * Crée la zone des suggestions : deux rangées empilées (Kreyòl puis Français) pour
+     * que le français reste toujours entièrement visible, sans scroll ni troncature,
+     * même quand les suggestions kreyòl sont longues ("Bonmaten-la"). La rangée
+     * française se réduit à hauteur nulle (GONE) quand elle est vide, pour ne pas
+     * gaspiller de place quand le français n'est pas encore activé (< 3 lettres).
      */
     private fun createSuggestionsArea(parentLayout: LinearLayout) {
-        val suggestionsContainer = HorizontalScrollView(this).apply {
+        val suggestionsContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dpToPx(48)
+                LinearLayout.LayoutParams.WRAP_CONTENT
             )
             setBackgroundColor(Color.parseColor("#FFFFFF"))
-            setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
         }
-        
-        suggestionsView = LinearLayout(this).apply {
+
+        val kreyolScroll = HorizontalScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(44)
+            )
+            setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(2))
+        }
+        kreyolRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
-        
-        suggestionsContainer.addView(suggestionsView)
+        kreyolScroll.addView(kreyolRow)
+
+        val frScroll = HorizontalScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(44)
+            )
+            setPadding(dpToPx(8), dpToPx(2), dpToPx(8), dpToPx(4))
+            visibility = View.GONE
+        }
+        frenchRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        frScroll.addView(frenchRow)
+        frenchRowScroll = frScroll
+
+        suggestionsContainer.addView(kreyolScroll)
+        suggestionsContainer.addView(frScroll)
+        // Alias historique : les modes non-bilingues (prédictions contextuelles) affichent
+        // dans la rangée du haut, la rangée française reste masquée dans ce cas.
+        suggestionsView = kreyolRow
+
         parentLayout.addView(suggestionsContainer)
     }
     
@@ -505,10 +543,13 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
      */
     private fun displaySuggestions(suggestions: List<String>) {
         Log.d(TAG, "displaySuggestions appelé avec ${suggestions.size} suggestions: ${suggestions.joinToString(", ")}")
+        // Mode simple (prédictions contextuelles) : pas de français, la 2e rangée reste masquée
+        frenchRow?.removeAllViews()
+        frenchRowScroll?.visibility = View.GONE
         suggestionsView?.let { container ->
             Log.d(TAG, "Container de suggestions trouvé, vidage des vues existantes")
             container.removeAllViews()
-            
+
             suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
                 val suggestionButton = Button(this).apply {
                     text = suggestion
@@ -542,77 +583,96 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     /**
-     * 🎯 Affiche les suggestions bilingues : puces arrondies pleines (vert Kreyòl /
-     * bleu Français), texte blanc. Un seul label KR/FR par groupe de langue (pas par
-     * puce) précède la série de suggestions correspondante.
+     * 🎯 Affiche les suggestions bilingues sur deux rangées empilées (Kreyòl en haut,
+     * Français en bas) : le français reste toujours entièrement visible, sans scroll
+     * ni troncature, même quand une suggestion kreyòl est longue ("Bonmaten-la"). La
+     * rangée française se masque (hauteur nulle) quand elle est vide.
      */
     private fun displayBilingualSuggestions(suggestions: List<BilingualSuggestion>) {
         Log.d(TAG, "displayBilingualSuggestions appelé avec ${suggestions.size} suggestions bilingues")
-        suggestionsView?.let { container ->
-            container.removeAllViews()
+        val kreyolContainer = kreyolRow ?: return
+        val frenchContainer = frenchRow ?: return
 
-            var lastLanguage: SuggestionLanguage? = null
+        kreyolContainer.removeAllViews()
+        frenchContainer.removeAllViews()
 
-            suggestions.take(MAX_SUGGESTIONS).forEach { bilingualSuggestion ->
-                if (bilingualSuggestion.language != lastLanguage) {
-                    val groupLabel = TextView(this).apply {
-                        text = bilingualSuggestion.getShortLabel()
-                        textSize = 10f
-                        setTextColor(KeyboardColors.TEXT_SECONDARY)
-                        setPadding(dpToPx(4), 0, dpToPx(2), 0)
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT
-                        ).apply {
-                            gravity = android.view.Gravity.CENTER_VERTICAL
-                        }
-                    }
-                    container.addView(groupLabel)
-                    lastLanguage = bilingualSuggestion.language
-                }
+        val kreyolSuggestions = suggestions.filter { it.language == SuggestionLanguage.KREYOL }
+        val frenchSuggestions = suggestions.filter { it.language == SuggestionLanguage.FRENCH }
 
-                val suggestionButton = Button(this).apply {
-                    text = bilingualSuggestion.word
-                    textSize = 14f
-                    setTextColor(KeyboardColors.CHIP_TEXT)
+        if (kreyolSuggestions.isNotEmpty()) {
+            addLanguageLabel(kreyolContainer, kreyolSuggestions.first().getShortLabel())
+            kreyolSuggestions.forEach { addSuggestionChip(kreyolContainer, it) }
+        }
 
-                    // 🎨 Puce arrondie pleine selon la langue (contraste renforcé)
-                    val bgColor = bilingualSuggestion.getColor()
-                    background = GradientDrawable().apply {
-                        shape = GradientDrawable.RECTANGLE
-                        cornerRadius = dpToPx(16).toFloat()
-                        setColor(bgColor)
-                    }
+        if (frenchSuggestions.isNotEmpty()) {
+            addLanguageLabel(frenchContainer, frenchSuggestions.first().getShortLabel())
+            frenchSuggestions.forEach { addSuggestionChip(frenchContainer, it) }
+        }
+        frenchRowScroll?.visibility = if (frenchSuggestions.isNotEmpty()) View.VISIBLE else View.GONE
 
-                    val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
-                    Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
+        Log.d(TAG, "✅ ${suggestions.size} suggestions bilingues affichées (${kreyolSuggestions.size} Kreyòl / ${frenchSuggestions.size} Français)")
+    }
 
-                    setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
+    /**
+     * Ajoute le micro-label (KR/FR) en tête d'une rangée de suggestions
+     */
+    private fun addLanguageLabel(container: LinearLayout, label: String) {
+        val groupLabel = TextView(this).apply {
+            text = label
+            textSize = 10f
+            setTextColor(KeyboardColors.TEXT_SECONDARY)
+            setPadding(dpToPx(4), 0, dpToPx(2), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+        }
+        container.addView(groupLabel)
+    }
 
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT
-                    ).apply {
-                        setMargins(dpToPx(3), 0, dpToPx(4), 0)
-                    }
+    /**
+     * Ajoute une puce de suggestion arrondie (fond plein, texte blanc) dans une rangée
+     */
+    private fun addSuggestionChip(container: LinearLayout, bilingualSuggestion: BilingualSuggestion) {
+        val suggestionButton = Button(this).apply {
+            text = bilingualSuggestion.word
+            textSize = 14f
+            setTextColor(KeyboardColors.CHIP_TEXT)
 
-                    setOnClickListener {
-                        inputProcessor.processSuggestionSelection(bilingualSuggestion.word)
-
-                        // 🔧 FIX SAMSUNG A21S: Performance optimisée
-                        serviceScope.launch {
-                            delay(150)
-                            suggestionEngine.setSuggestionMode(SuggestionEngine.SuggestionMode.CONTEXTUAL)
-                            suggestionEngine.generateContextualSuggestions()
-                        }
-                    }
-                }
-
-                container.addView(suggestionButton)
+            val bgColor = bilingualSuggestion.getColor()
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(16).toFloat()
+                setColor(bgColor)
             }
 
-            Log.d(TAG, "✅ ${suggestions.size} suggestions bilingues affichées avec couleurs")
+            val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
+            Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
+
+            setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                setMargins(dpToPx(3), 0, dpToPx(4), 0)
+            }
+
+            setOnClickListener {
+                inputProcessor.processSuggestionSelection(bilingualSuggestion.word)
+
+                // 🔧 FIX SAMSUNG A21S: Performance optimisée
+                serviceScope.launch {
+                    delay(150)
+                    suggestionEngine.setSuggestionMode(SuggestionEngine.SuggestionMode.CONTEXTUAL)
+                    suggestionEngine.generateContextualSuggestions()
+                }
+            }
         }
+
+        container.addView(suggestionButton)
     }
 
     /**
@@ -791,6 +851,10 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             // Nettoyage des vues
             suggestionsView?.removeAllViews()
             suggestionsView = null
+            frenchRow?.removeAllViews()
+            frenchRow = null
+            kreyolRow = null
+            frenchRowScroll = null
             mainKeyboardView = null
             
             Log.d(TAG, "Nettoyage terminé avec succès - Compatible A21s")
