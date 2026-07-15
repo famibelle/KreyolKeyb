@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.13] - 2026-07-15
+
+### 🎨 Look & feel des suggestions bilingues
+
+- **Puces pleines à contraste renforcé** : les suggestions Kreyòl (vert) et Français (bleu) passent d'un texte coloré sur fond gris à des puces pleines arrondies avec texte blanc — plus lisible en vision périphérique et en plein soleil
+- **Micro-label KR/FR groupé** : un seul repère de langue avant chaque groupe de suggestions (pas répété sur chaque puce)
+- **Suggestions Français toujours visibles** : la barre de suggestions passe de un à deux rangées empilées (Kreyòl en haut, Français en dessous). Auparavant, un mot kreyòl un peu long ("Bonmaten-la") poussait le français hors de l'écran, derrière un scroll horizontal peu découvrable — le français, censé être mis en avant, restait en pratique invisible. La rangée française se masque automatiquement quand elle est vide (< 3 lettres tapées)
+
 ## [7.0.12] - 2026-07-15
 
 ### 🌍 Bilinguisme Kreyòl + Français
