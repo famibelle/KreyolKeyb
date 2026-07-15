@@ -5,6 +5,18 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.0] - 2026-07-15
+
+### 🌍 Bilinguisme Kreyòl + Français
+
+Le clavier propose désormais des suggestions en français en plus du kréyòl, avec un rendu visuel unifié sur tout le clavier. Cette version regroupe et clôt le chantier ouvert en 7.0.12/7.0.13 :
+
+- **Suggestions bilingues actives** : français à partir de 3 lettres, kréyòl toujours prioritaire. Cette fonctionnalité existait dans le code depuis la v5.3.1 mais n'avait jamais été activée — il fallait changer complètement de clavier (Play Store) pour écrire en français
+- **Deux rangées séparées** (Kreyòl en haut, Français en dessous) : le français ne peut plus être poussé hors écran par un mot kreyòl long ("Bonmaten-la"), un souci réel du premier rendu à rangée unique
+- **Puces pleines à contraste renforcé**, texte blanc, micro-label KR/FR groupé par langue (pas répété sur chaque puce)
+- **Prédictions contextuelles unifiées** : le mode « mot suivant » (n-grams) affichait encore l'ancien rectangle bleu pastel, découvert en observant une conversation tapée en direct sur émulateur — même rendu que les suggestions bilingues désormais
+- **Dictionnaire français nettoyé** : 700 entrées réduites à 662 mots uniques (38 doublons qui pouvaient faire perdre une suggestion pertinente au profit d'un doublon)
+
 ## [7.0.13] - 2026-07-15
 
 ### 🎨 Look & feel des suggestions bilingues
