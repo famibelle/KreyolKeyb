@@ -16,7 +16,7 @@ lang: fr
 # Klavyé Kréyòl Karukera, le clavier créole guadeloupéen pour Android
 
 **Écrire en kréyòl sur son téléphone, sans galérer.** Klavyé Kréyòl Karukera
-est un clavier Android **gratuit, open source et 100 % hors ligne** qui
+est un clavier Android **gratuit, open source, zéro pub et 100 % hors ligne** qui
 propose des suggestions de mots en **créole guadeloupéen**, construites sur
 les textes des grands défenseurs du kréyòl : Sylviane Telchid, Sonny Rupaire,
 Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
@@ -51,6 +51,7 @@ Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
 | 🎮 **Jeux de vocabulaire** | Mots Mêlés et Mots Mélangés pour apprendre en s'amusant |
 | 🏆 **Progression culturelle** | 8 niveaux, de Pipirit à Benzo, au fil de tes mots tapés |
 | 🔒 **Zéro collecte de données** | Fonctionnement 100 % local : rien ne quitte ton téléphone ([politique de confidentialité](privacy/privacy-policy.html)) |
+| 🚫 **Zéro pub** | Aucune publicité, aucun tracker : le clavier reste concentré sur l'essentiel |
 | 🆓 **Gratuit et open source** | Code public sur [GitHub](https://github.com/famibelle/KreyolKeyb), licence MIT |
 
 ## Un projet de préservation linguistique
@@ -111,10 +112,12 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
 
 **Vous voulez aider le kréyòl à rayonner ?** Notre page ambassadeurs vous
 donne tout : les contacts des médias locaux, les emails pré-remplis en un
-clic, et quoi dire si vous appelez une radio.
+clic, quoi dire si vous appelez une radio, et une affiche à imprimer pour
+la laisser chez le boulanger, le pharmacien ou la boutique du coin.
 
-<div align="center" style="margin: 16px 0;">
+<div align="center" style="margin: 16px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
   <a href="ambassade.html" class="btn primary" style="padding:12px 28px;">🏝️ Devenir ambassadeur du Klavyé Kréyòl</a>
+  <a href="affiche.html" class="btn" style="padding:12px 28px;">🖨️ Imprimer l'affiche</a>
 </div>
 
 **Pou laprès :** [dossier de presse / press kit](presskit.html)
