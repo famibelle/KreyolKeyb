@@ -250,13 +250,30 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   color:#0E6E76;
   margin-top:1.5mm;
 }
+.qr-col{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3mm;
+  flex:0 0 auto;
+}
+.qr-cta{
+  font-family:"Fredoka",sans-serif;
+  font-weight:700;
+  font-size:12.5px;
+  line-height:1.25;
+  color:#FFFFFF;
+  text-shadow:0 2px 5px rgba(0,0,0,.4);
+  text-align:center;
+  max-width:48mm;
+  margin:0;
+}
 .qr-wrap{
   background:#FFFFFF;
   border:4px solid #8B1E14;
   border-radius:14px;
   padding:4mm;
   box-shadow:0 8px 22px rgba(0,0,0,.22);
-  flex:0 0 auto;
 }
 .qr-wrap img{display:block;width:34mm;height:34mm;}
 .credit{
@@ -345,12 +362,15 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
           <span>famibelle.github.io/KreyolKeyb</span>
         </p>
       </div>
-      <div class="qr-wrap">
-        <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play" width="2280" height="2280">
+      <div class="qr-col">
+        <p class="qr-cta">📲 Flash le code pour installer Klavyé Kréyòl</p>
+        <div class="qr-wrap">
+          <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play" width="2280" height="2280">
+        </div>
       </div>
     </div>
 
-    <div class="credit">Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
+    <div class="credit">famibelle.github.io/KreyolKeyb/ · Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
   </div>
 </div>
 
