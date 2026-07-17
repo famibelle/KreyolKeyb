@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Affiche (variante vive) · Klavyé Kréyòl Karukera</title>
-<meta name="description" content="Proposition alternative d'affiche, style flyer/jeu concours, pour Klavyé Kréyòl Karukera.">
+<title>Affiche à imprimer · Klavyé Kréyòl Karukera</title>
+<meta name="description" content="Affiche prête à imprimer pour faire connaître le clavier créole guadeloupéen : QR code vers Google Play, à afficher chez les commerçants.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="stylesheet" href="assets/theme.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,8 +57,8 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   box-shadow:0 8px 40px rgba(0,0,0,.25);
   font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   background:
-    radial-gradient(circle at 85% 8%, rgba(255,255,255,.16), transparent 40%),
-    linear-gradient(150deg,#0B5E66 0%,#0E6E76 22%,#178C6C 48%,#2FA65E 68%,#3FA83A 100%);
+    radial-gradient(circle at 85% 8%, rgba(255,255,255,.14), transparent 40%),
+    linear-gradient(150deg,#0B5E66 0%,#0E6E76 22%,#146B54 48%,#1F7A47 68%,#2E8B3D 100%);
 }
 
 /* header */
@@ -132,7 +132,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   font-weight:800;
   font-size:24px;
   line-height:1.15;
-  color:#E8890C;
+  color:#8B1E14;
   text-transform:uppercase;
   margin:0 0 7mm;
   text-wrap:balance;
@@ -264,7 +264,8 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   left:12mm; right:12mm; bottom:2.5mm;
   text-align:center;
   font-size:9.5px;
-  color:rgba(255,255,255,.85);
+  color:#FFFFFF;
+  text-shadow:0 1px 3px rgba(0,0,0,.55);
   font-family:ui-monospace,"SF Mono",Consolas,monospace;
 }
 
@@ -285,17 +286,24 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 <nav class="site">
   <a href="index.html">🏠 Accueil</a> ·
   <a href="ambassade.html">📣 Vin Anbasadè</a> ·
-  <a href="affiche.html">🖨️ Affiche</a> ·
-  <strong>🎨 Affiche (variante)</strong> ·
+  <strong>🖨️ Affiche</strong> ·
+  <a href="affiche.html">🎨 Autre style</a> ·
   <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
 </nav>
 
 <header style="padding:20px 0 10px;">
-  <p class="eyebrow">Klavyé Kréyòl Karukera · proposition alternative</p>
-  <h1>Affiche, variante flyer coloré 🎨</h1>
-  <p class="lead">Deuxième proposition, inspirée d'une structure de flyer/jeu-concours (gros titre, visuel dynamique, bandeau d'infos, bulle CTA, QR code) : plus vive et graphique que l'affiche blanche existante. À comparer avant de choisir.</p>
+  <p class="eyebrow">Klavyé Kréyòl Karukera · kit ambassadeur</p>
+  <h1>Une affiche à imprimer 🎨</h1>
+  <p class="lead">Format A4, prête à afficher chez le boulanger, le pharmacien, à la boutique du coin ou au marché. Le QR code renvoie directement vers Google Play.</p>
+
   <div class="actions">
-    <a class="btn" href="affiche.html">← Voir l'affiche actuelle (blanche)</a>
+    <a class="btn primary" href="assets/affiche-v2-kreyolkeyboard-A4.pdf" download>📄 Télécharger le PDF (A4, haute résolution)</a>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer directement</button>
+    <a class="btn" href="ambassade.html">← Retour au kit ambassadeur</a>
+  </div>
+
+  <div class="note">
+    Astuce : dans les options d'impression, choisissez « Aucune marge » et désactivez les en-têtes/pieds de page pour un rendu plein cadre. L'affiche s'imprime aussi très bien en A5, en réduisant l'échelle à 70 %. Le PDF est conçu pour rester lisible aussi bien en impression couleur qu'en noir et blanc, et à toute résolution d'imprimante.
   </div>
 </header>
 
