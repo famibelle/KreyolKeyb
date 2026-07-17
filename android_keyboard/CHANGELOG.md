@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.3] - 2026-07-17
+
+### 🐛 Toast recouvrant le sélecteur de clavier
+
+- **Le message d'aide de l'onboarding recouvrait la liste des claviers** : signalé par un utilisateur (« le toaster de proposition de choix de clavier couvre le choix du clavier »), reproduit en testant avec seulement 2 claviers installés, ce qui place « Klavyé Kréyòl Karukera » en dernière position de la liste système, pile là où le Toast d'aide s'affichait. `openInputMethodPicker()` ouvrait le sélecteur seulement 100ms après avoir affiché le Toast (`LENGTH_LONG`, ~3,5s), donc les deux se chevauchaient forcément pendant plusieurs secondes. Le sélecteur ne s'ouvre désormais qu'une fois le Toast (`LENGTH_SHORT`, ~2s) complètement disparu (délai porté à 2200ms). Tentative de `setGravity(TOP)` pour repositionner le Toast en haut de l'écran : sans effet vérifié sur Android 14/API 34, laissé en place par précaution pour d'éventuels appareils plus anciens mais ce n'est plus le mécanisme de protection réel
+
 ## [7.1.2] - 2026-07-17
 
 ### 🐛 Corrections issues d'une campagne de tests approfondie sur émulateur

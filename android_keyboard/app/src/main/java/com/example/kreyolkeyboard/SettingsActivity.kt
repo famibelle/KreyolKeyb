@@ -1772,22 +1772,33 @@ class SettingsActivity : AppCompatActivity() {
             
             // Demander le focus
             tempEditText.requestFocus()
-            
-            // Ouvrir le sélecteur après un court délai pour laisser le focus s'établir
+
+            // Le Toast flotte au-dessus de TOUT, y compris le sélecteur système, et sa
+            // position (setGravity TOP) est ignorée par le système sur les versions
+            // récentes d'Android (vérifié sur API 34) : il reste affiché en bas quoi
+            // qu'on fasse. La seule protection fiable contre le recouvrement est donc
+            // temporelle : n'ouvrir le sélecteur qu'une fois le Toast complètement
+            // disparu. LENGTH_SHORT dure ~2s ; on attend 2200ms par sécurité avant
+            // d'appeler showInputMethodPicker(), pour qu'ils ne soient jamais visibles
+            // en même temps (repro confirmée : avec LENGTH_LONG + 1500ms, le Toast
+            // recouvrait encore l'entrée "Klavyé Kréyòl Karukera" dans la liste).
+            Toast.makeText(this,
+                "Sélectionnez 'Klavyé Kréyòl Karukera' dans la liste",
+                Toast.LENGTH_SHORT
+            ).apply {
+                setGravity(android.view.Gravity.TOP, 0, 100)
+            }.show()
+
+            // Ouvrir le sélecteur seulement après que le Toast a disparu
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showInputMethodPicker()
-                
+
                 // Nettoyer après un délai supplémentaire
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     rootView.removeView(tempEditText)
                 }, 1000)
-            }, 100)
-            
-            Toast.makeText(this, 
-                "Sélectionnez 'Klavyé Kréyòl Karukera' dans la liste", 
-                Toast.LENGTH_LONG
-            ).show()
+            }, 2200)
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture sélecteur clavier: ${e.message}")
             Toast.makeText(this, 
