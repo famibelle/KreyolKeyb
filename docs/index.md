@@ -133,4 +133,4 @@ Le code source est ouvert et public sur
 ---
 
 🏝️ *Potomitan™, Teknoloji pou tout moun.
-« An kréyòl nou ka palé, an kréyòl nou ka rivé ! »*
+« An kréyòl nou ka palé, an kréyòl nou ka maké ! »*
