@@ -142,26 +142,26 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   justify-content:center;
   align-items:flex-end;
   gap:-6mm;
-  margin:0 0 6mm;
+  margin:0 0 5mm;
   position:relative;
-  height:78mm;
+  height:62mm;
 }
 .shots img{
   position:absolute;
-  width:44mm;
+  width:35mm;
   height:auto;
-  border-radius:10px;
+  border-radius:9px;
   box-shadow:0 10px 24px rgba(0,0,0,.28);
   border:3px solid #FFFFFF;
 }
 .shots img.s1{
   left:50%;
-  transform:translateX(-88%) rotate(-9deg);
+  transform:translateX(-86%) rotate(-9deg);
   z-index:1;
 }
 .shots img.s2{
   left:50%;
-  transform:translateX(-8%) rotate(7deg);
+  transform:translateX(-10%) rotate(7deg);
   z-index:2;
 }
 .pills{
@@ -185,8 +185,8 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 .pill.green{background:#1E8449;}
 
 .stamp{
-  width:52mm;
-  height:52mm;
+  width:42mm;
+  height:42mm;
   flex:0 0 auto;
   border-radius:50%;
   background:#FFE24B;
@@ -206,44 +206,35 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   line-height:1.15;
   text-align:center;
 }
-.stamp .big{font-size:19px;}
-.stamp .small{font-size:12px;margin-top:1mm;}
+.stamp .big{font-size:15.5px;}
+.stamp .small{font-size:9.5px;margin-top:1mm;}
 
-/* bottom band */
-.bottom{
-  position:absolute;
-  left:12mm; right:12mm; bottom:11mm;
+/* CTA band + QR, directly under the panel */
+.cta-band{
+  background:#FFFFFF;
+  margin:6mm 12mm 0;
+  padding:4.5mm 8mm;
+  border-radius:16px;
+  box-shadow:0 8px 22px rgba(0,0,0,.2);
+  text-align:center;
+}
+.cta-band .subtitle{margin:0;}
+.qr-center{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:16mm;
-}
-.qr-col{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:3mm;
-  flex:0 0 auto;
-}
-.qr-cta{
-  font-family:"Fredoka",sans-serif;
-  font-weight:700;
-  font-size:12.5px;
-  line-height:1.25;
-  color:#FFFFFF;
-  text-shadow:0 2px 5px rgba(0,0,0,.4);
-  text-align:center;
-  max-width:48mm;
-  margin:0;
+  gap:10mm;
+  margin:7mm 0 0;
 }
 .qr-wrap{
+  display:inline-block;
   background:#FFFFFF;
   border:4px solid #8B1E14;
-  border-radius:14px;
+  border-radius:16px;
   padding:4mm;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);
+  box-shadow:0 10px 26px rgba(0,0,0,.24);
 }
-.qr-wrap img{display:block;width:34mm;height:34mm;}
+.qr-wrap img{display:block;width:50mm;height:50mm;}
 .credit{
   position:absolute;
   left:12mm; right:12mm; bottom:2.5mm;
@@ -319,16 +310,17 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
       </div>
     </div>
 
-    <div class="bottom">
+    <div class="cta-band">
+      <p class="subtitle">📲 Flash le code pour installer Klavyé Kréyòl</p>
+    </div>
+
+    <div class="qr-center">
       <div class="stamp">
         <span class="big">100%<br>gratuit</span>
         <span class="small">zéro pub</span>
       </div>
-      <div class="qr-col">
-        <p class="qr-cta">📲 Flash le code pour installer Klavyé Kréyòl</p>
-        <div class="qr-wrap">
-          <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play" width="2280" height="2280">
-        </div>
+      <div class="qr-wrap">
+        <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play" width="2280" height="2280">
       </div>
     </div>
 
