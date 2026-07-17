@@ -117,7 +117,7 @@ la laisser chez le boulanger, le pharmacien ou la boutique du coin.
 
 <div align="center" style="margin: 16px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
   <a href="ambassade.html" class="btn primary" style="padding:12px 28px;">🏝️ Devenir ambassadeur du Klavyé Kréyòl</a>
-  <a href="affiche-v2.html" class="btn" style="padding:12px 28px;">🖨️ Imprimer l'affiche</a>
+  <a href="affiche.html" class="btn" style="padding:12px 28px;">🖨️ Imprimer l'affiche</a>
 </div>
 
 **Pou laprès :** [dossier de presse / press kit](presskit.html)
