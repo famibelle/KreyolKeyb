@@ -5,6 +5,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.2] - 2026-07-17
+
+### 🐛 Corrections issues d'une campagne de tests approfondie sur émulateur
+
+- **Suggestions kréyòl polluées par le contexte n-gram** : un mot sans aucune correspondance dans le dictionnaire (ex. « Ordinateur ») affichait quand même 3 suggestions kréyòl sans rapport, car le bonus contextuel n-gram (prédiction du mot suivant probable) était appliqué à tous les candidats sans vérifier qu'ils correspondaient au préfixe réellement tapé. `getKreyolSuggestions()` filtre désormais les candidats n-gram par préfixe avant de leur appliquer le bonus
+- **Bouton correcteur orthographique ouvrait le mauvais écran** : `openSpellCheckerSettings()` lançait `ACTION_INPUT_METHOD_SETTINGS`, qui ouvre la liste des claviers et non le sélecteur de correcteur orthographique. Lance maintenant directement l'écran standard AOSP (`Settings$SpellCheckersSettingsActivity`), avec repli sur l'ancien comportement si l'écran est absent sur certaines ROM
+- **Crash/ANR possible en changeant rapidement d'onglet Jeux** : `WordSearchFragment` et `WordScrambleFragment` planifiaient du travail (`generateNewPuzzle()`, `startNewGame()`) via `post {}`, qui peut s'exécuter après que le fragment a été détaché lors d'un changement d'onglet — provoquant une `IllegalStateException` sur `requireActivity()`/`requireContext()`. Ajout de gardes `isAdded` et remplacement de `requireContext()` par `context?.let {}` dans les blocs catch concernés
+- **Score « Mots réussis » du Démêle-mots faussé** : `endGame()` affichait `currentWordIndex` comme nombre de mots réussis, ce qui comptait aussi les mots passés/abandonnés. Nouveau compteur dédié `wordsCorrect`, incrémenté uniquement sur une réponse correcte
+
 ## [7.1.1] - 2026-07-15
 
 ### 🐛 Correction du compteur de mots découverts

@@ -343,11 +343,17 @@ class SuggestionEngine(private val context: Context) {
             allKreyol[word] = score.toFloat()
         }
         
-        // Ajouter suggestions n-gram avec bonus
-        ngramMatches.forEach { word ->
-            val currentScore = allKreyol[word] ?: 0f
-            allKreyol[word] = currentScore + 50f  // Bonus contextuel
-        }
+        // Ajouter suggestions n-gram avec bonus (uniquement si le mot correspond
+        // au préfixe tapé : le n-gramme prédit le mot suivant probable d'après le
+        // contexte, ce qui n'a aucun rapport avec ce que l'utilisateur est en train
+        // de taper — sans ce filtre, un mot sans aucune correspondance kréyòl
+        // (ex. "Ordinateur") affichait quand même 3 mots kréyòl sans rapport)
+        ngramMatches
+            .filter { it.startsWith(input, ignoreCase = true) }
+            .forEach { word ->
+                val currentScore = allKreyol[word] ?: 0f
+                allKreyol[word] = currentScore + 50f  // Bonus contextuel
+            }
         
         // Convertir en BilingualSuggestion et appliquer boost kreyòl + casse
         return allKreyol.entries

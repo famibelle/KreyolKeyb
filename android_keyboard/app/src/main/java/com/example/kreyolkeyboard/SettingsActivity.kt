@@ -1654,20 +1654,36 @@ class SettingsActivity : AppCompatActivity() {
 
     // Fonction pour ouvrir les paramètres où choisir le correcteur orthographique
     private fun openSpellCheckerSettings() {
+        // ACTION_INPUT_METHOD_SETTINGS ouvre la liste des CLAVIERS, pas le
+        // sélecteur de correcteur orthographique. Le seul point d'entrée public
+        // vers cet écran est ce composant Settings (standard AOSP depuis
+        // Android 4.2), avec repli sur l'écran clavier si absent sur certains ROM.
         try {
-            val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            val intent = Intent().apply {
+                setClassName("com.android.settings", "com.android.settings.Settings\$SpellCheckersSettingsActivity")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
             startActivity(intent)
             Toast.makeText(this,
-                "Dans 'Langues et saisie', ouvrez 'Vérification orthographique' et choisissez 'Correcteur Kréyòl Karukera'",
+                "Choisissez 'Correcteur Kréyòl Karukera' comme correcteur orthographique par défaut",
                 Toast.LENGTH_LONG
             ).show()
         } catch (e: Exception) {
-            Log.e("SettingsActivity", "Erreur ouverture paramètres correcteur: ${e.message}")
+            Log.e("SettingsActivity", "Erreur ouverture écran correcteur, repli sur les paramètres clavier: ${e.message}")
             try {
-                startActivity(Intent(Settings.ACTION_SETTINGS))
+                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                Toast.makeText(this,
+                    "Dans 'Langues et saisie', ouvrez 'Vérification orthographique' et choisissez 'Correcteur Kréyòl Karukera'",
+                    Toast.LENGTH_LONG
+                ).show()
             } catch (ex: Exception) {
-                Toast.makeText(this, "Impossible d'ouvrir les paramètres", Toast.LENGTH_SHORT).show()
+                try {
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                } catch (ex2: Exception) {
+                    Toast.makeText(this, "Impossible d'ouvrir les paramètres", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -3036,15 +3052,20 @@ class SettingsActivity : AppCompatActivity() {
                 
                 // Générer la première grille après que la vue soit créée
                 post {
-                    generateNewPuzzle()
+                    // Le post() s'exécute au prochain passage de la boucle de messages :
+                    // si l'utilisateur a déjà changé d'onglet entre-temps, le fragment
+                    // n'est plus attaché et requireActivity()/requireContext() planterait.
+                    if (isAdded) {
+                        generateNewPuzzle()
+                    }
                 }
             }
         }
-        
+
         private fun generateNewPuzzle() {
             try {
                 val activity = requireActivity() as SettingsActivity
-                
+
                 // Générer une nouvelle grille 8x8 avec des mots aléatoires du dictionnaire
                 currentPuzzle = WordSearchGenerator.generatePuzzle(
                     context = activity,
@@ -3052,20 +3073,22 @@ class SettingsActivity : AppCompatActivity() {
                     gridSize = 8,
                     difficulty = WordSearchDifficulty.NORMAL
                 )
-                
+
                 // Afficher la grille
                 displayPuzzle(currentPuzzle!!)
-                
+
                 // Réinitialiser
                 startTime = System.currentTimeMillis()
                 wordsFound = 0
                 updateScore(0)
-                
+
                 Log.d("WordSearchFragment", "Nouvelle grille générée: ${currentPuzzle?.words?.size} mots")
-                
+
             } catch (e: Exception) {
                 Log.e("WordSearchFragment", "Erreur génération: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erreur lors de la génération", Toast.LENGTH_SHORT).show()
+                // context (nullable) au lieu de requireContext() : si le fragment vient
+                // justement d'être détaché, ce bloc catch ne doit pas planter à son tour.
+                context?.let { Toast.makeText(it, "Erreur lors de la génération", Toast.LENGTH_SHORT).show() }
             }
         }
         
@@ -3153,6 +3176,7 @@ class SettingsActivity : AppCompatActivity() {
         
         private var gameWords: List<String> = listOf()
         private var currentWordIndex = 0
+        private var wordsCorrect = 0
         private var score = 0
         private var difficulty = com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty.NORMAL
         
@@ -3387,18 +3411,24 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 
                 addView(mainLayout)
-                
+
                 post {
-                    startNewGame()
+                    // Même précaution que WordSearchFragment.generateNewPuzzle() :
+                    // ce post() peut s'exécuter après que l'utilisateur a changé
+                    // d'onglet, auquel cas le fragment n'est plus attaché.
+                    if (isAdded) {
+                        startNewGame()
+                    }
                 }
             }
-            
+
             return rootView!!
         }
         
         private fun startNewGame() {
             score = 0
             currentWordIndex = 0
+            wordsCorrect = 0
             
             gameWords = com.example.kreyolkeyboard.wordscramble.WordScrambleData.loadWords(requireContext(), difficulty)
             
@@ -3515,7 +3545,8 @@ class SettingsActivity : AppCompatActivity() {
                 score += 100
                 
                 Toast.makeText(requireContext(), "✅ Correct! +100 pts", Toast.LENGTH_SHORT).show()
-                
+
+                wordsCorrect++
                 currentWordIndex++
                 loadNextWord()
             } else {
@@ -3569,7 +3600,7 @@ class SettingsActivity : AppCompatActivity() {
         private fun endGame() {
             AlertDialog.Builder(requireContext())
                 .setTitle("🎉 Partie terminée!")
-                .setMessage("Score final: $score\nMots réussis: $currentWordIndex/${gameWords.size}")
+                .setMessage("Score final: $score\nMots réussis: $wordsCorrect/${gameWords.size}")
                 .setPositiveButton("Rejouer") { _, _ ->
                     startNewGame()
                 }
