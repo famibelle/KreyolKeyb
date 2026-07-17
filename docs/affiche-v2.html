@@ -187,7 +187,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 .stamp{
   width:52mm;
   height:52mm;
-  margin:12mm auto 0;
+  flex:0 0 auto;
   border-radius:50%;
   background:#FFE24B;
   border:3px dashed #8B1E14;
@@ -212,43 +212,11 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 /* bottom band */
 .bottom{
   position:absolute;
-  left:12mm; right:12mm; bottom:9mm;
+  left:12mm; right:12mm; bottom:11mm;
   display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:8mm;
-}
-.bubble{
-  position:relative;
-  background:#FFFFFF;
-  border-radius:16px;
-  padding:6mm 8mm;
-  max-width:96mm;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);
-}
-.bubble:after{
-  content:"";
-  position:absolute;
-  left:14mm; bottom:-8mm;
-  border-width:9mm 6mm 0 0;
-  border-style:solid;
-  border-color:#FFFFFF transparent transparent transparent;
-}
-.bubble p{
-  margin:0;
-  font-family:"Fredoka",sans-serif;
-  font-weight:700;
-  font-size:13.5px;
-  color:#1C2624;
-  line-height:1.35;
-}
-.bubble p span{
-  display:block;
-  font-family:ui-monospace,"SF Mono",Consolas,monospace;
-  font-weight:400;
-  font-size:11.5px;
-  color:#0E6E76;
-  margin-top:1.5mm;
+  align-items:center;
+  justify-content:center;
+  gap:16mm;
 }
 .qr-col{
   display:flex;
@@ -351,16 +319,10 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
       </div>
     </div>
 
-    <div class="stamp">
-      <span class="big">100%<br>gratuit</span>
-      <span class="small">zéro pub</span>
-    </div>
-
     <div class="bottom">
-      <div class="bubble">
-        <p>Télécharge sur
-          <span>famibelle.github.io/KreyolKeyb</span>
-        </p>
+      <div class="stamp">
+        <span class="big">100%<br>gratuit</span>
+        <span class="small">zéro pub</span>
       </div>
       <div class="qr-col">
         <p class="qr-cta">📲 Flash le code pour installer Klavyé Kréyòl</p>
