@@ -7,6 +7,9 @@
 <meta name="description" content="Affiche prête à imprimer pour faire connaître le clavier créole guadeloupéen : QR code vers Google Play, à afficher chez les commerçants.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="stylesheet" href="assets/theme.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 <script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
 <script defer src="assets/theme.js"></script>
 <style>
@@ -58,42 +61,73 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 }
 .hero{
   width:100%;
-  height:82mm;
+  height:88mm;
   object-fit:cover;
   object-position:center 35%;
   display:block;
 }
+.hero-rule{
+  height:4px;
+  background:linear-gradient(90deg,#0E6E76,#C97F1E,#C94A3B);
+}
 .poster-body{
-  padding:10mm 16mm 0;
+  padding:11mm 16mm 0;
   text-align:center;
 }
 .poster-h1{
-  font-size:38px;
-  font-weight:800;
-  line-height:1.08;
-  letter-spacing:-0.01em;
+  font-family:"Fredoka","Segoe UI",sans-serif;
+  font-size:40px;
+  font-weight:700;
+  line-height:1.12;
+  letter-spacing:-0.005em;
   margin:0 0 7mm;
   color:#1C2624;
+  text-wrap:balance;
 }
 .poster-sub{
   font-size:15.5px;
   color:#4B5750;
-  max-width:160mm;
+  max-width:155mm;
   margin:0 auto 7mm;
-  line-height:1.4;
+  line-height:1.45;
 }
 .poster-bullets{
-  font-size:13.5px;
-  font-weight:700;
+  font-family:"Fredoka","Segoe UI",sans-serif;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.01em;
   color:#0E6E76;
-  margin-bottom:9mm;
+  margin-bottom:10mm;
 }
 .showcase{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:14mm;
-  margin-bottom:8mm;
+  gap:16mm;
+  margin:0 auto 9mm;
+  padding:10mm 14mm;
+  max-width:170mm;
+  background:#DDEEEE;
+  border-radius:20px;
+}
+.qr-item{display:flex;flex-direction:column;align-items:center;}
+.shot-block{display:flex;flex-direction:column;align-items:center;}
+.shot-block img{
+  display:block;
+  width:34mm;
+  height:auto;
+  border-radius:9px;
+  border:1px solid rgba(28,38,36,.08);
+  box-shadow:0 5px 18px rgba(28,38,36,.16);
+}
+.shot-caption{
+  font-family:"Fredoka","Segoe UI",sans-serif;
+  margin-top:4mm;
+  font-size:11.5px;
+  font-weight:600;
+  color:#1C2624;
+  max-width:38mm;
+  line-height:1.32;
 }
 .qr-block{
   display:inline-block;
@@ -101,36 +135,23 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   border:3px solid #8A5410;
   border-radius:16px;
   padding:6mm;
-  box-shadow:0 6px 24px rgba(28,38,36,.12);
+  box-shadow:0 6px 22px rgba(28,38,36,.18);
 }
-.qr-block img{display:block;width:42mm;height:42mm;}
+.qr-block img{display:block;width:50mm;height:50mm;}
 .qr-caption{
+  font-family:"Fredoka","Segoe UI",sans-serif;
   margin-top:4mm;
-  font-size:15.5px;
-  font-weight:800;
+  font-size:16px;
+  font-weight:700;
   color:#1C2624;
 }
 .qr-caption small{
   display:block;
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   font-size:11.5px;
   font-weight:600;
   color:#4B5750;
   margin-top:1.5mm;
-}
-.shot-block img{
-  display:block;
-  width:40mm;
-  height:auto;
-  border-radius:10px;
-  box-shadow:0 6px 24px rgba(28,38,36,.18);
-}
-.shot-caption{
-  margin-top:4mm;
-  font-size:12.5px;
-  font-weight:700;
-  color:#1C2624;
-  max-width:44mm;
-  line-height:1.3;
 }
 .band-bottom{
   position:absolute;
@@ -139,11 +160,17 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   color:#F5F2EA;
   text-align:center;
   padding:6mm 10mm;
-  font-size:13.5px;
-  font-weight:700;
+}
+.band-bottom .credit{
+  font-family:"Fredoka","Segoe UI",sans-serif;
+  font-size:14px;
+  font-weight:600;
 }
 .band-bottom .url{
+  display:block;
+  margin-top:1.5mm;
   font-family:ui-monospace,"SF Mono",Consolas,monospace;
+  font-size:12.5px;
   font-weight:400;
   opacity:.9;
 }
@@ -191,12 +218,17 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 <div class="preview-shell">
   <div class="page">
     <img class="hero" src="assets/affiche-banner.jpg" alt="Klavyé Kréyòl Karukera : Ekri an kréyòl Gwadloup !">
+    <div class="hero-rule"></div>
     <div class="poster-body">
       <div class="poster-h1">Ékri kréyòl asi téléfòn aw !</div>
       <p class="poster-sub">Le clavier Android gratuit qui suggère les mots en créole guadeloupéen pendant que vous écrivez, à partir des textes de Sylviane Telchid, Sonny Rupaire, Max Rippon et d'autres défenseurs du kréyòl.</p>
       <p class="poster-bullets">100% gratuit · Open source · Zéro collecte de données</p>
 
       <div class="showcase">
+        <div class="shot-block">
+          <img src="assets/affiche-screenshot.png" alt="Capture d'écran : suggestions de mots en créole pendant la frappe d'un SMS">
+          <p class="shot-caption">Sijesyon kréyòl an tan réyèl pandan w ka ékri</p>
+        </div>
         <div class="qr-item">
           <div class="qr-block">
             <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play" width="2280" height="2280">
@@ -205,15 +237,11 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
             <small>Disponible gratuitement sur Google Play</small>
           </div>
         </div>
-        <div class="shot-block">
-          <img src="assets/affiche-screenshot.png" alt="Capture d'écran : suggestions de mots en créole pendant la frappe d'un SMS">
-          <p class="shot-caption">Sijesyon kréyòl an tan réyèl pandan w ka ékri</p>
-        </div>
       </div>
     </div>
 
     <div class="band-bottom">
-      Créé par un Guadeloupéen pour les Guadeloupéens 🏝️<br>
+      <span class="credit">Créé par un Guadeloupéen pour les Guadeloupéens 🏝️</span>
       <span class="url">famibelle.github.io/KreyolKeyb</span>
     </div>
   </div>
