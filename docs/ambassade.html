@@ -31,6 +31,7 @@ nav.site a:hover{text-decoration:underline;}
 nav.site strong{color:var(--ink);}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--sea);margin:0 0 10px;}
 h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing:-0.02em;margin:0 0 12px;text-wrap:balance;}
+h1 img,.gauge-meta img{height:1em;width:auto;vertical-align:-0.1em;border-radius:1px;}
 .lead{font-size:16.5px;color:var(--ink-soft);max-width:56ch;margin:0 0 8px;}
 h2{font-size:19px;font-weight:800;margin:0 0 4px;}
 .time{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--paper);background:var(--sea);border-radius:999px;padding:4px 12px;margin-bottom:10px;}
@@ -89,7 +90,7 @@ footer a{color:var(--sea);}
 
 <header>
   <p class="eyebrow">Klavyé Kréyòl Karukera · plan de médiatisation contributif</p>
-  <h1>Vin Anbasadè a kréyòl la ! 🏝️</h1>
+  <h1>Vin Anbasadè a kréyòl la ! <img src="assets/drapeau-guadeloupe.png" alt="Drapeau de la Guadeloupe"></h1>
   <p class="lead">Le clavier créole n'a ni budget publicitaire ni service de com'. Il a mieux : <strong>vous</strong>. Chaque message, chaque email, chaque appel à une radio aide notre langue à exister dans le numérique. Choisissez votre mission : tout est prêt, il n'y a qu'à cliquer.</p>
 
   <div class="gauge-card">
@@ -99,7 +100,7 @@ footer a{color:var(--sea);}
     </div>
     <div class="gauge-bar"><div class="gauge-fill" id="g-fill" style="width:1%"></div></div>
     <div class="gauge-meta">
-      <span id="g-remaining">An nou ay ! Chaque partage compte 🏝️</span>
+      <span id="g-remaining">An nou ay ! Chaque partage compte <img src="assets/drapeau-guadeloupe.png" alt="Drapeau de la Guadeloupe"></span>
       <span>Objectif final : 10 000 · <span id="g-asof"></span></span>
     </div>
   </div>
@@ -110,7 +111,7 @@ footer a{color:var(--sea);}
   <h2>Partagez à vos proches</h2>
   <p class="section-sub">Le geste le plus simple et le plus efficace : le bouche-à-oreille.</p>
   <div class="card">
-    <div class="script" id="txt-wa">Mwen ka sèvi épi Klavyé Kréyòl Karukera pou ékri kréyòl asi téléfòn an mwen ! 🏝️ Sé on klavyé Android gratui ki ba'w sigjesyon mo an kréyòl Gwadloup. Télécharge-le gratuitement : https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dwhatsapp%26utm_campaign%3Dlaunch10k</div>
+    <div class="script" id="txt-wa">Mwen ka sèvi épi Klavyé Kréyòl Karukera pou ékri kréyòl asi téléfòn an mwen ! Sé on klavyé Android gratui ki ba'w sigjesyon mo an kréyòl Gwadloup. Télécharge-le gratuitement : https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dwhatsapp%26utm_campaign%3Dlaunch10k</div>
     <div class="actions">
       <a class="btn primary" id="wa-share" href="#">💬 Envoyer sur WhatsApp</a>
       <a class="btn" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Ffamibelle.github.io%2FKreyolKeyb%2F" target="_blank" rel="noopener">📘 Partager sur Facebook</a>
@@ -514,12 +515,12 @@ Contact : contact@potomitan.io</div>
     document.getElementById('g-current').textContent = fmt(s.current);
     document.getElementById('g-next').textContent = fmt(next);
     document.getElementById('g-asof').textContent = 'MAJ ' + s.as_of;
-    document.getElementById('g-remaining').textContent =
-      'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
+    document.getElementById('g-remaining').innerHTML =
+      'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! <img src="assets/drapeau-guadeloupe.png" alt="Drapeau de la Guadeloupe">';
     document.getElementById('g-fill').style.width = pct + '%';
   }).catch(function(){});
 
-  var waText ="Mwen ka sèvi épi Klavyé Kréyòl Karukera pou ékri kréyòl asi téléfòn an mwen ! 🏝️ Sé on klavyé Android gratui ki ba'w sigjesyon mo an kréyòl Gwadloup. Télécharge-le gratuitement : https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dwhatsapp%26utm_campaign%3Dlaunch10k";
+  var waText ="Mwen ka sèvi épi Klavyé Kréyòl Karukera pou ékri kréyòl asi téléfòn an mwen ! Sé on klavyé Android gratui ki ba'w sigjesyon mo an kréyòl Gwadloup. Télécharge-le gratuitement : https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dwhatsapp%26utm_campaign%3Dlaunch10k";
   document.getElementById('wa-share').href = "https://wa.me/?text=" + encodeURIComponent(waText);
 
   document.querySelectorAll('[data-copy]').forEach(function(btn){
