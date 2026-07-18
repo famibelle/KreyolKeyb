@@ -112,8 +112,8 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
 
 **Vous voulez aider le kréyòl à rayonner ?** Notre page ambassadeurs vous
 donne tout : les contacts des médias locaux, les emails pré-remplis en un
-clic, quoi dire si vous appelez une radio, et une affiche à imprimer pour
-la laisser chez le boulanger, le pharmacien ou la boutique du coin.
+clic, quoi dire si vous appelez une radio, et un tract à imprimer pour
+le laisser chez le boulanger, le pharmacien ou la boutique du coin.
 
 <div align="center" style="margin: 16px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
   <a href="ambassade.html" class="btn primary" style="padding:12px 28px;">🏝️ Devenir ambassadeur du Klavyé Kréyòl</a>
