@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tract à imprimer · Klavyé Kréyòl Karukera</title>
+<meta name="description" content="Tract A5 prêt à imprimer (2 par feuille A4) pour faire connaître le clavier créole guadeloupéen : à déposer en boulangerie, café, pharmacie. QR code vers Google Play.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+<script defer src="assets/theme.js"></script>
+<style>
+*{box-sizing:border-box;}
+html{overflow-x:hidden;}
+body{
+  margin:0; padding:0 18px 60px;
+  background:var(--paper); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  line-height:1.55;
+  overflow-x:hidden;
+}
+.wrap{max-width:680px;margin:0 auto;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--sea);margin:0 0 10px;}
+h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing:-0.02em;margin:0 0 12px;text-wrap:balance;}
+.lead{font-size:16.5px;color:var(--ink-soft);max-width:56ch;margin:0 0 20px;}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.btn{
+  display:inline-block;text-decoration:none;text-align:center;cursor:pointer;
+  font-size:14px;font-weight:700;border-radius:9px;padding:11px 16px;
+  border:1.5px solid var(--sea);color:var(--sea);background:transparent;
+  font-family:inherit;
+}
+.btn:hover{background:var(--sea-soft);}
+.btn.primary{background:var(--sea);color:var(--paper);}
+.btn.primary:hover{filter:brightness(1.08);}
+.note{
+  background:var(--sun-soft);border:1px solid color-mix(in srgb, var(--sun) 30%, transparent);
+  border-radius:10px;padding:14px 16px;font-size:14px;margin-bottom:28px;
+}
+
+/* --- Aperçu à l'écran --- */
+.preview-shell{
+  overflow-x:auto;
+  padding:20px 0 40px;
+  display:flex;
+  justify-content:center;
+}
+.page{
+  width:210mm;
+  height:297mm;
+  flex:0 0 auto;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.25);
+  background:#FFFFFF;
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
+/* --- Un tract A5 paysage --- */
+.tract{
+  position:relative;
+  width:210mm;
+  height:148.5mm;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.10), transparent 45%),
+    linear-gradient(115deg,#FF216C 0%,#FF216C 52%,#E01E5F 100%);
+  display:flex;
+  gap:6mm;
+  padding:8mm 9mm 7mm;
+}
+.col-left{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  color:#FFFFFF;
+}
+.badge-row{
+  display:flex;
+  align-items:center;
+  gap:4mm;
+  margin:0 0 5mm;
+}
+.badge{
+  display:inline-block;
+  background:#FFFFFF;
+  color:#E01E5F;
+  font-family:"Fredoka",sans-serif;
+  font-weight:700;
+  font-size:12.5px;
+  letter-spacing:.03em;
+  padding:2mm 5mm;
+  border-radius:999px;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  white-space:nowrap;
+}
+.logo-badge{
+  width:13mm;
+  height:13mm;
+  border-radius:50%;
+  background:#FFFFFF;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+.logo-badge img{width:86%;height:86%;object-fit:contain;}
+.headline{
+  font-family:"Fredoka",sans-serif;
+  font-weight:800;
+  font-size:42px;
+  line-height:1.02;
+  letter-spacing:-0.01em;
+  color:#FFFFFF;
+  text-shadow:0 3px 12px rgba(0,0,0,.22);
+  margin:0 0 5mm;
+}
+.probs{
+  list-style:none;
+  margin:0 0 4mm;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:4.2mm;
+}
+.probs li{
+  display:flex;
+  gap:2.8mm;
+  align-items:flex-start;
+  font-size:15.5px;
+  line-height:1.38;
+  font-weight:600;
+}
+.probs .emo{flex:0 0 auto;font-size:20px;line-height:1.2;}
+.probs .fanm{
+  font-family:"Fredoka",sans-serif;
+  font-weight:700;
+  font-size:17.5px;
+}
+.cta{
+  margin-top:auto;
+  background:#FFFFFF;
+  color:#E01E5F;
+  font-family:"Fredoka",sans-serif;
+  font-weight:800;
+  font-size:16.5px;
+  line-height:1.2;
+  text-transform:uppercase;
+  border-radius:14px;
+  padding:4mm 5mm;
+  text-align:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+}
+.col-right{
+  flex:0 0 88mm;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.diptych{
+  display:flex;
+  border:3px solid #FFFFFF;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 26px rgba(0,0,0,.28);
+  background:#FF216C;
+}
+.diptych img{
+  display:block;
+  width:41mm;
+  height:auto;
+}
+.qr-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6mm;
+  margin-top:4.5mm;
+}
+.stamp{
+  width:31mm;
+  height:31mm;
+  flex:0 0 auto;
+  border-radius:50%;
+  background:#FFE24B;
+  border:2.5px dashed #8B1E14;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  transform:rotate(-9deg);
+  box-shadow:0 6px 16px rgba(0,0,0,.22);
+}
+.stamp span{
+  font-family:"Fredoka",sans-serif;
+  font-weight:800;
+  color:#8B1E14;
+  text-transform:uppercase;
+  line-height:1.15;
+  text-align:center;
+}
+.stamp .big{font-size:12px;}
+.stamp .small{font-size:7.5px;margin-top:.8mm;}
+.qr-wrap{
+  background:#FFFFFF;
+  border-radius:12px;
+  padding:2.6mm;
+  box-shadow:0 8px 20px rgba(0,0,0,.24);
+}
+.qr-wrap img{display:block;width:29mm;height:29mm;}
+.qr-label{
+  font-family:"Fredoka",sans-serif;
+  font-weight:700;
+  font-size:9.5px;
+  color:#FFFFFF;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  text-align:center;
+  margin-top:2mm;
+}
+.credit{
+  position:absolute;
+  left:9mm; right:9mm; bottom:2mm;
+  text-align:center;
+  font-size:8.5px;
+  color:rgba(255,255,255,.92);
+  text-shadow:0 1px 3px rgba(0,0,0,.35);
+  font-family:ui-monospace,"SF Mono",Consolas,monospace;
+}
+
+/* ligne de découpe entre les deux tracts */
+.cutline{
+  position:absolute;
+  top:148.5mm;
+  left:0; right:0;
+  height:0;
+  border-top:1.2px dashed rgba(255,255,255,.85);
+  z-index:5;
+}
+.cutline::before{
+  content:"✂";
+  position:absolute;
+  left:4mm;
+  top:-3.2mm;
+  font-size:13px;
+  color:rgba(255,255,255,.95);
+  text-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+
+@media print{
+  .noprint{display:none !important;}
+  body{padding:0;margin:0;background:#fff;}
+  .wrap{max-width:none;}
+  .preview-shell{padding:0;overflow:visible;}
+  .page{box-shadow:none;}
+  @page{size:A4;margin:0;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+<div class="wrap noprint">
+
+<nav class="site">
+  <a href="index.html">🏠 Accueil</a> ·
+  <a href="ambassade.html">📣 Vin Anbasadè</a> ·
+  <a href="affiche.html">🖨️ Affiche</a> ·
+  <strong>🪧 Tract</strong> ·
+  <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
+</nav>
+
+<header style="padding:20px 0 10px;">
+  <p class="eyebrow">Klavyé Kréyòl Karukera · kit ambassadeur</p>
+  <h1>Un tract à distribuer 🪧</h1>
+  <p class="lead">Deux tracts A5 par feuille A4, à découper le long des pointillés. À déposer sur le comptoir de la boulangerie, du café ou de la pharmacie : le QR code renvoie directement vers Google Play.</p>
+
+  <div class="actions">
+    <a class="btn primary" href="assets/tract-kreyolkeyboard-A4.pdf" download>📄 Télécharger le PDF (A4, 2 tracts A5)</a>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer directement</button>
+    <a class="btn" href="ambassade.html">← Retour au kit ambassadeur</a>
+  </div>
+
+  <div class="note">
+    Astuce : dans les options d'impression, choisissez « Aucune marge » et désactivez les en-têtes/pieds de page. Chaque feuille A4 donne deux tracts identiques : coupez le long des pointillés ✂ et laissez une petite pile près de la caisse.
+  </div>
+</header>
+
+</div>
+
+<div class="preview-shell">
+  <div class="page">
+
+    <div class="tract">
+      <div class="col-left">
+        <div class="badge-row">
+          <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
+          <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+        </div>
+        <p class="headline">Pourquoi<br>ce clavier ?</p>
+        <ul class="probs">
+          <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
+          <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
+          <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour toi.</span></li>
+        </ul>
+        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+      </div>
+      <div class="col-right">
+        <div class="diptych">
+          <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+          <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+        </div>
+        <div class="qr-row">
+          <div class="stamp">
+            <span class="big">100%<br>gratuit</span>
+            <span class="small">zéro pub</span>
+          </div>
+          <div class="qr-wrap">
+            <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
+          </div>
+        </div>
+        <div class="qr-label">Disponible sur Google Play</div>
+      </div>
+      <div class="credit">famibelle.github.io/KreyolKeyb/ · Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
+    </div>
+
+    <div class="cutline"></div>
+
+    <div class="tract">
+      <div class="col-left">
+        <div class="badge-row">
+          <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
+          <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+        </div>
+        <p class="headline">Pourquoi<br>ce clavier ?</p>
+        <ul class="probs">
+          <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
+          <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
+          <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour toi.</span></li>
+        </ul>
+        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+      </div>
+      <div class="col-right">
+        <div class="diptych">
+          <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+          <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+        </div>
+        <div class="qr-row">
+          <div class="stamp">
+            <span class="big">100%<br>gratuit</span>
+            <span class="small">zéro pub</span>
+          </div>
+          <div class="qr-wrap">
+            <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
+          </div>
+        </div>
+        <div class="qr-label">Disponible sur Google Play</div>
+      </div>
+      <div class="credit">famibelle.github.io/KreyolKeyb/ · Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
