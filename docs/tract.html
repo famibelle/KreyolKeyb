@@ -76,8 +76,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 .top{
   display:flex;
   gap:6mm;
-  flex:1 1 auto;
-  min-height:0;
+  flex:0 0 auto;
   align-items:center;
 }
 .col-left{
@@ -171,25 +170,36 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   flex-direction:column;
   align-items:center;
 }
-.diptych{
-  display:flex;
-  gap:2.5mm;
-  border:3px solid #FFFFFF;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 10px 26px rgba(0,0,0,.28);
-  background:#FFFFFF;
+.shots{
+  position:relative;
+  width:90mm;
+  height:76mm;
 }
-.diptych img{
-  display:block;
-  width:45mm;
+.shots img{
+  position:absolute;
+  top:3mm;
+  width:41mm;
   height:auto;
-  border-radius:7px;
+  border-radius:9px;
+  border:3px solid #FFFFFF;
+  box-shadow:0 10px 24px rgba(0,0,0,.28);
+}
+.shots img.s1{
+  left:50%;
+  transform:translateX(-86%) rotate(-9deg);
+  z-index:1;
+}
+.shots img.s2{
+  left:50%;
+  transform:translateX(-10%) rotate(7deg);
+  z-index:2;
 }
 .bottom-row{
   display:flex;
   align-items:center;
   gap:6mm;
+  flex:1 1 auto;
+  min-height:0;
 }
 .stamp{
   width:31mm;
@@ -319,9 +329,9 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
           </ul>
         </div>
         <div class="col-right">
-          <div class="diptych">
-            <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
-            <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+          <div class="shots">
+            <img class="s1" src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+            <img class="s2" src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
           </div>
           <div class="qr-label">Disponible sur Google Play</div>
         </div>
@@ -356,9 +366,9 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
           </ul>
         </div>
         <div class="col-right">
-          <div class="diptych">
-            <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
-            <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+          <div class="shots">
+            <img class="s1" src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+            <img class="s2" src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
           </div>
           <div class="qr-label">Disponible sur Google Play</div>
         </div>
