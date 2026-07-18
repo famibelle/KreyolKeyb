@@ -69,8 +69,16 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
     radial-gradient(circle at 12% 10%, rgba(255,255,255,.10), transparent 45%),
     linear-gradient(115deg,#FF216C 0%,#FF216C 52%,#E01E5F 100%);
   display:flex;
-  gap:6mm;
+  flex-direction:column;
+  gap:4mm;
   padding:8mm 9mm 7mm;
+}
+.top{
+  display:flex;
+  gap:6mm;
+  flex:1 1 auto;
+  min-height:0;
+  align-items:center;
 }
 .col-left{
   flex:1 1 auto;
@@ -144,7 +152,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   font-size:17.5px;
 }
 .cta{
-  margin-top:auto;
+  flex:1 1 auto;
   background:#FFFFFF;
   color:#E01E5F;
   font-family:"Fredoka",sans-serif;
@@ -158,30 +166,30 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   box-shadow:0 6px 18px rgba(0,0,0,.22);
 }
 .col-right{
-  flex:0 0 88mm;
+  flex:0 0 auto;
   display:flex;
   flex-direction:column;
   align-items:center;
 }
 .diptych{
   display:flex;
+  gap:2.5mm;
   border:3px solid #FFFFFF;
   border-radius:12px;
   overflow:hidden;
   box-shadow:0 10px 26px rgba(0,0,0,.28);
-  background:#FF216C;
+  background:#FFFFFF;
 }
 .diptych img{
   display:block;
-  width:41mm;
+  width:45mm;
   height:auto;
+  border-radius:7px;
 }
-.qr-row{
+.bottom-row{
   display:flex;
   align-items:center;
-  justify-content:center;
   gap:6mm;
-  margin-top:4.5mm;
 }
 .stamp{
   width:31mm;
@@ -222,7 +230,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   text-transform:uppercase;
   letter-spacing:.04em;
   text-align:center;
-  margin-top:2mm;
+  margin-top:2.5mm;
 }
 .credit{
   position:absolute;
@@ -297,34 +305,36 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   <div class="page">
 
     <div class="tract">
-      <div class="col-left">
-        <div class="badge-row">
-          <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
-          <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+      <div class="top">
+        <div class="col-left">
+          <div class="badge-row">
+            <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
+            <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+          </div>
+          <p class="headline">Pourquoi<br>ce clavier ?</p>
+          <ul class="probs">
+            <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
+            <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
+            <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour&nbsp;toi.</span></li>
+          </ul>
         </div>
-        <p class="headline">Pourquoi<br>ce clavier ?</p>
-        <ul class="probs">
-          <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
-          <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
-          <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour toi.</span></li>
-        </ul>
-        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="col-right">
+          <div class="diptych">
+            <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+            <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+          </div>
+          <div class="qr-label">Disponible sur Google Play</div>
+        </div>
       </div>
-      <div class="col-right">
-        <div class="diptych">
-          <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
-          <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+      <div class="bottom-row">
+        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="stamp">
+          <span class="big">100%<br>gratuit</span>
+          <span class="small">zéro pub</span>
         </div>
-        <div class="qr-row">
-          <div class="stamp">
-            <span class="big">100%<br>gratuit</span>
-            <span class="small">zéro pub</span>
-          </div>
-          <div class="qr-wrap">
-            <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
-          </div>
+        <div class="qr-wrap">
+          <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
         </div>
-        <div class="qr-label">Disponible sur Google Play</div>
       </div>
       <div class="credit">famibelle.github.io/KreyolKeyb/ · Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
     </div>
@@ -332,34 +342,36 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
     <div class="cutline"></div>
 
     <div class="tract">
-      <div class="col-left">
-        <div class="badge-row">
-          <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
-          <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+      <div class="top">
+        <div class="col-left">
+          <div class="badge-row">
+            <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
+            <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
+          </div>
+          <p class="headline">Pourquoi<br>ce clavier ?</p>
+          <ul class="probs">
+            <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
+            <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
+            <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour&nbsp;toi.</span></li>
+          </ul>
         </div>
-        <p class="headline">Pourquoi<br>ce clavier ?</p>
-        <ul class="probs">
-          <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
-          <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
-          <li><span class="emo">➡️</span><span class="fanm">Klavyé Kréyòl Karukera est fait pour toi.</span></li>
-        </ul>
-        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="col-right">
+          <div class="diptych">
+            <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
+            <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+          </div>
+          <div class="qr-label">Disponible sur Google Play</div>
+        </div>
       </div>
-      <div class="col-right">
-        <div class="diptych">
-          <img src="assets/tract-visuel-1.png" alt="Klavyé Kréyòl Karukera : maké an bel kréyòl">
-          <img src="assets/tract-visuel-2.png" alt="Conversation SMS écrite en créole avec le clavier">
+      <div class="bottom-row">
+        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="stamp">
+          <span class="big">100%<br>gratuit</span>
+          <span class="small">zéro pub</span>
         </div>
-        <div class="qr-row">
-          <div class="stamp">
-            <span class="big">100%<br>gratuit</span>
-            <span class="small">zéro pub</span>
-          </div>
-          <div class="qr-wrap">
-            <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
-          </div>
+        <div class="qr-wrap">
+          <img src="assets/qr-google-play.png" alt="QR code vers Klavyé Kréyòl Karukera sur Google Play">
         </div>
-        <div class="qr-label">Disponible sur Google Play</div>
       </div>
       <div class="credit">famibelle.github.io/KreyolKeyb/ · Créé par un Guadeloupéen pour les Guadeloupéens 🏝️ · contact@potomitan.io</div>
     </div>
