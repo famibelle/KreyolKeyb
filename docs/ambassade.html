@@ -74,9 +74,32 @@ footer a{color:var(--sea);}
 .gauge-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--sea),var(--sun));min-width:8px;transition:width .8s ease;}
 .gauge-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
 .gauge-target{font-weight:700;color:var(--hibiscus);}
+section{scroll-margin-top:16px;}
+.side-nav{
+  position:fixed;top:50%;left:24px;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:2px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px;z-index:20;
+}
+.side-nav a{
+  display:block;color:var(--ink-soft);text-decoration:none;
+  font-size:13px;font-weight:600;padding:7px 10px;border-radius:8px;
+  white-space:nowrap;
+}
+.side-nav a:hover{background:var(--sea-soft);color:var(--sea);}
+.side-nav a.active{background:var(--sea-soft);color:var(--sea);}
+@media (max-width: 1240px){ .side-nav{display:none;} }
 </style>
 </head>
 <body>
+<nav class="side-nav" aria-label="Navigation rapide">
+  <a href="#partage">📣 Partager</a>
+  <a href="#flashcode">📱 FlashCode</a>
+  <a href="#affiche">🖨️ Affiche &amp; tract</a>
+  <a href="#medias">✉️ Médias</a>
+  <a href="#radio">📞 Radio</a>
+  <a href="#education">🎓 Éducation</a>
+</nav>
 <div class="wrap">
 
 <nav class="site">
@@ -109,7 +132,7 @@ footer a{color:var(--sea);}
   </div>
 </header>
 
-<section>
+<section id="partage">
   <span class="time">⏱ 30 segonn</span>
   <h2>Partagez à vos proches</h2>
   <p class="section-sub">Le geste le plus simple et le plus efficace : le bouche-à-oreille.</p>
@@ -123,7 +146,22 @@ footer a{color:var(--sea);}
   </div>
 </section>
 
-<section>
+<section id="flashcode">
+  <span class="time">⏱ 10 segonn</span>
+  <h2>Téléchargez le FlashCode</h2>
+  <p class="section-sub">Le QR code seul, en haute résolution, à coller sur vos propres supports : story Instagram, sticker, signature d'email, affichette maison...</p>
+  <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <img src="assets/qr-google-play.png" alt="FlashCode vers Klavyé Kréyòl Karukera sur Google Play" style="width:120px;height:120px;border-radius:8px;border:1px solid var(--line);flex:0 0 auto;">
+    <div style="flex:1 1 220px;">
+      <p class="meta" style="margin:0 0 12px;">PNG haute résolution (2280×2280) · renvoie directement vers Google Play</p>
+      <div class="actions">
+        <a class="btn primary" href="assets/qr-google-play.png" download>📥 Télécharger le FlashCode (PNG)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="affiche">
   <span class="time orange">⏱ 5 minit</span>
   <h2>Affichez dans votre quartier</h2>
   <p class="section-sub">Une affiche au format A4, prête à imprimer et à laisser chez le boulanger, le pharmacien ou à la boutique du coin. Le QR code renvoie directement vers Google Play.</p>
@@ -147,7 +185,7 @@ footer a{color:var(--sea);}
   </div>
 </section>
 
-<section>
+<section id="medias">
   <span class="time orange">⏱ 2 minit</span>
   <h2>Écrivez aux médias locaux</h2>
   <p class="section-sub">Les rédactions cherchent des sujets qui parlent à leurs lecteurs : un outil <strong>créé par un Guadeloupéen pour les Guadeloupéens</strong> en fait partie. Un email de lecteur pèse plus qu'un communiqué. Cliquez : l'email est pré-rempli, ajoutez un mot personnel et envoyez.</p>
@@ -456,7 +494,7 @@ footer a{color:var(--sea);}
   </div>
 </section>
 
-<section>
+<section id="radio">
   <span class="time red">⏱ 5 minit</span>
   <h2>Appelez une radio</h2>
   <p class="section-sub">Les radios locales adorent les auditeurs qui appellent avec un bon sujet. Voici quoi dire, en créole ou en français, comme vous voulez.</p>
@@ -472,7 +510,7 @@ footer a{color:var(--sea);}
   </div>
 </section>
 
-<section>
+<section id="education">
   <span class="time orange">⏱ Pou lékòl é asosiyasyon</span>
   <h2>Enseignants, associations, animateurs</h2>
   <p class="section-sub">Vous enseignez le créole ou animez une association culturelle ? Parlez-en autour de vous : le clavier suggère l'orthographe GEREC pendant la frappe, là où les claviers standards la combattent.</p>
@@ -538,6 +576,21 @@ Contact : contact@potomitan.io</div>
       });
     });
   });
+
+  var sideLinks = document.querySelectorAll('.side-nav a');
+  if (sideLinks.length && 'IntersectionObserver' in window){
+    var sections = Array.prototype.map.call(sideLinks, function(a){
+      return document.querySelector(a.getAttribute('href'));
+    });
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = document.querySelector('.side-nav a[href="#' + entry.target.id + '"]');
+        if (entry.isIntersecting) link.classList.add('active');
+        else link.classList.remove('active');
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    sections.forEach(function(s){ if (s) obs.observe(s); });
+  }
 })();
 </script>
 </body>
