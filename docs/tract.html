@@ -121,12 +121,13 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 .headline{
   font-family:"Fredoka",sans-serif;
   font-weight:800;
-  font-size:42px;
-  line-height:1.02;
+  font-size:27px;
+  line-height:1.05;
   letter-spacing:-0.01em;
   color:#FFFFFF;
   text-shadow:0 3px 12px rgba(0,0,0,.22);
   margin:0 0 5mm;
+  white-space:nowrap;
 }
 .probs{
   list-style:none;
@@ -152,6 +153,10 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 }
 .cta{
   flex:1 1 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4mm;
   background:#FFFFFF;
   color:#E01E5F;
   font-family:"Fredoka",sans-serif;
@@ -164,6 +169,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   text-align:center;
   box-shadow:0 6px 18px rgba(0,0,0,.22);
 }
+.cta .cta-ico{font-size:30px;line-height:1;}
 .col-right{
   flex:0 0 auto;
   display:flex;
@@ -241,6 +247,20 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   letter-spacing:.04em;
   text-align:center;
   margin-top:2.5mm;
+}
+.slogan-band{
+  flex:0 0 auto;
+  font-family:"Fredoka",sans-serif;
+  font-weight:800;
+  font-style:italic;
+  font-size:23px;
+  color:#FFE24B;
+  text-transform:uppercase;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.28);
+  letter-spacing:.02em;
+  line-height:1.25;
+  margin:1mm 0 0;
 }
 .credit{
   position:absolute;
@@ -329,7 +349,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
             <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
             <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
           </div>
-          <p class="headline">Pourquoi<br>ce clavier ?</p>
+          <p class="headline">Pourquoi ce clavier ?</p>
           <ul class="probs">
             <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
             <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
@@ -344,8 +364,9 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
           <div class="qr-label">Disponible sur Google Play</div>
         </div>
       </div>
+      <p class="slogan-band">«&nbsp;An kréyòl nou ka palé, an kréyòl nou ka maké&nbsp;!&nbsp;»</p>
       <div class="bottom-row">
-        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="cta"><span class="cta-ico">📲</span><span>Flash le code,<br>installe Klavyé Kréyòl</span></div>
         <div class="stamp">
           <span class="big">100%<br>gratuit</span>
           <span class="small">zéro pub</span>
@@ -366,7 +387,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
             <div class="logo-badge"><img src="assets/potomitan-logo.png" alt="Potomitan"></div>
             <span class="badge">KLAVYÉ KRÉYÒL KARUKERA</span>
           </div>
-          <p class="headline">Pourquoi<br>ce clavier ?</p>
+          <p class="headline">Pourquoi ce clavier ?</p>
           <ul class="probs">
             <li><span class="emo">🤔</span><span>Ton téléphone refuse tous les mots créoles et «&nbsp;corrige&nbsp;» ton kréyòl en français&nbsp;?</span></li>
             <li><span class="emo">😤</span><span>Tu doutes de l'orthographe à chaque message&nbsp;?</span></li>
@@ -381,8 +402,9 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
           <div class="qr-label">Disponible sur Google Play</div>
         </div>
       </div>
+      <p class="slogan-band">«&nbsp;An kréyòl nou ka palé, an kréyòl nou ka maké&nbsp;!&nbsp;»</p>
       <div class="bottom-row">
-        <div class="cta">📲 Flash le code,<br>installe Klavyé Kréyòl</div>
+        <div class="cta"><span class="cta-ico">📲</span><span>Flash le code,<br>installe Klavyé Kréyòl</span></div>
         <div class="stamp">
           <span class="big">100%<br>gratuit</span>
           <span class="small">zéro pub</span>
