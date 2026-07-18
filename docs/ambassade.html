@@ -82,23 +82,27 @@ section{scroll-margin-top:16px;}
   padding:10px;z-index:20;
 }
 .side-nav a{
-  display:block;color:var(--ink-soft);text-decoration:none;
+  display:flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;
   font-size:13px;font-weight:600;padding:7px 10px;border-radius:8px;
   white-space:nowrap;
 }
 .side-nav a:hover{background:var(--sea-soft);color:var(--sea);}
 .side-nav a.active{background:var(--sea-soft);color:var(--sea);}
-@media (max-width: 1240px){ .side-nav{display:none;} }
+@media (max-width: 1239px){
+  .side-nav a{padding:9px;}
+  .side-nav .lbl{display:none;}
+}
+@media (max-width: 959px){ .side-nav{display:none;} }
 </style>
 </head>
 <body>
 <nav class="side-nav" aria-label="Navigation rapide">
-  <a href="#partage">📣 Partager</a>
-  <a href="#flashcode">📱 FlashCode</a>
-  <a href="#tract">🪧 Tract</a>
-  <a href="#medias">✉️ Médias</a>
-  <a href="#radio">📞 Radio</a>
-  <a href="#education">🎓 Éducation</a>
+  <a href="#partage"><span class="ico">📣</span><span class="lbl">Partager</span></a>
+  <a href="#flashcode"><span class="ico">📱</span><span class="lbl">FlashCode</span></a>
+  <a href="#tract"><span class="ico">🪧</span><span class="lbl">Tract</span></a>
+  <a href="#medias"><span class="ico">✉️</span><span class="lbl">Médias</span></a>
+  <a href="#radio"><span class="ico">📞</span><span class="lbl">Radio</span></a>
+  <a href="#education"><span class="ico">🎓</span><span class="lbl">Éducation</span></a>
 </nav>
 <div class="wrap">
 
