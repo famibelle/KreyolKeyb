@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tract à imprimer · Klavyé Kréyòl Karukera</title>
-<meta name="description" content="Tract A5 prêt à imprimer (2 par feuille A4) pour faire connaître le clavier créole guadeloupéen : à déposer en boulangerie, café, pharmacie. QR code vers Google Play.">
+<title>Tract éco encre à imprimer · Klavyé Kréyòl Karukera</title>
+<meta name="description" content="Version éco encre (fond blanc) du tract A5 pour faire connaître le clavier créole guadeloupéen : 2 tracts par feuille A4, QR code vers Google Play.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="stylesheet" href="assets/theme.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,15 +59,13 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
-/* --- Un tract A5 paysage --- */
+/* --- Un tract A5 paysage, version éco encre --- */
 .tract{
   position:relative;
   width:210mm;
   height:148.5mm;
   overflow:hidden;
-  background:
-    radial-gradient(circle at 12% 10%, rgba(255,255,255,.10), transparent 45%),
-    linear-gradient(115deg,#FF216C 0%,#FF216C 52%,#E01E5F 100%);
+  background:#FFFFFF;
   display:flex;
   flex-direction:column;
   gap:4mm;
@@ -84,7 +82,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   min-width:0;
   display:flex;
   flex-direction:column;
-  color:#FFFFFF;
+  color:#1C2624;
 }
 .badge-row{
   display:flex;
@@ -96,13 +94,13 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   display:inline-block;
   background:#FFFFFF;
   color:#E01E5F;
+  border:2px solid #E01E5F;
   font-family:"Fredoka",sans-serif;
   font-weight:700;
   font-size:12.5px;
   letter-spacing:.03em;
   padding:2mm 5mm;
   border-radius:999px;
-  box-shadow:0 3px 10px rgba(0,0,0,.18);
   white-space:nowrap;
 }
 .logo-badge{
@@ -110,7 +108,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   height:13mm;
   border-radius:50%;
   background:#FFFFFF;
-  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  border:2px solid rgba(28,38,36,.4);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -124,8 +122,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   font-size:42px;
   line-height:1.02;
   letter-spacing:-0.01em;
-  color:#FFFFFF;
-  text-shadow:0 3px 12px rgba(0,0,0,.22);
+  color:#E01E5F;
   margin:0 0 5mm;
 }
 .probs{
@@ -149,11 +146,13 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   font-family:"Fredoka",sans-serif;
   font-weight:700;
   font-size:17.5px;
+  color:#E01E5F;
 }
 .cta{
   flex:1 1 auto;
   background:#FFFFFF;
   color:#E01E5F;
+  border:2.5px solid #E01E5F;
   font-family:"Fredoka",sans-serif;
   font-weight:800;
   font-size:16.5px;
@@ -162,7 +161,6 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   border-radius:14px;
   padding:4mm 5mm;
   text-align:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.22);
 }
 .col-right{
   flex:0 0 auto;
@@ -182,7 +180,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   height:auto;
   border-radius:9px;
   border:3px solid #FFFFFF;
-  box-shadow:0 10px 24px rgba(0,0,0,.28);
+  box-shadow:0 6px 16px rgba(28,38,36,.25);
 }
 .shots img.s1{
   left:50%;
@@ -206,19 +204,18 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   height:31mm;
   flex:0 0 auto;
   border-radius:50%;
-  background:#FFE24B;
-  border:2.5px dashed #8B1E14;
+  background:#FFFFFF;
+  border:2.5px dashed #E01E5F;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   transform:rotate(-9deg);
-  box-shadow:0 6px 16px rgba(0,0,0,.22);
 }
 .stamp span{
   font-family:"Fredoka",sans-serif;
   font-weight:800;
-  color:#8B1E14;
+  color:#E01E5F;
   text-transform:uppercase;
   line-height:1.15;
   text-align:center;
@@ -227,16 +224,16 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 .stamp .small{font-size:7.5px;margin-top:.8mm;}
 .qr-wrap{
   background:#FFFFFF;
+  border:2px solid rgba(28,38,36,.4);
   border-radius:12px;
   padding:2.6mm;
-  box-shadow:0 8px 20px rgba(0,0,0,.24);
 }
 .qr-wrap img{display:block;width:29mm;height:29mm;}
 .qr-label{
   font-family:"Fredoka",sans-serif;
   font-weight:700;
   font-size:9.5px;
-  color:#FFFFFF;
+  color:#E01E5F;
   text-transform:uppercase;
   letter-spacing:.04em;
   text-align:center;
@@ -247,8 +244,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   left:9mm; right:9mm; bottom:2mm;
   text-align:center;
   font-size:8.5px;
-  color:rgba(255,255,255,.92);
-  text-shadow:0 1px 3px rgba(0,0,0,.35);
+  color:#4B5750;
   font-family:ui-monospace,"SF Mono",Consolas,monospace;
 }
 
@@ -258,7 +254,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   top:148.5mm;
   left:0; right:0;
   height:0;
-  border-top:1.2px dashed rgba(255,255,255,.85);
+  border-top:1.2px dashed rgba(28,38,36,.5);
   z-index:5;
 }
 .cutline::before{
@@ -267,8 +263,7 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   left:4mm;
   top:-3.2mm;
   font-size:13px;
-  color:rgba(255,255,255,.95);
-  text-shadow:0 1px 3px rgba(0,0,0,.3);
+  color:rgba(28,38,36,.7);
 }
 
 @media print{
@@ -289,21 +284,20 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
   <a href="index.html">🏠 Accueil</a> ·
   <a href="ambassade.html">📣 Vin Anbasadè</a> ·
   <a href="affiche.html">🖨️ Affiche</a> ·
-  <strong>🪧 Tract</strong> ·
-  <a href="tract-eco.html">💧 Version éco encre</a> ·
+  <a href="tract.html">🪧 Tract</a> ·
+  <strong>💧 Version éco encre</strong> ·
   <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
 </nav>
 
 <header style="padding:20px 0 10px;">
   <p class="eyebrow">Klavyé Kréyòl Karukera · kit ambassadeur</p>
-  <h1>Un tract à distribuer 🪧</h1>
-  <p class="lead">Deux tracts A5 par feuille A4, à découper le long des pointillés. À déposer sur le comptoir de la boulangerie, du café ou de la pharmacie : le QR code renvoie directement vers Google Play.</p>
+  <h1>Le tract, version éco encre 💧</h1>
+  <p class="lead">Le même tract A5 (2 par feuille A4, à découper le long des pointillés), mais sur fond blanc : idéal pour imprimer une grosse pile sans vider la cartouche. La couleur reste sur les captures d'écran et les accents.</p>
 
   <div class="actions">
-    <a class="btn primary" href="assets/tract-kreyolkeyboard-A4.pdf" download>📄 Télécharger le PDF (A4, 2 tracts A5)</a>
+    <a class="btn primary" href="assets/tract-eco-kreyolkeyboard-A4.pdf" download>📄 Télécharger le PDF (A4, 2 tracts A5)</a>
     <button class="btn" onclick="window.print()">🖨️ Imprimer directement</button>
-    <a class="btn" href="tract-eco.html">💧 Version éco encre (fond blanc)</a>
-    <a class="btn" href="ambassade.html">← Retour au kit ambassadeur</a>
+    <a class="btn" href="tract.html">🪧 Version couleur (fond rose)</a>
   </div>
 
   <div class="note">
