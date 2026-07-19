@@ -5,6 +5,17 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.0] - 2026-07-19
+
+### 🎹 Essayez le clavier avant de l'installer
+
+Changement majeur de logique d'accueil, d'où le saut de version : jusqu'ici, l'installation demandait un acte de foi (accepter des avertissements système pour un clavier jamais essayé). L'ordre s'inverse : on essaie d'abord, on installe ensuite.
+
+- **Un vrai clavier interactif dans l'écran d'accueil** : le wizard de première ouverture embarque désormais un clavier Kréyòl complet et jouable — les mêmes composants que le vrai clavier (disposition AZERTY créole, moteur de suggestions bilingues, dictionnaires complets), branchés sur un champ de démonstration. L'utilisateur tape « bonjou », voit les suggestions Kréyòl (vertes) et Français (bleues) apparaître en direct, touche une suggestion pour compléter le mot : il ressent la valeur du clavier en dix secondes, avant tout passage par les réglages système
+- **Aucune activation requise pour l'essai** : tout tourne à l'intérieur de l'app ; le champ de démonstration n'ouvre jamais le clavier système et désactive le correcteur orthographique système (qui soulignait les mots créoles en rouge, à rebours de ce que la démo veut montrer)
+- **Shift, verrouillage majuscules, mode 123, retour arrière** fonctionnent dans la démo ; les accents é, è, ò sont des touches directes. L'image statique d'aperçu introduite en 7.1.6 est remplacée par cette démo vivante
+- **Correctif au passage** : les touches s'affichaient en MAJUSCULES dans le contexte d'une activité (le thème AppCompat impose `textAllCaps` aux boutons) ; les touches reflètent désormais exactement l'état shift quel que soit le contexte
+
 ## [7.1.10] - 2026-07-19
 
 ### 💡 Rattrapage des activations inachevées

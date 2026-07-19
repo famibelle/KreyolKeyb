@@ -747,14 +747,13 @@ class SettingsActivity : AppCompatActivity() {
         mainLayout.addView(heroCard)
         mainLayout.addView(createSpacing(16))
 
-        // Aperçu du résultat avant l'effort : montrer ce que l'utilisateur
-        // va obtenir (suggestions bilingues Kréyòl/Français) avant de lui
-        // demander d'aller accepter des avertissements dans les réglages
-        // système — la motivation précède la mécanique. Inutile pour un
-        // utilisateur qui revient après une désélection : il connaît déjà
+        // Essai du clavier avant l'effort : un vrai clavier interactif avec
+        // suggestions bilingues, AVANT de demander d'aller accepter des
+        // avertissements dans les réglages système — la motivation précède
+        // la mécanique. Inutile pour un utilisateur qui revient après une
+        // désélection : il connaît déjà
         if ((!isEnabled || !isSelected) && !hasCompletedBefore) {
-            addGuideImage(mainLayout, R.drawable.onboarding_keyboard_preview,
-                "Votre clavier avec suggestions en Kréyòl et en Français")
+            mainLayout.addView(createDemoKeyboardCard())
             mainLayout.addView(createSpacing(16))
         }
 
@@ -1467,6 +1466,185 @@ class SettingsActivity : AppCompatActivity() {
         mainLayout.addView(createFunnelCard())
 
         return mainLayout
+    }
+
+    // ═══ Clavier d'essai du wizard ═══
+    // Un vrai clavier Kréyòl interactif (les mêmes composants que l'IME :
+    // KeyboardLayoutManager + SuggestionEngine) branché sur un champ de
+    // démonstration : l'utilisateur essaie les suggestions bilingues AVANT
+    // d'accepter les avertissements système. Aucune activation requise,
+    // tout tourne dans l'activité.
+    private var demoEngine: SuggestionEngine? = null
+    private var demoEngineReady = false
+    private var demoKeyboardManager: KeyboardLayoutManager? = null
+
+    private fun createDemoKeyboardCard(): LinearLayout {
+        val card = createCard("#FFFFFF")
+
+        val title = TextView(this).apply {
+            text = "🎹 Essayez-le tout de suite !"
+            textSize = 18f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 4)
+        }
+        val caption = TextView(this).apply {
+            text = "Tapez « bonjou » et touchez une suggestion : rien à installer pour essayer"
+            textSize = 13f
+            setTextColor(Color.parseColor("#666666"))
+            setPadding(0, 0, 0, 12)
+        }
+
+        val demoField = EditText(this).apply {
+            hint = "Ékri isi..."
+            // Ne jamais ouvrir le clavier système (Gboard) sur ce champ :
+            // c'est le clavier d'essai ci-dessous qui écrit dedans
+            showSoftInputOnFocus = false
+            // Sans correcteur système : il soulignerait les mots créoles en
+            // rouge, à rebours de ce que la démo veut montrer
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            textSize = 16f
+            setPadding(16, 16, 16, 16)
+            minHeight = 90
+            setBackgroundColor(Color.parseColor("#F9F9F9"))
+            setTextColor(Color.parseColor("#1C1C1C"))
+            setHintTextColor(Color.parseColor("#999999"))
+        }
+
+        val suggestionsRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 12, 0, 4)
+            minimumHeight = 110
+        }
+
+        val keyboardContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#ECEFF1"))
+        }
+
+        // Moteur partagé entre les refreshs du wizard : dictionnaires
+        // chargés une seule fois
+        val engine = demoEngine ?: SuggestionEngine(this).also { created ->
+            demoEngine = created
+            activityScope.launch {
+                created.initialize()
+                created.enableBilingualSupport()
+                demoEngineReady = true
+            }
+        }
+
+        fun cursor(): Int =
+            demoField.selectionStart.let { if (it >= 0) it else demoField.text.length }
+
+        fun currentWord(): String =
+            demoField.text.toString().substring(0, cursor())
+                .takeLastWhile { it.isLetter() || it == '\'' || it == '-' }
+
+        fun clearChips() = suggestionsRow.removeAllViews()
+
+        fun refreshSuggestions() {
+            val word = currentWord()
+            if (word.isNotEmpty() && demoEngineReady) {
+                engine.generateBilingualSuggestions(word)
+            } else {
+                clearChips()
+            }
+        }
+
+        engine.setSuggestionListener(object : SuggestionEngine.SuggestionListener {
+            override fun onSuggestionsReady(suggestions: List<String>) {}
+            override fun onBilingualSuggestionsReady(suggestions: List<BilingualSuggestion>) {
+                clearChips()
+                suggestions.take(3).forEach { suggestion ->
+                    val chip = TextView(this@SettingsActivity).apply {
+                        text = suggestion.word
+                        textSize = 15f
+                        setTextColor(Color.WHITE)
+                        setTypeface(null, Typeface.BOLD)
+                        setPadding(28, 14, 28, 14)
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            cornerRadius = 40f
+                            setColor(suggestion.getColor())
+                        }
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { rightMargin = 12 }
+                        setOnClickListener {
+                            val pos = cursor()
+                            val word = currentWord()
+                            val start = (pos - word.length).coerceAtLeast(0)
+                            demoField.text.replace(start, pos, suggestion.word + " ")
+                            clearChips()
+                        }
+                    }
+                    suggestionsRow.addView(chip)
+                }
+            }
+            override fun onDictionaryLoaded(wordCount: Int) {}
+            override fun onNgramModelLoaded() {}
+            override fun onFrenchDictionaryLoaded(wordCount: Int) {}
+            override fun onModeChanged(newMode: SuggestionEngine.SuggestionMode) {}
+        })
+
+        demoKeyboardManager?.cleanup()
+        val manager = KeyboardLayoutManager(this)
+        demoKeyboardManager = manager
+        // Mirroir local de l'état shift (le manager n'expose pas de getter) :
+        // cycle minuscules → majuscule ponctuelle → verrouillage → minuscules
+        var demoCapital = false
+        var demoCapsLock = false
+
+        fun insertText(t: String) {
+            demoField.text.insert(cursor(), t)
+        }
+
+        manager.setInteractionListener(object : KeyboardLayoutManager.KeyboardInteractionListener {
+            override fun onKeyPress(key: String) {
+                when (key) {
+                    "⌫" -> {
+                        val pos = cursor()
+                        if (pos > 0) demoField.text.delete(pos - 1, pos)
+                    }
+                    "⏎" -> insertText("\n")
+                    "⇧" -> {
+                        when {
+                            !demoCapital && !demoCapsLock -> demoCapital = true
+                            demoCapital && !demoCapsLock -> demoCapsLock = true
+                            else -> { demoCapital = false; demoCapsLock = false }
+                        }
+                        manager.updateKeyboardStates(manager.isNumericMode(), demoCapital, demoCapsLock)
+                        manager.updateKeyboardDisplay()
+                    }
+                    "123", "ABC" -> {
+                        manager.switchKeyboardMode()
+                        keyboardContainer.removeAllViews()
+                        keyboardContainer.addView(manager.createKeyboardLayout())
+                    }
+                    else -> {
+                        insertText(if (demoCapital || demoCapsLock) key.uppercase() else key)
+                        if (demoCapital && !demoCapsLock) {
+                            demoCapital = false
+                            manager.updateKeyboardStates(manager.isNumericMode(), false, false)
+                            manager.updateKeyboardDisplay()
+                        }
+                    }
+                }
+                refreshSuggestions()
+            }
+            // Pas de popup d'accents en démo : é, è et ò sont déjà des touches directes
+            override fun onLongPress(key: String, button: View) {}
+            override fun onKeyRelease() {}
+        })
+        keyboardContainer.addView(manager.createKeyboardLayout())
+
+        card.addView(title)
+        card.addView(caption)
+        card.addView(demoField)
+        card.addView(suggestionsRow)
+        card.addView(keyboardContainer)
+        return card
     }
 
     // Carte diagnostic du tunnel d'activation : quand chaque jalon a été

@@ -207,6 +207,10 @@ class KeyboardLayoutManager(private val context: Context) {
             // Créer un Button classique pour les autres touches
             Button(context).apply {
                 text = getDisplayText(key)
+                // Le thème AppCompat d'une activité impose textAllCaps=true
+                // aux Button : les touches doivent refléter exactement l'état
+                // shift, quel que soit le contexte (IME ou clavier d'essai)
+                isAllCaps = false
                 // Taille de police personnalisée pour Potomitan™ branding discret
                 textSize = if (key == " ") TEXT_SIZE_SP * 0.75f else TEXT_SIZE_SP
                 setTypeface(typeface, Typeface.BOLD)
