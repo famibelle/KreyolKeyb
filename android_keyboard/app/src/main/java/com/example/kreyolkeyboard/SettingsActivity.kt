@@ -741,9 +741,9 @@ class SettingsActivity : AppCompatActivity() {
             val privacyNoticeCard = createCard("#FFF8E1")
 
             val privacyNoticeText = TextView(this).apply {
-                text = "ℹ️ En activant le clavier, Android affichera un avertissement standard " +
-                        "montré pour tous les claviers tiers. Klavyé Kréyòl ne collecte aucune donnée : " +
-                        "tout reste sur votre téléphone."
+                text = "ℹ️ En activant le clavier, Android affichera un ou deux avertissements " +
+                        "de sécurité, montrés pour tous les claviers tiers : validez-les tous pour " +
+                        "terminer. Klavyé Kréyòl ne collecte aucune donnée : tout reste sur votre téléphone."
                 textSize = 13f
                 setTextColor(Color.parseColor("#5D4037"))
                 setLineSpacing(0f, 1.2f)
@@ -771,7 +771,7 @@ class SettingsActivity : AppCompatActivity() {
             isLocked = false,
             icon = "⚙️",
             title = "Activer le clavier",
-            description = "Activez 'Klavyé Kréyòl Karukera' dans les paramètres système",
+            description = "Trouvez 'Klavyé Kréyòl Karukera' dans l'écran qui s'ouvre, activez l'interrupteur, puis revenez ici",
             buttonText = if (isEnabled) "✓ Activé" else "Ouvrir les paramètres",
             buttonEnabled = !isEnabled,
             buttonAction = {
@@ -788,7 +788,7 @@ class SettingsActivity : AppCompatActivity() {
             isLocked = !isEnabled,
             icon = "🔄",
             title = "Sélectionner le clavier",
-            description = if (!isEnabled) "Complétez d'abord l'étape 1" else "Choisissez le clavier Kréyòl quand vous tapez du texte",
+            description = if (!isEnabled) "Complétez d'abord l'étape 1" else "Choisissez 'Klavyé Kréyòl Karukera' dans la liste des claviers",
             buttonText = when {
                 !isEnabled -> "🔒 Verrouillé"
                 isSelected -> "✓ Sélectionné"
@@ -903,7 +903,7 @@ class SettingsActivity : AppCompatActivity() {
             isLocked = false, // indépendant des étapes 1-3 : fonctionne même sans activer le clavier Kréyòl
             icon = "🔤",
             title = "Corriger l'orthographe partout",
-            description = "Activez le correcteur Kréyòl pour ne plus voir vos mots créoles (et français) soulignés en rouge dans Messages, Notes et ailleurs",
+            description = "Pour ne plus voir vos mots créoles (et français) soulignés en rouge dans Messages, Notes et ailleurs : dans l'écran qui s'ouvre, choisissez 'Correcteur Kréyòl Karukera'",
             buttonText = if (isSpellCheckerOn) "✓ Activé" else "Ouvrir les paramètres",
             buttonEnabled = !isSpellCheckerOn,
             buttonAction = {
@@ -1714,16 +1714,15 @@ class SettingsActivity : AppCompatActivity() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             startActivity(intent)
-            Toast.makeText(this,
-                "Choisissez 'Correcteur Kréyòl Karukera' comme correcteur orthographique par défaut",
-                Toast.LENGTH_LONG
-            ).show()
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture écran correcteur, repli sur les paramètres clavier: ${e.message}")
             try {
                 val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
+                // Seul cas où un Toast d'instruction reste utile : l'écran de
+                // repli n'est pas celui attendu, la carte de l'étape 4 ne
+                // décrit donc pas ce que l'utilisateur a sous les yeux
                 Toast.makeText(this,
                     "Dans 'Langues et saisie', ouvrez 'Vérification orthographique' et choisissez 'Correcteur Kréyòl Karukera'",
                     Toast.LENGTH_LONG
@@ -1738,17 +1737,15 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Fonction pour ouvrir les paramètres de clavier
+    // Ouvre les paramètres de clavier système. Pas de Toast d'instruction :
+    // la carte de l'étape 1 dit déjà quoi faire, avant le saut vers les
+    // réglages (le Toast s'affichait par-dessus l'écran système, en bas,
+    // sans garantie de position ni de durée suffisante)
     private fun openKeyboardSettings() {
         try {
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
-            
-            Toast.makeText(this, 
-                "Activez 'Klavyé Kréyòl Karukera' dans la liste", 
-                Toast.LENGTH_LONG
-            ).show()
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture paramètres clavier: ${e.message}")
             // Fallback vers paramètres généraux

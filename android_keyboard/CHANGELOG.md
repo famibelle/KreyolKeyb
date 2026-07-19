@@ -5,6 +5,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.7] - 2026-07-19
+
+### 📝 Instructions formulées par objectif, valables sur tous les téléphones
+
+- **Des instructions qui décrivent le but, pas un chemin d'écran** : chaque constructeur (Samsung, Xiaomi...) réorganise les écrans de réglages à sa façon, donc décrire un chemin précis (« dans la liste Clavier à l'écran ») peut ne pas correspondre à ce que voit l'utilisateur. Les cartes disent maintenant quoi chercher : « Trouvez 'Klavyé Kréyòl Karukera' dans l'écran qui s'ouvre, activez l'interrupteur, puis revenez ici » — le libellé de l'app est la seule constante affichée partout
+- **Préparation aux avertissements système** : l'activation d'un clavier tiers déclenche un ou deux dialogues de confirmation selon les téléphones, et abandonner en cours de route annule l'activation (constaté en test : valider le premier puis revenir en arrière laisse le clavier désactivé). La carte d'information annonce désormais « un ou deux avertissements de sécurité : validez-les tous pour terminer »
+- **Fin des Toasts d'instruction** : les messages flottants qui s'affichaient par-dessus les écrans système (position et durée non maîtrisables) sont supprimés au profit des cartes, lisibles avant de partir vers les réglages. Seule exception conservée : l'écran de repli du correcteur orthographique, différent de celui attendu, garde son message d'orientation
+- **Étape 4 plus claire** : la carte du correcteur indique directement quoi choisir dans l'écran (« choisissez 'Correcteur Kréyòl Karukera' »), instruction qui n'existait auparavant que dans un Toast fugace
+
 ## [7.1.6] - 2026-07-19
 
 ### 🚀 Première ouverture concentrée sur l'essentiel
