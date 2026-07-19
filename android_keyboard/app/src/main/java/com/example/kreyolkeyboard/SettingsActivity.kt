@@ -815,6 +815,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         val testEditText = EditText(this).apply {
+            tag = "onboarding_test_field"
             hint = if (isStep3Locked) "🔒 Verrouillé" else "Ékri an Kréyòl la..."
             textSize = 16f
             setPadding(16, 16, 16, 16)
@@ -1754,51 +1755,15 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Fonction pour ouvrir le sélecteur de méthode d'entrée (clavier)
+    // Ouvre le sélecteur de clavier système, immédiatement. Ne pas ajouter de
+    // Toast d'instruction ici : sa gravité est ignorée depuis API 30, il
+    // s'affiche en bas par-dessus le sélecteur et masque l'entrée à choisir ;
+    // l'instruction est déjà portée par la carte de l'étape 2, visible
+    // derrière le dialogue.
     private fun openInputMethodPicker() {
         try {
-            Log.d("SettingsActivity", "🔄 Ouverture du sélecteur de clavier")
-            
-            // Créer un EditText temporaire invisible pour avoir un contexte d'entrée
-            val tempEditText = EditText(this).apply {
-                visibility = View.GONE
-                isFocusable = true
-                isFocusableInTouchMode = true
-            }
-            
-            // Ajouter temporairement à la vue racine
-            val rootView = window.decorView.rootView as android.view.ViewGroup
-            rootView.addView(tempEditText)
-            
-            // Demander le focus
-            tempEditText.requestFocus()
-
-            // Le Toast flotte au-dessus de TOUT, y compris le sélecteur système, et sa
-            // position (setGravity TOP) est ignorée par le système sur les versions
-            // récentes d'Android (vérifié sur API 34) : il reste affiché en bas quoi
-            // qu'on fasse. La seule protection fiable contre le recouvrement est donc
-            // temporelle : n'ouvrir le sélecteur qu'une fois le Toast complètement
-            // disparu. LENGTH_SHORT dure ~2s ; on attend 2200ms par sécurité avant
-            // d'appeler showInputMethodPicker(), pour qu'ils ne soient jamais visibles
-            // en même temps (repro confirmée : avec LENGTH_LONG + 1500ms, le Toast
-            // recouvrait encore l'entrée "Klavyé Kréyòl Karukera" dans la liste).
-            Toast.makeText(this,
-                "Sélectionnez 'Klavyé Kréyòl Karukera' dans la liste",
-                Toast.LENGTH_SHORT
-            ).apply {
-                setGravity(android.view.Gravity.TOP, 0, 100)
-            }.show()
-
-            // Ouvrir le sélecteur seulement après que le Toast a disparu
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showInputMethodPicker()
-
-                // Nettoyer après un délai supplémentaire
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    rootView.removeView(tempEditText)
-                }, 1000)
-            }, 2200)
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showInputMethodPicker()
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture sélecteur clavier: ${e.message}")
             Toast.makeText(this, 
@@ -2642,8 +2607,11 @@ class SettingsActivity : AppCompatActivity() {
             super.onResume()
             // 🔧 FIX: Rafraîchir le contenu quand le fragment redevient visible
             // Cela met à jour l'état du clavier (activé/sélectionné)
+            val wasEnabled = lastKnownEnabled
+            val wasSelected = lastKnownSelected
             refreshContent()
-            
+            chainNextStep(wasEnabled, wasSelected)
+
             // 🔧 FIX: Démarrer une vérification périodique de l'état du clavier
             startPeriodicRefresh()
         }
@@ -2662,6 +2630,8 @@ class SettingsActivity : AppCompatActivity() {
                 override fun run() {
                     // Vérifier si l'état a changé et rafraîchir si nécessaire
                     val activity = requireActivity() as SettingsActivity
+                    val wasEnabled = lastKnownEnabled
+                    val wasSelected = lastKnownSelected
                     val currentEnabled = activity.isKeyboardEnabled()
                     val currentSelected = activity.isKeyboardSelected()
                     val currentSpellCheckerOn = activity.isSpellCheckerSelected()
@@ -2669,8 +2639,9 @@ class SettingsActivity : AppCompatActivity() {
                     // Rafraîchir uniquement si l'état a changé
                     if (shouldRefresh(currentEnabled, currentSelected, currentSpellCheckerOn)) {
                         refreshContent()
+                        chainNextStep(wasEnabled, wasSelected)
                     }
-                    
+
                     // Reprogrammer la vérification dans 2 secondes
                     refreshHandler?.postDelayed(this, 2000)
                 }
@@ -2704,6 +2675,48 @@ class SettingsActivity : AppCompatActivity() {
             rootView?.removeAllViews()
             rootView?.addView(activity.createOnboardingContent())
             Log.d("SettingsActivity", "🔄 Contenu de l'onboarding rafraîchi (enabled=$lastKnownEnabled, selected=$lastKnownSelected, spellChecker=$lastKnownSpellCheckerOn)")
+        }
+
+        // Enchaîne automatiquement l'étape suivante quand une action système
+        // vient d'aboutir, pour économiser des taps de navigation : clavier
+        // sélectionné → focus sur le champ de test (le clavier Kréyòl
+        // apparaît aussitôt) ; clavier activé (retour des réglages système)
+        // → ouverture directe du sélecteur. À appeler après refreshContent(),
+        // qui met à jour lastKnownEnabled/lastKnownSelected. Le délai initial
+        // laisse l'utilisateur voir l'étape passer au vert avant la suite.
+        private fun chainNextStep(wasEnabled: Boolean, wasSelected: Boolean) {
+            when {
+                !wasSelected && lastKnownSelected -> rootView?.postDelayed({
+                    runWhenWindowFocused { focusTestField() }
+                }, 400)
+                !wasEnabled && lastKnownEnabled -> rootView?.postDelayed({
+                    runWhenWindowFocused {
+                        (activity as? SettingsActivity)?.openInputMethodPicker()
+                    }
+                }, 400)
+            }
+        }
+
+        // showInputMethodPicker() et showSoftInput() sont ignorés par le
+        // système tant que la fenêtre n'a pas repris le focus après le retour
+        // des réglages (InputMethodManagerService rejette les clients non
+        // courants, vu dans logcat : « Ignoring showInputMethodPickerFromClient »).
+        // On attend donc le focus fenêtre, plus une courte marge pour que le
+        // système réenregistre l'activité comme client de saisie courant.
+        private fun runWhenWindowFocused(attemptsLeft: Int = 10, action: () -> Unit) {
+            if (!isAdded) return
+            if (requireActivity().hasWindowFocus()) {
+                rootView?.postDelayed({ if (isAdded) action() }, 150)
+            } else if (attemptsLeft > 0) {
+                rootView?.postDelayed({ runWhenWindowFocused(attemptsLeft - 1, action) }, 200)
+            }
+        }
+
+        private fun focusTestField() {
+            val field = rootView?.findViewWithTag<EditText>("onboarding_test_field") ?: return
+            field.requestFocus()
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(field, InputMethodManager.SHOW_IMPLICIT)
         }
     }
     
