@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.6] - 2026-07-19
+
+### 🚀 Première ouverture concentrée sur l'essentiel
+
+- **Mode « première ouverture »** : tant que le clavier n'a jamais été entièrement configuré, la barre d'onglets (jeux, stats, guide...) et le swipe entre onglets sont masqués — l'utilisateur qui vient d'installer l'app voit uniquement le parcours de configuration, sans distraction. La navigation se révèle en fondu au moment où la configuration aboutit, comme une petite récompense
+- **Le flag ne se pose qu'une seule fois** (`onboarding_completed` en local) : un utilisateur déjà configuré qui met à jour l'app ne voit jamais le mode restreint, et celui dont le clavier se retrouve désélectionné plus tard (changement de téléphone, mise à jour système) garde l'accès à tous les onglets
+- **Aperçu du clavier avant l'effort** : en tête du parcours de configuration, une image du vrai clavier montre ce que l'utilisateur va obtenir — suggestions bilingues « Bonjou » (Kréyòl) / « Bonjour » (Français) au-dessus du clavier AZERTY créole avec ses accents ò, é, è. La motivation précède la demande d'aller accepter les avertissements système. L'aperçu disparaît une fois le clavier configuré
+
 ## [7.1.5] - 2026-07-19
 
 ### ⚡ Détection instantanée des changements de clavier

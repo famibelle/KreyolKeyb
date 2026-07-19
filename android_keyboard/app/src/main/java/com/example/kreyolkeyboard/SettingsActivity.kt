@@ -282,12 +282,50 @@ class SettingsActivity : AppCompatActivity() {
         
         mainLayout.addView(tabBar)
         mainLayout.addView(viewPager)
-        
+
         setContentView(mainLayout)
+
+        applyFirstRunMode()
 
         Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
 
         maybeAskForReview()
+    }
+
+    // Mode « première ouverture » : tant que le clavier n'a jamais été
+    // entièrement configuré, la barre d'onglets et le swipe sont masqués pour
+    // concentrer l'utilisateur sur la configuration (jeux, stats et guide
+    // n'ont pas de valeur avant l'activation). Le flag ne se pose qu'une
+    // fois : un utilisateur configuré qui désélectionne plus tard le clavier
+    // garde l'accès à tous les onglets.
+    private fun onboardingPrefs() =
+        getSharedPreferences("kreyol_onboarding_prefs", Context.MODE_PRIVATE)
+
+    private fun applyFirstRunMode() {
+        if (onboardingPrefs().getBoolean("onboarding_completed", false)) return
+        if (isKeyboardEnabled() && isKeyboardSelected()) {
+            // Utilisateur déjà configuré (ex. mise à jour de l'app) :
+            // poser le flag sans jamais montrer le mode restreint
+            onboardingPrefs().edit().putBoolean("onboarding_completed", true).apply()
+            return
+        }
+        tabBar.visibility = View.GONE
+        viewPager.isUserInputEnabled = false
+    }
+
+    // Appelé par l'onboarding quand la configuration vient d'aboutir :
+    // pose le flag et révèle la navigation avec un léger fondu
+    fun onOnboardingCompleted() {
+        val prefs = onboardingPrefs()
+        if (!prefs.getBoolean("onboarding_completed", false)) {
+            prefs.edit().putBoolean("onboarding_completed", true).apply()
+        }
+        viewPager.isUserInputEnabled = true
+        if (tabBar.visibility != View.VISIBLE) {
+            tabBar.visibility = View.VISIBLE
+            tabBar.alpha = 0f
+            tabBar.animate().alpha(1f).setDuration(400).start()
+        }
     }
 
     /**
@@ -672,7 +710,17 @@ class SettingsActivity : AppCompatActivity() {
         
         mainLayout.addView(heroCard)
         mainLayout.addView(createSpacing(16))
-        
+
+        // Aperçu du résultat avant l'effort : montrer ce que l'utilisateur
+        // va obtenir (suggestions bilingues Kréyòl/Français) avant de lui
+        // demander d'aller accepter des avertissements dans les réglages
+        // système — la motivation précède la mécanique
+        if (!isEnabled || !isSelected) {
+            addGuideImage(mainLayout, R.drawable.onboarding_keyboard_preview,
+                "Votre clavier avec suggestions en Kréyòl et en Français")
+            mainLayout.addView(createSpacing(16))
+        }
+
         // Section "En 3 étapes"
         val stepsTitle = TextView(this).apply {
             text = "📍 Configuration"
@@ -2667,6 +2715,10 @@ class SettingsActivity : AppCompatActivity() {
             lastKnownSpellCheckerOn = activity.isSpellCheckerSelected()
             rootView?.removeAllViews()
             rootView?.addView(activity.createOnboardingContent())
+            if (lastKnownEnabled && lastKnownSelected) {
+                // Configuration aboutie : révéler la navigation (idempotent)
+                activity.onOnboardingCompleted()
+            }
             Log.d("SettingsActivity", "🔄 Contenu de l'onboarding rafraîchi (enabled=$lastKnownEnabled, selected=$lastKnownSelected, spellChecker=$lastKnownSpellCheckerOn)")
         }
 
