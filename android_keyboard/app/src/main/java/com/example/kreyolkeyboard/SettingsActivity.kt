@@ -285,6 +285,7 @@ class SettingsActivity : AppCompatActivity() {
 
         setContentView(mainLayout)
 
+        recordFunnelStep("funnel_first_open")
         applyFirstRunMode()
 
         Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
@@ -300,6 +301,18 @@ class SettingsActivity : AppCompatActivity() {
     // garde l'accès à tous les onglets.
     private fun onboardingPrefs() =
         getSharedPreferences("kreyol_onboarding_prefs", Context.MODE_PRIVATE)
+
+    // Tunnel d'activation local : horodate chaque jalon du parcours
+    // (première ouverture, activation, sélection, premier mot) une seule
+    // fois, en SharedPreferences — diagnostic consultable dans À Propos,
+    // rien ne quitte le téléphone, cohérent avec la politique « aucune
+    // collecte » de l'app
+    private fun recordFunnelStep(key: String) {
+        val prefs = onboardingPrefs()
+        if (!prefs.contains(key)) {
+            prefs.edit().putLong(key, System.currentTimeMillis()).apply()
+        }
+    }
 
     private fun applyFirstRunMode() {
         if (onboardingPrefs().getBoolean("onboarding_completed", false)) return
@@ -645,6 +658,10 @@ class SettingsActivity : AppCompatActivity() {
 
         // 🔍 Log pour déboguer l'état du clavier
         Log.d("SettingsActivity", "📋 État du clavier: isEnabled=$isEnabled, isSelected=$isSelected")
+
+        // Jalons du tunnel d'activation (horodatés une seule fois)
+        if (isEnabled) recordFunnelStep("funnel_keyboard_enabled")
+        if (isSelected) recordFunnelStep("funnel_keyboard_selected")
         
         // Hero Section - Bienvenue avec progression (carte compacte)
         val heroCard = createCard("#FFFFFF")
@@ -1413,8 +1430,74 @@ class SettingsActivity : AppCompatActivity() {
         privacyCard.addView(privacyText)
         privacyCard.addView(privacyLink)
         mainLayout.addView(privacyCard)
+        mainLayout.addView(createSpacing(16))
+
+        // Tunnel d'activation : diagnostic local du parcours de configuration
+        mainLayout.addView(createFunnelCard())
 
         return mainLayout
+    }
+
+    // Carte diagnostic du tunnel d'activation : quand chaque jalon a été
+    // franchi (données 100 % locales). Sert à comprendre où le parcours
+    // accroche quand un utilisateur montre son téléphone, sans télémétrie
+    private fun createFunnelCard(): LinearLayout {
+        val card = createCard("#F8F9FA")
+
+        val title = TextView(this).apply {
+            text = "🔎 Diagnostic d'activation"
+            textSize = 18f
+            setTextColor(Color.parseColor("#333333"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+        card.addView(title)
+
+        val prefs = onboardingPrefs()
+        val firstOpen = prefs.getLong("funnel_first_open", 0L)
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.FRANCE)
+
+        fun funnelLine(label: String, key: String): String {
+            val ts = prefs.getLong(key, 0L)
+            return when {
+                ts == 0L -> "$label : pas encore"
+                firstOpen == 0L || ts <= firstOpen -> "$label : ${dateFormat.format(Date(ts))}"
+                else -> {
+                    val minutes = (ts - firstOpen) / 60000
+                    val delta = when {
+                        minutes < 1 -> "moins d'une minute après l'ouverture"
+                        minutes < 60 -> "$minutes min après l'ouverture"
+                        minutes < 1440 -> "${minutes / 60} h après l'ouverture"
+                        else -> "${minutes / 1440} j après l'ouverture"
+                    }
+                    "$label : $delta"
+                }
+            }
+        }
+
+        val lines = TextView(this).apply {
+            text = listOf(
+                if (firstOpen == 0L) "Première ouverture : pas encore"
+                else "Première ouverture : ${dateFormat.format(Date(firstOpen))}",
+                funnelLine("Clavier activé", "funnel_keyboard_enabled"),
+                funnelLine("Clavier sélectionné", "funnel_keyboard_selected"),
+                funnelLine("Premier mot tapé", "funnel_first_word")
+            ).joinToString("\n")
+            textSize = 14f
+            setTextColor(Color.parseColor("#333333"))
+            setLineSpacing(0f, 1.5f)
+        }
+        card.addView(lines)
+
+        val note = TextView(this).apply {
+            text = "Ces horodatages restent sur votre téléphone."
+            textSize = 12f
+            setTextColor(Color.parseColor("#888888"))
+            setPadding(0, 8, 0, 0)
+        }
+        card.addView(note)
+
+        return card
     }
 
     fun createGuideContent(): LinearLayout {

@@ -196,7 +196,15 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         inputProcessor.setWordCommitListener(object : WordCommitListener {
             override fun onWordCommitted(word: String) {
                 Log.d(TAG, "🔍 onWordCommitted appelé avec: '$word'")
-                
+
+                // Tunnel d'activation local : horodater le tout premier mot
+                // commité (diagnostic affiché dans À Propos, rien ne sort du
+                // téléphone)
+                val funnelPrefs = getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
+                if (!funnelPrefs.contains("funnel_first_word")) {
+                    funnelPrefs.edit().putLong("funnel_first_word", System.currentTimeMillis()).apply()
+                }
+
                 // Tracker le mot dans le dictionnaire (seulement si présent)
                 val tracked = dictionaryWithUsage.incrementWordUsage(word)
                 Log.d(TAG, "🎯 Résultat tracking '$word': $tracked")

@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.9] - 2026-07-19
+
+### 🔎 Diagnostic local du parcours d'activation
+
+- **Quatre jalons horodatés en local** : première ouverture de l'app, activation du clavier, sélection, premier mot tapé. Chaque jalon n'est enregistré qu'une fois, en SharedPreferences — rien ne quitte le téléphone, conformément à la promesse « zéro collecte » de l'app
+- **Carte « Diagnostic d'activation » dans À Propos** : affiche la date de première ouverture puis, pour chaque jalon suivant, le délai écoulé (« moins d'une minute après l'ouverture », « 2 h après l'ouverture »...) ou « pas encore ». Utile pour comprendre où le parcours accroche quand un utilisateur en difficulté montre son téléphone, et pour vérifier soi-même que tout est en place
+- **Premier mot horodaté par le clavier lui-même** au moment où un mot est réellement commité (suggestion tapée ou espace), champ de test compris — c'est le moment « aha » que tout le parcours cherche à atteindre
+
 ## [7.1.8] - 2026-07-19
 
 ### ✍️ Premier mot guidé et rappel en cas de désélection
