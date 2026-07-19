@@ -44,7 +44,7 @@ Ce clavier s'appuie sur les travaux des plus grands défenseurs du kréyòl :
 📱 COMPATIBILITÉ TOTALE
 • Android 5.0 à 14+ supporté
 • Toutes apps : WhatsApp, Facebook, SMS, email
-• Installation simple en 2 minutes
+• Installation guidée en 1 minute, clavier d'essai intégré
 • Mode alphabétique par défaut
 
 🔐 SÉCURITÉ & CONFIDENTIALITÉ  
@@ -54,10 +54,10 @@ Ce clavier s'appuie sur les travaux des plus grands défenseurs du kréyòl :
 • Permissions minimales requises
 • Politique de confidentialité complète : https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html
 
-⚙️ ACTIVATION EN 3 ÉTAPES
-• Ouvre Paramètres > Langues et saisie > Claviers virtuels
-• Active "Klavyé Kréyòl Karukera" (Android affichera un avertissement standard, montré pour tout clavier tiers — normal, et sans rapport avec une quelconque collecte de données ici)
-• Sélectionne-le comme clavier actif
+⚙️ ESSAIE-LE AVANT MÊME DE L'INSTALLER
+• Ouvre l'app : un clavier d'essai complet t'attend sur l'écran d'accueil. Tape « bonjou », regarde les suggestions kréyòl et français t'aider, touche une suggestion : tu sais tout de suite ce que tu vas gagner, sans rien activer
+• Un guide pas-à-pas fait ensuite tout le travail : un bouton t'amène au bon écran de réglages, le sélecteur de clavier s'ouvre tout seul à ton retour, et tu tapes ton premier vrai mot dans la foulée
+• Android affichera un ou deux avertissements standard, montrés pour tout clavier tiers : normal, et sans rapport avec une quelconque collecte de données ici (rien ne quitte ton téléphone)
 
 🌍 IMPACT CULTUREL
 

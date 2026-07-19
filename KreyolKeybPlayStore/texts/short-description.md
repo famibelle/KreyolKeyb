@@ -1,1 +1,1 @@
-Clavier créole guadeloupéen avec accents, suggestions et design tropical
+Clavier kréyòl Gwadloup : essai immédiat, suggestions bilingues, zéro collecte
