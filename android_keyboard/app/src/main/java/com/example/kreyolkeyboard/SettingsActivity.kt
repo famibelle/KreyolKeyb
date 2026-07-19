@@ -662,6 +662,16 @@ class SettingsActivity : AppCompatActivity() {
         // Jalons du tunnel d'activation (horodatés une seule fois)
         if (isEnabled) recordFunnelStep("funnel_keyboard_enabled")
         if (isSelected) recordFunnelStep("funnel_keyboard_selected")
+
+        // Nudge « activation inachevée » : l'utilisateur est allé dans les
+        // réglages mais le clavier n'est toujours pas activé — le cas le
+        // plus fréquent est l'abandon au second des deux avertissements
+        // système (qui annule silencieusement l'activation)
+        val settingsVisitAt = onboardingPrefs().getLong("settings_visit_at", 0L)
+        if (isEnabled && settingsVisitAt != 0L) {
+            onboardingPrefs().edit().remove("settings_visit_at").apply()
+        }
+        val showIncompleteNudge = !isEnabled && settingsVisitAt != 0L
         
         // Hero Section - Bienvenue avec progression (carte compacte)
         val heroCard = createCard("#FFFFFF")
@@ -764,7 +774,28 @@ class SettingsActivity : AppCompatActivity() {
         // affiché par Android pour tout clavier tiers, sans que l'app ne
         // puisse le personnaliser — on prépare l'utilisateur avant qu'il
         // n'apparaisse plutôt que de le laisser le découvrir sans contexte.
-        if (!isEnabled) {
+        // Carte d'encouragement après un aller-retour infructueux dans les
+        // réglages : remplace la carte d'information (déjà lue) par le
+        // diagnostic de l'échec le plus probable et l'invitation à réessayer
+        if (showIncompleteNudge) {
+            val nudgeCard = createCard("#FFF3E0")
+
+            val nudgeText = TextView(this).apply {
+                text = "💡 Presque ! Le clavier n'est pas encore activé.\n\n" +
+                        "Sur l'écran des réglages, Android demande de valider deux " +
+                        "avertissements l'un après l'autre : s'arrêter au premier " +
+                        "annule l'activation. Rouvrez les paramètres et validez-les tous."
+                textSize = 14f
+                setTextColor(Color.parseColor("#BF360C"))
+                setLineSpacing(0f, 1.3f)
+            }
+
+            nudgeCard.addView(nudgeText)
+            mainLayout.addView(nudgeCard)
+            mainLayout.addView(createSpacing(12))
+        }
+
+        if (!isEnabled && !showIncompleteNudge) {
             val privacyNoticeCard = createCard("#FFF8E1")
 
             val privacyNoticeText = TextView(this).apply {
@@ -1836,6 +1867,12 @@ class SettingsActivity : AppCompatActivity() {
     // sans garantie de position ni de durée suffisante)
     private fun openKeyboardSettings() {
         try {
+            // Horodater le départ vers les réglages : si l'utilisateur
+            // revient sans avoir activé le clavier (abandon au premier des
+            // deux avertissements, ligne pas trouvée...), l'onboarding
+            // affiche une carte d'encouragement ciblée
+            onboardingPrefs().edit()
+                .putLong("settings_visit_at", System.currentTimeMillis()).apply()
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)

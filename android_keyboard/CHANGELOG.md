@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.10] - 2026-07-19
+
+### 💡 Rattrapage des activations inachevées
+
+- **Détection du retour infructueux des réglages** : le cas d'échec le plus probable de toute l'installation est désormais rattrapé. Android affiche deux avertissements successifs à l'activation d'un clavier tiers, et s'arrêter au premier annule silencieusement l'activation (erreur commise deux fois pendant nos propres tests pilotés). L'app horodate le départ vers les réglages ; si l'utilisateur revient sans clavier activé, la carte d'information générique est remplacée par un encouragement ciblé : « Presque ! ... Android demande de valider deux avertissements l'un après l'autre : s'arrêter au premier annule l'activation. Rouvrez les paramètres et validez-les tous »
+- **La carte disparaît d'elle-même** dès que l'activation aboutit (détection instantanée par le ContentObserver), et l'horodatage est nettoyé pour ne jamais réapparaître à tort plus tard
+- **Piste du surlignage abandonnée après prototype** : l'extra `:settings:fragment_args_key`, qui fait défiler et clignoter une ligne précise sur certains écrans de réglages AOSP, est ignoré par l'écran « Clavier à l'écran » (vérifié image par image sur émulateur API 34 : aucune animation). Les lignes de cet écran sont construites dynamiquement sans clés de préférence. Documenté ici pour éviter de réexplorer la piste
+
 ## [7.1.9] - 2026-07-19
 
 ### 🔎 Diagnostic local du parcours d'activation
