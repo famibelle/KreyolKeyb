@@ -3,6 +3,7 @@ package com.example.kreyolkeyboard
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
@@ -2586,9 +2587,29 @@ class SettingsActivity : AppCompatActivity() {
     // Fragment pour le démarrage / onboarding
     class OnboardingFragment : Fragment() {
         private var rootView: ScrollView? = null
-        private var refreshHandler: Handler? = null
-        private var refreshRunnable: Runnable? = null
-        
+
+        // Observe les réglages système du clavier au lieu de les sonder
+        // toutes les 2 secondes : réaction immédiate quand l'utilisateur
+        // active ou sélectionne le clavier (notamment pendant que le
+        // sélecteur système est affiché par-dessus l'activité, qui reste
+        // resumed), et plus de Handler périodique qui tourne à vide.
+        private val settingsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                val activity = activity as? SettingsActivity ?: return
+                val wasEnabled = lastKnownEnabled
+                val wasSelected = lastKnownSelected
+                val changed = shouldRefresh(
+                    activity.isKeyboardEnabled(),
+                    activity.isKeyboardSelected(),
+                    activity.isSpellCheckerSelected()
+                )
+                if (changed) {
+                    refreshContent()
+                    chainNextStep(wasEnabled, wasSelected)
+                }
+            }
+        }
+
         override fun onCreateView(
             inflater: android.view.LayoutInflater,
             container: android.view.ViewGroup?,
@@ -2605,56 +2626,28 @@ class SettingsActivity : AppCompatActivity() {
         
         override fun onResume() {
             super.onResume()
-            // 🔧 FIX: Rafraîchir le contenu quand le fragment redevient visible
-            // Cela met à jour l'état du clavier (activé/sélectionné)
+            // Rafraîchir pour rattraper les changements survenus pendant que
+            // le fragment était masqué (ex. activation dans les réglages
+            // système), puis observer les réglages en continu
             val wasEnabled = lastKnownEnabled
             val wasSelected = lastKnownSelected
             refreshContent()
             chainNextStep(wasEnabled, wasSelected)
 
-            // 🔧 FIX: Démarrer une vérification périodique de l'état du clavier
-            startPeriodicRefresh()
+            val resolver = requireContext().contentResolver
+            resolver.registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.DEFAULT_INPUT_METHOD), false, settingsObserver)
+            resolver.registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.ENABLED_INPUT_METHODS), false, settingsObserver)
+            resolver.registerContentObserver(
+                Settings.Secure.getUriFor("selected_spell_checker"), false, settingsObserver)
         }
-        
+
         override fun onPause() {
             super.onPause()
-            // Arrêter la vérification périodique quand le fragment n'est plus visible
-            stopPeriodicRefresh()
+            requireContext().contentResolver.unregisterContentObserver(settingsObserver)
         }
-        
-        private fun startPeriodicRefresh() {
-            stopPeriodicRefresh() // S'assurer qu'il n'y a pas de refresh en cours
-            
-            refreshHandler = Handler(Looper.getMainLooper())
-            refreshRunnable = object : Runnable {
-                override fun run() {
-                    // Vérifier si l'état a changé et rafraîchir si nécessaire
-                    val activity = requireActivity() as SettingsActivity
-                    val wasEnabled = lastKnownEnabled
-                    val wasSelected = lastKnownSelected
-                    val currentEnabled = activity.isKeyboardEnabled()
-                    val currentSelected = activity.isKeyboardSelected()
-                    val currentSpellCheckerOn = activity.isSpellCheckerSelected()
 
-                    // Rafraîchir uniquement si l'état a changé
-                    if (shouldRefresh(currentEnabled, currentSelected, currentSpellCheckerOn)) {
-                        refreshContent()
-                        chainNextStep(wasEnabled, wasSelected)
-                    }
-
-                    // Reprogrammer la vérification dans 2 secondes
-                    refreshHandler?.postDelayed(this, 2000)
-                }
-            }
-            refreshHandler?.postDelayed(refreshRunnable!!, 2000)
-        }
-        
-        private fun stopPeriodicRefresh() {
-            refreshRunnable?.let { refreshHandler?.removeCallbacks(it) }
-            refreshHandler = null
-            refreshRunnable = null
-        }
-        
         private var lastKnownEnabled = false
         private var lastKnownSelected = false
         private var lastKnownSpellCheckerOn = false

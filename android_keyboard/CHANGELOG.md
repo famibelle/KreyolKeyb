@@ -5,6 +5,22 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.5] - 2026-07-19
+
+### ⚡ Détection instantanée des changements de clavier
+
+- **Réaction immédiate à la sélection du clavier** : l'onboarding sondait l'état du clavier toutes les 2 secondes (Handler périodique), donc après avoir choisi « Klavyé Kréyòl Karukera » dans le sélecteur, l'écran « Tout est prêt ! » et l'apparition automatique du clavier pouvaient traîner jusqu'à 2 secondes. Le polling est remplacé par un `ContentObserver` sur les réglages système (`DEFAULT_INPUT_METHOD`, `ENABLED_INPUT_METHODS`, correcteur orthographique) : la réaction est désormais instantanée, vérifié sur émulateur (interface à jour moins de 0,9 s après le tap, focus et clavier compris)
+- **Moins de travail en arrière-plan** : plus de Handler qui interroge le système toutes les 2 secondes tant que l'onglet Démarrage est visible ; l'app ne fait plus rien tant qu'un réglage ne change pas réellement. L'observation démarre au `onResume` et s'arrête au `onPause` du fragment
+- Ces réglages sont des clés publiques stables présentes sur tout Android (aucune dépendance à un constructeur particulier)
+
+## [7.1.4] - 2026-07-19
+
+### ⚡ Onboarding fluidifié : sélecteur immédiat et enchaînement automatique
+
+- **Le sélecteur de clavier s'ouvre immédiatement** : le bouton « Ouvrir le sélecteur » attendait 2,2 secondes (le temps qu'un Toast d'instruction disparaisse) avant d'afficher le sélecteur système. Ce temps mort invitait au double-tap, avec sélection accidentelle d'un clavier possible (reproduit en test : le second tap atterrissait sur le dialogue en train de s'ouvrir). Le Toast, l'attente et l'EditText invisible qui servait de contexte de saisie sont supprimés — l'instruction est déjà portée par la carte de l'étape 2, visible derrière le dialogue
+- **Enchaînement automatique des étapes** : au retour des réglages système avec le clavier fraîchement activé, le sélecteur s'ouvre tout seul ; une fois « Klavyé Kréyòl Karukera » sélectionné, le champ de test reçoit automatiquement le focus et le clavier Kréyòl apparaît — l'utilisateur peut taper son premier mot sans aucun tap de navigation
+- **Robustesse** : l'appel `showInputMethodPicker()` est silencieusement ignoré par Android tant que l'activité n'a pas repris le focus fenêtre (`InputMethodManagerService: Ignoring showInputMethodPickerFromClient`, vérifié dans logcat). Nouveau garde `runWhenWindowFocused()` : attente du focus avec retries bornés avant l'appel. Parcours complet vérifié sur émulateur API 34 depuis un état vierge
+
 ## [7.1.3] - 2026-07-17
 
 ### 🐛 Toast recouvrant le sélecteur de clavier
