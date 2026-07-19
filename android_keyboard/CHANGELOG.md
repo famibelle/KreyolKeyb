@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.8] - 2026-07-19
+
+### ✍️ Premier mot guidé et rappel en cas de désélection
+
+- **Micro-tâche concrète au premier essai** : l'étape 3 ne dit plus vaguement « tapez quelques mots » mais propose « Essayez d'écrire “Bonjou tout moun” et regardez les suggestions vous aider » — un objectif précis qui fait rencontrer immédiatement la vraie valeur du clavier : les suggestions bilingues et les accents créoles
+- **Rappel clair quand le clavier n'est plus actif** : après une mise à jour système ou un changement de réglages, Android peut désélectionner le clavier sans prévenir. L'utilisateur qui rouvre l'app ne retombe plus sur le « Bienvenue ! » de première installation : il voit « 🔔 Le clavier Kréyòl n'est plus sélectionné » (ou « n'est plus actif ») avec l'explication probable et l'étape exacte à refaire
+- **Pas de redite pour ceux qui connaissent** : l'aperçu du clavier (image de motivation destinée aux nouveaux) n'est plus montré aux utilisateurs qui avaient déjà tout configuré, et la barre d'onglets reste accessible — seul le tout premier setup est en mode concentré
+
 ## [7.1.7] - 2026-07-19
 
 ### 📝 Instructions formulées par objectif, valables sur tous les téléphones

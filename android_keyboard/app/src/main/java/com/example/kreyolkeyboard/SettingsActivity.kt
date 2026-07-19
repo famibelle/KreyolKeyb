@@ -638,7 +638,11 @@ class SettingsActivity : AppCompatActivity() {
         
         val isEnabled = isKeyboardEnabled()
         val isSelected = isKeyboardSelected()
-        
+        // Distingue le tout premier setup d'un retour après désélection
+        // (mise à jour système, changement de clavier...) : le ton et
+        // l'habillage diffèrent, mais les étapes restent les mêmes
+        val hasCompletedBefore = onboardingPrefs().getBoolean("onboarding_completed", false)
+
         // 🔍 Log pour déboguer l'état du clavier
         Log.d("SettingsActivity", "📋 État du clavier: isEnabled=$isEnabled, isSelected=$isSelected")
         
@@ -655,6 +659,7 @@ class SettingsActivity : AppCompatActivity() {
         val welcomeIcon = TextView(this).apply {
             text = when {
                 isEnabled && isSelected -> "✅"
+                hasCompletedBefore -> "🔔"
                 isEnabled -> "🎯"
                 else -> "🚀"
             }
@@ -674,6 +679,8 @@ class SettingsActivity : AppCompatActivity() {
         val welcomeTitle = TextView(this).apply {
             text = when {
                 isEnabled && isSelected -> "Tout est prêt !"
+                hasCompletedBefore && isEnabled -> "Le clavier Kréyòl n'est plus sélectionné"
+                hasCompletedBefore -> "Le clavier Kréyòl n'est plus actif"
                 isEnabled -> "Vous y êtes presque !"
                 else -> "Bienvenue sur Klavyé Kréyòl !"
             }
@@ -685,10 +692,12 @@ class SettingsActivity : AppCompatActivity() {
             })
             setTypeface(null, Typeface.BOLD)
         }
-        
+
         val welcomeSubtitle = TextView(this).apply {
             text = when {
                 isEnabled && isSelected -> "Vous pouvez taper en Kréyòl partout !"
+                hasCompletedBefore && isEnabled -> "Sans doute après une mise à jour ou un changement de réglages : rouvrez le sélecteur pour le remettre"
+                hasCompletedBefore -> "Sans doute après une mise à jour ou un changement de réglages : une minute suffit pour le réactiver"
                 isEnabled -> "Sélectionnez le clavier pour l'utiliser"
                 else -> "Configurez votre clavier en 3 étapes ⏱️"
             }
@@ -714,8 +723,9 @@ class SettingsActivity : AppCompatActivity() {
         // Aperçu du résultat avant l'effort : montrer ce que l'utilisateur
         // va obtenir (suggestions bilingues Kréyòl/Français) avant de lui
         // demander d'aller accepter des avertissements dans les réglages
-        // système — la motivation précède la mécanique
-        if (!isEnabled || !isSelected) {
+        // système — la motivation précède la mécanique. Inutile pour un
+        // utilisateur qui revient après une désélection : il connaît déjà
+        if ((!isEnabled || !isSelected) && !hasCompletedBefore) {
             addGuideImage(mainLayout, R.drawable.onboarding_keyboard_preview,
                 "Votre clavier avec suggestions en Kréyòl et en Français")
             mainLayout.addView(createSpacing(16))
@@ -856,7 +866,7 @@ class SettingsActivity : AppCompatActivity() {
         step3Header.addView(step3TitleText)
         
         val step3Desc = TextView(this).apply {
-            text = if (isStep3Locked) "Complétez les étapes 1 et 2 pour débloquer" else "Tapez quelques mots pour essayer les suggestions en Kréyòl"
+            text = if (isStep3Locked) "Complétez les étapes 1 et 2 pour débloquer" else "Essayez d'écrire « Bonjou tout moun » et regardez les suggestions vous aider"
             textSize = 14f
             setTextColor(Color.parseColor("#666666"))
             setPadding(0, 0, 0, 12)
