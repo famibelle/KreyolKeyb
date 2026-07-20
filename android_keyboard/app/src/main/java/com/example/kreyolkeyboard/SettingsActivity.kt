@@ -339,6 +339,14 @@ class SettingsActivity : AppCompatActivity() {
             tabBar.alpha = 0f
             tabBar.animate().alpha(1f).setDuration(400).start()
         }
+        // Le clavier d'essai (dictionnaires + moteur de suggestions chargés
+        // dans le processus de l'app) n'a plus de raison d'exister une fois
+        // la configuration terminée : la carte qui l'hébergeait disparaît
+        // du wizard, mais l'objet restait sinon référencé indéfiniment
+        demoKeyboardManager?.cleanup()
+        demoKeyboardManager = null
+        demoEngine = null
+        demoEngineReady = false
     }
 
     /**
@@ -823,7 +831,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // ÉTAPE 1 : Activer le clavier
         val step1Card = createStepCard(
-            stepNumber = 1,
+            badge = "1",
             isCompleted = isEnabled,
             isLocked = false,
             icon = "⚙️",
@@ -840,7 +848,7 @@ class SettingsActivity : AppCompatActivity() {
         
         // ÉTAPE 2 : Sélectionner le clavier
         val step2Card = createStepCard(
-            stepNumber = 2,
+            badge = "2",
             isCompleted = isSelected,
             isLocked = !isEnabled,
             icon = "🔄",
@@ -950,14 +958,26 @@ class SettingsActivity : AppCompatActivity() {
         step3Card.addView(testEditText)
         
         mainLayout.addView(step3Card)
-        mainLayout.addView(createSpacing(12))
+        mainLayout.addView(createSpacing(24))
 
-        // ÉTAPE 4 : Activer la vérification orthographique système (découverte)
+        // Correcteur orthographique : fonctionnalité indépendante des 3 étapes
+        // critiques (fonctionne même sans avoir activé le clavier Kréyòl),
+        // sortie du parcours numéroté pour ne pas laisser croire à une
+        // "étape 4" alors que la barre de progression annonce 3 étapes
+        val extrasTitle = TextView(this).apply {
+            text = "🚀 Pou ay pli lwen (optionnel)"
+            textSize = 16f
+            setTextColor(Color.parseColor("#666666"))
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 12)
+        }
+        mainLayout.addView(extrasTitle)
+
         val isSpellCheckerOn = isSpellCheckerSelected()
         val step4Card = createStepCard(
-            stepNumber = 4,
+            badge = "✚",
             isCompleted = isSpellCheckerOn,
-            isLocked = false, // indépendant des étapes 1-3 : fonctionne même sans activer le clavier Kréyòl
+            isLocked = false,
             icon = "🔤",
             title = "Corriger l'orthographe partout",
             description = "Pour ne plus voir vos mots créoles (et français) soulignés en rouge dans Messages, Notes et ailleurs : dans l'écran qui s'ouvre, choisissez 'Correcteur Kréyòl Karukera'",
@@ -1157,7 +1177,7 @@ class SettingsActivity : AppCompatActivity() {
     
     // Fonction pour créer une card d'étape
     private fun createStepCard(
-        stepNumber: Int,
+        badge: String,
         isCompleted: Boolean,
         isLocked: Boolean,
         icon: String,
@@ -1181,8 +1201,8 @@ class SettingsActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 12)
         }
         
-        val badge = TextView(this).apply {
-            text = stepNumber.toString()
+        val badgeView = TextView(this).apply {
+            text = badge
             textSize = 20f
             setTextColor(
                 when {
@@ -1227,7 +1247,7 @@ class SettingsActivity : AppCompatActivity() {
                 setTextColor(Color.parseColor("#4CAF50"))
                 setTypeface(null, Typeface.BOLD)
             }
-            header.addView(badge)
+            header.addView(badgeView)
             header.addView(iconText)
             header.addView(titleText)
             header.addView(checkIcon)
@@ -1236,12 +1256,12 @@ class SettingsActivity : AppCompatActivity() {
                 text = "🔒"
                 textSize = 20f
             }
-            header.addView(badge)
+            header.addView(badgeView)
             header.addView(iconText)
             header.addView(titleText)
             header.addView(lockIcon)
         } else {
-            header.addView(badge)
+            header.addView(badgeView)
             header.addView(iconText)
             header.addView(titleText)
         }
@@ -1518,6 +1538,40 @@ class SettingsActivity : AppCompatActivity() {
             minimumHeight = 110
         }
 
+        // Pont entre le « aha » et l'action : la démo crée la motivation
+        // mais ne la convertissait pas encore — l'utilisateur devait
+        // comprendre seul qu'il fallait redescendre vers l'étape 1. Ce
+        // bouton apparaît au premier signe d'engagement (première touche
+        // pressée) et enchaîne directement vers l'activation système
+        var installCtaShown = false
+        val installCta = Button(this).apply {
+            text = "Ça vous plaît ? Installez-le →"
+            textSize = 15f
+            isAllCaps = false
+            setBackgroundColor(Color.parseColor("#0080FF"))
+            setTextColor(Color.WHITE)
+            setPadding(24, 20, 24, 20)
+            // INVISIBLE (pas GONE) dès la création : réserve sa place tout de
+            // suite pour que son apparition ne décale jamais le clavier situé
+            // juste en dessous. Un décalage au premier caractère tapé ferait
+            // rater les touches suivantes, frappées de mémoire par l'utilisateur
+            // (repro confirmée en test automatisé : les taps suivants
+            // atterrissaient sur ce bouton une fois révélé, ouvrant les
+            // réglages système en pleine frappe)
+            visibility = View.INVISIBLE
+            alpha = 0f
+            setOnClickListener { openKeyboardSettings() }
+        }
+
+        fun revealInstallCta() {
+            recordFunnelStep("funnel_demo_first_key")
+            if (!installCtaShown) {
+                installCtaShown = true
+                installCta.visibility = View.VISIBLE
+                installCta.animate().alpha(1f).setDuration(300).start()
+            }
+        }
+
         val keyboardContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#ECEFF1"))
@@ -1577,6 +1631,7 @@ class SettingsActivity : AppCompatActivity() {
                             val start = (pos - word.length).coerceAtLeast(0)
                             demoField.text.replace(start, pos, suggestion.word + " ")
                             clearChips()
+                            revealInstallCta()
                         }
                     }
                     suggestionsRow.addView(chip)
@@ -1629,6 +1684,7 @@ class SettingsActivity : AppCompatActivity() {
                             manager.updateKeyboardStates(manager.isNumericMode(), false, false)
                             manager.updateKeyboardDisplay()
                         }
+                        revealInstallCta()
                     }
                 }
                 refreshSuggestions()
@@ -1643,6 +1699,8 @@ class SettingsActivity : AppCompatActivity() {
         card.addView(caption)
         card.addView(demoField)
         card.addView(suggestionsRow)
+        card.addView(installCta)
+        card.addView(createSpacing(8))
         card.addView(keyboardContainer)
         return card
     }
@@ -1688,6 +1746,7 @@ class SettingsActivity : AppCompatActivity() {
             text = listOf(
                 if (firstOpen == 0L) "Première ouverture : pas encore"
                 else "Première ouverture : ${dateFormat.format(Date(firstOpen))}",
+                funnelLine("Premier essai (clavier de démo)", "funnel_demo_first_key"),
                 funnelLine("Clavier activé", "funnel_keyboard_enabled"),
                 funnelLine("Clavier sélectionné", "funnel_keyboard_selected"),
                 funnelLine("Premier mot tapé", "funnel_first_word")

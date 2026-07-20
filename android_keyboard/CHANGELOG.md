@@ -5,6 +5,17 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.1.0] - 2026-07-20
+
+### 🌉 Le pont entre l'essai et l'installation, et trois points d'hygiène
+
+- **Bouton d'installation dans la carte d'essai** : la démo (v8.0.0) créait la motivation mais ne la convertissait pas — après avoir tapé « bonjou » et vu les suggestions, l'utilisateur devait comprendre seul qu'il fallait redescendre vers l'étape 1. Un bouton « Ça vous plaît ? Installez-le → » apparaît désormais dès la première touche pressée ou la première suggestion touchée, et enchaîne directement vers l'activation système
+- **Correctif de décalage découvert en testant ce bouton** : le faire apparaître poussait tout le contenu vers le bas (le clavier de démo se décalait sous les doigts dès la première frappe), ce qui aurait fait rater les touches suivantes tapées de mémoire. Corrigé en réservant sa place dès la création de la carte (`INVISIBLE` plutôt que `GONE`) : plus aucun décalage, vérifié par un test automatisé qui reproduisait le problème avant correctif
+- **Nouveau jalon dans le tunnel d'activation** : « Premier essai (clavier de démo) », horodaté dès la première touche pressée dans la démo, avant même l'activation système — visible dans la carte Diagnostic de l'onglet À Propos
+- **Le correcteur orthographique sort du parcours numéroté** : il s'affichait comme une « étape 4 » alors que la barre de progression annonce 3 étapes (il est en réalité indépendant, utilisable sans même avoir activé le clavier Kréyòl). Nouvelle section « 🚀 Pou ay pli lwen (optionnel) » avec un badge distinct (✚), pour ne plus laisser croire à une étape supplémentaire obligatoire
+- **Le moteur de suggestions de la démo est libéré** dès que la configuration aboutit (`onOnboardingCompleted()`) plutôt que de rester chargé en mémoire indéfiniment après la disparition de sa carte — pertinent sur les appareils d'entrée de gamme
+- **Vérifié à grande police** (`font_scale` 1.3, réglage courant chez les utilisateurs seniors) : tout le wizard tient sans chevauchement ; seul le libellé de la touche « 123 » se tronque visuellement en « 12 » (touche pleinement fonctionnelle, défaut cosmétique mineur laissé en l'état)
+
 ## [8.0.0] - 2026-07-19
 
 ### 🎹 Essayez le clavier avant de l'installer
