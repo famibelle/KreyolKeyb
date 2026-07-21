@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.2.0] - 2026-07-21
+
+### ⌨️ Appuis longs recentrés sur le kréyòl et le français
+
+- **Table des accents nettoyée** : la liste de caractères proposés en appui long sur chaque touche venait visiblement d'un gabarit générique — elle mélangeait des lettres polonaises, turques et nordiques (č, š, ć, ř, ž, ł, ÿ…) qui ne servent ni au kréyòl guadeloupéen ni au français. Retirées : 25 caractères sans usage sur les touches a, e, i, o, u, n, c, s, z, l, y
+- **Doublons avec le clavier de base supprimés** : é, è et ò sont déjà des touches dédiées du clavier (rangées 1 et 4) — inutile de les proposer une seconde fois via appui long sur e/o
+- **Digraphes créoles ajoutés** : appui long sur c → ch, sur d → dj, sur n → ng, trois groupes de lettres fréquents en graphie créole GEREC (chapo, djòl, moun…), absents jusqu'ici de tout raccourci
+- Résultat : 39 propositions réparties sur 11 touches → 14 propositions réparties sur 8 touches, popup d'accents plus rapide à parcourir
+- ⚠️ Les digraphes ch/dj/ng sont une proposition à valider à l'usage par des locuteurs kréyòl ; à ajuster si le retour terrain montre un découpage différent plus naturel
+
 ## [8.1.0] - 2026-07-20
 
 ### 🌉 Le pont entre l'essai et l'installation, et trois points d'hygiène
