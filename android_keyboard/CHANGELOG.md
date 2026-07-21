@@ -5,6 +5,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.4.0] - 2026-07-21
+
+### 📊 Table des accents recalée sur l'usage réel des dictionnaires
+
+- **Analyse chiffrée** de `creole_dict.json` (4911 mots) et `french_simple_dict.json` (662 mots) : comptage de chaque caractère diacritique, mot par mot, pour vérifier que la table d'appui long (v8.2.0/v8.3.0) correspond à un usage réel plutôt qu'à un gabarit générique
+- **ë et ü retirés** de l'appui long sur e/u : zéro occurrence dans les deux dictionnaires réunis, aucune justification créole ni française
+- **œ ajouté** en appui long sur o (aux côtés de ô) : présent dans le dictionnaire français avec une fréquence notable (« œil », « cœur »), jusqu'ici totalement impossible à taper
+- Confirmé au passage : é/è/ò concentrent 98% de l'usage réel des diacritiques créoles (1603, 992 et 378 mots sur 4911), ce qui valide leur statut de touches dédiées
+
 ## [8.3.0] - 2026-07-21
 
 ### 🔎 Aperçu des options d'appui long directement sur les touches
