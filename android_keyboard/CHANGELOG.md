@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.5.0] - 2026-07-21
+
+### ➖ Le trait d'union remonté en priorité sur l'appui long du point
+
+- **Constat chiffré** : le trait d'union apparaît dans 21,7% des mots du dictionnaire créole (1068 mots sur 4911), avec une fréquence d'usage cumulée (26 623) supérieure à celle de la touche dédiée « ò » (18 699) — c'est le marqueur d'élision créole le plus productif (« a-y », « ba-w », « an-nou », « fi-la »…), et pourtant il n'apparaissait qu'en 4ᵉ et dernière position de l'appui long sur `.`, donc invisible dans l'indice de coin introduit en v8.3.0
+- **Réordonné en tête** : appui long sur `.` propose désormais `- ! ? …` (au lieu de `! ? … -`), et l'indice de coin affiche directement `-` en haut à droite
+- **`ç` conservé** malgré une justification faible (0 mot créole, 1 seul mot français : « français ») : le coût de le garder est nul, contrairement au bénéfice de pouvoir taper ce mot sans détour
+
 ## [8.4.0] - 2026-07-21
 
 ### 📊 Table des accents recalée sur l'usage réel des dictionnaires
