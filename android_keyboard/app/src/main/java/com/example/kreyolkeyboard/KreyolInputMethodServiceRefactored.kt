@@ -184,6 +184,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         accentHandler = AccentHandler(this).apply {
             setAccentSelectionListener(this@KreyolInputMethodServiceRefactored)
         }
+        // Permet à KeyboardLayoutManager d'afficher un aperçu des options
+        // d'appui long dans les coins des touches (v8.3.0)
+        keyboardLayoutManager.accentHandler = accentHandler
         
         inputProcessor = InputProcessor(this).apply {
             setInputProcessorListener(this@KreyolInputMethodServiceRefactored)
@@ -293,7 +296,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         keyboardContainer.addView(keyboardLayout)
         mainLayout.addView(keyboardContainer)
         mainKeyboardView = keyboardContainer
-        
+
         return mainLayout
     }
     

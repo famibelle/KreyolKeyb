@@ -7,9 +7,11 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -25,6 +27,7 @@ class KeyboardLayoutManager(private val context: Context) {
         private const val BUTTON_MARGIN_DP = 2
         private const val CORNER_RADIUS_DP = 8f
         private const val TEXT_SIZE_SP = 16f
+        private const val HINT_TEXT_SIZE_SP = 8f
         private const val SHADOW_RADIUS = 4f
         private const val TAG = "KeyboardLayoutManager"
         
@@ -37,6 +40,11 @@ class KeyboardLayoutManager(private val context: Context) {
     private var isCapsLock = false
     private var isNumericMode = false // FORCE ALPHABÉTIQUE PAR DÉFAUT
     private val keyboardButtons = mutableListOf<View>() // Changé de TextView à View pour supporter ImageButton
+
+    // Référence optionnelle pour prévisualiser les options d'appui long dans
+    // les coins des touches (v8.3.0). Laissé à null par le clavier de démo
+    // (SettingsActivity), qui n'a pas d'AccentHandler et n'affiche donc aucun indice.
+    var accentHandler: AccentHandler? = null
     
     // 🌐 Handler pour l'appui long personnalisé de la barre d'espace
     private val spaceLongPressHandler = Handler(Looper.getMainLooper())
@@ -137,9 +145,11 @@ class KeyboardLayoutManager(private val context: Context) {
         val totalWeight = calculateRowWeight(keys)
         
         for (key in keys) {
+            // createKeyButton() alimente déjà keyboardButtons avec la touche
+            // interactive brute (avant l'éventuel enrobage des indices de coin) ;
+            // un second ajout ici dupliquait chaque touche dans la liste.
             val button = createKeyButton(key, totalWeight)
             rowLayout.addView(button)
-            keyboardButtons.add(button)
         }
         
         return rowLayout
@@ -211,6 +221,13 @@ class KeyboardLayoutManager(private val context: Context) {
                 // aux Button : les touches doivent refléter exactement l'état
                 // shift, quel que soit le contexte (IME ou clavier d'essai)
                 isAllCaps = false
+                // Button a une élévation/StateListAnimator implicite qui le
+                // fait dessiner par-dessus ses voisins ajoutés après lui dans
+                // un FrameLayout, quel que soit l'ordre d'ajout (constaté en
+                // testant les indices d'appui long v8.3.0 : un enfant ajouté
+                // après restait invisible tant que ceci n'était pas neutralisé).
+                elevation = 0f
+                stateListAnimator = null
                 // Taille de police personnalisée pour Potomitan™ branding discret
                 textSize = if (key == " ") TEXT_SIZE_SP * 0.75f else TEXT_SIZE_SP
                 setTypeface(typeface, Typeface.BOLD)
@@ -238,8 +255,56 @@ class KeyboardLayoutManager(private val context: Context) {
         
         // Configuration des événements tactiles
         setupButtonInteractions(button, key)
-        
-        return button
+
+        // Aperçu des options d'appui long dans les coins de la touche (v8.3.0)
+        val hints = accentHandler?.takeIf { it.hasAccents(key) }?.getAccentsForKey(key)
+        return if (!hints.isNullOrEmpty()) {
+            wrapWithLongPressHints(button, hints)
+        } else {
+            button
+        }
+    }
+
+    /**
+     * Enveloppe une touche dans un FrameLayout pour superposer, en haut-droit et
+     * bas-droit, un aperçu des deux premières options d'appui long. La touche
+     * d'origine garde exactement sa zone tactile, son style et son ancrage pour
+     * la popup d'accents (le FrameLayout se contente de prendre sa place dans la
+     * rangée) ; keyboardButtons ne référence jamais ce FrameLayout, seulement la
+     * touche brute qu'il contient.
+     */
+    private fun wrapWithLongPressHints(inner: View, hints: List<String>): FrameLayout {
+        val outerParams = inner.layoutParams
+        inner.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+
+        return FrameLayout(context).apply {
+            layoutParams = outerParams
+            addView(inner)
+            addView(createHintLabel(hints[0], Gravity.TOP or Gravity.END))
+            if (hints.size > 1) {
+                addView(createHintLabel(hints[1], Gravity.BOTTOM or Gravity.END))
+            }
+        }
+    }
+
+    private fun createHintLabel(hintText: String, gravity: Int): TextView {
+        return TextView(context).apply {
+            text = hintText
+            textSize = HINT_TEXT_SIZE_SP
+            setTextColor(Color.parseColor("#99333333"))
+            isClickable = false
+            isFocusable = false
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                gravity
+            ).apply {
+                setMargins(0, dpToPx(2), dpToPx(3), dpToPx(2))
+            }
+        }
     }
     
     /**

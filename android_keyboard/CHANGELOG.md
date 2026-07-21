@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.3.0] - 2026-07-21
+
+### 🔎 Aperçu des options d'appui long directement sur les touches
+
+- **Ponctuation ajoutée en appui long** sur trois touches déjà visibles en mode alphabétique : virgule → point-virgule/deux-points, point → !/?/…/trait d'union, apostrophe → guillemets droits/guillemets français « ». Évite l'aller-retour vers le mode 123 pour la ponctuation la plus fréquente
+- **Petits indices en haut-droit et bas-droit de chaque touche concernée** (lettres accentuées et ponctuation) : un aperçu discret des deux premières options d'appui long, sans changer la zone tactile ni le style de la touche
+- **Bug découvert et corrigé en testant cet affichage** : `Button` porte une élévation/`StateListAnimator` implicite qui le fait toujours dessiner par-dessus ses voisins ajoutés après lui dans un conteneur superposé, quel que soit l'ordre d'ajout — les indices restaient invisibles tant que l'élévation n'était pas explicitement neutralisée sur la touche. Corrigé, vérifié par capture d'écran zoomée sur émulateur
+- **Correctif de fond au passage** : la liste interne des touches (`keyboardButtons`, utilisée pour la casse majuscule/minuscule) recevait chaque touche deux fois depuis l'origine ; sans le corriger, les nouvelles touches enrobées y auraient laissé des entrées inertes
+- Le clavier d'essai interactif (v8.0.0) n'affiche pas ces indices, n'ayant pas de gestion d'accents — comportement inchangé
+
 ## [8.2.0] - 2026-07-21
 
 ### ⌨️ Appuis longs recentrés sur le kréyòl et le français
