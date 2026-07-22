@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.7.4] - 2026-07-22
+
+### 📦 Règles ProGuard resserrées pour une vraie optimisation R8
+
+- **Constat** : Google Play recommandait d'« améliorer la mémoire et les performances avec R8 » malgré `minifyEnabled = true` déjà actif ; les règles `-keep class androidx.** { *; }` et `-keep class kotlin.** { *; }` neutralisaient le shrinking/obfuscation sur toute la stdlib Kotlin et AndroidX, de même que les `-keep ... { public *; }` sur les classes internes de l'app (Dictionary, Suggestion, AccentHandler, etc.)
+- **Corrigé** : suppression des règles trop larges, aucune n'étant justifiée (pas de réflexion sur ces classes, confirmé par recherche dans le code) ; seul le nom des classes Activity/Service/InputMethodService reste protégé, car référencé par `AndroidManifest.xml`
+- **Vérifié** : build release reconstruit, mapping R8 confirme le renommage et la suppression effective de centaines de classes AndroidX/Kotlin auparavant intactes
+
 ## [8.7.3] - 2026-07-22
 
 ### ⌨️ Trois digraphes GEREC manquants ajoutés à l'appui long (n, g, t)

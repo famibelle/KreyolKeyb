@@ -1,69 +1,31 @@
 # 🔒 ProGuard Rules pour Clavier Kreyòl Karukera
 # Règles d'obfuscation et d'optimisation pour publication Play Store
+#
+# Les composants instanciés par le framework Android (Activity, Service,
+# InputMethodService) doivent garder leur nom de classe intact car ils sont
+# référencés par nom dans AndroidManifest.xml. En revanche leurs membres
+# internes n'ont pas besoin d'être protégés : R8 peut les réduire/obfusquer.
 
 # =====================================
 # RÈGLES DE BASE ANDROID
 # =====================================
 
-# Conserver les classes d'activité et de service principales
+# Conserver le nom des classes d'activité et de service (référencées par le manifest)
 -keep class * extends android.app.Activity
 -keep class * extends android.app.Service
 -keep class * extends android.inputmethodservice.InputMethodService
 
 # =====================================
-# RÈGLES SPÉCIFIQUES IME (CLAVIER)
-# =====================================
-
-# Conserver le service IME principal
--keep class com.example.kreyolkeyboard.KreyolInputMethodService* {
-    public *;
-}
--keep class com.example.kreyolkeyboard.KreyolInputMethodServiceRefactored* {
-    public *;
-}
-
-# Conserver l'activité de paramètres
--keep class com.example.kreyolkeyboard.SettingsActivity* {
-    public *;
-}
-
-# Conserver les interfaces de callback Android
--keep class * extends android.view.inputmethod.InputConnection
--keep class * extends android.inputmethodservice.KeyboardView
-
-# =====================================
-# RÈGLES POUR LES ASSETS ET DONNÉES
-# =====================================
-
-# Conserver les classes de gestion du dictionnaire
--keep class com.example.kreyolkeyboard.*Dictionary* {
-    public *;
-}
-
-# Conserver les classes de suggestion
--keep class com.example.kreyolkeyboard.*Suggestion* {
-    public *;
-}
-
-# Conserver les handlers d'accent
--keep class com.example.kreyolkeyboard.AccentHandler* {
-    public *;
-}
-
-# =====================================
 # RÈGLES KOTLIN ET ANDROIDX
 # =====================================
 
-# Kotlin
--keep class kotlin.** { *; }
+# Métadonnées Kotlin nécessaires à la réflexion (kotlin-reflect, coroutines introspection)
 -keep class kotlin.Metadata { *; }
 -dontwarn kotlin.**
 -keepclassmembers class **$WhenMappings {
     <fields>;
 }
 
-# AndroidX
--keep class androidx.** { *; }
 -dontwarn androidx.**
 
 # =====================================
