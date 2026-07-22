@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.6.0] - 2026-07-22
+
+### ➖ Le trait d'union devient une touche dédiée
+
+- **Suite du constat v8.5.0** : le trait d'union (21,7% des mots créoles, fréquence cumulée 26 623) dépasse l'usage de la touche dédiée « ò » (18 699) — il méritait mieux qu'un appui long
+- **Nouvelle touche directe** dans la rangée du bas, entre `é` et la barre d'espace : `123 , é - [espace] è . ' ⏎` (9 touches au lieu de 8, chacune environ 9% plus étroite mais toujours confortablement tapable)
+- **Retiré de l'appui long sur `.`** (redondant désormais), qui repasse à `! ? …`
+- **Vérifié sur émulateur** : « a-y » (le mot avec trait d'union le plus fréquent du dictionnaire, 1906 occurrences) se tape directement et déclenche la bonne suggestion dès la première lettre
+- **`é` et `è` conservés intacts** : tous deux plus utilisés que le trait d'union (86 743 et 45 490 contre 26 623), aucune raison de les sacrifier
+
 ## [8.5.0] - 2026-07-21
 
 ### ➖ Le trait d'union remonté en priorité sur l'appui long du point

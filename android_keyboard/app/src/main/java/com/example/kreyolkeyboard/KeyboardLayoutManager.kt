@@ -105,7 +105,9 @@ class KeyboardLayoutManager(private val context: Context) {
         val row1 = arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "ò", "p")
         val row2 = arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
         val row3 = arrayOf("⇧", "w", "x", "c", "v", "b", "n", "⌫")
-        val row4 = arrayOf("123", ",", "é", " ", "è", ".", "'", "⏎")
+        // v8.6.0 : "-" ajouté en touche dédiée (21,7% des mots créoles en
+        // contiennent un, fréquence cumulée supérieure à celle de "ò")
+        val row4 = arrayOf("123", ",", "é", "-", " ", "è", ".", "'", "⏎")
         
         mainLayout.addView(createKeyboardRow(row1))
         mainLayout.addView(createKeyboardRow(row2))
@@ -357,8 +359,10 @@ class KeyboardLayoutManager(private val context: Context) {
                     ))
                     orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 }
-                "à", "è", "ò", "é", "ù", "ì", "ç" -> {
-                    // Touches créoles avec nuance de blanc/gris
+                "à", "è", "ò", "é", "ù", "ì", "ç", "-" -> {
+                    // Touches créoles avec nuance de blanc/gris (le trait
+                    // d'union rejoint ce groupe en v8.6.0 : marqueur
+                    // d'élision aussi essentiel que les voyelles accentuées)
                     setColors(intArrayOf(
                         Color.parseColor("#FFFFFF"), // Blanc
                         Color.parseColor("#F8F8F8")  // Blanc cassé
@@ -395,7 +399,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 "⇧" -> if (isCapsLock || isCapitalMode) Color.parseColor("#666666") else Color.parseColor("#333333")
                 ",", ".", "'" -> Color.WHITE // Texte blanc sur fond orange caraïbe
                 "⏎", "123", "ABC" -> Color.WHITE // Texte blanc sur fond vert tropical
-                "à", "è", "ò", "é", "ù", "ì", "ç" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
+                "à", "è", "ò", "é", "ù", "ì", "ç", "-" -> Color.parseColor("#333333") // Texte gris foncé sur fond blanc
                 " " -> Color.parseColor("#CCFFFFFF") // Blanc semi-transparent pour Potomitan™ - discret mais lisible
                 else -> Color.parseColor("#333333")
             })
