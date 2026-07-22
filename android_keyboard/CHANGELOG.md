@@ -5,6 +5,23 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.7.2] - 2026-07-22
+
+### 🔎 Aperçus en coin et ordre d'appui long recalés sur la fréquence réelle (e, o)
+
+- **Touche "e"** : appui long enrichi de é et è (déjà touches dédiées par ailleurs), classés par fréquence décroissante dans `creole_dict.json` : é (86 743, 1603 mots) > è (45 490, 992 mots) > ê (15, 1 mot). Indices de coin : `è` en haut-droit, `é` en bas-droit
+- **Touche "o"** : appui long enrichi de ò et ó, ordre choisi `ò, ô, ó, œ`. Indices de coin déplacés à gauche : `ò` en haut-gauche, `ó` en bas-gauche (à la place de ô/œ précédemment affichés à droite)
+- **Mécanisme d'aperçu en coin généralisé** (`KeyboardLayoutManager`/`AccentHandler`) : chaque touche peut désormais définir un ordre et un côté (gauche/droit) d'affichage indépendants de l'ordre du popup d'appui long, sans changer le comportement par défaut (droite) des autres touches accentuées (a, i, u, c, `,` `.` `'`)
+- **Vérifié sur émulateur** : capture zoomée confirmant les 4 coins (`è`/`é` sur "e", `ò`/`ó` sur "o") et l'ordre exact du popup d'appui long sur chaque touche
+
+## [8.6.1] - 2026-07-22
+
+### 🎨 La touche trait d'union reprend la couleur orange caraïbe
+
+- **Bug visuel corrigé** : le trait d'union (`-`), devenu touche dédiée en v8.6.0, avait été classé par erreur avec les voyelles accentuées (fond blanc) au lieu de rejoindre `,` et `.` avec qui il partage la même rangée
+- **Corrigé** : fond et texte alignés sur le groupe ponctuation (orange caraïbe), cohérent visuellement avec ses voisines de rangée
+- **Vérifié sur émulateur** : capture d'écran confirmant la couleur corrigée dans l'app Messages
+
 ## [8.6.0] - 2026-07-22
 
 ### ➖ Le trait d'union devient une touche dédiée
