@@ -259,40 +259,43 @@ class KeyboardLayoutManager(private val context: Context) {
         setupButtonInteractions(button, key)
 
         // Aperçu des options d'appui long dans les coins de la touche (v8.3.0)
-        val hints = accentHandler?.takeIf { it.hasAccents(key) }?.getAccentsForKey(key)
+        val hints = accentHandler?.takeIf { it.hasAccents(key) }?.getCornerHintsForKey(key)
         return if (!hints.isNullOrEmpty()) {
-            wrapWithLongPressHints(button, hints)
+            val onStartSide = accentHandler?.isCornerHintOnStartSide(key) == true
+            wrapWithLongPressHints(button, hints, onStartSide)
         } else {
             button
         }
     }
 
     /**
-     * Enveloppe une touche dans un FrameLayout pour superposer, en haut-droit et
-     * bas-droit, un aperçu des deux premières options d'appui long. La touche
-     * d'origine garde exactement sa zone tactile, son style et son ancrage pour
-     * la popup d'accents (le FrameLayout se contente de prendre sa place dans la
+     * Enveloppe une touche dans un FrameLayout pour superposer, en haut et en
+     * bas d'un même côté (droit par défaut, gauche si onStartSide), un aperçu
+     * des deux premières options d'appui long. La touche d'origine garde
+     * exactement sa zone tactile, son style et son ancrage pour la popup
+     * d'accents (le FrameLayout se contente de prendre sa place dans la
      * rangée) ; keyboardButtons ne référence jamais ce FrameLayout, seulement la
      * touche brute qu'il contient.
      */
-    private fun wrapWithLongPressHints(inner: View, hints: List<String>): FrameLayout {
+    private fun wrapWithLongPressHints(inner: View, hints: List<String>, onStartSide: Boolean): FrameLayout {
         val outerParams = inner.layoutParams
         inner.layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
         )
+        val horizontalGravity = if (onStartSide) Gravity.START else Gravity.END
 
         return FrameLayout(context).apply {
             layoutParams = outerParams
             addView(inner)
-            addView(createHintLabel(hints[0], Gravity.TOP or Gravity.END))
+            addView(createHintLabel(hints[0], Gravity.TOP or horizontalGravity, onStartSide))
             if (hints.size > 1) {
-                addView(createHintLabel(hints[1], Gravity.BOTTOM or Gravity.END))
+                addView(createHintLabel(hints[1], Gravity.BOTTOM or horizontalGravity, onStartSide))
             }
         }
     }
 
-    private fun createHintLabel(hintText: String, gravity: Int): TextView {
+    private fun createHintLabel(hintText: String, gravity: Int, onStartSide: Boolean): TextView {
         return TextView(context).apply {
             text = hintText
             textSize = HINT_TEXT_SIZE_SP
@@ -304,7 +307,11 @@ class KeyboardLayoutManager(private val context: Context) {
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 gravity
             ).apply {
-                setMargins(0, dpToPx(2), dpToPx(3), dpToPx(2))
+                if (onStartSide) {
+                    setMargins(dpToPx(3), dpToPx(2), 0, dpToPx(2))
+                } else {
+                    setMargins(0, dpToPx(2), dpToPx(3), dpToPx(2))
+                }
             }
         }
     }
