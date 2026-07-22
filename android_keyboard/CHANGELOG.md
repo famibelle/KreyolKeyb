@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.7.3] - 2026-07-22
+
+### ⌨️ Trois digraphes GEREC manquants ajoutés à l'appui long (n, g, t)
+
+- **Constat** : les digraphes de consonnes palatalisées de la graphie GEREC (ch, dj, tj, ng, ny, gn, gy) n'étaient couverts que partiellement (ch sur "c", dj sur "d", ng sur "n") ; un comptage des occurrences cumulées dans `creole_dict.json` et `french_simple_dict.json` a révélé plusieurs manques significatifs
+- **Touche "n"** : gagne "ny" (/ɲ/, 1353 occurrences, 47 mots) en plus de "ng", déjà plus fréquent que "dj" (74) présent depuis v8.2.0
+- **Touche "g"** : gagne "gn" (2915 occurrences, digraphe français : montagne, campagne) et "gy" (221, variante créole rare), touche qui n'avait jusqu'ici aucun appui long
+- **Touche "t"** : gagne "tj" (/tʃ/, 184 occurrences), complétant la série des occlusives palatalisées ch/dj/tj/ng aux côtés des touches c/d/n déjà couvertes
+- **Build vérifié** : compilation Kotlin réussie (`compileDebugKotlin`)
+
 ## [8.7.2] - 2026-07-22
 
 ### 🔎 Aperçus en coin et ordre d'appui long recalés sur la fréquence réelle (e, o)
