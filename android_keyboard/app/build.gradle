@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     namespace 'com.example.kreyolkeyboard'
 
     signingConfigs {
@@ -48,9 +48,9 @@ android {
     defaultConfig {
         applicationId "com.potomitan.kreyolkeyboard"
         minSdk = 21
-        targetSdk = 35
-        versionCode = 80704
-        versionName "8.7.4"
+        targetSdk = 36
+        versionCode = 80800
+        versionName "8.8.0"
         
         // Améliorer la compatibilité Samsung ULTRA
         multiDexEnabled true

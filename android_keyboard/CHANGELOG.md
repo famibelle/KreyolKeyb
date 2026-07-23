@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.8.0] - 2026-07-23
+
+### 🎯 Cible Android 16 (API 36) pour rester conforme Google Play
+
+- **Constat** : Google Play signalait que l'appli ciblait encore Android 15 (API 35), non conforme à l'exigence d'API cible récente (deadline 31 oct. 2026 avant blocage des mises à jour)
+- **Corrigé** : `compileSdk` et `targetSdk` passés à 36 dans `app/build.gradle`
+- **Vérifié** : builds debug et release reconstruits avec succès (AGP 8.6.0, plateforme SDK 36 déjà installée localement), R8/lint release sans erreur
+
 ## [8.7.4] - 2026-07-22
 
 ### 📦 Règles ProGuard resserrées pour une vraie optimisation R8
