@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Sceau Made in Guadeloupe">
+  <title>Créé en Guadeloupe</title>
+
+  <g fill="#C97F1E">
+    <circle cx="176.0" cy="100.0" r="20"/>
+    <circle cx="170.21" cy="129.08" r="20"/>
+    <circle cx="153.74" cy="153.74" r="20"/>
+    <circle cx="129.08" cy="170.21" r="20"/>
+    <circle cx="100.0" cy="176.0" r="20"/>
+    <circle cx="70.92" cy="170.21" r="20"/>
+    <circle cx="46.26" cy="153.74" r="20"/>
+    <circle cx="29.79" cy="129.08" r="20"/>
+    <circle cx="24.0" cy="100.0" r="20"/>
+    <circle cx="29.79" cy="70.92" r="20"/>
+    <circle cx="46.26" cy="46.26" r="20"/>
+    <circle cx="70.92" cy="29.79" r="20"/>
+    <circle cx="100.0" cy="24.0" r="20"/>
+    <circle cx="129.08" cy="29.79" r="20"/>
+    <circle cx="153.74" cy="46.26" r="20"/>
+    <circle cx="170.21" cy="70.92" r="20"/>
+    <circle cx="100" cy="100" r="78"/>
+  </g>
+
+  <circle cx="100" cy="100" r="67" fill="#F5F2EA"/>
+  <circle cx="100" cy="100" r="59" fill="#0E6E76"/>
+
+  <g>
+    <polygon points="100,42 104,54 116,54 106.5,61.5 110,73.5 100,66 90,73.5 93.5,61.5 84,54 96,54" fill="#F5F2EA"/>
+  </g>
+
+  <g transform="rotate(-11 100 100)">
+    <path d="M -6,113 L 206,89 L 206,89 L 206,113 L -6,137 Z" fill="#8A1330"/>
+    <path d="M -6,89 L 206,65 L 206,89 L -6,113 Z" fill="#E01E5F"/>
+    <path d="M -6,89 L 14,95 L -6,113 Z" fill="#8A1330"/>
+    <path d="M 206,65 L 186,77 L 206,89 Z" fill="#8A1330"/>
+    <text x="100" y="84" text-anchor="middle" font-family="'Fredoka', 'Segoe UI', sans-serif" font-weight="700" font-size="19" letter-spacing="1" fill="#F5F2EA">GWADLOUP</text>
+  </g>
+</svg>
