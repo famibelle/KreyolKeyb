@@ -40,6 +40,43 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "10.9.2": [
+        {
+            "emoji": "🔖",
+            "title": "Vos partages se retrouvent entre eux",
+            "description": (
+                "Les messages envoyés depuis l'application partaient chacun de "
+                "leur côté. Ils se terminent tous maintenant par "
+                "#KlavyéKréyòl : la carte de niveau, la carte d'activation, le "
+                "partage de l'application et la puce du clavier. De quoi voir "
+                "qui d'autre écrit en kréyòl."
+            ),
+        }
+    ],
+    "10.9.1": [
+        {
+            "emoji": "⚡",
+            "title": "La frappe ne marque plus de temps",
+            "description": (
+                "Chaque mot validé faisait réenregistrer tout le dictionnaire "
+                "avant de rendre la main au clavier, jusqu'à une demi-seconde "
+                "sur un simple espace. L'enregistrement se fait désormais en "
+                "coulisse : rien n'est perdu, et l'écriture reste fluide d'un "
+                "bout à l'autre de la phrase."
+            ),
+        },
+        {
+            "emoji": "🔔",
+            "title": "Le signal de niveau ne se perd plus en route",
+            "description": (
+                "La pastille de l'onglet « Kréyòl an mwen » n'apparaissait "
+                "qu'en rouvrant complètement l'application : un palier franchi "
+                "pendant qu'elle attendait en arrière-plan passait inaperçu. "
+                "Elle s'affiche maintenant dès le retour, et la pastille de "
+                "l'icône s'éteint une fois la progression consultée."
+            ),
+        },
+    ],
     "10.9.0": [
         {
             "emoji": "📤",

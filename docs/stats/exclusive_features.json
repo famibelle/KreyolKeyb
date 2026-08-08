@@ -1,8 +1,32 @@
 {
   "production_version": "10.0.1",
-  "latest_version": "10.9.0",
+  "latest_version": "10.9.2",
   "as_of": "2026-08-08",
   "features": [
+    {
+      "version": "10.9.2",
+      "emoji": "🔖",
+      "title": "Vos partages se retrouvent entre eux",
+      "description": "Les messages envoyés depuis l'application partaient chacun de leur côté. Ils se terminent tous maintenant par #KlavyéKréyòl : la carte de niveau, la carte d'activation, le partage de l'application et la puce du clavier. De quoi voir qui d'autre écrit en kréyòl.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.9.2",
+      "curated": true
+    },
+    {
+      "version": "10.9.1",
+      "emoji": "⚡",
+      "title": "La frappe ne marque plus de temps",
+      "description": "Chaque mot validé faisait réenregistrer tout le dictionnaire avant de rendre la main au clavier, jusqu'à une demi-seconde sur un simple espace. L'enregistrement se fait désormais en coulisse : rien n'est perdu, et l'écriture reste fluide d'un bout à l'autre de la phrase.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.9.1",
+      "curated": true
+    },
+    {
+      "version": "10.9.1",
+      "emoji": "🔔",
+      "title": "Le signal de niveau ne se perd plus en route",
+      "description": "La pastille de l'onglet « Kréyòl an mwen » n'apparaissait qu'en rouvrant complètement l'application : un palier franchi pendant qu'elle attendait en arrière-plan passait inaperçu. Elle s'affiche maintenant dès le retour, et la pastille de l'icône s'éteint une fois la progression consultée.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.9.1",
+      "curated": true
+    },
     {
       "version": "10.9.0",
       "emoji": "📤",
