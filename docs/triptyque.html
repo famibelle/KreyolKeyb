@@ -166,6 +166,14 @@ h1{font-size:clamp(27px,6vw,36px);font-weight:800;line-height:1.1;letter-spacing
 
 /* ---------- panneaux clairs ---------- */
 .light{ background:#F5F2EA; }
+/* Le fond crème varie très légèrement d'un volet à l'autre : au verso, la
+   lecture va du plus chaud (volet 4, côté terre cuite de la couverture) au
+   plus froid (volet 6, côté lagon). L'écart reste sous le seuil du « bloc de
+   couleur » : à plat le dépliant garde son unité, mais les plis se devinent
+   et chaque volet se distingue une fois replié. */
+.light.tint-warm{ background:#F8F3E4; }
+.light.tint-mid { background:#F4F1E9; }
+.light.tint-cool{ background:#EFF2EE; }
 .light h2{
   font-size:16px; font-weight:800; color:#1C2624; margin:0 0 3mm;
   padding-bottom:2mm; border-bottom:3px solid #C97F1E;
@@ -357,7 +365,7 @@ body[data-print-mode="verso"] #face-recto{ display:none; }
     </div>
 
     <!-- P2 : pourquoi -->
-    <div class="panel light">
+    <div class="panel light tint-mid">
       <div class="kicker">Pourquoi</div>
       <h2>Pourquoi un clavier créole ?</h2>
       <ul class="bullets" style="margin:0 0 3mm;">
@@ -401,7 +409,7 @@ body[data-print-mode="verso"] #face-recto{ display:none; }
   <div class="page" id="face-verso">
 
     <!-- P4 : installation -->
-    <div class="panel light">
+    <div class="panel light tint-warm">
       <div class="kicker">C'est parti</div>
       <h2>Installation en 4 étapes</h2>
       <ol class="steps">
@@ -427,7 +435,7 @@ body[data-print-mode="verso"] #face-recto{ display:none; }
     </div>
 
     <!-- P5 : fonctionnalités -->
-    <div class="panel light">
+    <div class="panel light tint-mid">
       <div class="kicker">Fonctionnalités</div>
       <h2>Ce qu'il fait pour toi</h2>
       <ul class="bullets">
@@ -445,7 +453,7 @@ body[data-print-mode="verso"] #face-recto{ display:none; }
     </div>
 
     <!-- P6 : progression -->
-    <div class="panel light">
+    <div class="panel light tint-cool">
       <div class="kicker">Motivation</div>
       <h2>Suis ta progression</h2>
       <p>Un tableau de bord suit les mots créoles que tu utilises et ta progression vers le niveau <b>Potomitan</b>, le sommet des niveaux de maîtrise.</p>
