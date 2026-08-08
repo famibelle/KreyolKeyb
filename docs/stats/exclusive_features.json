@@ -1,5 +1,5 @@
 {
-  "production_version": "10.0.1",
+  "production_version": "10.6.0",
   "latest_version": "10.9.2",
   "as_of": "2026-08-08",
   "features": [
@@ -41,94 +41,6 @@
       "title": "Vos passages de niveau se signalent enfin",
       "description": "Franchir un palier de vocabulaire ne se voyait qu'en ouvrant vos statistiques. Une pastille se pose désormais sur l'icône de l'application, sans son ni bandeau : rien ne vient vous déranger pendant que vous écrivez, et vous la découvrez en revenant à votre écran d'accueil.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.8.0",
-      "curated": true
-    },
-    {
-      "version": "10.6.0",
-      "emoji": "🔒",
-      "title": "Le clavier ne retient aucun de vos mots",
-      "description": "La 10.5.0 apprenait les mots absents des textes créoles pour les proposer ensuite. Cette fonction est retirée : un clavier qui conserve ce qu'on écrit n'est pas ce qu'on attend d'un clavier. Ce qui avait été enregistré est effacé au premier démarrage.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.6.0",
-      "curated": true
-    },
-    {
-      "version": "10.4.1",
-      "emoji": "✅",
-      "title": "Vos mots kréyòl ne sont plus soulignés en rouge",
-      "description": "Le correcteur orthographique kréyòl existait mais n'était jamais sollicité par Android : tous vos mots créoles passaient donc pour des fautes. Il fonctionne désormais, à sélectionner une fois dans Réglages › Système › Clavier › Correcteur orthographique.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.4.1",
-      "curated": true
-    },
-    {
-      "version": "10.4.0",
-      "emoji": "🎯",
-      "title": "Les suggestions suivent enfin le curseur",
-      "description": "Revenir corriger un mot déjà écrit, effacer l'espace qui le suit ou taper en plein milieu ne donnait plus aucune suggestion. C'est corrigé : le clavier sait de nouveau où vous en êtes dans votre texte.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.4.0",
-      "curated": true
-    },
-    {
-      "version": "10.4.0",
-      "emoji": "📊",
-      "title": "Le clavier apprend votre vocabulaire",
-      "description": "Les mots que vous employez vraiment remontent dans les suggestions, même s'ils sont moins courants dans la littérature créole. Tout reste sur votre téléphone.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.4.0",
-      "curated": true
-    },
-    {
-      "version": "10.4.0",
-      "emoji": "🧠",
-      "title": "Des prédictions plus justes",
-      "description": "Le clavier tient compte des deux derniers mots écrits au lieu d'un seul. Après « an ka », il propose kwè, vwè, travay, là où « ka » seul donnait fè, di, pran.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.4.0",
-      "curated": true
-    },
-    {
-      "version": "10.3.0",
-      "emoji": "🎮",
-      "title": "Mo an Karénaj, le Wordle créole",
-      "description": "Devine un mot kréyòl de 5 lettres en 6 essais, avec un retour en couleur comme le Wordle. Un nouveau jeu de vocabulaire directement dans l'app.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.3.0",
-      "curated": true
-    },
-    {
-      "version": "10.2.9",
-      "emoji": "✨",
-      "title": "Un guide pas à pas pour l'activation",
-      "description": "L'onglet Guide explique maintenant, captures d'écran à l'appui, comment activer et sélectionner le clavier dans les réglages Android.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.2.9",
-      "curated": true
-    },
-    {
-      "version": "10.2.8",
-      "emoji": "🌐",
-      "title": "Un repère pour changer de clavier",
-      "description": "Une petite icône apparaît dans la barre d'espace pour retrouver facilement l'appui long qui ouvre le sélecteur de clavier.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.2.8",
-      "curated": true
-    },
-    {
-      "version": "10.2.3",
-      "emoji": "🎉",
-      "title": "Une carte à partager après l'activation",
-      "description": "Une fois le clavier activé, une carte de félicitations propose de partager la nouvelle avec un message prêt à l'emploi.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.2.3",
-      "curated": true
-    },
-    {
-      "version": "10.2.1",
-      "emoji": "📤",
-      "title": "Envoyer un mot à un ami",
-      "description": "Une puce apparaît dans la barre de suggestions dès la première utilisation réelle du clavier, pour partager l'app en un tap.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.2.1",
-      "curated": true
-    },
-    {
-      "version": "10.1.0",
-      "emoji": "😀",
-      "title": "Tous les emojis, rangés par catégories",
-      "description": "Le panneau emoji ne se limite plus à une courte liste : l'ensemble des emojis est là, classé par catégories avec des onglets, et on passe de l'une à l'autre d'un glissement du doigt.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.1.0",
       "curated": true
     }
   ]
