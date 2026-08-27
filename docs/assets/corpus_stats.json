@@ -1,14 +1,14 @@
 {
- "lignes_total": 2630,
+ "lignes_total": 2632,
  "lignes_vides": 122,
- "lignes_utiles": 2508,
+ "lignes_utiles": 2510,
  "sources_total": 87,
- "caracteres": 191772,
- "octets_utf8": 209025,
+ "caracteres": 191782,
+ "octets_utf8": 209035,
  "longueur_entree": {
   "min": 1,
   "max": 42906,
-  "moyenne": 76.5,
+  "moyenne": 76.4,
   "mediane": 20,
   "p90": 87
  },
@@ -16,7 +16,7 @@
   {
    "min": 0,
    "max": 10,
-   "n": 610
+   "n": 612
   },
   {
    "min": 10,
@@ -49,13 +49,13 @@
    "n": 43
   }
  ],
- "mots_total": 36499,
- "mots_uniques": 5285,
+ "mots_total": 36501,
+ "mots_uniques": 5287,
  "richesse_lexicale": 0.1448,
- "mots_par_entree": 14.6,
+ "mots_par_entree": 14.5,
  "bigrammes_uniques": 20307,
  "trigrammes_uniques": 26960,
- "hapax": 2952,
+ "hapax": 2954,
  "hapax_pourcent": 55.9,
  "longueur_mot_moyenne": 3.91,
  "top_mots": [
@@ -351,10 +351,10 @@
  ],
  "couverture": {
   "50": 73,
-  "75": 521,
+  "75": 522,
   "90": 1985,
-  "95": 3461,
-  "99": 4921
+  "95": 3462,
+  "99": 4922
  },
  "mots_longs": [
   {
@@ -469,7 +469,7 @@
   },
   {
    "lettres": 4,
-   "mots": 726
+   "mots": 727
   },
   {
    "lettres": 5,
@@ -477,7 +477,7 @@
   },
   {
    "lettres": 6,
-   "mots": 931
+   "mots": 932
   },
   {
    "lettres": 7,
@@ -912,17 +912,17 @@
  "top_lettres": [
   {
    "lettre": "a",
-   "n": 19558,
+   "n": 19559,
    "pourcent": 13.66
   },
   {
    "lettre": "n",
-   "n": 15287,
+   "n": 15289,
    "pourcent": 10.68
   },
   {
    "lettre": "o",
-   "n": 11260,
+   "n": 11262,
    "pourcent": 7.86
   },
   {
@@ -932,12 +932,12 @@
   },
   {
    "lettre": "i",
-   "n": 8448,
+   "n": 8449,
    "pourcent": 5.9
   },
   {
    "lettre": "t",
-   "n": 7134,
+   "n": 7138,
    "pourcent": 4.98
   },
   {
@@ -1136,8 +1136,8 @@
  "dataset": "POTOMITAN/PawolKreyol-gfc",
  "dataset_url": "https://huggingface.co/datasets/POTOMITAN/PawolKreyol-gfc",
  "source_donnees": "huggingface",
- "parquet_octets": 139606,
- "dataset_revision": "56ebdb86551deddf2d9c5312e2a5859008f62479",
- "dataset_revision_parquet": "e9634bf673484d63e52e139afa57b1fb304c61f8",
- "dataset_derniere_modification": "2026-08-22T19:59:48.000Z"
+ "parquet_octets": 139636,
+ "dataset_revision": "49a2d5136e26acb6f54aa85275521f48cf23348c",
+ "dataset_revision_parquet": "0b31d94bc34322233050552eedf90aa8a1e810c5",
+ "dataset_derniere_modification": "2026-08-26T20:33:17.000Z"
 }
