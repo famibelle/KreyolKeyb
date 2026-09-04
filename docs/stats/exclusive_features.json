@@ -1,7 +1,7 @@
 {
   "production_version": "10.6.0",
   "latest_version": "10.14.8",
-  "as_of": "2026-09-03",
+  "as_of": "2026-09-04",
   "features": [
     {
       "version": "10.14.2",
