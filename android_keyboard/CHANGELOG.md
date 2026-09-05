@@ -5,6 +5,37 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.1.0] - 2026-09-05
+
+### ✨ Ajouté
+
+- **L'application annonce elle-même une nouvelle version.** Elle passait par le
+  Play Store, qui ne pose aucune pastille sur l'icône d'une application dont
+  une mise à jour attend. Le téléchargement se fait en fond et l'installation
+  attend un geste : le mode bloquant existe, mais barrer l'écran de quelqu'un
+  venu changer le son des touches n'a rien d'aimable. Rien ne s'affiche quand
+  l'application n'a pas été installée depuis le Play Store, ce qui est le cas
+  des APK publiés sur GitHub à chaque version.
+
+### 🔧 Modifié
+
+- **Mo an Karénaj tire de nouveau dans une vraie réserve.** Elle était tombée à
+  103 mots en 12.0.0, faute de traduction pour les autres : à une partie par
+  jour, la répétition devenait sensible en trois mois. Elle remonte à 220 mots,
+  en acceptant ceux que le corpus emploie au moins cinq fois, et 45 % des
+  parties se terminent encore sur une traduction. Dix-huit noms propres sont
+  écartés au passage, dont `viktò`, qui n'est pas un mot mais un personnage
+  d'une pièce de Sonny Rupaire.
+
+### 🐛 Corrigé
+
+- **La couverture des gloses était sous-estimée dans toute la documentation.**
+  Elle était mesurée sur les clés exactes de la table, alors que
+  l'application cherche avec repli d'accents, `kòlè` trouvant `kolé`. Le chiffre
+  réel est de 622 mots du dictionnaire et 42 % des occurrences, contre les 513
+  et 36 % annoncés en 12.0.0. Rien ne change dans l'application : c'est la
+  mesure qui était fausse, pas la table.
+
 ## [12.0.1] - 2026-09-05
 
 ### 🔧 Modifié
@@ -33,8 +64,8 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Le mot du jour porte sa traduction**, annoncée « en français : … » plutôt
   que posée sous le mot : une glose seule ne dit pas dans quelle langue on la
   lit. La liste des mots les plus utilisés en fait autant.
-- **1 145 formes traduites**, dont 513 des 5 296 mots du dictionnaire, soit
-  36 % de tout ce que le corpus écrit. Les 632 autres sont des mots absents du
+- **1 145 formes traduites**, qui couvrent 622 des 5 296 mots du dictionnaire,
+  soit 42 % de tout ce que le corpus écrit. Les autres sont des mots absents du
   corpus : ils ne servent qu'à la recherche. Les sources sont Kreyolopedia et
   le Wiktionnaire francophone, toutes deux en CC BY-SA 4.0 ; elles sont créditées
   dans la fiche de chaque mot et en pied de l'onglet.
