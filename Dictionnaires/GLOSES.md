@@ -95,10 +95,18 @@ tourner **après** `KreyolComplet.py`, comme `generate_cloze.py`.
 - `--strict` refuse le cache : les deux sources doivent répondre. C'est le mode
   à employer à la main, jamais en CI.
 - `--hors-ligne` force le cache, pour mettre au point sans rappeler 900 pages.
-- Sans option, le script tente le réseau et se replie sur le cache. C'est ce
-  que fait la CI, pour qu'une indisponibilité de source dégrade comme le reste
-  de la chaîne au lieu de rendre le build rouge. Deux garde-fous de volume et
-  d'attribution arrêtent alors le build si le fichier est tronqué.
+- Sans option, le script tente le réseau et se replie sur le cache, et si le
+  cache n'existe pas non plus, **il ignore la source** au lieu de s'arrêter.
+  C'est ce que fait la CI, dont le disque est neuf à chaque exécution, donc
+  sans cache : le 5 septembre 2026, un simple délai d'attente dépassé chez
+  Kreyolopedia a fait échouer le build du tag v16.0.0.
+- Ce que la chaîne doit refuser, c'est un **actif tronqué**, pas une requête
+  ratée, et le volume s'en charge mieux qu'un `try` : sans Kreyolopedia la
+  table tombe de 1 145 à 1 136 formes (neuf perdues, le Wiktionnaire couvrant
+  douze des vingt et une autres) et le build reste vert ; sans le Wiktionnaire
+  elle tombe à 21, sous le plancher de 800 de l'étape *Verify Generated
+  Assets*, et le build s'arrête comme il doit. `--strict` garde le
+  comportement d'origine, une source manquante y est fatale.
 
 Le cache vit dans `Dictionnaires/gloses_data/`, hors du dépôt.
 

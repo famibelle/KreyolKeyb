@@ -281,11 +281,21 @@ def abaisser_initiale(texte, nom_propre):
 FICHIER_KREYOLOPEDIA = "kreyolopedia_gp.json"
 
 
-def charger_kreyolopedia(hors_ligne=False, verbeux=True):
+def charger_kreyolopedia(hors_ligne=False, verbeux=True, tolerant=False):
     """Les mots guadeloupéens validés de Kreyolopedia.
 
     Renvoie `(mots, frais)` : la liste des fiches, et si elles viennent du
     réseau ou du cache.
+
+    `tolerant` rend la source facultative : injoignable et jamais mise en
+    cache, elle est ignorée au lieu de lever. C'est ce qu'il faut en CI, où le
+    disque est neuf à chaque exécution, donc où il n'y a jamais de cache : une
+    indisponibilité passagère de Kreyolopedia y faisait échouer le build
+    entier, alors que cette source ne fournit que 21 des 1 145 formes livrées.
+    Ce n'est pas une question de fraîcheur mais de volume, et le volume est
+    déjà gardé deux fois : `construire()` refuse une table vide, et l'étape
+    « Verify Generated Assets » du workflow refuse moins de 800 formes. Perdre
+    le Wiktionnaire déclenche donc bien un échec, perdre Kreyolopedia non.
     """
     if not hors_ligne:
         try:
@@ -307,6 +317,10 @@ def charger_kreyolopedia(hors_ligne=False, verbeux=True):
 
     cache = _lire_cache(FICHIER_KREYOLOPEDIA)
     if cache is None:
+        if tolerant:
+            if verbeux:
+                print("      ⏭️  ni réseau ni cache : source ignorée")
+            return [], False
         raise RuntimeError("Kreyolopedia injoignable et jamais mise en cache")
     if verbeux:
         print(f"   📁 cache Kreyolopedia du {cache['_recupere_le'][:10]} — "
@@ -336,7 +350,7 @@ MOTIF_LIGNE_DEFINITION = re.compile(r'^#\s*[^*:#\s]')
 MOTIF_TRADUCTION = re.compile(r'\{\{trad[^}|]*\|gcf\|([^}|]+)')
 
 
-def charger_wiktionnaire(hors_ligne=False, verbeux=True):
+def charger_wiktionnaire(hors_ligne=False, verbeux=True, tolerant=False):
     """Les deux passes du Wiktionnaire.
 
     Renvoie `(donnees, frais)` où `donnees` porte :
@@ -396,6 +410,13 @@ def charger_wiktionnaire(hors_ligne=False, verbeux=True):
 
     cache = _lire_cache(FICHIER_WIKTIONNAIRE)
     if cache is None:
+        if tolerant:
+            # Voir charger_kreyolopedia : ignorer celle-ci ne masque rien, la
+            # table tombe alors sous le plancher de 800 formes et le workflow
+            # arrête le build à l'étape de vérification.
+            if verbeux:
+                print("      ⏭️  ni réseau ni cache : source ignorée")
+            return {"definitions": {}, "traductions": {}}, False
         raise RuntimeError("Wiktionnaire injoignable et jamais mis en cache")
     if verbeux:
         print(f"   📁 cache Wiktionnaire du {cache['_recupere_le'][:10]} — "

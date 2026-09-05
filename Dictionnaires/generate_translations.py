@@ -395,9 +395,18 @@ def main():
 
     print(f"\n🌐 SOURCES ({len(dico)} mots à gloser)")
     print("-" * 45)
+    # Hors mode strict, une source injoignable et jamais mise en cache est
+    # ignorée plutôt que fatale. Le disque de la CI est neuf à chaque
+    # exécution, donc sans cache : le 5 septembre 2026, un simple délai
+    # d'attente dépassé chez Kreyolopedia a fait échouer le build du tag
+    # v16.0.0, pour une source qui fournit 21 des 1 145 formes. Ce que la
+    # chaîne doit refuser, c'est un actif tronqué, pas une requête ratée :
+    # `construire()` refuse une table vide et le workflow refuse moins de
+    # 800 formes, ce qui laisse passer la perte de Kreyolopedia et arrête bien
+    # celle du Wiktionnaire.
     try:
-        kreyolopedia, frais_k = charger_kreyolopedia(hors_ligne)
-        wiktionnaire, frais_w = charger_wiktionnaire(hors_ligne)
+        kreyolopedia, frais_k = charger_kreyolopedia(hors_ligne, tolerant=not strict)
+        wiktionnaire, frais_w = charger_wiktionnaire(hors_ligne, tolerant=not strict)
     except Exception as erreur:
         print(f"\n❌ {erreur}")
         return 1
