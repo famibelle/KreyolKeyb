@@ -47,6 +47,8 @@ import com.example.kreyolkeyboard.cloze.ClozeData
 import com.example.kreyolkeyboard.cloze.ClozeDifficulty
 import com.example.kreyolkeyboard.cloze.ClozeQuestion
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.example.kreyolkeyboard.wordsearch.WordSearchPuzzle
 import com.example.kreyolkeyboard.wordsearch.WordSearchWord
@@ -104,6 +106,7 @@ class SettingsActivity : AppCompatActivity() {
         const val EXTRA_OPEN_TAB = "open_tab"
         const val TAB_STATS = 1
         const val TAB_JEUX = 2
+        const val TAB_DICO = 3
 
         /** Code de la demande de permission POST_NOTIFICATIONS (pastille de niveau). */
         private const val REQUEST_NOTIFICATIONS = 4201
@@ -172,7 +175,8 @@ class SettingsActivity : AppCompatActivity() {
             "Le correcteur se choisit dans les réglages Android sous « Clavier », et non sous « Langues ». Le bouton de l'étape 4 vous y mène directement.",
             "Après une mise à jour de l'application, le correcteur peut rester muet jusqu'au redémarrage du téléphone : cela vient d'Android, pas du clavier.",
             "Le guide, en bas de l'onglet Démarrage, reprend toutes les étapes en images, suivies des questions fréquentes.",
-            "« Mots à Trous » vous montre une vraie phrase kréyòl à laquelle il manque un mot : sur les quatre propositions, une seule est celle qu'a écrite l'auteur."
+            "« Mots à Trous » vous montre une vraie phrase kréyòl à laquelle il manque un mot : sur les quatre propositions, une seule est celle qu'a écrite l'auteur.",
+            "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez « maison ». Les jeux, eux, vous disent maintenant ce que veut dire le mot qu'ils vous font chercher."
         )
     }
     
@@ -660,6 +664,15 @@ class SettingsActivity : AppCompatActivity() {
             tabContainer.addView(gamesTab)
             Log.d("SettingsActivity", "Onglet Jé créé et ajouté")
 
+            // Tab Dictionnaire : le seul onglet qui ne joue à rien. On y cherche
+            // un mot, dans un sens ou dans l'autre, et on lit ce qu'il veut
+            // dire. Libellé français faute de mieux : aucune des sources du
+            // projet n'atteste de forme kréyòl pour « dictionnaire », et on
+            // n'en invente pas.
+            val dictionaryTab = createTab(TAB_DICO, "📚", "Dictionnaire")
+            tabContainer.addView(dictionaryTab)
+            Log.d("SettingsActivity", "Onglet Dictionnaire créé et ajouté")
+
             // Guide et À Propos ne sont plus des onglets : ce sont des pages de
             // référence que l'on lit une fois, pas des destinations
             // quotidiennes. Elles s'ouvrent depuis le pied de l'onglet
@@ -726,14 +739,17 @@ class SettingsActivity : AppCompatActivity() {
             // Label du tab
             val labelView = TextView(this@SettingsActivity).apply {
                 text = label
-                // 11sp : trois onglets se partagent la largeur au lieu de
-                // sept, et « Kréyòl an mwen », le plus long, tient largement.
+                // 11sp : quatre onglets se partagent la largeur au lieu de
+                // sept. Vérifié à 360 dp : les quatre libellés tiennent encore
+                // sur une ligne, « Kréyòl an mwen » compris. À police système
+                // agrandie il passe sur deux lignes, ce que le garde-fou
+                // ci-dessous autorise ; il n'est jamais rogné.
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setPadding(0, 0, 0, 2)
-                // Garde-fou conservé bien que trois onglets laissent la place :
-                // un libellé plus long qu'attendu doit passer à la ligne ou se
-                // terminer en points de suspension, jamais repousser ses voisins.
+                // Un libellé plus long que sa colonne doit passer à la ligne ou
+                // se terminer en points de suspension, jamais repousser ses
+                // voisins.
                 maxLines = 2
                 ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(
@@ -3345,8 +3361,21 @@ class SettingsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         
+        // La traduction est annoncée plutôt que posée sous le mot : « chaussure »
+        // seul, sous un mot kréyòl, ne dit pas dans quelle langue on le lit.
+        val wordGloss = TranslationDictionary.traduire(this, wordOfDay)?.let { glose ->
+            TextView(this).apply {
+                text = "en français : $glose"
+                textSize = 16f
+                setTextColor(Color.parseColor("#666666"))
+                gravity = Gravity.CENTER
+                setPadding(0, 0, 0, 16)
+            }
+        }
+
         wordContainer.addView(wordLabel)
         wordContainer.addView(wordText)
+        wordGloss?.let { wordContainer.addView(it) }
         wordContainer.addView(wordUsage)
         
         // === Top 5 - Liste simple ===
@@ -3379,17 +3408,31 @@ class SettingsActivity : AppCompatActivity() {
                 setPadding(0, 0, 16, 0)
             }
             
-            val wordName = TextView(this).apply {
-                text = word.first
-                textSize = 20f
-                setTextColor(Color.parseColor("#1C1C1C"))
+            // Le mot et sa glose forment une colonne, pour que la traduction
+            // s'aligne sous le mot et non entre lui et son compteur.
+            val wordName = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     1f
                 )
+                addView(TextView(this@SettingsActivity).apply {
+                    text = word.first
+                    textSize = 20f
+                    setTextColor(Color.parseColor("#1C1C1C"))
+                })
+                TranslationDictionary.traduire(this@SettingsActivity, word.first)?.let { glose ->
+                    addView(TextView(this@SettingsActivity).apply {
+                        text = glose
+                        textSize = 13f
+                        setTextColor(Color.parseColor("#999999"))
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                    })
+                }
             }
-            
+
             val wordCount = TextView(this).apply {
                 text = "${word.second}"
                 textSize = 20f
@@ -3949,7 +3992,7 @@ class SettingsActivity : AppCompatActivity() {
     // Adapter pour ViewPager2 avec swipe cyclique
     private class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
         companion object {
-            const val REAL_COUNT = 3 // Nombre réel d'onglets (jeux regroupés)
+            const val REAL_COUNT = 4 // Nombre réel d'onglets (jeux regroupés)
             const val VIRTUAL_COUNT = Int.MAX_VALUE // Nombre virtuel pour simuler l'infini
             const val START_POSITION = VIRTUAL_COUNT / 2 // Position de départ au milieu
         }
@@ -3963,6 +4006,7 @@ class SettingsActivity : AppCompatActivity() {
                 0 -> OnboardingFragment()
                 1 -> StatsFragment()
                 2 -> GamesFragment()
+                3 -> DictionaryFragment()
                 else -> OnboardingFragment()
             }
         }
@@ -4220,6 +4264,28 @@ class SettingsActivity : AppCompatActivity() {
         return WEEKLY_TIPS[(weekIndex % WEEKLY_TIPS.size).toInt()]
     }
 
+    /**
+     * Tire un mot au hasard, puis avance jusqu'au premier qui porte une glose.
+     *
+     * Le mot du jour s'affiche avec sa traduction, et 513 des 5 296 mots
+     * seulement en ont une : sans ce parcours, neuf jours sur dix la ligne
+     * « en français » resterait vide sous un mot de quarante-huit points.
+     *
+     * Le parcours plutôt qu'un `filter` : la liste vient du fichier d'usage,
+     * qui grossit à chaque mot tapé, et la filtrer entière allouerait une copie
+     * à chaque ouverture de l'onglet pour n'en garder qu'un mot. Il est
+     * circulaire, et rend le mot tiré si la table est vide — sans glose,
+     * l'onglet montre un mot du jour muet, jamais rien.
+     */
+    private fun tirerMotGlose(mots: List<String>, random: Random): String {
+        val depart = random.nextInt(mots.size)
+        for (decalage in mots.indices) {
+            val candidat = mots[(depart + decalage) % mots.size]
+            if (TranslationDictionary.estProposable(this, candidat)) return candidat
+        }
+        return mots[depart]
+    }
+
     private fun getWordOfTheDay(): Pair<String, Int> {
         return try {
             val usageFile = File(filesDir, "creole_dict_with_usage.json")
@@ -4245,7 +4311,7 @@ class SettingsActivity : AppCompatActivity() {
                 val seed = dateString.hashCode().toLong()
                 val random = Random(seed)
                 
-                val selectedWord = allWords[random.nextInt(allWords.size)]
+                val selectedWord = tirerMotGlose(allWords, random)
                 // Lire directement l'entier
                 usageCount = jsonObject.optInt(selectedWord, 0)
                 
@@ -4274,8 +4340,8 @@ class SettingsActivity : AppCompatActivity() {
                 val seed = dateString.hashCode().toLong()
                 val random = Random(seed)
                 
-                val selectedWord = allWords[random.nextInt(allWords.size)]
-                
+                val selectedWord = tirerMotGlose(allWords, random)
+
                 return Pair(selectedWord, 0)
             }
         } catch (e: Exception) {
@@ -4562,11 +4628,26 @@ class SettingsActivity : AppCompatActivity() {
                 val wordView = TextView(activity).apply {
                     text = if (word.isFound) "✅ ${word.word.uppercase()}" else "📝 ${word.word.uppercase()}"
                     textSize = 14f
-                    setPadding(12, 8, 12, 8)
+                    setPadding(12, 8, 12, 0)
                     setTextColor(if (word.isFound) Color.parseColor("#4CAF50") else Color.parseColor("#333333"))
                     setTypeface(null, if (word.isFound) Typeface.BOLD else Typeface.NORMAL)
                 }
                 wordsListContainer.addView(wordView)
+
+                // La glose est montrée dès le départ, pas seulement une fois le
+                // mot trouvé : la liste donne déjà le mot en toutes lettres,
+                // elle ne cache rien. C'est en le cherchant dans la grille
+                // qu'on a le temps de lire ce qu'il veut dire.
+                TranslationDictionary.traduire(activity, word.word)?.let { glose ->
+                    wordsListContainer.addView(TextView(activity).apply {
+                        text = glose
+                        textSize = 11f
+                        setPadding(28, 0, 12, 8)
+                        setTextColor(Color.parseColor("#999999"))
+                        maxLines = 2
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                    })
+                }
             }
         }
         
@@ -4997,8 +5078,15 @@ class SettingsActivity : AppCompatActivity() {
             
             if (answer.equals(currentWord, ignoreCase = true)) {
                 score += 100
-                
-                Toast.makeText(requireContext(), "✅ Correct! +100 pts", Toast.LENGTH_SHORT).show()
+
+                // La traduction n'arrive qu'une fois le mot reconstitué : la
+                // donner avant reviendrait à donner la réponse.
+                val glose = TranslationDictionary.libelle(
+                    requireContext(), currentWord, prefixe = " — "
+                )
+                Toast.makeText(
+                    requireContext(), "✅ Correct! +100 pts$glose", Toast.LENGTH_SHORT
+                ).show()
 
                 wordsCorrect++
                 currentWordIndex++
@@ -5010,7 +5098,12 @@ class SettingsActivity : AppCompatActivity() {
         }
         
         private fun skipWord() {
-            Toast.makeText(requireContext(), "Le mot était: $currentWord", Toast.LENGTH_SHORT).show()
+            val glose = TranslationDictionary.libelle(
+                requireContext(), currentWord, prefixe = " — "
+            )
+            Toast.makeText(
+                requireContext(), "Le mot était: $currentWord$glose", Toast.LENGTH_SHORT
+            ).show()
             currentWordIndex++
             loadNextWord()
         }
@@ -5459,11 +5552,18 @@ class SettingsActivity : AppCompatActivity() {
             editGuess.isEnabled = false
             btnSubmit.isEnabled = false
 
+            // La partie se termine sur le mot ; c'est le seul moment où sa
+            // traduction ne gâche rien, et le seul où elle sert à quelque
+            // chose.
+            val glose = TranslationDictionary.libelle(
+                requireContext(), targetWord, prefixe = "\n\nEn français : "
+            )
+
             AlertDialog.Builder(requireContext())
                 .setTitle(if (won) "🎉 Bravo !" else "😔 Domaj !")
                 .setMessage(
-                    if (won) "Ou touvé mo-a an $currentAttempt èsèy : ${targetWord.uppercase()}"
-                    else "Mo la té : ${targetWord.uppercase()}"
+                    (if (won) "Ou touvé mo-a an $currentAttempt èsèy : ${targetWord.uppercase()}"
+                    else "Mo la té : ${targetWord.uppercase()}") + glose
                 )
                 .setPositiveButton("Rejouer") { _, _ -> startNewGame() }
                 .setNegativeButton("OK", null)
@@ -5909,9 +6009,16 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             tvSentence.text = sentenceWithAnswer(question)
+            // La réponse est révélée dans les deux cas — juste, elle est déjà en
+            // vert dans la grille — donc sa traduction ne dévoile plus rien.
+            // Elle n'arrive que si l'actif la connaît : 77 des 240 réponses du
+            // jeu sont glosées, les autres s'affichent sans.
+            val glose = TranslationDictionary.libelle(
+                requireContext(), question.answer, prefixe = " — "
+            )
             tvFeedback.apply {
-                text = if (juste) "✅ Ou touvé !"
-                       else "❌ La phrase disait « ${question.answer} »"
+                text = if (juste) "✅ Ou touvé ! ${question.answer}$glose"
+                       else "❌ La phrase disait « ${question.answer} »$glose"
                 setTextColor(if (juste) couleurJuste else couleurFausse)
                 visibility = View.VISIBLE
             }
@@ -6181,6 +6288,448 @@ class SettingsActivity : AppCompatActivity() {
             conteneurJeu = null
             barreRetour = null
             grilleChoix = null
+        }
+    }
+
+    // Fragment « Dictionnaire » : un champ de saisie et une liste de résultats.
+    // C'est le seul onglet qui ne joue à rien — on y cherche un mot, dans un
+    // sens ou dans l'autre, et on lit ce qu'il veut dire.
+    class DictionaryFragment : Fragment() {
+
+        private var rootView: ScrollView? = null
+        private lateinit var champRecherche: EditText
+        private lateinit var conteneurResultats: LinearLayout
+        private lateinit var tvEtat: TextView
+
+        // La recherche parcourt toute la table : à la vitesse de frappe, c'est
+        // une dizaine de parcours par mot tapé. On attend 200 ms de silence
+        // avant de chercher, ce qui ramène cela à un seul.
+        private val delaiRecherche = Handler(Looper.getMainLooper())
+        private var rechercheEnAttente: Runnable? = null
+
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+
+            val racine = ScrollView(activity).apply {
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+                isFillViewport = true
+            }
+
+            val colonne = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(24, 24, 24, 24)
+            }
+
+            colonne.addView(TextView(activity).apply {
+                text = "📚 Dictionnaire"
+                textSize = 22f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.parseColor("#FF8C00"))
+                setPadding(0, 0, 0, 8)
+            })
+
+            // Le chargement se fait ici et non à la première frappe : analyser
+            // l'actif entre la frappe et les résultats se verrait.
+            TranslationDictionary.charger(activity)
+
+            colonne.addView(TextView(activity).apply {
+                text = "Tapez un mot kréyòl ou un mot français : la recherche " +
+                        "fonctionne dans les deux sens.\n" +
+                        "Touchez un mot pour ouvrir sa fiche ; appui long pour " +
+                        "le copier."
+                textSize = 14f
+                setTextColor(Color.parseColor("#666666"))
+                setLineSpacing(0f, 1.2f)
+                setPadding(0, 0, 0, 20)
+            })
+
+            champRecherche = EditText(activity).apply {
+                hint = "kaz, maison, dlo, eau…"
+                textSize = 18f
+                // Couleurs explicites : sur fond blanc imposé, la couleur de
+                // texte héritée du thème est elle-même claire, et le champ
+                // paraissait vide alors qu'il contenait la requête.
+                setTextColor(Color.parseColor("#1C1C1C"))
+                setHintTextColor(Color.parseColor("#BBBBBB"))
+                setSingleLine(true)
+                imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+                setPadding(24, 20, 24, 20)
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                addTextChangedListener(object : android.text.TextWatcher {
+                    override fun afterTextChanged(s: android.text.Editable?) {
+                        rechercheEnAttente?.let { delaiRecherche.removeCallbacks(it) }
+                        val requete = s?.toString() ?: ""
+                        val tache = Runnable { if (isAdded) afficherResultats(requete) }
+                        rechercheEnAttente = tache
+                        delaiRecherche.postDelayed(tache, 200)
+                    }
+
+                    override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                    override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                })
+            }
+            colonne.addView(champRecherche)
+
+            tvEtat = TextView(activity).apply {
+                textSize = 15f
+                setTextColor(Color.parseColor("#999999"))
+                setPadding(4, 20, 4, 8)
+                setLineSpacing(0f, 1.25f)
+            }
+            colonne.addView(tvEtat)
+
+            conteneurResultats = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            colonne.addView(conteneurResultats)
+
+            // Les deux sources sont en CC BY-SA : la citation n'est pas une
+            // politesse, c'est la condition de la réutilisation. C'est aussi ce
+            // qui dit d'où sort la traduction qu'on lit, et donc jusqu'où on
+            // peut lui faire confiance. Le texte vient de l'actif lui-même.
+            colonne.addView(TextView(activity).apply {
+                text = "Traductions issues de :\n" +
+                        TranslationDictionary.attribution(activity) +
+                        "\nPartage à l'identique."
+                textSize = 12f
+                setTextColor(Color.parseColor("#AAAAAA"))
+                setLineSpacing(0f, 1.2f)
+                setPadding(4, 28, 4, 8)
+            })
+
+            racine.addView(colonne)
+            rootView = racine
+
+            afficherResultats("")
+            return racine
+        }
+
+        /**
+         * Affiche les résultats d'une requête, ou l'invite quand elle est vide.
+         *
+         * Le cas « rien trouvé » mérite une explication plutôt qu'un vide : le
+         * clavier connaît 5 296 mots et la table n'en glose que 513. Sans ce
+         * message, quelqu'un qui cherche « sé » — le troisième mot le plus
+         * fréquent du kréyòl — croit l'application cassée, alors qu'aucune
+         * source libre ne le traduit.
+         */
+        private fun afficherResultats(requete: String) {
+            val activity = activity as? SettingsActivity ?: return
+            conteneurResultats.removeAllViews()
+
+            if (requete.trim().length < 2) {
+                tvEtat.text = "Entrez au moins deux lettres. " +
+                        "${TranslationDictionary.taille(activity)} mots traduits."
+                return
+            }
+
+            val resultats = TranslationDictionary.rechercher(activity, requete)
+            if (resultats.isEmpty()) {
+                tvEtat.text = "Aucun résultat pour « ${requete.trim()} ».\n" +
+                        "Le dictionnaire est encore jeune : beaucoup de mots " +
+                        "kréyòl n'ont pas encore de traduction publiée sous " +
+                        "licence libre."
+                return
+            }
+
+            tvEtat.text = if (resultats.size == 1) "1 résultat"
+                          else "${resultats.size} résultats"
+
+            resultats.forEachIndexed { rang, entree ->
+                conteneurResultats.addView(ligneResultat(activity, entree, rang))
+            }
+        }
+
+        private fun ligneResultat(
+            activity: SettingsActivity,
+            entree: TranslationDictionary.Entree,
+            rang: Int
+        ): View = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(20, 16, 20, 16)
+            // Une ligne sur deux légèrement teintée : la liste peut compter
+            // quarante entrées, et rien d'autre ne sépare une glose du mot
+            // suivant.
+            setBackgroundColor(
+                if (rang % 2 == 0) Color.WHITE else Color.parseColor("#FAFAFA")
+            )
+            isClickable = true
+            setOnClickListener { ouvrirFiche(activity, entree) }
+            // L'appui long garde la copie à un seul geste : c'est l'action
+            // courante, et la faire passer par la fiche coûterait deux taps à
+            // qui veut seulement coller un mot ailleurs.
+            setOnLongClickListener { copierMot(activity, entree.mot); true }
+
+            addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                )
+                addView(TextView(activity).apply {
+                    text = entree.mot
+                    textSize = 19f
+                    setTypeface(null, Typeface.BOLD)
+                    setTextColor(Color.parseColor("#1C1C1C"))
+                })
+                addView(TextView(activity).apply {
+                    text = entree.glose
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#555555"))
+                    setPadding(0, 4, 0, 0)
+                })
+            })
+
+            // Le chevron des liens de référence de l'onglet Démarrage : c'est
+            // déjà, ailleurs dans l'application, ce qui annonce qu'une ligne
+            // ouvre quelque chose.
+            addView(TextView(activity).apply {
+                text = "›"
+                textSize = 22f
+                setTextColor(Color.parseColor("#BBBBBB"))
+                setPadding(20, 0, 0, 0)
+            })
+        }
+
+        /**
+         * Fiche d'un mot : son sens, sa prononciation, ses exemples, sa source.
+         *
+         * Déployée d'emblée et sans position repliée. Une feuille inférieure
+         * s'ouvre par défaut à une hauteur calculée sur l'écran : tant que la
+         * fiche tient dedans on ne voit rien, mais sur un petit écran — ou avec
+         * une police système agrandie, ce qui revient au même — elle s'ouvre en
+         * cachant les boutons, sans que rien n'indique qu'il faut la tirer.
+         */
+        private fun ouvrirFiche(
+            activity: SettingsActivity,
+            entree: TranslationDictionary.Entree
+        ) {
+            val dialogue = BottomSheetDialog(activity)
+            dialogue.setContentView(contenuFiche(activity, entree, dialogue))
+            dialogue.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            dialogue.behavior.skipCollapsed = true
+            dialogue.show()
+        }
+
+        private fun contenuFiche(
+            activity: SettingsActivity,
+            entree: TranslationDictionary.Entree,
+            dialogue: BottomSheetDialog
+        ): View {
+            val colonne = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundColor(Color.WHITE)
+                setPadding(40, 36, 40, 44)
+            }
+
+            colonne.addView(TextView(activity).apply {
+                text = entree.mot
+                textSize = 30f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.parseColor("#1C1C1C"))
+            })
+
+            // La prononciation ne vient que de Kreyolopedia, dont les fiches
+            // sont écrites à la main. Elle est rare et se pose sous le mot,
+            // sans titre : un intitulé de section pour six caractères pèserait
+            // plus que ce qu'il annonce.
+            if (entree.phonetique.isNotEmpty()) {
+                colonne.addView(TextView(activity).apply {
+                    text = entree.phonetique
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#999999"))
+                    setPadding(0, 6, 0, 0)
+                })
+            }
+
+            colonne.addView(titreSection(activity, "EN FRANÇAIS", 30))
+
+            // Le générateur assemble les acceptions avec « , » ; rien ne lui
+            // interdit d'en produire une qui contienne elle-même une virgule.
+            // Découper là est donc une heuristique : au pire une acception
+            // s'affiche sur deux lignes, jamais aucune n'est perdue.
+            entree.glose.split(", ").filter { it.isNotBlank() }.forEach { sens ->
+                colonne.addView(TextView(activity).apply {
+                    text = "•  $sens"
+                    textSize = 17f
+                    setTextColor(Color.parseColor("#333333"))
+                    setPadding(0, 0, 0, 8)
+                    setLineSpacing(0f, 1.15f)
+                })
+            }
+
+            // La définition entière quand la glose l'a raccourcie : « gwoka »
+            // se glose « musique » sur une ligne de liste, mais la fiche a la
+            // place de dire les chants et les danses. Le champ ne voyage dans
+            // l'actif que lorsqu'il apporte quelque chose, la section
+            // disparaît donc d'elle-même pour les mille formes dont la glose
+            // est déjà toute la définition.
+            if (entree.definition.isNotEmpty()) {
+                colonne.addView(titreSection(activity, "DÉFINITION", 26))
+                colonne.addView(TextView(activity).apply {
+                    text = entree.definition
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#333333"))
+                    setLineSpacing(0f, 1.25f)
+                })
+            }
+
+            // Une glose dit ce qu'un mot veut dire, jamais comment il s'emploie :
+            // « kaz = maison » ne fait pas deviner « an ka rété adan an ti kaz ».
+            // Ces phrases-là sont écrites pour cela.
+            if (entree.exemples.isNotEmpty()) {
+                colonne.addView(titreSection(
+                    activity,
+                    if (entree.exemples.size == 1) "EXEMPLE" else "EXEMPLES",
+                    26
+                ))
+                // Chacune sur son fond, séparées d'un vrai intervalle : côte à
+                // côte sur le blanc de la fiche, deux phrases se lisent comme
+                // un seul paragraphe.
+                entree.exemples.forEachIndexed { rang, phrase ->
+                    colonne.addView(TextView(activity).apply {
+                        text = phrase
+                        textSize = 16f
+                        setTextColor(Color.parseColor("#333333"))
+                        setLineSpacing(0f, 1.25f)
+                        setPadding(24, 20, 24, 20)
+                        background = GradientDrawable().apply {
+                            cornerRadius = 12f
+                            setColor(Color.parseColor("#F6F7F8"))
+                        }
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            if (rang < entree.exemples.size - 1) bottomMargin = 14
+                        }
+                    })
+                }
+            }
+
+            colonne.addView(titreSection(activity, "SOURCE", 26))
+            colonne.addView(TextView(activity).apply {
+                text = entree.libelleSource + " · CC BY-SA 4.0"
+                textSize = 15f
+                setTextColor(Color.parseColor("#555555"))
+            })
+
+            colonne.addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 30, 0, 0)
+
+                addView(boutonFiche(
+                    activity, "Copier le mot",
+                    Color.parseColor("#FF8C00"), Color.WHITE, null
+                ) {
+                    copierMot(activity, entree.mot)
+                    dialogue.dismiss()
+                }.apply {
+                    (layoutParams as LinearLayout.LayoutParams).bottomMargin = 20
+                })
+
+                // Le lien n'apparaît que si l'on sait sur quel article il
+                // tombe. Un mot atteint par les traductions n'a pas de page à
+                // lui : l'envoyer sur `wiktionary.org/wiki/<mot>` mènerait à
+                // une page absente, ou pire, à un homographe d'une autre
+                // langue.
+                val url = entree.url
+                if (url.isNotEmpty()) {
+                    addView(boutonFiche(
+                        activity, "Voir sur ${entree.libelleSource} ↗",
+                        Color.WHITE, Color.parseColor("#2C7A8C"),
+                        Color.parseColor("#B9D6DD")
+                    ) {
+                        ouvrirLien(activity, url)
+                        dialogue.dismiss()
+                    })
+                }
+            })
+
+            return ScrollView(activity).apply { addView(colonne) }
+        }
+
+        /**
+         * Intitulé d'une section de la fiche. Toutes se ressemblent au pixel
+         * près ; seul l'espace au-dessus de la première diffère, la fiche
+         * ouvrant sur le mot en 30sp.
+         */
+        private fun titreSection(
+            activity: SettingsActivity,
+            libelle: String,
+            marge: Int
+        ): TextView = TextView(activity).apply {
+            text = libelle
+            textSize = 11f
+            letterSpacing = 0.12f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#AAAAAA"))
+            setPadding(0, marge, 0, 10)
+        }
+
+        /**
+         * Bouton de la fiche. `isAllCaps = false` : le thème AppCompat force la
+         * capitale sur les boutons d'une activité, ce qui donnerait « COPIER LE
+         * MOT » à côté de libellés en casse normale partout ailleurs.
+         */
+        private fun boutonFiche(
+            activity: SettingsActivity,
+            libelle: String,
+            fond: Int,
+            encre: Int,
+            bordure: Int?,
+            action: () -> Unit
+        ): Button = Button(activity).apply {
+            text = libelle
+            isAllCaps = false
+            textSize = 16f
+            setTextColor(encre)
+            background = GradientDrawable().apply {
+                cornerRadius = 14f
+                setColor(fond)
+                bordure?.let { setStroke(3, it) }
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener { action() }
+        }
+
+        private fun copierMot(activity: SettingsActivity, mot: String) {
+            val presse = activity.getSystemService(Context.CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+            presse.setPrimaryClip(ClipData.newPlainText("Dictionnaire", mot))
+            Snackbar.make(requireView(), "« $mot » copié", Snackbar.LENGTH_SHORT).show()
+        }
+
+        private fun ouvrirLien(activity: SettingsActivity, url: String) {
+            try {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            } catch (e: Exception) {
+                // Un appareil sans navigateur n'est pas une panne de l'onglet :
+                // la fiche reste lisible, seul le lien ne mène nulle part.
+                Log.e("SettingsActivity", "Lien injoignable: ${e.message}")
+            }
+        }
+
+        override fun onDestroyView() {
+            super.onDestroyView()
+            rechercheEnAttente?.let { delaiRecherche.removeCallbacks(it) }
+            rootView = null
         }
     }
 
