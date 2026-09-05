@@ -5,6 +5,25 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.1] - 2026-09-05
+
+### 🔧 Modifié
+
+- **Les propositions autres que la première redeviennent des boutons.** La
+  17.0.0 les posait à nu sur le plateau, sans fond : le rang se lisait bien,
+  mais plus rien ne disait qu'un mot s'appuie, et l'appui lui-même n'avait plus
+  de confirmation visuelle. Elles reprennent le fond, le contour et l'encre
+  d'une touche de lettre, qui sont le vocabulaire par lequel ce clavier dit
+  déjà « ceci s'appuie », en gardant la forme arrondie des puces pour ne pas se
+  faire prendre pour une touche égarée dans la barre.
+- Elles partagent toutes **le même fond**, quel que soit leur rang et quelle que
+  soit leur rangée : une deuxième proposition kréyòl et une deuxième
+  proposition française sont identiques. Seule la première de chaque rangée
+  porte la couleur de sa langue, ce qui reste la façon dont le rang se lit.
+- Les filets qui séparaient les propositions disparaissent avec la raison qui
+  les avait fait naître : deux mots sans fond se lisaient comme une phrase,
+  deux pastilles se séparent par leur forme.
+
 ## [17.0.0] - 2026-09-05
 
 ### 🔧 Modifié

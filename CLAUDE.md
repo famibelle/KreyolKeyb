@@ -126,7 +126,11 @@ Three implementation points are load-bearing:
 
 Measured on the emulator, monotone in both themes: light floor `#ECECEC` in a `#F5F5F5` ground, shadow from `#CECECE` over 11 px, lip `#FDFDFD`; dark floor `#0C0C0C` in `#131313`, shadow from `#070707`, lip `#363636`.
 
-**Fill encodes rank, not language, since 17.0.0.** The bar stated the language three times (row, KR/FR label, chip colour) and the rank nowhere, though ranking is the whole job of `SuggestionEngine`. Only the first chip of each row keeps a filled pill; the rest sit bare on the tray with a hairline divider and the same tap target. The row and the label are therefore now load-bearing. `KREYOL_GREEN` was darkened to `#27864D` at the same time: a suggestion is read at 18 sp, which is WCAG normal text (4.5:1), and the old `#2E9E5B` gave 3.41:1 against white while the French blue gave 4.93:1.
+**Colour encodes rank, not language, since 17.0.0.** The bar stated the language three times (row, KR/FR label, chip colour) and the rank nowhere, though ranking is the whole job of `SuggestionEngine`. Only the first chip of each row carries its language colour; every other chip shares one fill regardless of rank or row. The row and the label are therefore now load-bearing.
+
+17.0.0 went one step too far and left those other chips bare, with no background at all. The rank read fine, but nothing said a word was tappable and the tap lost its visual confirmation. 17.0.1 gives them a key's material (`palette.touche` gradient, `palette.bordure` stroke, `palette.encre` ink) while keeping the chip's 16 dp radius: the keyboard's own vocabulary for "this is pressable", in the shape of a suggestion. The hairline dividers went with them, having existed only because two bare words read as a phrase.
+
+`KREYOL_GREEN` was darkened to `#27864D` in 17.0.0: a suggestion is read at 18 sp, which is WCAG normal text (4.5:1), and the old `#2E9E5B` gave 3.41:1 against white while the French blue gave 4.93:1.
 
 ### Suggestion Pipeline (`SuggestionEngine.kt`)
 

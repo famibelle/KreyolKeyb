@@ -59,7 +59,7 @@ une par semaine dans cet ordre.
 | 40 | Le panneau emoji s'ouvre sur les 30 derniers emojis employés. | `EmojiRecents` (capacité 30, soit `GRID_COLUMNS` × `VISIBLE_ROWS`), catégorie « Récents » ajoutée en tête dans `EmojiPickerView.categories`. Depuis la 15.0.0 |
 | 29 | Le retour arrière efface un emoji en entier, couleur de peau comprise. | `calculateBackspaceLength()` (`InputProcessor.kt:191`) : paires de surrogates + modificateur de ton |
 | 27 | La touche Entrée s'adapte au champ : Rechercher, Envoyer, ou retour à la ligne. | `handleEnter()` (`InputProcessor.kt:209`) |
-| 41 | La proposition en couleur est la plus probable, les mots à côté viennent ensuite. | `addSuggestionChip(..., premier)` : seule la première puce de chaque rangée garde son fond plein, le remplissage disant le rang depuis la 17.0.0. Ordre produit par `SuggestionEngine.calculateDictionaryScore()` |
+| 41 | La proposition en couleur est la plus probable, celles à côté viennent ensuite. | `addSuggestionChip(..., premier)` : seule la première puce de chaque rangée porte la couleur de sa langue, les autres partagent la matière d'une touche. Ordre produit par `SuggestionEngine.calculateDictionaryScore()` |
 | 39 | Glisser le doigt le long de la barre d'espace promène le curseur lettre par lettre. | `setupSpaceLongPress()` (`KeyboardLayoutManager.kt`), seuil `scaledTouchSlop` puis un cran tous les `SPACE_CURSOR_STEP_DP` (10 dp) ; `InputProcessor.moveCursorBy()`. Depuis la 14.0.0 |
 
 ### Suggestions

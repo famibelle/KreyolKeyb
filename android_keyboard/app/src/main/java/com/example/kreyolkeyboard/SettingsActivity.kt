@@ -186,7 +186,7 @@ class SettingsActivity : AppCompatActivity() {
             "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez « maison ». Les jeux, eux, vous disent maintenant ce que veut dire le mot qu'ils vous font chercher.",
             "Glissez le doigt le long de la barre d'espace pour promener le curseur lettre par lettre : plus besoin de viser entre deux caractères pour corriger un mot.",
             "Le panneau emoji s'ouvre sur ceux que vous venez d'employer : les 30 derniers vous attendent dans le premier onglet.",
-            "La proposition en couleur est celle que le clavier juge la plus probable ; les mots à côté d'elle viennent ensuite, par ordre de vraisemblance."
+            "La proposition en couleur est celle que le clavier juge la plus probable ; celles à côté d'elle viennent ensuite, par ordre de vraisemblance."
         )
     }
     

@@ -910,9 +910,6 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             container.removeAllViews()
 
             suggestions.take(MAX_SUGGESTIONS).forEachIndexed { rang, suggestion ->
-                // Un filet à partir de la troisième : il sépare deux mots nus,
-                // pas une pastille de son voisin, dont la forme suffit.
-                if (rang >= 2) addChipDivider(container)
                 addSuggestionChip(
                     container,
                     BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL),
@@ -943,7 +940,6 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         if (kreyolSuggestions.isNotEmpty()) {
             addLanguageLabel(kreyolContainer, kreyolSuggestions.first().getShortLabel())
             kreyolSuggestions.forEachIndexed { rang, suggestion ->
-                if (rang >= 2) addChipDivider(kreyolContainer)
                 addSuggestionChip(kreyolContainer, suggestion, premier = rang == 0)
             }
         }
@@ -954,7 +950,6 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             // française est pleine elle aussi, ce qui garde à l'écran les deux
             // couleurs de langue.
             frenchSuggestions.forEachIndexed { rang, suggestion ->
-                if (rang >= 2) addChipDivider(frenchContainer)
                 addSuggestionChip(frenchContainer, suggestion, premier = rang == 0)
             }
         }
@@ -989,25 +984,6 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
 
     /**
-     * Le filet vertical qui sépare deux propositions nues (v17.0.0).
-     *
-     * À mi-hauteur de la puce, pas sur toute la rangée : un trait pleine
-     * hauteur découperait le plateau en cases au lieu de séparer deux mots.
-     */
-    private fun addChipDivider(container: LinearLayout) {
-        val trait = View(this).apply {
-            setBackgroundColor(KeyboardTheme.palette().bordure)
-            layoutParams = LinearLayout.LayoutParams(
-                maxOf(1, dpToPx(1)),
-                suggestionChipHeightPx() / 2
-            ).apply {
-                gravity = android.view.Gravity.CENTER_VERTICAL
-            }
-        }
-        container.addView(trait)
-    }
-
-    /**
      * Ajoute une proposition dans une rangée.
      *
      * Depuis la v17.0.0, **le remplissage dit le rang et non la langue**. La
@@ -1017,10 +993,17 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
      * n-grammes, usage personnel, tolérance aux fautes de frappe. La première
      * proposition, celle qui a gagné ce calcul, ressemblait à la troisième.
      *
-     * Seule la première de chaque rangée garde donc sa pastille pleine ; les
-     * suivantes sont posées à nu sur le plateau, avec la même zone tactile. La
-     * langue reste dite par la rangée et par l'étiquette, qui deviennent du
-     * coup porteuses : les retirer redeviendrait ambigu.
+     * Seule la première de chaque rangée porte donc la couleur de sa langue ;
+     * les suivantes partagent toutes le même fond, quel que soit leur rang et
+     * quelle que soit leur rangée. La langue reste dite par la rangée et par
+     * l'étiquette, qui deviennent du coup porteuses : les retirer redeviendrait
+     * ambigu.
+     *
+     * La 17.0.0 posait ces suivantes à nu sur le plateau, sans fond. C'était un
+     * cran trop loin : le rang se lisait, mais plus rien ne disait qu'un mot
+     * s'appuie, et l'appui lui-même n'avait plus de confirmation visuelle. Elles
+     * reprennent en 17.0.1 la matière d'une touche, en gardant la forme d'une
+     * puce.
      */
     private fun addSuggestionChip(
         container: LinearLayout,
@@ -1048,11 +1031,23 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
                 Log.d(TAG, "🎨 '${bilingualSuggestion.word}' en tête : ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
             } else {
-                // Nu sur le plateau. `background = null` et non un fond
-                // transparent : le style Button pose sinon son propre relief,
-                // qui redonnerait à la proposition l'aspect d'une pastille.
-                setTextColor(KeyboardTheme.palette().encre)
-                background = null
+                // Matière de touche, forme de puce. La 17.0.0 posait ces
+                // propositions à nu sur le plateau : plus rien ne disait qu'on
+                // pouvait les toucher, et l'appui n'avait plus de confirmation
+                // visuelle. Elles reprennent donc le fond, le contour et l'encre
+                // d'une touche de lettre, ce qui est le vocabulaire que ce
+                // clavier emploie déjà pour dire « ceci s'appuie », tout en
+                // gardant le rayon des puces pour ne pas se faire prendre pour
+                // une touche égarée dans la barre.
+                val palette = KeyboardTheme.palette()
+                setTextColor(palette.encre)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = dpToPx(16).toFloat()
+                    setColors(palette.touche.couleurs())
+                    orientation = GradientDrawable.Orientation.TOP_BOTTOM
+                    setStroke(dpToPx(1), palette.bordure)
+                }
             }
 
             setPadding(
