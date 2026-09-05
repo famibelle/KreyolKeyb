@@ -79,6 +79,18 @@ jobs:
         # même le build si la génération produit un fichier vide ou tronqué.
         echo "🕳️ Génération du jeu de phrases à trous..."
         python generate_cloze.py
+
+        # La table de gloses consomme elle aussi le dictionnaire qui vient
+        # d'être écrit, et doit donc tourner après lui. Elle ne dépend pas de
+        # Hugging Face mais de deux sources publiques, Kreyolopedia et le
+        # Wiktionnaire, sans jeton ni compte.
+        #
+        # Sans --strict pour la même raison que ci-dessus : une indisponibilité
+        # de l'une des deux ne doit pas rendre le build rouge. Le script se
+        # replie alors sur son cache, ou échoue proprement s'il n'en a pas, et
+        # c'est le garde-fou de volume plus bas qui arrête le build.
+        echo "📖 Génération de la table de traductions..."
+        python generate_translations.py
         
         echo "📁 Contenu après génération:"
         ls -la
@@ -163,6 +175,26 @@ jobs:
           exit 1
         fi
 
+        # La table de gloses décide de ce que les quatre jeux font chercher :
+        # ils ne tirent que parmi les mots traduits. Une table tronquée ne
+        # casse rien visiblement — le filtre se replie sur le dictionnaire
+        # entier — mais les jeux repartent muets.
+        TRAD_COUNT=$(jq '.translations | length' android_keyboard/app/src/main/assets/creole_translations.json)
+        echo "📖 Formes traduites : $TRAD_COUNT"
+        if [ "$TRAD_COUNT" -lt 800 ]; then
+          echo "::error::Seulement $TRAD_COUNT formes dans creole_translations.json — une des deux passes du Wiktionnaire a échoué. Lancez Dictionnaires/generate_translations.py"
+          exit 1
+        fi
+
+        # Kreyolopedia et le Wiktionnaire sont en CC BY-SA : citer la source
+        # n'est pas une politesse, c'est la condition de la réutilisation.
+        # L'attribution voyage dans l'actif et s'affiche en pied de l'onglet
+        # Dictionnaire.
+        if ! jq -e '.attribution | length > 0' android_keyboard/app/src/main/assets/creole_translations.json > /dev/null; then
+          echo "::error::creole_translations.json ne porte pas l'attribution de ses sources — CC BY-SA l'exige."
+          exit 1
+        fi
+
     - name: 🎯 Dictionary Assets Ready
       run: |
         echo "✅ Assets de dictionnaire prêts pour les builds Android"
@@ -170,9 +202,11 @@ jobs:
         DICT_COUNT=$(jq 'length' android_keyboard/app/src/main/assets/creole_dict.json)
         NGRAMS_COUNT=$(jq 'length' android_keyboard/app/src/main/assets/creole_ngrams.json)
         CLOZE_COUNT=$(jq '.items | length' android_keyboard/app/src/main/assets/creole_cloze.json)
+        TRAD_COUNT=$(jq '.translations | length' android_keyboard/app/src/main/assets/creole_translations.json)
         echo "   - Mots: $DICT_COUNT"
         echo "   - N-grams: $NGRAMS_COUNT"
         echo "   - Phrases à trous: $CLOZE_COUNT"
+        echo "   - Formes traduites: $TRAD_COUNT"
         echo "� Fichiers disponibles pour tous les jobs de build"
 
     # 🔧 FIX CRITIQUE : sans cet upload, chaque job de build ci-dessous fait son
@@ -188,6 +222,7 @@ jobs:
           android_keyboard/app/src/main/assets/creole_dict.json
           android_keyboard/app/src/main/assets/creole_ngrams.json
           android_keyboard/app/src/main/assets/creole_cloze.json
+          android_keyboard/app/src/main/assets/creole_translations.json
         retention-days: 1
 
   # 🔧 ÉTAPE 2A : BUILD DEBUG APK
