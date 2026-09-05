@@ -57,8 +57,8 @@ android {
         applicationId "com.potomitan.kreyolkeyboard"
         minSdk = 21
         targetSdk = 36
-        versionCode = 120001
-        versionName "12.0.1"
+        versionCode = 120100
+        versionName "12.1.0"
         
         // Améliorer la compatibilité Samsung ULTRA
         multiDexEnabled true
@@ -155,6 +155,11 @@ dependencies {
 
     // Demande d'avis Google Play (In-App Review)
     implementation 'com.google.android.play:review-ktx:2.0.2'
+    // Mise à jour depuis l'application. En mode FLEXIBLE uniquement : le
+    // téléchargement se fait en fond et l'installation attend un geste, là où
+    // le mode IMMEDIATE bloque l'écran. Sur un clavier, que l'on ouvre
+    // rarement et souvent pour régler autre chose, bloquer serait hostile.
+    implementation 'com.google.android.play:app-update-ktx:2.1.0'
 
     // Nouvelles dépendances pour Android 14+ et amélioration stabilité
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'

@@ -60,6 +60,13 @@ import com.example.kreyolkeyboard.mokarenaj.MoKarenajRow
 import com.example.kreyolkeyboard.mokarenaj.LetterState
 import com.example.kreyolkeyboard.mokarenaj.color
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.LinearGradient
@@ -266,6 +273,99 @@ class SettingsActivity : AppCompatActivity() {
 
         maybeAskForReview()
         maybeAskForNotificationPermission()
+        maybeOfferUpdate()
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // Mise à jour depuis l'application
+    // ────────────────────────────────────────────────────────────────────
+
+    /**
+     * Le gestionnaire de mise à jour de Play, créé à la demande.
+     *
+     * Il n'existe que pour cet écran : un clavier s'utilise sans jamais ouvrir
+     * son application, et le service de saisie n'a ni activité ni droit
+     * d'interrompre quelqu'un en train d'écrire. C'est donc ici, et nulle part
+     * ailleurs, qu'une mise à jour peut être proposée.
+     */
+    private val updateManager: AppUpdateManager by lazy {
+        AppUpdateManagerFactory.create(this)
+    }
+
+    /**
+     * Suit l'avancement du téléchargement pour savoir quand proposer
+     * l'installation. Retiré dans [onDestroy] : le gestionnaire garde une
+     * référence forte sur l'écouteur, qui retiendrait l'activité entière.
+     */
+    private val updateListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) proposerInstallation()
+    }
+
+    /**
+     * Le retour du dialogue de Play. On n'y fait rien d'autre que tracer :
+     * un refus n'appelle aucune insistance, et une acceptation est déjà suivie
+     * par [updateListener].
+     */
+    private val updateLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
+    ) { resultat ->
+        Log.d("SettingsActivity", "Retour du flux de mise à jour: ${resultat.resultCode}")
+    }
+
+    /**
+     * Propose la mise à jour si Play en connaît une.
+     *
+     * En mode **FLEXIBLE** : le téléchargement se fait en fond, l'application
+     * reste utilisable, et l'installation attend un geste. Le mode IMMEDIATE
+     * aurait bloqué l'écran derrière une barre de progression, ce qui est
+     * hostile pour quelqu'un venu changer le son des touches.
+     *
+     * Trois cas où il ne se passe rien, tous silencieux et tous normaux :
+     * l'application est à jour ; Play ne répond pas ; ou l'application n'a pas
+     * été installée depuis le Play Store. Ce dernier cas n'est pas
+     * hypothétique ici : le projet publie ses APK sur GitHub à chaque version,
+     * et l'API refuse alors de répondre. Une erreur visible ferait passer une
+     * installation parfaitement valide pour un problème.
+     */
+    private fun maybeOfferUpdate() {
+        try {
+            updateManager.registerListener(updateListener)
+            updateManager.appUpdateInfo.addOnSuccessListener { info ->
+                val disponible =
+                    info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                        info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                if (!disponible) {
+                    Log.d("SettingsActivity", "Pas de mise à jour à proposer")
+                    return@addOnSuccessListener
+                }
+                Log.d("SettingsActivity", "Mise à jour disponible: code ${info.availableVersionCode()}")
+                updateManager.startUpdateFlowForResult(
+                    info,
+                    updateLauncher,
+                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                )
+            }.addOnFailureListener { erreur ->
+                Log.d("SettingsActivity", "Mise à jour indisponible: ${erreur.message}")
+            }
+        } catch (e: Exception) {
+            Log.e("SettingsActivity", "Erreur de mise à jour: ${e.message}")
+        }
+    }
+
+    /**
+     * Invite à redémarrer l'application une fois la mise à jour téléchargée.
+     *
+     * Une Snackbar et non une boîte de dialogue : le téléchargement se termine
+     * à un moment que la personne n'a pas choisi, souvent au milieu d'autre
+     * chose. Elle reste affichée jusqu'à ce qu'on la touche ou qu'on la
+     * balaie, parce qu'un message de quelques secondes se rate.
+     */
+    private fun proposerInstallation() {
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            "Mise à jour téléchargée",
+            Snackbar.LENGTH_INDEFINITE
+        ).setAction("Installer") { updateManager.completeUpdate() }.show()
     }
 
     /**
@@ -504,6 +604,18 @@ class SettingsActivity : AppCompatActivity() {
             Log.d("SettingsActivity", "🔄 Pastille de niveau à rafraîchir au retour au premier plan")
             updateTabBar()
         }
+
+        // Une mise à jour peut avoir fini de se télécharger pendant que
+        // l'application était en arrière-plan : l'écouteur a bien reçu
+        // l'événement, mais la Snackbar est partie avec la vue. Sans cette
+        // relance, la mise à jour reste téléchargée et jamais installée.
+        try {
+            updateManager.appUpdateInfo.addOnSuccessListener { info ->
+                if (info.installStatus() == InstallStatus.DOWNLOADED) proposerInstallation()
+            }
+        } catch (e: Exception) {
+            Log.d("SettingsActivity", "État de mise à jour illisible: ${e.message}")
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -516,6 +628,12 @@ class SettingsActivity : AppCompatActivity() {
     override fun onDestroy() {
         // 🔧 FIX CRITIQUE: Annuler toutes les coroutines de l'activité
         activityScope.cancel()
+
+        try {
+            updateManager.unregisterListener(updateListener)
+        } catch (e: Exception) {
+            Log.d("SettingsActivity", "Écouteur de mise à jour déjà retiré: ${e.message}")
+        }
         Log.d("SettingsActivity", "✅ Coroutines de l'activité annulées proprement")
         
         super.onDestroy()
