@@ -68,11 +68,27 @@ object KeyboardColors {
     // figurer : les puces de suggestion sont des pastilles pleines, lisibles
     // telles quelles sur le fond clair comme sur le fond sombre de la barre.
     // Tout ce qui bascule vit dans KeyboardTheme.
+    //
+    // Depuis la v17.0.0 elles ne colorent plus que la **première** proposition
+    // de chaque rangée, le remplissage disant désormais le rang. Elles restent
+    // la couleur de langue du clavier, sur un support réduit.
 
-    // 🟢 Vert pour Guadeloupéen/Kreyòl (fond plein, texte blanc, contraste renforcé)
-    val KREYOL_GREEN = Color.parseColor("#2E9E5B")
+    // 🟢 Vert pour Guadeloupéen/Kreyòl (fond plein, texte blanc)
+    //
+    // Assombri en 17.0.0 : le #2E9E5B d'origine ne donnait que **3,41:1** avec
+    // du blanc. Une puce se lit à 18 sp, ce qui est du texte courant au sens
+    // WCAG et non du texte large, donc le seuil applicable est 4,5:1 et il
+    // n'était pas atteint. La langue pour laquelle ce clavier existe avait
+    // ainsi la puce la moins lisible des deux, le bleu français étant lui à
+    // 4,93:1. Même teinte (H = 144°) à 85 % de valeur : 4,56:1, pour un écart
+    // de couleur que personne ne voit.
+    //
+    // Le 2,71:1 documenté dans KeyboardTheme pour un glyphe sur le vert des
+    // touches n'est pas comparable : un glyphe de touche est énorme et se
+    // reconnaît au lieu de se lire.
+    val KREYOL_GREEN = Color.parseColor("#27864D")
 
-    // 🔵 Bleu pour Français (fond plein, texte blanc, contraste renforcé)
+    // 🔵 Bleu pour Français (fond plein, texte blanc). 4,93:1, conforme.
     val FRENCH_BLUE = Color.parseColor("#3B6FC4")
 
     val CHIP_TEXT = Color.parseColor("#FFFFFF")           // Texte des puces (fond plein)

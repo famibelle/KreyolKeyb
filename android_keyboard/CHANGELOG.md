@@ -5,6 +5,32 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0] - 2026-09-05
+
+### 🔧 Modifié
+
+- **La barre de suggestions devient un plateau creusé dans le clavier.** Elle se
+  détachait depuis la 16.0.0 par une ombre qui la disait posée au-dessus des
+  touches ; elle est désormais creusée dedans, ce qui rend aux touches le
+  relief. Le fond du plateau passe plus sombre que celui du clavier, une ombre
+  interne borde son bord haut, un liséré éclairé son bord bas, et le fond du
+  clavier apparaît de chaque côté pour lui faire une margelle. Rien de tout
+  cela ne coûte un point de hauteur : les trois bandes tiennent dans les
+  rembourrages que la barre réservait déjà.
+- **La couleur d'une proposition dit maintenant son rang et non sa langue.** La
+  barre disait la langue trois fois, par la rangée, par l'étiquette KR ou FR et
+  par la couleur de la pastille, et ne disait le rang nulle part, alors que
+  c'est tout le travail du moteur de suggestions. La première proposition
+  ressemblait à la troisième. Seule la première de chaque rangée garde
+  désormais sa pastille pleine ; les suivantes sont posées à nu sur le plateau,
+  séparées d'un filet, avec la même zone tactile. On voit enfin d'un coup d'œil
+  quel mot le clavier propose vraiment.
+- **Le vert kréyòl s'assombrit légèrement, pour être lisible.** Le blanc sur
+  l'ancien vert ne donnait que 3,41:1, quand un mot de 18 points en demande
+  4,5:1 : la langue pour laquelle ce clavier existe avait la proposition la
+  moins lisible des deux, le français étant à 4,93:1. Même teinte, un ton plus
+  bas, 4,56:1, pour un écart de couleur que personne ne voit.
+
 ## [16.0.0] - 2026-09-05
 
 ### 🔧 Modifié

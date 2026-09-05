@@ -112,18 +112,21 @@ The mode (`systeme` / `clair` / `sombre`) lives in `KeyboardPreferences`, next t
 haptic and sound switches, and for the same reason: on several OEM skins the phone's
 day/night setting does not reach third-party keyboards.
 
-Since 16.0.0 the palette also carries `filetSuggestions` and `ombreSuggestions`, the two
-colours of the drop shadow the suggestion bar casts onto the keyboard. It is painted by
-`OmbreSuggestions`, a hand-written `Drawable` set as the background of the service's
-`keyboardContainer`. Three shorter routes were rejected and the reasons still hold:
-`View.setElevation()` draws a black shadow that is invisible on the dark theme's
-`#131313` and is only tintable from API 28 (minSdk is 21); a dedicated view would cost
-its height to the budget `computeAvailableRowsHeight()` counts to the pixel; and
-`LayerDrawable` can only confine a layer to the top of its bounds with `setLayerHeight`,
-API 23. The 5 dp band (1 dp hairline + 4 dp gradient) sits inside the padding the
-keyboard already reserves above its first row, so it costs no vertical space. Measured on
-the emulator: light `#FFFFFF` → `#D2D2D2` → `#F5F5F5`, dark `#202020` → `#090909` →
-`#131313`, monotone in both, hairline darkest.
+### Suggestion Bar Relief (`CuvetteSuggestions.kt`)
+
+Since 17.0.0 the suggestion bar is a tray **carved into** the keyboard. 16.0.0 had it the other way round, casting a drop shadow onto the keys; the two readings are exclusive, so `OmbreSuggestions` was replaced rather than extended, and what was the drop shadow became the tray's lit lower lip.
+
+A recess needs all three signals, and with two of them the eye reads a gradient instead of a volume: the tray floor is **darker** than `fondClavier` (this inverted `fondSuggestions`, which had been lighter than the keys since the theme shipped), an inner shadow runs along the top edge, and a lit hairline along the bottom. The palette carries the last two as `ombreCuvette` and `lisereCuvette`.
+
+Three implementation points are load-bearing:
+
+- **The rim is the side inset.** A recess with no visible ledge has nothing casting the shadow, so the service gives `suggestionsContainer` an 8 dp horizontal margin and `fondClavier` shows through on either side. The margin is horizontal only: a top or bottom margin would add height that `computeAvailableRowsHeight()` does not know about, and the last key row would be clipped by exactly that much.
+- **Only the bottom corners are rounded.** The top edge is the edge of the IME window; rounding it there would show the app through the corners. A tray whose upper wall runs off-screen is also what the geometry actually describes.
+- **No `clipPath`.** The lip follows the bottom corners' curve, which a clip would give with a jagged edge. Two filled paths do it antialiased: the whole tray in the lip colour, then the same path offset up by the lip's thickness in the floor colour.
+
+Measured on the emulator, monotone in both themes: light floor `#ECECEC` in a `#F5F5F5` ground, shadow from `#CECECE` over 11 px, lip `#FDFDFD`; dark floor `#0C0C0C` in `#131313`, shadow from `#070707`, lip `#363636`.
+
+**Fill encodes rank, not language, since 17.0.0.** The bar stated the language three times (row, KR/FR label, chip colour) and the rank nowhere, though ranking is the whole job of `SuggestionEngine`. Only the first chip of each row keeps a filled pill; the rest sit bare on the tray with a hairline divider and the same tap target. The row and the label are therefore now load-bearing. `KREYOL_GREEN` was darkened to `#27864D` at the same time: a suggestion is read at 18 sp, which is WCAG normal text (4.5:1), and the old `#2E9E5B` gave 3.41:1 against white while the French blue gave 4.93:1.
 
 ### Suggestion Pipeline (`SuggestionEngine.kt`)
 

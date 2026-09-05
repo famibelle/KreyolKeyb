@@ -97,6 +97,18 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // cf. fitTextToChipHeight().
         private const val SUGGESTION_CHIP_PADDING_V_DP = 6
         private const val SUGGESTION_CHIP_MIN_WIDTH_DP = 88
+
+        /**
+         * Encastrement latéral du plateau de suggestions (v17.0.0).
+         *
+         * C'est lui qui fait la margelle : le fond du clavier apparaît de
+         * chaque côté, et sans ce rebord visible rien ne porterait l'ombre
+         * interne, donc rien ne se lirait comme un creux. Latéral seulement :
+         * une marge haute ou basse s'ajouterait à la hauteur consommée sans que
+         * `computeAvailableRowsHeight()` la voie, et la dernière rangée de
+         * touches se ferait rogner d'autant.
+         */
+        private const val SUGGESTION_BAR_INSET_DP = 8
         private const val ONBOARDING_PREFS = "kreyol_onboarding_prefs"
         private const val PREF_FIRST_REAL_USE_TIP_SHOWN = "first_real_use_tip_shown"
         private const val PREF_SHARE_CHIP_SHOWN = "share_invite_chip_shown"
@@ -446,10 +458,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         val keyboardContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 0, 0, 0)
-            // Le fond des touches porte aussi la retombée d'ombre de la barre de
-            // suggestions (v16.0.0) : c'est ce conteneur qui commence juste sous
-            // elle, donc le seul endroit où la peindre sans rien décaler.
-            background = KeyboardTheme.fondClavierAvecOmbre(this@KreyolInputMethodServiceRefactored)
+            // Aucun fond ici : celui de mainLayout suffit. C'est la barre de
+            // suggestions qui porte le relief depuis la v17.0.0, en creux, et
+            // le fond du clavier lui sert de margelle.
         }
         mainLayout.post { adjustForNavigationBarOverlap(mainLayout, keyboardContainer) }
 
@@ -482,8 +493,13 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setBackgroundColor(KeyboardTheme.palette().fondSuggestions)
+            ).apply {
+                // Voir SUGGESTION_BAR_INSET_DP : latéral seulement, la hauteur
+                // consommée doit rester celle que le budget vertical prévoit.
+                marginStart = dpToPx(SUGGESTION_BAR_INSET_DP)
+                marginEnd = dpToPx(SUGGESTION_BAR_INSET_DP)
+            }
+            background = KeyboardTheme.cuvetteSuggestions(this@KreyolInputMethodServiceRefactored)
         }
 
         val kreyolScroll = HorizontalScrollView(this).apply {
@@ -893,8 +909,15 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             Log.d(TAG, "Container de suggestions trouvé, vidage des vues existantes")
             container.removeAllViews()
 
-            suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
-                addSuggestionChip(container, BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL))
+            suggestions.take(MAX_SUGGESTIONS).forEachIndexed { rang, suggestion ->
+                // Un filet à partir de la troisième : il sépare deux mots nus,
+                // pas une pastille de son voisin, dont la forme suffit.
+                if (rang >= 2) addChipDivider(container)
+                addSuggestionChip(
+                    container,
+                    BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL),
+                    premier = rang == 0
+                )
             }
         }
     }
@@ -919,12 +942,21 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
 
         if (kreyolSuggestions.isNotEmpty()) {
             addLanguageLabel(kreyolContainer, kreyolSuggestions.first().getShortLabel())
-            kreyolSuggestions.forEach { addSuggestionChip(kreyolContainer, it) }
+            kreyolSuggestions.forEachIndexed { rang, suggestion ->
+                if (rang >= 2) addChipDivider(kreyolContainer)
+                addSuggestionChip(kreyolContainer, suggestion, premier = rang == 0)
+            }
         }
 
         if (frenchSuggestions.isNotEmpty()) {
             addLanguageLabel(frenchContainer, frenchSuggestions.first().getShortLabel())
-            frenchSuggestions.forEach { addSuggestionChip(frenchContainer, it) }
+            // Chaque rangée a son propre rang : la première proposition
+            // française est pleine elle aussi, ce qui garde à l'écran les deux
+            // couleurs de langue.
+            frenchSuggestions.forEachIndexed { rang, suggestion ->
+                if (rang >= 2) addChipDivider(frenchContainer)
+                addSuggestionChip(frenchContainer, suggestion, premier = rang == 0)
+            }
         }
         // INVISIBLE (jamais GONE) : garder la hauteur de la rangée réservée en permanence
         // évite que l'apparition/disparition des suggestions françaises ne décale les
@@ -957,9 +989,44 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
 
     /**
-     * Ajoute une puce de suggestion arrondie (fond plein, texte blanc) dans une rangée
+     * Le filet vertical qui sépare deux propositions nues (v17.0.0).
+     *
+     * À mi-hauteur de la puce, pas sur toute la rangée : un trait pleine
+     * hauteur découperait le plateau en cases au lieu de séparer deux mots.
      */
-    private fun addSuggestionChip(container: LinearLayout, bilingualSuggestion: BilingualSuggestion) {
+    private fun addChipDivider(container: LinearLayout) {
+        val trait = View(this).apply {
+            setBackgroundColor(KeyboardTheme.palette().bordure)
+            layoutParams = LinearLayout.LayoutParams(
+                maxOf(1, dpToPx(1)),
+                suggestionChipHeightPx() / 2
+            ).apply {
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+        }
+        container.addView(trait)
+    }
+
+    /**
+     * Ajoute une proposition dans une rangée.
+     *
+     * Depuis la v17.0.0, **le remplissage dit le rang et non la langue**. La
+     * barre encodait la langue trois fois, par la rangée, par l'étiquette KR/FR
+     * et par la couleur de la pastille, et n'encodait le rang nulle part, alors
+     * que c'est tout le travail de [SuggestionEngine] : fréquence du corpus,
+     * n-grammes, usage personnel, tolérance aux fautes de frappe. La première
+     * proposition, celle qui a gagné ce calcul, ressemblait à la troisième.
+     *
+     * Seule la première de chaque rangée garde donc sa pastille pleine ; les
+     * suivantes sont posées à nu sur le plateau, avec la même zone tactile. La
+     * langue reste dite par la rangée et par l'étiquette, qui deviennent du
+     * coup porteuses : les retirer redeviendrait ambigu.
+     */
+    private fun addSuggestionChip(
+        container: LinearLayout,
+        bilingualSuggestion: BilingualSuggestion,
+        premier: Boolean
+    ) {
         val suggestionButton = Button(this).apply {
             text = bilingualSuggestion.word
             textSize = SUGGESTION_TEXT_SIZE_SP
@@ -969,17 +1036,24 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             // paraît posé trop bas dans sa puce (mesuré : 29 px de vide au-dessus
             // contre 14 en dessous).
             includeFontPadding = false
-            setTextColor(KeyboardColors.CHIP_TEXT)
 
-            val bgColor = bilingualSuggestion.getColor()
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dpToPx(16).toFloat()
-                setColor(bgColor)
+            if (premier) {
+                val bgColor = bilingualSuggestion.getColor()
+                setTextColor(KeyboardColors.CHIP_TEXT)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = dpToPx(16).toFloat()
+                    setColor(bgColor)
+                }
+                val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
+                Log.d(TAG, "🎨 '${bilingualSuggestion.word}' en tête : ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
+            } else {
+                // Nu sur le plateau. `background = null` et non un fond
+                // transparent : le style Button pose sinon son propre relief,
+                // qui redonnerait à la proposition l'aspect d'une pastille.
+                setTextColor(KeyboardTheme.palette().encre)
+                background = null
             }
-
-            val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
-            Log.d(TAG, "🎨 Bouton '${bilingualSuggestion.word}': ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
 
             setPadding(
                 dpToPx(14),

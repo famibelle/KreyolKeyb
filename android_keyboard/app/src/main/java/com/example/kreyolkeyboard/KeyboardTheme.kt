@@ -38,6 +38,15 @@ import android.util.Log
  * | glyphe sur l'orange | 2,26:1 | 2,26:1 |
  * | glyphe sur le bleu | 3,26:1 | 3,26:1 |
  * | accent dans la popup | 12,63:1 | 11,09:1 |
+ * | mot en tête, sur le vert | 4,56:1 | 4,56:1 |
+ * | mot en tête, sur le bleu | 4,93:1 | 4,93:1 |
+ * | mot nu sur le plateau | 10,69:1 | 17,17:1 |
+ *
+ * Les trois dernières lignes sont celles de la barre de suggestions (v17.0.0).
+ * Elles obéissent à un régime différent des glyphes de touche : un mot de
+ * suggestion se lit à 18 sp, ce qui est du texte courant au sens WCAG et non du
+ * texte large, donc le seuil applicable est 4,5:1. C'est ce qui a fait
+ * assombrir le vert kréyòl, qui n'était qu'à 3,41:1.
  *
  * Les valeurs claires sont celles d'avant ce thème, reprises telles quelles : le
  * clavier clair ne change pas d'un pixel. Les trois lignes des couleurs produit
@@ -116,23 +125,26 @@ object KeyboardTheme {
         val encreEtiquette: Int,
         /** Fond derrière les touches, et derrière le panneau emoji. */
         val fondClavier: Int,
-        /** Fond de la barre de suggestions. */
+        /**
+         * Fond de la barre de suggestions, c'est-à-dire le fond du plateau
+         * creusé depuis la v17.0.0. **Plus sombre que [fondClavier]**, dans les
+         * deux thèmes : c'est le signal principal du creux, et il est passé du
+         * côté opposé en 17.0.0, la barre ayant été plus claire que les touches
+         * jusque-là.
+         */
         val fondSuggestions: Int,
         /**
-         * Trait qui marque le bord bas de la barre de suggestions, et départ du
-         * dégradé qui le prolonge (v16.0.0). Voir [OmbreSuggestions].
-         *
-         * Deux valeurs et non une : le filet doit être la partie la plus dense
-         * de l'ombre, sans quoi le dégradé paraîtrait plus sombre que le bord
-         * dont il tombe, et l'ombre se lirait à l'envers.
+         * Ombre interne du bord haut du plateau, et liséré éclairé de son bord
+         * bas (v17.0.0). Voir [CuvetteSuggestions].
          *
          * Leur alpha diffère beaucoup d'un thème à l'autre parce que leur
-         * support diffère : sur le `#F5F5F5` du thème clair, 14 % de noir se
-         * voient déjà ; sur le `#131313` du sombre, il faut la moitié du noir
-         * pour obtenir un écart de la même lisibilité.
+         * support diffère : sur le fond clair, 13 % de noir se voient déjà ;
+         * sur le fond sombre il en faut 40 % pour un écart comparable, et le
+         * liséré doit y être un blanc translucide là où le thème clair se
+         * contente d'un blanc presque plein.
          */
-        val filetSuggestions: Int,
-        val ombreSuggestions: Int,
+        val ombreCuvette: Int,
+        val lisereCuvette: Int,
         /** Popup d'appui long : dégradé du haut, dégradé du bas, contour. */
         val popupHaut: Int,
         val popupBas: Int,
@@ -173,9 +185,9 @@ object KeyboardTheme {
         encreSurCouleur = Color.WHITE,
         encreEtiquette = Color.parseColor("#6C757D"),
         fondClavier = Color.parseColor("#F5F5F5"),
-        fondSuggestions = Color.parseColor("#FFFFFF"),
-        filetSuggestions = Color.parseColor("#24000000"),
-        ombreSuggestions = Color.parseColor("#1A000000"),
+        fondSuggestions = Color.parseColor("#ECECEC"),
+        ombreCuvette = Color.parseColor("#22000000"),
+        lisereCuvette = Color.parseColor("#CCFFFFFF"),
         popupHaut = Color.parseColor("#FFFFFF"),
         popupBas = Color.parseColor("#F8F8F8"),
         popupBordure = Color.parseColor("#E0E0E0"),
@@ -212,9 +224,9 @@ object KeyboardTheme {
         encreSurCouleur = Color.WHITE,
         encreEtiquette = Color.parseColor("#9AA3AB"),
         fondClavier = Color.parseColor("#131313"),
-        fondSuggestions = Color.parseColor("#202020"),
-        filetSuggestions = Color.parseColor("#80000000"),
-        ombreSuggestions = Color.parseColor("#59000000"),
+        fondSuggestions = Color.parseColor("#0C0C0C"),
+        ombreCuvette = Color.parseColor("#66000000"),
+        lisereCuvette = Color.parseColor("#26FFFFFF"),
         popupHaut = Color.parseColor("#2B2B2B"),
         popupBas = Color.parseColor("#242424"),
         popupBordure = Color.parseColor("#454545"),
@@ -240,38 +252,41 @@ object KeyboardTheme {
     fun palette(): Palette = courante
 
     /**
-     * Épaisseur du trait qui marque le bord bas de la barre de suggestions, et
-     * hauteur du dégradé qui le prolonge (v16.0.0).
+     * Les trois cotes du plateau creusé (v17.0.0).
      *
-     * Cinq dp en tout, soit la retombée d'une surface posée à quelques
-     * millimètres au-dessus d'une autre. C'est aussi ce que le clavier réserve
-     * déjà au-dessus de sa première rangée en portrait, donc l'ombre ne coûte
-     * rien au budget vertical. En paysage ce rembourrage tombe à 4 dp : le
-     * dernier dp passe alors sous la première rangée de touches, qui est
-     * opaque et le recouvre. Rien à corriger, mais rien à agrandir non plus.
+     * L'ombre interne tient dans les 4 dp que la première rangée de
+     * suggestions réserve déjà au-dessus de sa première puce, et le liséré dans
+     * le rembourrage symétrique du bas : le creux ne coûte donc pas un point de
+     * hauteur, ce qui compte, `computeAvailableRowsHeight()` comptant le budget
+     * vertical au pixel près.
+     *
+     * L'encastrement latéral, lui, est posé par le service sur les marges de la
+     * barre : c'est une affaire de mise en page, pas de peinture.
      */
-    private const val FILET_DP = 1
-    private const val OMBRE_DP = 4
+    private const val OMBRE_INTERNE_DP = 4
+    private const val LISERE_DP = 1
+    private const val RAYON_CUVETTE_DP = 10
 
     /**
-     * Le fond du clavier, ombre de la barre de suggestions comprise.
+     * Le fond de la barre de suggestions, creusé.
      *
-     * Rendu ici plutôt que dans le service pour que les deux hauteurs vivent à
-     * côté des deux couleurs qu'elles dosent : c'est l'ensemble des quatre qui
-     * fait l'effet, et les séparer garantit qu'un réglage de l'un se fasse sans
-     * voir l'autre.
+     * Rendu ici plutôt que dans le service pour que les trois cotes vivent à
+     * côté des trois couleurs qu'elles dosent : c'est l'ensemble qui fait
+     * l'effet, et les séparer garantirait qu'un réglage de l'un se fasse sans
+     * voir les autres.
      */
-    fun fondClavierAvecOmbre(context: Context): Drawable {
+    fun cuvetteSuggestions(context: Context): Drawable {
         val densite = context.resources.displayMetrics.density
         val p = palette()
-        return OmbreSuggestions(
-            fond = p.fondClavier,
-            filet = p.filetSuggestions,
-            ombre = p.ombreSuggestions,
-            // Au moins un pixel : sous mdpi le filet s'arrondirait à zéro et
-            // l'ombre perdrait sa partie la plus dense.
-            filetPx = maxOf(1, (FILET_DP * densite).toInt()),
-            degradePx = (OMBRE_DP * densite).toInt()
+        return CuvetteSuggestions(
+            fond = p.fondSuggestions,
+            ombre = p.ombreCuvette,
+            lisere = p.lisereCuvette,
+            ombrePx = (OMBRE_INTERNE_DP * densite).toInt(),
+            // Au moins un pixel : sous mdpi le liséré s'arrondirait à zéro et
+            // le creux perdrait le signal qui fait basculer sa lecture.
+            liserePx = maxOf(1, (LISERE_DP * densite).toInt()),
+            rayonPx = RAYON_CUVETTE_DP * densite
         )
     }
 
