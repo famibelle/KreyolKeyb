@@ -65,6 +65,20 @@ jobs:
         
         echo "🚀 Lancement du script Python..."
         python KreyolComplet.py
+
+        # Le jeu de phrases à trous consomme le dictionnaire et les n-grammes
+        # qui viennent d'être écrits : il doit tourner APRÈS le pipeline,
+        # jamais avant, sinon ses leurres sont tirés d'un modèle périmé et
+        # ClozeAssetTest voit ses réponses sortir du dictionnaire livré.
+        #
+        # Sans --strict, volontairement : KreyolComplet.py se replie en silence
+        # sur l'instantané local quand Hugging Face est injoignable, et le
+        # build continue. Faire échouer le seul jeu à trous dans ce cas
+        # transformerait une panne de HF en build rouge, alors que le reste de
+        # la chaîne l'absorbe. Le garde-fou de volume, plus bas, arrête quand
+        # même le build si la génération produit un fichier vide ou tronqué.
+        echo "🕳️ Génération du jeu de phrases à trous..."
+        python generate_cloze.py
         
         echo "📁 Contenu après génération:"
         ls -la
@@ -131,14 +145,34 @@ jobs:
         fi
         echo "✅ Format de creole_dict.json vérifié : tableau de paires [mot, fréquence]"
 
+        # Le jeu de phrases à trous n'a pas de repli codé en dur : sans son
+        # actif, ClozeFragment affiche un écran qui dit que les phrases n'ont
+        # pas pu être chargées. Un fichier vide ou tronqué ne casse donc rien
+        # visiblement au build, et le jeu part cassé.
+        CLOZE_COUNT=$(jq '.items | length' android_keyboard/app/src/main/assets/creole_cloze.json)
+        echo "🕳️ Questions de phrases à trous : $CLOZE_COUNT"
+        if [ "$CLOZE_COUNT" -lt 250 ]; then
+          echo "::error::Seulement $CLOZE_COUNT questions dans creole_cloze.json — une manche fait 10 questions par difficulté. Lancez Dictionnaires/generate_cloze.py"
+          exit 1
+        fi
+
+        # Les phrases livrées sont des extraits d'œuvres d'auteurs identifiés :
+        # l'attribution voyage dans le fichier, et le jeu l'affiche.
+        if ! jq -e '.sources | length > 0' android_keyboard/app/src/main/assets/creole_cloze.json > /dev/null; then
+          echo "::error::creole_cloze.json ne porte pas l'attribution de son corpus."
+          exit 1
+        fi
+
     - name: 🎯 Dictionary Assets Ready
       run: |
         echo "✅ Assets de dictionnaire prêts pour les builds Android"
         echo "� Statistiques finales:"
         DICT_COUNT=$(jq 'length' android_keyboard/app/src/main/assets/creole_dict.json)
         NGRAMS_COUNT=$(jq 'length' android_keyboard/app/src/main/assets/creole_ngrams.json)
+        CLOZE_COUNT=$(jq '.items | length' android_keyboard/app/src/main/assets/creole_cloze.json)
         echo "   - Mots: $DICT_COUNT"
         echo "   - N-grams: $NGRAMS_COUNT"
+        echo "   - Phrases à trous: $CLOZE_COUNT"
         echo "� Fichiers disponibles pour tous les jobs de build"
 
     # 🔧 FIX CRITIQUE : sans cet upload, chaque job de build ci-dessous fait son
@@ -153,6 +187,7 @@ jobs:
         path: |
           android_keyboard/app/src/main/assets/creole_dict.json
           android_keyboard/app/src/main/assets/creole_ngrams.json
+          android_keyboard/app/src/main/assets/creole_cloze.json
         retention-days: 1
 
   # 🔧 ÉTAPE 2A : BUILD DEBUG APK
