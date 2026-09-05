@@ -19,10 +19,11 @@ import java.io.InputStreamReader
  * chaque ouverture du clavier pour un usage nul. Il n'est chargé que par
  * l'onglet Dictionnaire, l'onglet « Kréyòl an mwen » et les quatre jeux.
  *
- * La table glose 1 145 formes, dont 513 des 5 296 mots du dictionnaire de
- * fréquences — 36 % des occurrences du corpus. Les 632 autres sont des mots
- * que le corpus n'a jamais employés : ils ne servent qu'à la recherche, les
- * jeux ne tirant que dans le dictionnaire.
+ * La table glose 1 145 formes. Elles couvrent 622 des 5 296 mots du
+ * dictionnaire de fréquences, soit 42 % des occurrences du corpus : le repli
+ * d'accents de [parFormePliee] en rattrape 109 que les clés exactes ratent,
+ * `kòlè` trouvant `kolé` et `evè` trouvant `èvè`. Le reste ne sert qu'à la
+ * recherche, les jeux ne tirant que dans le dictionnaire.
  *
  * Ce qui reste sans glose n'est pas du bruit. `sé`, troisième mot le plus
  * fréquent du kréyòl, n'est glosé par aucune des deux sources. La couverture

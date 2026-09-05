@@ -29,7 +29,7 @@ Montbrand, Poullet, Telchid ; Orphie) sont sous droit d'auteur, Diko Kréyol
 n'annonce aucune licence de réutilisation, et data.gouv.fr ne publie rien.
 
 On assemble donc deux sources libres, toutes deux en CC BY-SA 4.0 (voir
-`gloses_source.py`), et on livre 38 % des occurrences là où LuxKeyb en couvre
+`gloses_source.py`), et on livre 42 % des occurrences là où LuxKeyb en couvre
 90 %. C'est le plafond du réutilisable, pas un réglage.
 
 Trois règles décident de la glose, dans cet ordre :
@@ -84,7 +84,7 @@ SOURCE_TRADUCTION = "T"     # cité en traduction par une page française
 MAX_ACCEPTIONS = 3
 
 # Plancher de livraison en mode strict. Mesuré à 1 149 formes le 5 septembre
-# 2026, dont 520 dans le dictionnaire du clavier ; en dessous de 800, une des
+# 2026, dont 622 couvrant le dictionnaire du clavier ; en dessous de 800, une des
 # deux passes du Wiktionnaire a échoué sans le dire.
 MINIMUM_STRICT = 800
 
@@ -298,11 +298,16 @@ def mesurer(table, dico):
     print("\n📊 COUVERTURE DU DICTIONNAIRE")
     print("-" * 45)
 
-    glosees = [mot for mot in dico if mot in table]
+    # La couverture se mesure avec le repli d'accents, parce que c'est ainsi
+    # que `TranslationDictionary` cherche à l'exécution : `kòlè` trouve `kolé`,
+    # `evè` trouve `èvè`. Compter sur les clés exactes sous-estimait le
+    # résultat livré de 109 mots et de six points d'occurrences.
+    plie = {plier(cle) for cle in table}
+    glosees = [mot for mot in dico if plier(mot) in plie]
     total = sum(dico.values())
     occurrences = sum(dico[mot] for mot in glosees)
     tries = sorted(dico, key=lambda m: -dico[m])
-    tete = sum(1 for mot in tries[:200] if mot in table)
+    tete = sum(1 for mot in tries[:200] if plier(mot) in plie)
 
     print(f"   {len(glosees)} des {len(dico)} mots du clavier sont glosés "
           f"({100 * len(glosees) / len(dico):.1f} %)")

@@ -52,10 +52,15 @@ Le générateur les essaie dans cet ordre, et s'arrête au premier qui répond.
 
 ## Ce que la table couvre, et ce qu'elle ne couvrira pas
 
-1 145 formes glosées, dont 513 des 5 296 mots du dictionnaire du clavier, soit
-**36 % des occurrences du corpus** et 86 des 200 mots les plus fréquents. Les
-632 autres formes sont des mots que le corpus n'a jamais employés : elles ne
-servent qu'à la recherche, les jeux ne tirant que dans le dictionnaire.
+1 145 formes glosées. Elles couvrent **622 des 5 296 mots du dictionnaire du
+clavier**, soit **42 % des occurrences du corpus**.
+
+Ce chiffre se mesure avec le repli d'accents, parce que c'est ainsi que
+`TranslationDictionary` cherche : sur les clés exactes on n'en compte que 513,
+soit 36 %, et l'on manque les 109 formes que le repli rattrape (`kòlè` trouve
+`kolé`, `evè` trouve `èvè`). Les formes restantes sont des mots que le corpus
+n'a jamais employés : elles ne servent qu'à la recherche, les jeux ne tirant
+que dans le dictionnaire.
 
 À titre de comparaison, le clavier luxembourgeois qui partage cette base de
 code glose 55 % de ses formes et 90 % de ses occurrences, à partir d'une source
