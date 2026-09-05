@@ -446,6 +446,10 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         val keyboardContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 0, 0, 0)
+            // Le fond des touches porte aussi la retombée d'ombre de la barre de
+            // suggestions (v16.0.0) : c'est ce conteneur qui commence juste sous
+            // elle, donc le seul endroit où la peindre sans rien décaler.
+            background = KeyboardTheme.fondClavierAvecOmbre(this@KreyolInputMethodServiceRefactored)
         }
         mainLayout.post { adjustForNavigationBarOverlap(mainLayout, keyboardContainer) }
 

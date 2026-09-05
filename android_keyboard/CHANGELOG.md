@@ -5,6 +5,25 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [16.0.0] - 2026-09-05
+
+### 🔧 Modifié
+
+- **La barre de suggestions se détache du clavier.** Elle était de plain-pied
+  avec les touches : rien ne disait qu'elle est une surface à part, posée
+  au-dessus. Les deux thèmes la peignaient déjà plus claire que le fond des
+  touches, ce qui en est la moitié ; il lui manquait ce qu'une surface
+  surélevée projette en dessous d'elle. Un trait fin marque désormais son bord
+  bas, prolongé par un dégradé de quatre points qui s'éteint dans le fond du
+  clavier.
+- L'ombre est peinte et non déléguée au système. Celle d'Android est noire, et
+  du noir sur le fond du thème sombre ne se verrait pas ; elle n'est teintable
+  qu'à partir d'une version qui exclurait la moitié des appareils visés. Les
+  deux couleurs viennent donc de la palette, une par thème, et l'effet se lit
+  aussi bien sur le clavier clair que sur le sombre.
+- Elle ne coûte rien à la hauteur des touches : elle se pose sur le
+  rembourrage que le clavier réserve déjà au-dessus de sa première rangée.
+
 ## [15.0.0] - 2026-09-05
 
 ### ✨ Ajouté

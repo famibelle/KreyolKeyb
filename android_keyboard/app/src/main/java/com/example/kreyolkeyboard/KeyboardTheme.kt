@@ -3,6 +3,7 @@ package com.example.kreyolkeyboard
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.util.Log
 
 /**
@@ -117,6 +118,21 @@ object KeyboardTheme {
         val fondClavier: Int,
         /** Fond de la barre de suggestions. */
         val fondSuggestions: Int,
+        /**
+         * Trait qui marque le bord bas de la barre de suggestions, et départ du
+         * dégradé qui le prolonge (v16.0.0). Voir [OmbreSuggestions].
+         *
+         * Deux valeurs et non une : le filet doit être la partie la plus dense
+         * de l'ombre, sans quoi le dégradé paraîtrait plus sombre que le bord
+         * dont il tombe, et l'ombre se lirait à l'envers.
+         *
+         * Leur alpha diffère beaucoup d'un thème à l'autre parce que leur
+         * support diffère : sur le `#F5F5F5` du thème clair, 14 % de noir se
+         * voient déjà ; sur le `#131313` du sombre, il faut la moitié du noir
+         * pour obtenir un écart de la même lisibilité.
+         */
+        val filetSuggestions: Int,
+        val ombreSuggestions: Int,
         /** Popup d'appui long : dégradé du haut, dégradé du bas, contour. */
         val popupHaut: Int,
         val popupBas: Int,
@@ -158,6 +174,8 @@ object KeyboardTheme {
         encreEtiquette = Color.parseColor("#6C757D"),
         fondClavier = Color.parseColor("#F5F5F5"),
         fondSuggestions = Color.parseColor("#FFFFFF"),
+        filetSuggestions = Color.parseColor("#24000000"),
+        ombreSuggestions = Color.parseColor("#1A000000"),
         popupHaut = Color.parseColor("#FFFFFF"),
         popupBas = Color.parseColor("#F8F8F8"),
         popupBordure = Color.parseColor("#E0E0E0"),
@@ -195,6 +213,8 @@ object KeyboardTheme {
         encreEtiquette = Color.parseColor("#9AA3AB"),
         fondClavier = Color.parseColor("#131313"),
         fondSuggestions = Color.parseColor("#202020"),
+        filetSuggestions = Color.parseColor("#80000000"),
+        ombreSuggestions = Color.parseColor("#59000000"),
         popupHaut = Color.parseColor("#2B2B2B"),
         popupBas = Color.parseColor("#242424"),
         popupBordure = Color.parseColor("#454545"),
@@ -218,6 +238,42 @@ object KeyboardTheme {
 
     /** La palette en vigueur. Sûre à appeler depuis le dessin d'une touche. */
     fun palette(): Palette = courante
+
+    /**
+     * Épaisseur du trait qui marque le bord bas de la barre de suggestions, et
+     * hauteur du dégradé qui le prolonge (v16.0.0).
+     *
+     * Cinq dp en tout, soit la retombée d'une surface posée à quelques
+     * millimètres au-dessus d'une autre. C'est aussi ce que le clavier réserve
+     * déjà au-dessus de sa première rangée en portrait, donc l'ombre ne coûte
+     * rien au budget vertical. En paysage ce rembourrage tombe à 4 dp : le
+     * dernier dp passe alors sous la première rangée de touches, qui est
+     * opaque et le recouvre. Rien à corriger, mais rien à agrandir non plus.
+     */
+    private const val FILET_DP = 1
+    private const val OMBRE_DP = 4
+
+    /**
+     * Le fond du clavier, ombre de la barre de suggestions comprise.
+     *
+     * Rendu ici plutôt que dans le service pour que les deux hauteurs vivent à
+     * côté des deux couleurs qu'elles dosent : c'est l'ensemble des quatre qui
+     * fait l'effet, et les séparer garantit qu'un réglage de l'un se fasse sans
+     * voir l'autre.
+     */
+    fun fondClavierAvecOmbre(context: Context): Drawable {
+        val densite = context.resources.displayMetrics.density
+        val p = palette()
+        return OmbreSuggestions(
+            fond = p.fondClavier,
+            filet = p.filetSuggestions,
+            ombre = p.ombreSuggestions,
+            // Au moins un pixel : sous mdpi le filet s'arrondirait à zéro et
+            // l'ombre perdrait sa partie la plus dense.
+            filetPx = maxOf(1, (FILET_DP * densite).toInt()),
+            degradePx = (OMBRE_DP * densite).toInt()
+        )
+    }
 
     /**
      * Relit le réglage et la configuration système.

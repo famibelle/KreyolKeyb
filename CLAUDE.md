@@ -110,6 +110,19 @@ The mode (`systeme` / `clair` / `sombre`) lives in `KeyboardPreferences`, next t
 haptic and sound switches, and for the same reason: on several OEM skins the phone's
 day/night setting does not reach third-party keyboards.
 
+Since 16.0.0 the palette also carries `filetSuggestions` and `ombreSuggestions`, the two
+colours of the drop shadow the suggestion bar casts onto the keyboard. It is painted by
+`OmbreSuggestions`, a hand-written `Drawable` set as the background of the service's
+`keyboardContainer`. Three shorter routes were rejected and the reasons still hold:
+`View.setElevation()` draws a black shadow that is invisible on the dark theme's
+`#131313` and is only tintable from API 28 (minSdk is 21); a dedicated view would cost
+its height to the budget `computeAvailableRowsHeight()` counts to the pixel; and
+`LayerDrawable` can only confine a layer to the top of its bounds with `setLayerHeight`,
+API 23. The 5 dp band (1 dp hairline + 4 dp gradient) sits inside the padding the
+keyboard already reserves above its first row, so it costs no vertical space. Measured on
+the emulator: light `#FFFFFF` → `#D2D2D2` → `#F5F5F5`, dark `#202020` → `#090909` →
+`#131313`, monotone in both, hairline darkest.
+
 ### Suggestion Pipeline (`SuggestionEngine.kt`)
 
 The ranking stages live in `SuggestionEngine.kt` and read top to bottom; two thresholds in them are deliberate rather than incidental: the French fallback only kicks in at ≥ 3 characters typed, and 3 suggestions are displayed out of 5 scored internally (3 Kreyòl + 2 French slots).
