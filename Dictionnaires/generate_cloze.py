@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🕳️ MOTS À TROUS — génération du jeu de phrases à compléter
+🕳️ FRAZ A TWOU — génération du jeu de phrases à compléter
 ==========================================================
 
 Produit `android_keyboard/app/src/main/assets/creole_cloze.json`, l'actif du
@@ -552,7 +552,7 @@ def sauvegarder(questions):
 def main():
     strict = "--strict" in sys.argv
 
-    print("🕳️ MOTS À TROUS — GÉNÉRATION DU JEU DE PHRASES À COMPLÉTER 🕳️")
+    print("🕳️ FRAZ A TWOU — GÉNÉRATION DU JEU DE PHRASES À COMPLÉTER 🕳️")
     print("=" * 70)
     print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)

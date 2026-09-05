@@ -7,7 +7,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * Contrôles du jeu de phrases à trous livré (« Mots à Trous »).
+ * Contrôles du jeu de phrases à trous livré (« Fraz a twou »).
  *
  * L'actif est produit hors du build par `Dictionnaires/generate_cloze.py`, donc
  * rien dans la compilation ne garantit sa forme. Une phrase sans marqueur, une

@@ -7,7 +7,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 /**
- * Modèles de données pour le jeu « Mots à Trous » : une phrase kréyòl
+ * Modèles de données pour le jeu « Fraz a twou » : une phrase kréyòl
  * authentique dont un mot a été retiré, et quatre propositions.
  *
  * L'actif `creole_cloze.json` est produit par `Dictionnaires/generate_cloze.py`,

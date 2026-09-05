@@ -175,7 +175,7 @@ class SettingsActivity : AppCompatActivity() {
             "Le correcteur se choisit dans les réglages Android sous « Clavier », et non sous « Langues ». Le bouton de l'étape 4 vous y mène directement.",
             "Après une mise à jour de l'application, le correcteur peut rester muet jusqu'au redémarrage du téléphone : cela vient d'Android, pas du clavier.",
             "Le guide, en bas de l'onglet Démarrage, reprend toutes les étapes en images, suivies des questions fréquentes.",
-            "« Mots à Trous » vous montre une vraie phrase kréyòl à laquelle il manque un mot : sur les quatre propositions, une seule est celle qu'a écrite l'auteur.",
+            "« Fraz a twou » vous montre une vraie phrase kréyòl à laquelle il manque un mot : sur les quatre propositions, une seule est celle qu'a écrite l'auteur.",
             "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez « maison ». Les jeux, eux, vous disent maintenant ce que veut dire le mot qu'ils vous font chercher."
         )
     }
@@ -2662,7 +2662,7 @@ class SettingsActivity : AppCompatActivity() {
         addGuideSection(
             mainLayout, "#F0F8E8", "🎮 Jeux de vocabulaire",
             "Quatre jeux — « Mots Mêlés », « Mots Mélangés », « Mo an Karénaj » et " +
-                    "« Mots à Trous » — sont réunis sous l'onglet « Jé ». Ils font revoir du " +
+                    "« Fraz a twou » — sont réunis sous l'onglet « Jé ». Ils font revoir du " +
                     "vocabulaire créole en s'amusant, à partir des mots déjà présents dans le " +
                     "dictionnaire du clavier."
         )
@@ -5576,7 +5576,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Fragment pour les Mots à Trous : une phrase authentique dont un mot
+    // Fragment pour Fraz a twou : une phrase authentique dont un mot
     // manque, et quatre propositions. Les phrases, la réponse et les leurres
     // viennent tels quels de l'actif ; ce fragment ne fait que présenter et
     // compter.
@@ -5642,7 +5642,7 @@ class SettingsActivity : AppCompatActivity() {
                             layoutParams = LinearLayout.LayoutParams(
                                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
                             )
-                            text = "📝 Mots à Trous"
+                            text = "📝 Fraz a twou"
                             textSize = 18f
                             setTypeface(null, Typeface.BOLD)
                             setTextColor(couleurNeutre)
@@ -5913,7 +5913,7 @@ class SettingsActivity : AppCompatActivity() {
          * le dit. Un jeu de dépannage jouable masquerait une livraison cassée.
          */
         private fun showMissingAsset() {
-            tvSentence.text = "Les phrases des Mots à Trous n'ont pas pu être chargées."
+            tvSentence.text = "Les phrases de Fraz a twou n'ont pas pu être chargées."
             tvSource.text = ""
             tvProgress.text = ""
             tvFeedback.visibility = View.GONE
@@ -6104,7 +6104,7 @@ class SettingsActivity : AppCompatActivity() {
                 "#1976D2") { WordScrambleFragment() },
             Jeu("🟩", "Mo an Karénaj", "Devinez le mot de 5 lettres en 6 essais",
                 "#4CAF50") { MoKarenajFragment() },
-            Jeu("📝", "Mots à Trous", "Complétez la phrase à laquelle il manque un mot",
+            Jeu("📝", "Fraz a twou", "Complétez la phrase à laquelle il manque un mot",
                 "#FF8C00") { ClozeFragment() }
         )
 

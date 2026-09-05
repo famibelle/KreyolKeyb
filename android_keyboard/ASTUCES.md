@@ -91,7 +91,7 @@ une par semaine dans cet ordre.
 | 8 | Mo an Karénaj : 5 lettres, 6 essais, vert bien placé / jaune mal placé. | `WORD_LENGTH = 5`, `MAX_ATTEMPTS = 6` (`mokarenaj/MoKarenajModels.kt:31`), `evaluateGuess()` (`mokarenaj/MoKarenajModels.kt:79`), couleurs `LetterState.color()` (`mokarenaj/MoKarenajModels.kt:17`). Le mot est tiré au hasard à chaque partie (`pickRandomWord()`), d'où l'absence de « mot du jour » dans le texte |
 | 17 | Mots Mélangés : 10 mots chronométrés, bouton Indice. | `take(10)` (`wordscramble/WordScrambleModels.kt:76`), `getTimeForDifficulty()` 45/30/20 s (`wordscramble/WordScrambleModels.kt:91`), bouton « 💡 Indice » (`SettingsActivity.kt:4120`) |
 | 23 | Mots Mêlés : diagonales et mots à l'envers selon la difficulté. | `WordSearchDifficulty` (`wordsearch/WordSearchModels.kt:63`), `WordDirection` (`wordsearch/WordSearchModels.kt:52`) |
-| 37 | Mots à Trous : une phrase kréyòl réelle, quatre propositions, une seule écrite par l'auteur. | Actif `creole_cloze.json` produit par `Dictionnaires/generate_cloze.py`, lu par `cloze/ClozeData.loadQuestions()`. Les leurres viennent du modèle n-grammes pour le même contexte, d'où « elles sonnent juste tant qu'on ne lit pas toute la phrase » |
+| 37 | Fraz a twou : une phrase kréyòl réelle, quatre propositions, une seule écrite par l'auteur. | Actif `creole_cloze.json` produit par `Dictionnaires/generate_cloze.py`, lu par `cloze/ClozeData.loadQuestions()`. Les leurres viennent du modèle n-grammes pour le même contexte, d'où « elles sonnent juste tant qu'on ne lit pas toute la phrase » |
 
 ### Dictionnaire
 
