@@ -41,8 +41,8 @@ object WordScrambleData {
      * Charge les mots du dictionnaire selon la difficulté
      */
     fun loadWords(context: Context, difficulty: ScrambleDifficulty): List<String> {
-        cachedWords?.let { 
-            return filterByDifficulty(it, difficulty).shuffled().take(10)
+        cachedWords?.let {
+            return retenir(context, filterByDifficulty(it, difficulty))
         }
         
         val words = mutableListOf<String>()
@@ -73,9 +73,24 @@ object WordScrambleData {
             return listOf("lakou", "soley", "lapli", "lanmè", "zwazo", "chat", "chen", "tab")
         }
         
-        return filterByDifficulty(words, difficulty).shuffled().take(10)
+        return retenir(context, filterByDifficulty(words, difficulty))
     }
-    
+
+    /**
+     * Les dix mots d'une manche, tirés parmi ceux dont on peut dire le sens.
+     *
+     * Reconstituer « KAPTÈ » sans savoir qu'il s'agit d'un capteur exerce
+     * l'orthographe et rien d'autre. Le filtre rend la liste entière si la
+     * table de gloses est vide : le jeu reste alors jouable, simplement muet.
+     * Les réserves mesurées vont de 95 mots (difficile) à 248 (normal).
+     */
+    private fun retenir(context: Context, candidats: List<String>): List<String> =
+        com.example.kreyolkeyboard.TranslationDictionary
+            .filtrerMotsTraduits(context, candidats)
+            .shuffled()
+            .take(10)
+
+
     private fun isValidForDifficulty(word: String, difficulty: ScrambleDifficulty): Boolean {
         return when (difficulty) {
             ScrambleDifficulty.EASY -> word.length in 4..5

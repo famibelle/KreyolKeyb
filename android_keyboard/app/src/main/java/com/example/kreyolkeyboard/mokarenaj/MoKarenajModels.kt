@@ -63,8 +63,18 @@ object MoKarenajData {
         return words
     }
 
+    /**
+     * Tire le mot à deviner parmi ceux dont on peut dire le sens : la partie se
+     * termine sur sa traduction, et un mot sans glose la ferait finir sur rien.
+     *
+     * Le filtre ne s'applique qu'ici, jamais à [isValidWord] : une proposition
+     * du joueur doit rester acceptée dès lors qu'elle est au dictionnaire, même
+     * si aucune source ne la glose. Sur les 882 mots de cinq lettres du
+     * dictionnaire, 93 portent une glose.
+     */
     fun pickRandomWord(context: Context): String {
-        val words = loadWords(context)
+        val words = com.example.kreyolkeyboard.TranslationDictionary
+            .filtrerMotsTraduits(context, loadWords(context))
         return words.random()
     }
 

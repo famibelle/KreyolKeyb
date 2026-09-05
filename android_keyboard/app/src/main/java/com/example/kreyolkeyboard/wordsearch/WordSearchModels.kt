@@ -80,8 +80,11 @@ object WordSearchThemes {
      */
     fun getThemeWords(theme: String, context: Context): List<String> {
         // Utiliser le cache si disponible
-        cachedWords?.let { return it.shuffled() }
-        
+        cachedWords?.let {
+            return com.example.kreyolkeyboard.TranslationDictionary
+                .filtrerMotsTraduits(context, it).shuffled()
+        }
+
         val words = mutableListOf<String>()
         
         try {
@@ -110,7 +113,12 @@ object WordSearchThemes {
             // En cas d'erreur, retourner quelques mots par défaut
             return listOf("mwen", "nou", "yo", "kay", "lakou", "soley", "lapli", "van")
         }
-        
-        return words.shuffled()
+
+        // La grille ne fait chercher que des mots dont on peut dire le sens :
+        // une grille de mots opaques exerce l'œil, jamais le vocabulaire. Le
+        // filtre rend la liste entière si la table de gloses est vide, ce qui
+        // garde le jeu jouable en cas d'actif manquant.
+        return com.example.kreyolkeyboard.TranslationDictionary
+            .filtrerMotsTraduits(context, words).shuffled()
     }
 }
