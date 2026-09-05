@@ -1,8 +1,66 @@
 {
   "production_version": "10.6.0",
-  "latest_version": "10.14.8",
+  "latest_version": "12.0.1",
   "as_of": "2026-09-05",
   "features": [
+    {
+      "version": "12.0.1",
+      "emoji": "🏷️",
+      "title": "Le jeu de phrases s'appelle « Fraz a twou »",
+      "description": "Il était livré sous un nom français, « Mots à Trous », alors que les trois autres jeux du clavier portent déjà un nom que la langue reconnaît. Le nom kréyòl vient d'un locuteur, pas d'une traduction faite au passage.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.1",
+      "curated": true
+    },
+    {
+      "version": "12.0.0",
+      "emoji": "📚",
+      "title": "Un onglet Dictionnaire, qui cherche dans les deux sens",
+      "description": "Tapez « kaz » ou tapez « maison » : la recherche répond dans les deux cas, sans vous demander de quel côté vous vous tenez. Touchez un mot et sa fiche s'ouvre, avec le sens, la prononciation, un exemple et la source. Appui long pour le copier.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.0",
+      "curated": true,
+      "image": "Screenshots/nouveaute_12.0.0_dictionnaire.png",
+      "image_alt": "À gauche, la recherche du mot français « maison » dans l'onglet Dictionnaire, qui remonte kaz, tiwèt et kalòj-a-poul. À droite, la fiche du mot kaz : prononciation, les sens « maison » et « case », un exemple d'emploi et la source Kreyolopedia."
+    },
+    {
+      "version": "12.0.0",
+      "emoji": "🎮",
+      "title": "Les jeux disent enfin ce que veut dire leur mot",
+      "description": "Retrouver « KAPTÈ » sans savoir qu'il s'agit d'un capteur faisait travailler l'orthographe et rien d'autre. Les quatre jeux affichent maintenant la traduction, au moment où elle ne donne plus la réponse : à la fin de la partie pour Mo an Karénaj, sous chaque mot de la liste pour Mots Mêlés.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.0",
+      "curated": true
+    },
+    {
+      "version": "12.0.0",
+      "emoji": "💡",
+      "title": "Le mot du jour porte sa traduction",
+      "description": "« difikilté », et juste en dessous « en français : difficulté ». Le classement de vos mots les plus employés fait de même. 1 145 mots kréyòl sont traduits à ce jour, depuis Kreyolopedia et le Wiktionnaire, deux sources libres citées dans l'application.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.0",
+      "curated": true
+    },
+    {
+      "version": "11.0.0",
+      "emoji": "📝",
+      "title": "Un quatrième jeu : une phrase à laquelle il manque un mot",
+      "description": "Une vraie phrase kréyòl s'affiche, tirée du corpus littéraire du clavier, et un mot lui manque. Quatre propositions, une seule est celle qu'a écrite l'auteur : les trois autres sont des mots que le corpus atteste au même endroit, elles sonnent donc juste tant qu'on ne lit pas toute la phrase. 389 phrases, sur trois niveaux.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v11.0.0",
+      "curated": true
+    },
+    {
+      "version": "11.0.0",
+      "emoji": "🧭",
+      "title": "Les quatre jeux se rejoignent derrière un onglet « Jé »",
+      "description": "À sept onglets, chacun n'avait qu'un septième de la largeur et les libellés se coupaient en plein milieu d'un mot. Les jeux tiennent désormais dans une seule destination, le guide et « À propos » descendent au pied de l'onglet Démarrage, et ce qui reste respire.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v11.0.0",
+      "curated": true
+    },
+    {
+      "version": "11.0.0",
+      "emoji": "⌨️",
+      "title": "Un bouton pour revenir au clavier kréyòl",
+      "description": "Quand un autre clavier a pris la main, l'application le dit et propose de rechoisir le kréyòl en un geste, au lieu de vous renvoyer dans le tunnel d'installation alors que tout est déjà en place.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v11.0.0",
+      "curated": true
+    },
     {
       "version": "10.14.2",
       "emoji": "🔤",
