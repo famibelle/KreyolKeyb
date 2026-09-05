@@ -5,6 +5,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.0.1] - 2026-09-05
+
+### 🔧 Modifié
+
+- **Le jeu de phrases à compléter s'appelle « Fraz a twou ».** Il était livré
+  sous un nom français, « Mots à Trous », alors que trois des quatre jeux du
+  clavier portent déjà un nom que la langue reconnaît. Le nom kréyòl vient d'un
+  locuteur, pas d'une traduction faite ici.
+
 ## [12.0.0] - 2026-09-05
 
 ### ✨ Ajouté
