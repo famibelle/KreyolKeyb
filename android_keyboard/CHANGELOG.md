@@ -5,6 +5,55 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.0.0] - 2026-09-05
+
+### ✨ Ajouté
+
+- **Un quatrième jeu : « Mots à Trous ».** Une vraie phrase kréyòl s'affiche, un
+  mot lui manque, et quatre propositions sont offertes dont une seule est celle
+  qu'a écrite l'auteur. Les trois autres sont des mots que le corpus atteste au
+  même endroit : elles sonnent juste tant qu'on ne lit pas toute la phrase. 389
+  phrases, réparties sur trois niveaux de difficulté, avec la source de chacune
+  affichée sous elle.
+
+### 🔧 Modifié
+
+- **La barre d'onglets passe de sept à trois.** Les quatre jeux se rejoignent
+  derrière un onglet « Jé ». À sept onglets, chacun disposait d'un septième de
+  la largeur et les libellés se coupaient en plein milieu d'un mot ; les trois
+  destinations restantes — Démarrage, Kréyòl an mwen, Jé — respirent, et la
+  police des libellés remonte de 9 à 11 sp.
+- **Le guide et « À Propos » quittent la barre pour le pied de l'onglet
+  Démarrage.** Ce sont des pages qu'on lit une fois, et elles coûtaient deux
+  septièmes de la largeur à chaque ouverture. Elles s'ouvrent maintenant en
+  plein écran, depuis l'endroit où l'on vient déjà quand on cherche à
+  comprendre.
+- **Les jeux et les statistiques s'ouvrent sans attendre la configuration
+  complète du clavier.** Il fallait jusqu'ici que le clavier soit activé *et*
+  sélectionné ; quelqu'un qui en avait essayé un autre, ou qu'une mise à jour du
+  téléphone avait désélectionné, se retrouvait renvoyé dans le tunnel
+  d'installation alors qu'il connaissait déjà l'application. Les onglets
+  reviennent dès la première activation, et ne repartent plus.
+
+### 🐛 Corrigé
+
+- **Un bouton pour revenir au clavier kréyòl.** Quand un autre clavier a pris la
+  main, l'onglet Démarrage l'annonce en tête d'écran et propose de rechoisir le
+  kréyòl en un appui. Le clavier n'est ni désinstallé ni désactivé dans ce cas,
+  et le message le dit : il n'y a qu'à le rechoisir. Le second chemin est
+  rappelé juste en dessous — la petite icône de clavier en bas de l'écran,
+  pendant que vous écrivez, ouvre le même choix sans quitter l'application où
+  vous êtes.
+- La carte « Configuration rapide » n'annonce plus une mise à jour du téléphone
+  quand le clavier a simplement changé : elle dit ce qui est, sans en supposer
+  la cause.
+- **Le raccourci « Découvrez vos statistiques » n'atterrit plus au bord du
+  monde.** Il affichait le bon contenu, mais déposait à un endroit d'où plus
+  rien ne se balayait vers la gauche.
+- Les pastilles de mots de l'onglet « Kréyòl an mwen » retrouvent leur fond
+  pastel. Il était brunâtre : une opacité concaténée à une couleur ne produit
+  pas une transparence, mais une autre teinte, opaque.
+
 ## [10.14.8] - 2026-08-26
 
 ### 🤫 Le guide révélait le huitième niveau
