@@ -5,6 +5,51 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.0.0] - 2026-09-05
+
+### ✨ Ajouté
+
+- **Un onglet « Dictionnaire », et la traduction française des mots kréyòl.**
+  On y cherche un mot dans les deux sens : « kaz » comme « maison ». Le sens de
+  la requête est déduit et non demandé, ce qui évite le piège des mots que les
+  deux langues partagent : chercher « livre » remontait sinon l'homographe
+  kréyòl avant le mot cherché. Toucher un résultat ouvre sa fiche — sens,
+  prononciation, exemples, source — et un appui long le copie.
+- **Les quatre jeux disent enfin ce que veut dire le mot qu'ils font
+  chercher.** Reconstituer « KAPTÈ » sans savoir qu'il s'agit d'un capteur
+  exerçait l'orthographe et rien d'autre. La traduction apparaît au moment où
+  elle ne dévoile plus rien : à la fin de la partie pour Mo an Karénaj, une
+  fois le mot reconstitué pour Mots Mélangés, sous chaque mot de la liste pour
+  Mots Mêlés, avec la réponse pour Mots à Trous.
+- **Le mot du jour porte sa traduction**, annoncée « en français : … » plutôt
+  que posée sous le mot : une glose seule ne dit pas dans quelle langue on la
+  lit. La liste des mots les plus utilisés en fait autant.
+- **1 145 formes traduites**, dont 513 des 5 296 mots du dictionnaire, soit
+  36 % de tout ce que le corpus écrit. Les 632 autres sont des mots absents du
+  corpus : ils ne servent qu'à la recherche. Les sources sont Kreyolopedia et
+  le Wiktionnaire francophone, toutes deux en CC BY-SA 4.0 ; elles sont créditées
+  dans la fiche de chaque mot et en pied de l'onglet.
+
+### 🔧 Modifié
+
+- **La barre d'onglets passe de trois à quatre.** Les quatre libellés tiennent
+  encore sur une ligne, y compris « Kréyòl an mwen », le plus long, et jusqu'aux
+  écrans de 360 dp. Il passe à deux lignes quand la police système est
+  agrandie, sans jamais être coupé.
+- **Les jeux ne tirent plus que parmi les mots traduits.** Ils y perdent en
+  réserve — Mo an Karénaj passe de 882 mots de cinq lettres à 93 — et y gagnent
+  de ne plus jamais finir une partie sur un mot dont ils ne peuvent rien dire.
+  Une proposition du joueur, elle, reste acceptée dès lors qu'elle est au
+  dictionnaire, traduite ou non.
+
+### ⚠️ Limites connues
+
+- **Un mot kréyòl sur dix seulement est traduit**, et `sé`, troisième mot le
+  plus fréquent de la langue, n'est glosé par aucune source libre. Les
+  dictionnaires de référence sont sous droit d'auteur ; ce qui manque ici
+  manque partout ailleurs en accès libre. La couverture montera quand
+  Kreyolopedia et le Wiktionnaire grandiront, sans que l'application change.
+
 ## [11.0.0] - 2026-09-05
 
 ### ✨ Ajouté

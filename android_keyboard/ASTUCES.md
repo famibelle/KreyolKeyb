@@ -6,7 +6,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
 
 ## Fonctionnement
 
-- Les 37 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
+- Les 38 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
   part ailleurs : ce fichier documente et source cette liste, il n'est pas lu
   par l'application.
 - `getTipOfTheWeek()` (`SettingsActivity.kt:3516`) prend le numéro de semaine
@@ -14,7 +14,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
   seedé sur la date (contrairement à `getWordOfTheDay()`,
   `SettingsActivity.kt:3525`) : la liste est parcourue en entier et deux
   semaines de suite ne retombent jamais sur la même astuce. Le cycle complet
-  dure donc 37 semaines, soit un peu plus de huit mois.
+  dure donc 38 semaines, soit un peu plus de huit mois.
 - Le décalage de fuseau est ajouté au timestamp pour que le changement d'astuce
   ait lieu à minuit local, pas à minuit UTC. Le `+3` du calcul cale la bascule
   sur le lundi, le jour 0 de l'ère Unix étant un jeudi.
@@ -35,7 +35,7 @@ onglets) sont repris tels quels de l'application ou du dictionnaire.
 
 ---
 
-## Les 37 astuces
+## Les 38 astuces
 
 Les numéros correspondent à l'ordre dans `WEEKLY_TIPS`, donc à l'ordre de
 passage : l'astuce n° 1 s'affiche la semaine où le compteur repart à zéro, puis
@@ -92,6 +92,12 @@ une par semaine dans cet ordre.
 | 17 | Mots Mélangés : 10 mots chronométrés, bouton Indice. | `take(10)` (`wordscramble/WordScrambleModels.kt:76`), `getTimeForDifficulty()` 45/30/20 s (`wordscramble/WordScrambleModels.kt:91`), bouton « 💡 Indice » (`SettingsActivity.kt:4120`) |
 | 23 | Mots Mêlés : diagonales et mots à l'envers selon la difficulté. | `WordSearchDifficulty` (`wordsearch/WordSearchModels.kt:63`), `WordDirection` (`wordsearch/WordSearchModels.kt:52`) |
 | 37 | Mots à Trous : une phrase kréyòl réelle, quatre propositions, une seule écrite par l'auteur. | Actif `creole_cloze.json` produit par `Dictionnaires/generate_cloze.py`, lu par `cloze/ClozeData.loadQuestions()`. Les leurres viennent du modèle n-grammes pour le même contexte, d'où « elles sonnent juste tant qu'on ne lit pas toute la phrase » |
+
+### Dictionnaire
+
+| # | Astuce | Source |
+|---|--------|--------|
+| 38 | L'onglet Dictionnaire cherche dans les deux sens ; les jeux disent ce que veut dire leur mot. | `DictionaryFragment` (`SettingsActivity.kt`), quatrième onglet depuis la 12.0.0. Recherche bidirectionnelle : `TranslationDictionary.rechercher()`, dont le premier rang ne se déclenche que si une glose vaut exactement la requête. Côté jeux, `TranslationDictionary.libelle()` aux quatre points de révélation et `filtrerMotsTraduits()` aux quatre tirages |
 
 ### Correcteur, confidentialité, aide
 

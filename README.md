@@ -284,6 +284,8 @@ Le dictionnaire contient **5 296 mots créoles** extraits de :
 | `creole_dict.json` | 5 296 mots kréyòl + fréquences | ~160 Ko |
 | `creole_ngrams.json` | 8 852 contextes (4 601 à un mot, 4 251 à deux mots) | ~1,3 Mo |
 | `french_simple_dict.json` | 662 mots français (fallback) | ~16 Ko |
+| `creole_cloze.json` | 389 phrases à trous du jeu *Mots à Trous* | ~72 Ko |
+| `creole_translations.json` | 1 145 formes traduites en français (CC BY-SA) | ~67 Ko |
 
 ### Mots les Plus Fréquents
 ```
@@ -295,7 +297,13 @@ té (726), pa (664), yo (638), nou (633), ou (611)
 ```bash
 cd Dictionnaires
 python KreyolComplet.py           # Hugging Face (HF_TOKEN requis) : dictionnaire + n-grams
+python generate_cloze.py          # puis les phrases à trous, qui consomment ce qui précède
+python generate_translations.py   # puis les traductions (Kreyolopedia + Wiktionnaire, sans jeton)
 ```
+
+L'ordre compte : les deux derniers scripts lisent le dictionnaire livré au lieu
+de le reconstruire. Voir [`Dictionnaires/GLOSES.md`](Dictionnaires/GLOSES.md)
+pour les sources des traductions et leurs obligations de licence.
 
 ## 🎨 Design & UX
 
