@@ -78,6 +78,9 @@ android_keyboard/app/local-release.properties.example
 KreyolKeybPlayStore\graphics\screenshots-phone\KlavyéAnAktion2.webm
 .github\workflows\release_aab.yml
 Dictionnaires/backups/
+# Cache des sources de gloses (Kreyolopedia, Wiktionnaire) : rappelé à la
+# demande, il n'a rien à faire dans l'historique.
+Dictionnaires/gloses_data/
 # Extrait local d'un dataset HF privé/gated - usage interne uniquement, ne pas publier
 Dictionnaires/extraits_potomitan-gcf-fr-translation.json
 monitor_performance.sh
