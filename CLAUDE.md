@@ -8,15 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Android Build Commands
 
-All commands run from `android_keyboard/`:
-
-```bash
-./gradlew assembleDebug          # Build debug APK
-./gradlew assembleRelease        # Build signed release APK (requires keystore config)
-./gradlew installDebug           # Build + install on connected device
-./gradlew test                   # Run all unit tests
-./gradlew test --tests "com.example.kreyolkeyboard.LevenshteinDistanceTest"  # Single test class
-```
+All Gradle commands run from `android_keyboard/`.
 
 **Local build gotchas:** AGP requires Java 17 (`export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`), and the checked-in `gradlew` script is corrupted (missing `eval`, passes quoted args to Gradle). Work around it with:
 ```bash
@@ -28,7 +20,7 @@ Release signing reads `KEYSTORE_FILE`, `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSW
 
 **Never put signing credentials in `gradle.properties`** — that file is tracked. Doing so leaked the release passwords publicly between 2025-10-08 and 2025-10-23 (`22001c93` → `563e31aa`); the branches still carrying them were deleted from `origin` on 2026-08-15, with local backups under `refs/backup/2026-08-15-fuite-secret/`. `keystore.properties` exists so there is no tracked file where a credential can plausibly be written.
 
-**versionCode** format: `60501` = version `6.5.1` (major × 10000 + minor × 100 + patch). minSdk 21, targetSdk 36.
+**versionCode** format: `60501` = version `6.5.1` (major × 10000 + minor × 100 + patch).
 
 ## Dictionary / Data Pipeline
 
@@ -36,6 +28,7 @@ The JSON assets in `android_keyboard/app/src/main/assets/` are the **source of t
 - `creole_dict.json` — `[word, frequency]` list (~5300 words)
 - `creole_ngrams.json` — n-gram context model, ~8850 keys. Two key families in one flat object: one word (`"ka"`, from bigrams) and two words separated by a space (`"an ka"`, from trigrams). See `android_keyboard/NGRAMS.md`
 - `french_simple_dict.json` — French fallback dictionary, only ~660 words. This thinness constrains both the bilingual suggestions and the spell checker (see below)
+- `creole_cloze.json` — the ~390 fill-in-the-blank questions of the *Mots à Trous* game. Not produced by `KreyolComplet.py`; see `generate_cloze.py` below
 
 To regenerate from the Hugging Face dataset `POTOMITAN/PawolKreyol-gfc` (requires `HF_TOKEN`):
 ```bash
@@ -48,6 +41,10 @@ python KreyolComplet.py          # Fetches HF data, rebuilds dict + n-grams, bac
 
 `python KreyolComplet.py --rapport-seul` replays the same computation but writes **only** `RAPPORT_LINGUISTIQUE.md`: `sauvegarder_donnees()` is skipped, so the dictionaries shipped in the APK are untouched. Unlike the full pipeline this mode *refuses* the local-snapshot fallback (it checks `source_chargement`), because a report regenerated from stale data would still be stamped with today's date.
 
+`Dictionnaires/generate_cloze.py` builds `creole_cloze.json` for the *Mots à Trous* game. It **consumes** the shipped dictionary and n-grams rather than rebuilding anything, so it must run **after** `KreyolComplet.py` — running it before leaves the distractors drawn from a model that no longer matches the corpus, and `ClozeAssetTest` then fails on answers that are no longer in the dictionary. It reuses `KreyolPipelineUnique.charger_textes_kreyol()` for the corpus, and `--strict` refuses the local-snapshot fallback (CI deliberately runs it *without* `--strict`, so an HF outage degrades the same way the dictionary already does).
+
+Two thresholds in it carry the game's quality, and both are proxies for a grammar the project does not have. Creole capitalizes nothing but proper nouns, so unlike the Luxembourgish fork there is no case signal for "content word": the masked word is picked on frequency instead (5 ≤ freq ≤ 150, ≥ 4 letters), which costs good answers like `moun` (267) and `pran` (152) along with the function words it is aimed at. Conversely a mid-sentence capital *is* a reliable proper-noun signal here, but it must be combined with the overall capitalization ratio — `viktò` is capitalized 95 times out of 95, yet 83 of those open a line of dialogue. Requiring the same final letter for distractors was measured and dropped: it takes the delivery from 510 questions to 178, for a language that barely inflects.
+
 `docs/scripts/generate_corpus_stats.py` computes the figures behind the `docs/corpus.html` page into `docs/assets/corpus_stats.json`. It reads the public parquet export through the HF datasets-server (no `HF_TOKEN`, no `datasets` library) and deliberately mirrors `KreyolComplet.py`'s regex and n-gram thresholds, so its totals stay comparable to the shipped assets. It also stores the dataset's commit SHAs, which is what `rapport-corpus.yml` diffs to decide whether anything needs rebuilding.
 
 Corpus word counts **replace** stored frequencies rather than adding to them, so two consecutive runs produce the same dictionary. Words absent from the corpus (hand-curated additions) are preserved, their frequency rescaled to the current corpus scale.
@@ -58,14 +55,7 @@ Corpus word counts **replace** stored frequencies rather than adding to them, so
 
 `KreyolInputMethodServiceRefactored.kt` is the **only** IME service. The legacy monolithic `KreyolInputMethodService.kt` and the unused `TestInputMethodService.kt` were deleted in 10.4.2: neither was declared in the manifest, so both were dead code that still shipped in the APK and made features look implemented when they were not (`onUpdateSelection()` lived only there while the active service lacked it). Recover them from git history if ever needed.
 
-The refactored IME coordinates four components via listener interfaces:
-
-| Component | Responsibility |
-|-----------|---------------|
-| `KeyboardLayoutManager` | Creates and styles key buttons, manages shift/caps/numeric mode |
-| `SuggestionEngine` | Loads dictionary + n-grams, produces ranked bilingual suggestions |
-| `AccentHandler` | Long-press popup for accented characters |
-| `InputProcessor` | Handles key events, backspace, word commit to `InputConnection` |
+The refactored IME coordinates four components (`KeyboardLayoutManager`, `SuggestionEngine`, `AccentHandler`, `InputProcessor`) via listener interfaces.
 
 ### Keyboard Theme (`KeyboardTheme.kt`)
 
@@ -94,14 +84,7 @@ day/night setting does not reach third-party keyboards.
 
 ### Suggestion Pipeline (`SuggestionEngine.kt`)
 
-1. **Prefix match** against `creole_dict.json` (Kreyòl prioritized)
-2. **N-gram context** from the last two committed words, falling back to the last one when the pair is unknown
-3. **Levenshtein fuzzy match** (`LevenshteinDistance.kt`) for typo tolerance
-4. **Accent-tolerant match** (`AccentTolerantMatcher.kt`) — matches `e` against `é`, etc.
-5. **French fallback** — only kicks in at ≥ 3 characters typed
-6. **Casing preservation** — `applyCasingPattern()` mirrors the user's casing onto the suggestion
-
-Max 3 suggestions displayed (5 internally scored: 3 Kreyòl + 2 French slots).
+The ranking stages live in `SuggestionEngine.kt` and read top to bottom; two thresholds in them are deliberate rather than incidental: the French fallback only kicks in at ≥ 3 characters typed, and 3 suggestions are displayed out of 5 scored internally (3 Kreyòl + 2 French slots).
 
 ### Spell Checker (`KreyolSpellCheckerService.kt`)
 
@@ -127,26 +110,23 @@ Android allows a single spell checker system-wide and no app can select itself. 
 - `VocabularyStatsActivity` — displays dashboard with progress per level
 - `WordCommitListener` interface — `KreyolInputMethodServiceRefactored` implements this to log each committed word
 
-### Games (`wordscramble/`, `wordsearch/`, `mokarenaj/` packages)
+### Tabs (`SettingsActivity`)
 
-Three vocabulary mini-games accessible from `SettingsActivity` (`mokarenaj` is a Creole Wordle). They pull words directly from the loaded dictionary. No separate data source.
+Three tabs since 11.0.0 — Démarrage, Kréyòl an mwen, Jé — down from seven. The pager is *cyclic*: it repeats the tabs over a huge virtual range, so an absolute `currentItem` is meaningless. Navigate with `allerAOnglet()`, which also refuses to animate a jump of more than one tab (ViewPager2 stops midway, leaving the bar showing one tab while the content is another).
 
-## iOS Port (lives on the `ios/port` branch)
+The four games sit behind the `Jé` tab in `GamesFragment`, which swaps the chosen game into its own `FrameLayout` via `childFragmentManager`. **No nested pager**: the word-search grid is dragged with a finger, and a second `ViewPager2` would fight it for every horizontal gesture. Back-to-the-menu is an `OnBackPressedCallback` enabled only while a game is open, so the Back button still quits the app everywhere else.
 
-The iOS Swift/SwiftUI port is **not on `main`** — its sources, `project.yml`, and `ios-build.yml` workflow exist only on the `ios/port` branch. On `main`, `ios/` contains only signing materials (CSR, distribution key). Check out or merge from `ios/port` before doing iOS work.
+Guide and À Propos are no longer tabs: `SheetFragment` opens the existing fragments full screen from the foot of the Démarrage tab.
 
-The port uses **XcodeGen** (`project.yml`) and requires a Mac with Xcode 15:
+The first-run funnel keys off `funnel_keyboard_enabled`, which is timestamped once and never cleared — the tab bar comes back on first *activation* and never hides again, even if a system update later deselects the keyboard.
 
-```bash
-cd ios
-xcodegen generate               # Creates KreyolKeyb.xcodeproj from project.yml
-```
+### Games (`wordscramble/`, `wordsearch/`, `mokarenaj/`, `cloze/` packages)
 
-The iOS project references the shared JSON assets directly from `android_keyboard/app/src/main/assets/` — do not duplicate them. The Xcode project is gitignored; regenerate it with `xcodegen generate` before building.
+Four vocabulary mini-games accessible from the `Jé` tab (`mokarenaj` is a Creole Wordle). Three of them pull words directly from the loaded dictionary, with a hard-coded fallback list. `cloze` (*Mots à Trous*) is the exception on both counts: it reads `creole_cloze.json`, and it has **no fallback** — a missing asset shows a screen saying so, because ten hand-written sentences would make a broken delivery perfectly playable.
 
-The structure mirrors Android: `Core/SuggestionEngine.swift`, `Core/LevenshteinDistance.swift`, `Core/AccentTolerantMatcher.swift`, `Gamification/`, `Games/`, `Views/ContentView.swift` (≈ `SettingsActivity`), and `KeyboardExtension/KeyboardViewController.swift` (≈ the IME service).
+## iOS Port
 
-**Phase 1** (Swift source files) is complete. **Phase 2** (wiring the `KeyboardViewController` with actual key views, accent popups, and App Group sharing) is not yet implemented.
+The iOS Swift/SwiftUI port lives on the `ios/port` branch, not on `main`. Load the `ios-port` skill before any iOS work.
 
 ## CI/CD
 
@@ -160,11 +140,7 @@ Never write the literal skip-CI marker into a hand-written commit message, even 
 
 ## Brand Assets
 
-`docs/charte-graphique.html` is the brand reference page: logo rules, the three palettes and what each is for, typography, reusable components, editorial rules. It *describes* the values that live in `docs/assets/theme.css`, `res/values/colors.xml` and `docs/publicites.html` rather than redefining them, so those files stay the single source and the page follows when they change.
-
-Note the three palettes are deliberately distinct and must not be mixed inside one support: communication (theme.css, muted, made for long text), product (colors.xml, vivid, a keyboard is read in a tenth of a second), advertising (publicites.html, hardcoded gradients that survive network compression).
-
-`scripts/tag_assets.py` writes the Potomitan™ authorship and copyright into every visual's metadata (PNG iTXt + XMP, JPEG Exif/XMP/COM, SVG tags, PDF docinfo + XMP). It works at the chunk/segment level, so **nothing is re-encoded** and repeated runs never degrade a JPEG; it is idempotent, and `--check` reports files that lost their metadata. `docs/assets/ads/generate.py` calls it after every export, because Chrome writes bare PNGs. Third-party visuals (Google Play badge, stock imagery) are skipped by name: stamping our copyright on them would be false. PDF support needs `pikepdf`; without it the PDFs are skipped and the run says so.
+Brand rules (the three palettes, the charte page, `scripts/tag_assets.py`) live in `docs/CLAUDE.md`, loaded when working under `docs/`.
 
 ## Legacy / Auxiliary Directories
 
