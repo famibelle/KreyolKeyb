@@ -95,7 +95,28 @@ object KeyFeedback {
         }
     }
 
-    private fun vibrate(view: View) {
+    /**
+     * Retour d'un cran de déplacement du curseur, quand le doigt glisse sur la
+     * barre d'espace (v14.0.0) : vibration seule, et jamais de son.
+     *
+     * Un glissement d'un bord à l'autre de l'écran franchit une trentaine de
+     * crans. Le son de frappe joué à chacun d'eux tournerait à la crécelle,
+     * alors que la vibration donne exactement ce qu'on cherche ici : la
+     * granularité du geste, un cran valant un caractère.
+     *
+     * [HapticFeedbackConstants.CLOCK_TICK] et non `KEYBOARD_TAP` : c'est
+     * l'effet le plus court du catalogue, celui que le système réserve aux
+     * défilements crantés. Répété trente fois, `KEYBOARD_TAP` se sent comme
+     * une frappe continue.
+     */
+    fun onCursorStep(view: View) {
+        val context = view.context
+        if (hapticEnabled ?: KeyboardPreferences.hapticEnabled(context).also { hapticEnabled = it }) {
+            vibrate(view, HapticFeedbackConstants.CLOCK_TICK)
+        }
+    }
+
+    private fun vibrate(view: View, effect: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // FLAG_IGNORE_GLOBAL_SETTING : sans lui, le système jette la demande
@@ -105,7 +126,7 @@ object KeyFeedback {
                 // tiers. L'échappatoire est ici le réglage de l'application, pas celui
                 // du système.
                 view.performHapticFeedback(
-                    HapticFeedbackConstants.KEYBOARD_TAP,
+                    effect,
                     HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
                 )
             }

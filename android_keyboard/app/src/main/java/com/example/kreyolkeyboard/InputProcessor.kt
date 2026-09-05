@@ -370,6 +370,29 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     }
     
     /**
+     * Déplace le curseur de [steps] caractères, négatif vers la gauche
+     * (glissement sur la barre d'espace, v14.0.0).
+     *
+     * Le déplacement passe par des événements de touche directionnelle et non
+     * par `setSelection()`. Ce dernier demanderait la position absolue du
+     * curseur, que l'IME ne connaît que par `onUpdateSelection()`, c'est-à-dire
+     * avec un retard : pendant un glissement rapide on écrirait une position
+     * calculée depuis une valeur périmée, et le curseur sauterait. La touche
+     * directionnelle laisse au contraire l'éditeur faire le calcul sur son
+     * propre état, ce qui règle du même coup les bornes du texte, les retours à
+     * la ligne et la sélection en cours, qu'elle réduit comme partout ailleurs.
+     * C'est aussi ce que fait le clavier de l'AOSP pour ce même geste.
+     */
+    fun moveCursorBy(steps: Int) {
+        if (steps == 0) return
+
+        val keyCode = if (steps > 0) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+        repeat(kotlin.math.abs(steps)) {
+            inputMethodService.sendDownUpKeyEvents(keyCode)
+        }
+    }
+
+    /**
      * Resynchronise le mot courant avec le texte réellement présent avant le
      * curseur, appelé à chaque déplacement signalé par onUpdateSelection().
      *

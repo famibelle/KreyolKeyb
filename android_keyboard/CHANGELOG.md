@@ -5,6 +5,35 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.0.0] - 2026-09-05
+
+### ✨ Ajouté
+
+- **Le curseur se promène en glissant le doigt sur la barre d'espace.** Poser un
+  curseur entre deux lettres est le geste le plus raté de la saisie mobile : la
+  cible fait deux millimètres et le doigt en couvre dix. Le doigt part de la
+  barre d'espace et le curseur suit, une lettre par cran de 10 dp, avec une
+  courte vibration à chaque caractère franchi. Le geste ne s'arrête pas au bord
+  de la touche : il court sur toute la largeur de l'écran, soit une trentaine de
+  caractères, de quoi traverser une phrase sans lever le doigt.
+- Les deux gestes que la barre d'espace portait déjà sont intacts et se
+  départagent d'eux-mêmes : passé le seuil de glissement, le compte à rebours du
+  sélecteur de claviers est annulé, et le relâchement n'insère plus d'espace.
+  Placer le curseur au milieu d'un mot ne doit pas laisser une espace derrière
+  soi.
+
+### 🔧 Modifié
+
+- **Les suggestions ne clignotent plus pendant un déplacement de curseur.**
+  Chaque caractère franchi relançait un calcul de suggestions : traverser une
+  phrase en faisait défiler trente. Le mot suivi n'est désormais resynchronisé
+  qu'une fois le doigt arrêté, sur la position d'arrivée, qui est la seule qui
+  compte.
+
+### 📝 Note de version
+
+- La numérotation saute de la 12 à la 14. Aucune version 13 n'a existé.
+
 ## [12.1.0] - 2026-09-05
 
 ### ✨ Ajouté

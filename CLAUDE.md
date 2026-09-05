@@ -62,6 +62,18 @@ Corpus word counts **replace** stored frequencies rather than adding to them, so
 
 The refactored IME coordinates four components (`KeyboardLayoutManager`, `SuggestionEngine`, `AccentHandler`, `InputProcessor`) via listener interfaces.
 
+### Space Bar Gestures (`KeyboardLayoutManager.setupSpaceLongPress()`)
+
+Three gestures share one `OnTouchListener`: tap (space), one-second long press (IME picker), and, since 14.0.0, a horizontal drag that moves the caret one character per `SPACE_CURSOR_STEP_DP` (10 dp). Past `scaledTouchSlop` the long-press timer is cancelled and the release no longer inserts a space.
+
+Three things there are load-bearing and easy to undo:
+
+- **Every branch returns `false`.** That is what makes `View.onTouchEvent` consume the DOWN (the key is clickable), which is what keeps MOVE and UP coming to this listener after the finger has left the key. Returning `true` on DOWN would confine the gesture to the width of the space bar instead of the width of the screen. The same mechanism is why the space key has no `OnClickListener` (two of them insert a double space).
+- **The anchor advances by whole steps, not to the finger's position.** Rounding never accumulates, and an out-and-back finger returns the caret exactly where it started.
+- **The caret moves via `sendDownUpKeyEvents(DPAD_LEFT/RIGHT)`, not `setSelection()`.** `setSelection()` needs an absolute position, which the IME only learns from `onUpdateSelection()`, i.e. late; during a fast drag it would compute from a stale value and the caret would jump. This is also what AOSP's keyboard does for this gesture.
+
+`onUpdateSelection()` fires per character during the drag, so the service debounces: `glissementCurseur` defers `syncWordWithCursor()` until `DELAI_SYNC_CURSEUR` (120 ms) after the last movement. Without it the suggestion bar recomputes on every character crossed.
+
 ### Keyboard Theme (`KeyboardTheme.kt`)
 
 One palette object, resolved once per focus, that the four painted surfaces read: the

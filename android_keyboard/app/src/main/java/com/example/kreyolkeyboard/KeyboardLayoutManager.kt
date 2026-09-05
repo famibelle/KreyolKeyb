@@ -92,6 +92,35 @@ class KeyboardLayoutManager(private val context: Context) {
         // 🌐 Délai pour l'appui long sur la barre d'espace (1 seconde)
         private const val SPACE_LONG_PRESS_DELAY = 1000L
 
+        /**
+         * Distance que le doigt parcourt sur la barre d'espace pour déplacer le
+         * curseur d'un caractère (v14.0.0).
+         *
+         * Dix dp est un compromis entre deux contraintes opposées. La barre
+         * d'espace ne fait qu'une soixantaine de dp de large, mais le geste ne
+         * s'y arrête pas : la vue garde le doigt jusqu'au relâchement, donc la
+         * course utile est celle de l'écran, environ 360 dp, soit trente-six
+         * caractères. C'est assez pour traverser une ligne de texte sans lever
+         * le doigt, et assez peu pour viser une lettre précise, ce qui est le
+         * geste que cette fonction existe pour rendre possible.
+         */
+        private const val SPACE_CURSOR_STEP_DP = 10
+
+        /**
+         * Nombre de caractères dont le curseur doit se déplacer pour un
+         * déplacement de [deltaPx] du doigt depuis le dernier cran franchi,
+         * négatif vers la gauche.
+         *
+         * `internal` (et non private) pour être testable en JVM sans MotionEvent.
+         *
+         * La troncature vers zéro est ce qu'on veut des deux côtés : elle rend
+         * le geste symétrique, un demi-cran ne déplaçant rien ni à gauche ni à
+         * droite. Un arrondi au plus proche avancerait d'un caractère à mi-course
+         * et reculerait au retour, ce qui se sent comme un curseur qui hésite.
+         */
+        internal fun cursorStepsFor(deltaPx: Float, stepPx: Float): Int =
+            if (stepPx <= 0f) 0 else (deltaPx / stepPx).toInt()
+
         fun isLandscape(context: Context): Boolean =
             context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -124,6 +153,13 @@ class KeyboardLayoutManager(private val context: Context) {
     private val spaceLongPressHandler = Handler(Looper.getMainLooper())
     private var spaceLongPressRunnable: Runnable? = null
     private var isSpaceLongPressTriggered = false
+
+    // Glissement horizontal sur la barre d'espace (v14.0.0). L'ancre n'est pas
+    // le point de départ du geste mais le dernier cran franchi : elle avance
+    // d'un pas à chaque caractère, de sorte que l'arrondi ne se cumule jamais
+    // et qu'un aller-retour du doigt ramène le curseur exactement d'où il vient.
+    private var spaceCursorAnchorX = 0f
+    private var isSpaceCursorMode = false
     
     init {
         // Garantir que le clavier démarre toujours en mode alphabétique
@@ -135,6 +171,19 @@ class KeyboardLayoutManager(private val context: Context) {
         fun onKeyPress(key: String)
         fun onLongPress(key: String, button: View) // Changé de TextView à View
         fun onKeyRelease()
+
+        /**
+         * Le doigt glisse sur la barre d'espace : déplacer le curseur de [steps]
+         * caractères, négatif vers la gauche (v14.0.0).
+         *
+         * Corps par défaut vide, pour le seul clavier de démonstration de
+         * l'onglet Démarrage : il pilote un EditText et non un champ distant,
+         * et le geste n'y a rien à montrer que la frappe ne montre déjà.
+         */
+        fun onSpaceCursorMove(steps: Int) {}
+
+        /** Le doigt se lève après un glissement de curseur (v14.0.0). */
+        fun onSpaceCursorEnd() {}
     }
     
     private var interactionListener: KeyboardInteractionListener? = null
@@ -785,13 +834,31 @@ class KeyboardLayoutManager(private val context: Context) {
     }
     
     /**
-     * 🌐 Configure l'appui long personnalisé de 1 seconde pour la barre d'espace
+     * 🌐 Gestes de la barre d'espace : appui court, appui long d'une seconde
+     * (sélecteur de claviers) et, depuis la v14.0.0, glissement horizontal pour
+     * déplacer le curseur.
+     *
+     * Les trois cohabitent dans un seul `OnTouchListener` parce qu'ils se
+     * départagent : passé le seuil de glissement, le timer d'appui long est
+     * annulé et le relâchement n'insère plus d'espace. Poser le curseur en
+     * traversant un mot ne doit pas laisser un espace derrière soi.
+     *
+     * Le listener rend `false` partout, comme avant : `View.onTouchEvent`
+     * consomme alors le ACTION_DOWN parce que la vue est cliquable, ce qui
+     * garantit que les ACTION_MOVE et le ACTION_UP continuent d'arriver ici
+     * même quand le doigt a quitté la barre. C'est ce qui donne au geste toute
+     * la largeur de l'écran plutôt que la seule largeur de la touche.
      */
     private fun setupSpaceLongPress(button: View, key: String) {
+        val slopPx = android.view.ViewConfiguration.get(context).scaledTouchSlop
+        val stepPx = dpToPx(SPACE_CURSOR_STEP_DP).toFloat()
+
         button.setOnTouchListener { view, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
                     isSpaceLongPressTriggered = false
+                    isSpaceCursorMode = false
+                    spaceCursorAnchorX = event.x
                     
                     // Animation d'appui (100ms)
                     view.animate()
@@ -812,22 +879,48 @@ class KeyboardLayoutManager(private val context: Context) {
                     
                     false
                 }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    if (!isSpaceCursorMode) {
+                        // Le seuil est celui du système (scaledTouchSlop) et non une
+                        // valeur maison : c'est la distance en dessous de laquelle
+                        // Android considère qu'un doigt n'a pas bougé, et la prendre
+                        // telle quelle évite de déclencher un glissement sur le
+                        // tremblement qui accompagne un appui long volontaire.
+                        if (kotlin.math.abs(event.x - spaceCursorAnchorX) > slopPx) {
+                            isSpaceCursorMode = true
+                            spaceLongPressRunnable?.let { spaceLongPressHandler.removeCallbacks(it) }
+                            // L'ancre repart du point courant : sans cela le curseur
+                            // sauterait du seuil déjà parcouru dès le premier cran.
+                            spaceCursorAnchorX = event.x
+                            releaseKeyScale(view)
+                            Log.d(TAG, "↔️ Glissement du curseur engagé sur la barre d'espace")
+                        }
+                    } else {
+                        val steps = cursorStepsFor(event.x - spaceCursorAnchorX, stepPx)
+                        if (steps != 0) {
+                            spaceCursorAnchorX += steps * stepPx
+                            KeyFeedback.onCursorStep(view)
+                            interactionListener?.onSpaceCursorMove(steps)
+                        }
+                    }
+                    false
+                }
                 android.view.MotionEvent.ACTION_UP -> {
                     // Annuler le timer si relâché avant 1 seconde
                     spaceLongPressRunnable?.let { spaceLongPressHandler.removeCallbacks(it) }
                     
-                    // Animation de relâchement (120ms)
-                    view.animate()
-                        .scaleX(1.0f)
-                        .scaleY(1.0f)
-                        .setDuration(120)
-                        .start()
+                    releaseKeyScale(view)
                     
                     interactionListener?.onKeyRelease()
                     
-                    // Si relâché rapidement (pas d'appui long), c'est un clic normal
-                    if (!isSpaceLongPressTriggered) {
-                        interactionListener?.onKeyPress(key)
+                    when {
+                        // Un glissement n'écrit rien : il a déplacé le curseur
+                        isSpaceCursorMode -> {
+                            isSpaceCursorMode = false
+                            interactionListener?.onSpaceCursorEnd()
+                        }
+                        // Si relâché rapidement (pas d'appui long), c'est un clic normal
+                        !isSpaceLongPressTriggered -> interactionListener?.onKeyPress(key)
                     }
                     
                     false
@@ -836,19 +929,27 @@ class KeyboardLayoutManager(private val context: Context) {
                     // Annuler le timer en cas d'annulation
                     spaceLongPressRunnable?.let { spaceLongPressHandler.removeCallbacks(it) }
                     
-                    // Animation de relâchement (120ms)
-                    view.animate()
-                        .scaleX(1.0f)
-                        .scaleY(1.0f)
-                        .setDuration(120)
-                        .start()
+                    releaseKeyScale(view)
                     
                     interactionListener?.onKeyRelease()
+                    if (isSpaceCursorMode) {
+                        isSpaceCursorMode = false
+                        interactionListener?.onSpaceCursorEnd()
+                    }
                     false
                 }
                 else -> false
             }
         }
+    }
+
+    /** Animation de relâchement (120 ms), commune aux fins de geste de l'espace. */
+    private fun releaseKeyScale(view: View) {
+        view.animate()
+            .scaleX(1.0f)
+            .scaleY(1.0f)
+            .setDuration(120)
+            .start()
     }
     
     /**
