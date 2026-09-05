@@ -74,6 +74,17 @@ Three things there are load-bearing and easy to undo:
 
 `onUpdateSelection()` fires per character during the drag, so the service debounces: `glissementCurseur` defers `syncWordWithCursor()` until `DELAI_SYNC_CURSEUR` (120 ms) after the last movement. Without it the suggestion bar recomputes on every character crossed.
 
+### Emoji Recents (`EmojiRecents.kt`)
+
+Since 15.0.0 the emoji panel leads with a « Récents » category built from a 30-entry MRU list in its own `SharedPreferences` file (`kreyol_emoji_prefs`). 30 is `GRID_COLUMNS` × `VISIBLE_ROWS`, i.e. exactly the visible page: a longer list would make the one category that exists to be seen at a glance start scrolling.
+
+This is the one place the project stores something the user typed after 10.6.0 deleted the personal dictionary, so the boundary is deliberate and worth keeping: entries are identifiers drawn from a closed, shipped set (`emoji_data.json`), never free text; there is no timestamp and no counter; and `setEnregistrementAutorise()` is refreshed from `isSensitiveField()` on every `onStartInputView()`, exactly like the gamification word counters. « Vider les emojis récents » in `KeyboardSettingsActivity` clears it.
+
+Two implementation notes:
+
+- **The category list is frozen at construction**, not updated live. `createEmojiLayout()` builds a new `EmojiPickerView` on every switch into emoji mode, so it is fresh at each opening; reordering the grid under the finger of someone picking three emoji in a row would make them miss the third.
+- **A skin tone picked by long press does not go through `onEmojiSelected`.** It is committed by the service's `onAccentSelected()`, which is why that method records it too. Without it only the panel's default variant would ever reach the recents.
+
 ### Keyboard Theme (`KeyboardTheme.kt`)
 
 One palette object, resolved once per focus, that the four painted surfaces read: the

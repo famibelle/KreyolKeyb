@@ -27,6 +27,9 @@ import androidx.viewpager2.widget.ViewPager2
  * défile dans la catégorie courante (comportement par défaut d'un
  * RecyclerView/GridLayoutManager) : les deux gestes sont orthogonaux et
  * coexistent sans code de désambiguïsation supplémentaire.
+ *
+ * Depuis la v15.0.0, une catégorie « Récents » ouvre la liste quand
+ * [EmojiRecents] n'est pas vide, et le panneau s'ouvre dessus.
  */
 class EmojiPickerView(
     context: Context,
@@ -47,6 +50,26 @@ class EmojiPickerView(
     private val tabViews = mutableListOf<TextView>()
     private lateinit var viewPager: ViewPager2
 
+    /**
+     * Les catégories affichées : celles de l'actif, précédées des emojis
+     * récents quand il y en a (v15.0.0).
+     *
+     * La liste est figée à la construction et non tenue à jour pendant que le
+     * panneau est ouvert. C'est délibéré : réordonner la grille sous le doigt
+     * de quelqu'un qui enchaîne trois emojis lui ferait manquer le troisième.
+     * Le panneau étant reconstruit à chaque passage en mode emoji (voir
+     * `KeyboardLayoutManager.createEmojiLayout`), la liste est de toute façon
+     * à jour à la prochaine ouverture.
+     *
+     * Aucun onglet « Récents » tant que rien n'a été employé : un premier
+     * onglet vide serait une impasse au tout premier usage, qui est justement
+     * celui où l'on découvre le panneau.
+     */
+    private val categories: List<EmojiCategory> = EmojiRecents.lire(context).let { recents ->
+        if (recents.isEmpty()) emojiData.categories
+        else listOf(EmojiCategory("Récents", "🕒", recents)) + emojiData.categories
+    }
+
     init {
         orientation = VERTICAL
         accentHandler?.loadEmojiSkinTones(emojiData.skinTones)
@@ -59,7 +82,7 @@ class EmojiPickerView(
             orientation = HORIZONTAL
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, dpToPx(TAB_HEIGHT_DP))
 
-            emojiData.categories.forEachIndexed { index, category ->
+            categories.forEachIndexed { index, category ->
                 // TextView plutôt que Button : le style Button par défaut
                 // (Material/AppCompat, hérité même après remise à zéro du
                 // fond) impose un minWidth et un ellipsize sur une seule
@@ -134,10 +157,10 @@ class EmojiPickerView(
         }
 
         override fun onBindViewHolder(holder: PageHolder, position: Int) {
-            holder.recyclerView.adapter = EmojiGridAdapter(emojiData.categories[position].emojis)
+            holder.recyclerView.adapter = EmojiGridAdapter(categories[position].emojis)
         }
 
-        override fun getItemCount() = emojiData.categories.size
+        override fun getItemCount() = categories.size
     }
 
     private inner class EmojiGridAdapter(

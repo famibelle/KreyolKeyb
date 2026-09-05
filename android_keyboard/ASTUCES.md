@@ -6,7 +6,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
 
 ## Fonctionnement
 
-- Les 39 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
+- Les 40 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
   part ailleurs : ce fichier documente et source cette liste, il n'est pas lu
   par l'application.
 - `getTipOfTheWeek()` (`SettingsActivity.kt:3516`) prend le numéro de semaine
@@ -14,7 +14,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
   seedé sur la date (contrairement à `getWordOfTheDay()`,
   `SettingsActivity.kt:3525`) : la liste est parcourue en entier et deux
   semaines de suite ne retombent jamais sur la même astuce. Le cycle complet
-  dure donc 39 semaines, soit neuf mois.
+  dure donc 40 semaines, soit un peu plus de neuf mois.
 - Le décalage de fuseau est ajouté au timestamp pour que le changement d'astuce
   ait lieu à minuit local, pas à minuit UTC. Le `+3` du calcul cale la bascule
   sur le lundi, le jour 0 de l'ère Unix étant un jeudi.
@@ -35,7 +35,7 @@ onglets) sont repris tels quels de l'application ou du dictionnaire.
 
 ---
 
-## Les 39 astuces
+## Les 40 astuces
 
 Les numéros correspondent à l'ordre dans `WEEKLY_TIPS`, donc à l'ordre de
 passage : l'astuce n° 1 s'affiche la semaine où le compteur repart à zéro, puis
@@ -56,6 +56,7 @@ une par semaine dans cet ordre.
 | 13 | Bouton « 123 » pour chiffres et symboles, euro compris ; « ABC » pour revenir. | `handleModeSwitch()` (`InputProcessor.kt:321`), rangée numérique avec `€` (`KeyboardLayoutManager.kt:131`) |
 | 15 | Touche emoji en bas à droite, près de 1900 emojis classés par catégories. | Layout emoji (`KeyboardLayoutManager.kt:142`), `EmojiData.categories` (`EmojiData.kt:28`), asset `emoji_data.json` |
 | 18 | Appui long sur un emoji de personne pour choisir la couleur de peau. | `emojiSkinTones` / `loadEmojiSkinTones()` (`AccentHandler.kt:104`), `EmojiData.skinTones` (`EmojiData.kt:29`) |
+| 40 | Le panneau emoji s'ouvre sur les 30 derniers emojis employés. | `EmojiRecents` (capacité 30, soit `GRID_COLUMNS` × `VISIBLE_ROWS`), catégorie « Récents » ajoutée en tête dans `EmojiPickerView.categories`. Depuis la 15.0.0 |
 | 29 | Le retour arrière efface un emoji en entier, couleur de peau comprise. | `calculateBackspaceLength()` (`InputProcessor.kt:191`) : paires de surrogates + modificateur de ton |
 | 27 | La touche Entrée s'adapte au champ : Rechercher, Envoyer, ou retour à la ligne. | `handleEnter()` (`InputProcessor.kt:209`) |
 | 39 | Glisser le doigt le long de la barre d'espace promène le curseur lettre par lettre. | `setupSpaceLongPress()` (`KeyboardLayoutManager.kt`), seuil `scaledTouchSlop` puis un cran tous les `SPACE_CURSOR_STEP_DP` (10 dp) ; `InputProcessor.moveCursorBy()`. Depuis la 14.0.0 |

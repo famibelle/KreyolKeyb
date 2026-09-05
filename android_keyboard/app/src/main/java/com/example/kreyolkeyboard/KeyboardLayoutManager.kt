@@ -348,7 +348,12 @@ class KeyboardLayoutManager(private val context: Context) {
         val controlRow = arrayOf("ABC", "⌫", " ", "⏎")
 
         val picker = EmojiPickerView(context, accentHandler).apply {
-            onEmojiSelected = { emoji -> interactionListener?.onKeyPress(emoji) }
+            onEmojiSelected = { emoji ->
+                // Noté ici et non dans la vue : le panneau reste une vue, et
+                // EmojiRecents écarte de lui-même les champs sensibles.
+                EmojiRecents.enregistrer(context, emoji)
+                interactionListener?.onKeyPress(emoji)
+            }
         }
 
         mainLayout.addView(picker)

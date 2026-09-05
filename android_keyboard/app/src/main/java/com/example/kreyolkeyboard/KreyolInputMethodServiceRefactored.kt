@@ -797,6 +797,11 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 inputProcessor.setCurrentWord(updatedWord)
                 Log.d(TAG, "✅ Mot mis à jour: '$currentWord' + '$accent' → '$updatedWord'")
             } else {
+                // Un emoji, donc un ton de peau choisi en appui long dans le
+                // panneau : il ne passe pas par onEmojiSelected, il faut le
+                // retenir ici sans quoi la variante choisie ne rejoindrait
+                // jamais les récents, seule la variante par défaut le ferait.
+                EmojiRecents.enregistrer(this, accent)
                 inputProcessor.finalizeCurrentWordFromEmoji()
             }
             
@@ -1124,6 +1129,11 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // survit au passage dans l'écran de l'application, donc un interrupteur
         // changé là-bas doit s'appliquer dès le retour dans un champ de saisie.
         KeyFeedback.refresh(this)
+
+        // Même moment, même raison, pour les emojis récents : un mot de passe
+        // ne doit pas laisser d'emoji derrière lui, exactement comme il ne
+        // laisse pas de mot dans les statistiques de vocabulaire.
+        EmojiRecents.setEnregistrementAutorise(!isSensitiveField())
 
         // Le thème se relit au même moment et pour la même raison, mais lui ne
         // suffit pas à se relire : les couleurs sont posées sur les vues à leur

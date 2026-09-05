@@ -5,6 +5,33 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [15.0.0] - 2026-09-05
+
+### ✨ Ajouté
+
+- **Le panneau emoji s'ouvre sur ceux que vous venez d'employer.** Il en propose
+  près de 1 900 en neuf catégories, quand chacun en emploie une poignée : le
+  même envoi recommençait par la même descente dans la grille. Un onglet
+  « Récents » ouvre désormais la liste et le panneau s'ouvre dessus. Trente
+  emojis, soit exactement la page visible, dix colonnes sur trois rangées : au
+  delà, la catégorie se mettrait à défiler et perdrait ce qu'on lui demande,
+  tout montrer d'un coup d'œil.
+- Une couleur de peau choisie en appui long rejoint les récents telle qu'elle a
+  été employée, et non sous la variante par défaut du panneau.
+- **« Vider les emojis récents »**, dans les réglages du clavier, sous les
+  interrupteurs de vibration et de son.
+
+### 🔒 Confidentialité
+
+- Cette liste ne retient que des identifiants pris dans un ensemble fermé et
+  public, les emojis livrés dans l'application, jamais du texte libre. Elle est
+  bornée à trente entrées, sans horodatage ni compteur : elle ne dit ni quand ni
+  combien de fois. Elle obéit à la même exclusion que les statistiques de
+  vocabulaire, rien n'y est ajouté depuis un champ de mot de passe ou depuis un
+  champ que l'application déclare non mémorisable. Elle ne quitte pas
+  l'appareil.
+- L'onglet « Récents » n'apparaît pas tant que rien n'a été employé.
+
 ## [14.0.0] - 2026-09-05
 
 ### ✨ Ajouté
