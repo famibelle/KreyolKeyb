@@ -9,7 +9,9 @@
       "title": "Le passage aux chiffres et aux emojis ne marque plus d'arrêt",
       "description": "Chaque appui sur « 123 », « ABC » ou la touche emoji reconstruisait le clavier entier, trente-quatre touches neuves d'un seul bloc : sur un téléphone d'entrée de gamme, l'écran se figeait quatre à cinq images, ce petit retard que l'on sentait sans savoir le nommer. Les deux pavés sont désormais montés une fois pour toutes et la bascule ne fait que changer lequel se voit, deux fois et demie plus vite.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v18.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_18.0.0_bascule_numerique.png",
+      "image_alt": "Le pavé numérique du clavier : deux rangées de chiffres et de symboles, la touche ABC en bas à gauche pour revenir aux lettres. Depuis la 18.0.0 il est monté en même temps que le pavé alphabétique, et la bascule ne fait que changer lequel s'affiche."
     },
     {
       "version": "17.0.0",
@@ -17,7 +19,9 @@
       "title": "La barre des propositions est creusée dans le clavier",
       "description": "Elle était de plain-pied avec les touches, sans que rien ne dise qu'il s'agit d'une autre surface. Son fond passe un ton plus sombre, une ombre borde son bord haut, un liséré éclairé son bord bas, et le clavier apparaît de chaque côté pour lui faire une margelle. Les touches y regagnent leur relief, sans que le clavier prenne un point de hauteur de plus.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v17.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_17.0.0_barre_creusee.png",
+      "image_alt": "La barre de suggestions au-dessus des touches : son fond est plus sombre que celui du clavier, le clavier réapparaît de chaque côté pour lui faire une margelle, et les propositions kwè, vwè, travay, rété y sont posées comme au fond d'une cuvette."
     },
     {
       "version": "17.0.0",
@@ -25,7 +29,9 @@
       "title": "Le vert des propositions kréyòl se lit mieux",
       "description": "Un mot proposé s'affiche à la taille d'un texte courant, qui demande un contraste de 4,5:1 : le blanc sur l'ancien vert n'en donnait que 3,41, quand le bleu du français était à 4,93. La langue pour laquelle ce clavier existe avait donc la proposition la moins lisible des deux. Même teinte, un ton plus bas, pour un écart que personne ne voit.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v17.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_17.0.0_vert_propositions.png",
+      "image_alt": "Quatre propositions dans la barre de suggestions : la première, kwè, sur une pastille verte, les autres sur fond clair. Le vert a été assombri en 17.0.0 pour que le blanc du texte s'y lise avec le contraste d'un texte courant."
     },
     {
       "version": "15.0.0",
@@ -33,7 +39,9 @@
       "title": "Le panneau emoji s'ouvre sur ceux que vous venez d'employer",
       "description": "Il en propose près de 1 900 en neuf catégories, quand chacun en emploie une poignée : le même envoi recommençait par la même descente dans la grille. Une catégorie « Récents » ouvre maintenant le panneau, avec les trente derniers, soit exactement ce qui tient à l'écran. Une couleur de peau choisie en appui long y revient telle quelle. Ces emojis ne quittent pas le téléphone, et un bouton des réglages vide la liste.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v15.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_15.0.0_emoji_recents.png",
+      "image_alt": "Le panneau emoji ouvert sur la catégorie Récents, marquée par une horloge : les derniers emojis employés apparaissent en tête, du plus récent au plus ancien."
     },
     {
       "version": "14.0.0",
@@ -57,7 +65,9 @@
       "title": "Le jeu de phrases s'appelle « Fraz a twou »",
       "description": "Il était livré sous un nom français, « Mots à Trous », alors que les trois autres jeux du clavier portent déjà un nom que la langue reconnaît. Le nom kréyòl vient d'un locuteur, pas d'une traduction faite au passage.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.1",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_11.0.0_fraz_a_twou.png",
+      "image_alt": "Une partie de Fraz a twou : une phrase de Max Rippon avec un mot masqué, et quatre propositions kréyòl dont une seule est celle de l'auteur."
     },
     {
       "version": "12.0.0",
@@ -83,7 +93,9 @@
       "title": "Le mot du jour porte sa traduction",
       "description": "« difikilté », et juste en dessous « en français : difficulté ». Le classement de vos mots les plus employés fait de même. 1 145 mots kréyòl sont traduits à ce jour, depuis Kreyolopedia et le Wiktionnaire, deux sources libres citées dans l'application.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_12.0.0_mot_du_jour.png",
+      "image_alt": "La carte Mot du jour de l'onglet Kréyòl an mwen : le mot pyés, et juste en dessous « en français : champ, pièce »."
     },
     {
       "version": "11.0.0",
@@ -91,7 +103,9 @@
       "title": "Un quatrième jeu : une phrase à laquelle il manque un mot",
       "description": "Une vraie phrase kréyòl s'affiche, tirée du corpus littéraire du clavier, et un mot lui manque. Quatre propositions, une seule est celle qu'a écrite l'auteur : les trois autres sont des mots que le corpus atteste au même endroit, elles sonnent donc juste tant qu'on ne lit pas toute la phrase. 389 phrases, sur trois niveaux.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v11.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_11.0.0_fraz_a_twou.png",
+      "image_alt": "Une partie de Fraz a twou au niveau Normal : une phrase de Max Rippon avec un mot masqué, sa référence sous la phrase, et quatre propositions kréyòl dont une seule est celle de l'auteur."
     },
     {
       "version": "11.0.0",
@@ -99,7 +113,9 @@
       "title": "Les quatre jeux se rejoignent derrière un onglet « Jé »",
       "description": "À sept onglets, chacun n'avait qu'un septième de la largeur et les libellés se coupaient en plein milieu d'un mot. Les jeux tiennent désormais dans une seule destination, le guide et « À propos » descendent au pied de l'onglet Démarrage, et ce qui reste respire.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v11.0.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_11.0.0_onglet_je.png",
+      "image_alt": "L'onglet Jé de l'application, actif dans la barre du haut : les quatre jeux réunis sur une même page, Mots Mêlés, Mots Mélangés, Mo an Karénaj et Fraz a twou, chacun avec une phrase qui dit sa règle."
     },
     {
       "version": "11.0.0",
@@ -125,7 +141,9 @@
       "title": "Le clavier passe en thème sombre",
       "description": "Il restait blanc quelle que soit l'heure et quel que soit le réglage du téléphone : dans une conversation affichée en sombre, il éclairait l'écran à chaque saisie. Il suit désormais le mode sombre du système, ses touches de lettres passant du blanc à l'anthracite. Le vert, l'orange et le bleu de la charte, eux, ne changent pas.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.13.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_10.13.0_theme_sombre.png",
+      "image_alt": "Le clavier en thème sombre : les touches de lettres passées à l'anthracite, tandis que le vert des touches de mode, l'orange de la ponctuation et le bleu de la barre d'espace restent ceux du thème clair."
     },
     {
       "version": "10.13.0",
@@ -133,7 +151,9 @@
       "title": "Trois positions pour l'apparence du clavier",
       "description": "Les réglages du clavier accueillent une carte « Apparence » : « Comme le téléphone », « Toujours clair » ou « Toujours sombre ». Les deux dernières existent parce que sur plusieurs surcouches, le réglage jour/nuit du téléphone ne descend pas jusqu'aux claviers tiers. Le choix s'applique dès le retour dans un champ de saisie.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.13.0",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_10.13.0_apparence.png",
+      "image_alt": "La carte « Apparence » des réglages du clavier : trois positions à cocher, « Comme le téléphone », « Toujours clair » et « Toujours sombre »."
     },
     {
       "version": "10.12.5",
@@ -181,7 +201,9 @@
       "title": "Les réglages du clavier ont leur propre écran",
       "description": "Ils étaient arrivés dans une carte de l'onglet À Propos, une page de présentation où personne ne cherche un interrupteur. Un engrenage en haut à droite de l'application ouvre maintenant un écran « Réglages du clavier », comme partout ailleurs sur Android.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.12.1",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_10.12.1_reglages_ecran.png",
+      "image_alt": "L'écran « Réglages du clavier », ouvert depuis l'engrenage de l'application, avec sa propre barre de titre bleue et sa flèche de retour."
     },
     {
       "version": "10.12.1",
@@ -205,7 +227,9 @@
       "title": "Deux interrupteurs pour la vibration et le son",
       "description": "Puisque le clavier ne suit plus le téléphone, il offre lui-même de quoi le faire taire : « Vibration à la frappe » et « Son de frappe », actifs par défaut, dans les réglages du clavier. Le choix s'applique dès le retour dans un champ de saisie.",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v10.11.7",
-      "curated": true
+      "curated": true,
+      "image": "Screenshots/nouveaute_10.11.7_vibration_son.png",
+      "image_alt": "La carte « Retour de frappe » des réglages du clavier : deux interrupteurs, « Vibration à la frappe » et « Son de frappe », tous deux actifs."
     },
     {
       "version": "10.11.6",
