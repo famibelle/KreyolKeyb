@@ -1,8 +1,18 @@
 {
   "production_version": "10.6.0",
-  "latest_version": "19.0.0",
+  "latest_version": "20.0.0",
   "as_of": "2026-09-06",
   "features": [
+    {
+      "version": "20.0.0",
+      "emoji": "🧩",
+      "title": "« Mokwaré », une grille de mots croisés kréyòl",
+      "description": "Cinquième jeu de l'onglet « Jé », et le seul où l'on écrit soi-même le mot au lieu de le reconnaître. Chaque définition est le sens français d'un mot kréyòl, à poser dans la grille lettre par lettre. Le jeu apporte son propre pavé, avec É, È et Ò, parce que le clavier système n'a pas de raison de les offrir et qu'écrire « kréyòl » sans accent est la faute que le jeu corrige. La faute ne se voit qu'une fois le mot rempli ; un mot trouvé rappelle sa forme et son sens. 180 grilles, trois niveaux de difficulté.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v20.0.0",
+      "curated": true,
+      "image": "Screenshots/nouveaute_20.0.0_mokware.png",
+      "image_alt": "Une partie de Mokwaré en difficulté Normal, 3 mots sur 8 trouvés : pon, aprann et lagé sont écrits en vert dans la grille et se croisent, la ligne « lagé : libérer, abandonner » confirme le dernier. Sous la grille, le pavé de saisie du jeu, alphabétique, avec É, È et Ò sur la dernière rangée."
+    },
     {
       "version": "18.0.0",
       "emoji": "⚡",
