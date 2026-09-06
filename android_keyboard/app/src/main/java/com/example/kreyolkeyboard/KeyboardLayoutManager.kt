@@ -135,6 +135,13 @@ class KeyboardLayoutManager(private val context: Context) {
     private var isEmojiMode = false
     private val keyboardButtons = mutableListOf<View>() // Changé de TextView à View pour supporter ImageButton
 
+    // Voir applyGuadeloupeStyleToView : seules les ROM Honor / Huawei ont besoin
+    // du rendu logiciel par touche, ailleurs il ne fait que ralentir.
+    private val forcerRenduLogiciel: Boolean = run {
+        val fabricant = android.os.Build.MANUFACTURER?.lowercase().orEmpty()
+        fabricant == "honor" || fabricant == "huawei"
+    }
+
     // Hauteur que la fenêtre IME peut réellement accorder aux quatre rangées de
     // touches, renseignée par le service avant chaque création de layout. En
     // paysage cette fenêtre se limite à l'espace entre barre d'état et barre de
@@ -227,37 +234,105 @@ class KeyboardLayoutManager(private val context: Context) {
     }
 
     /**
-     * Crée le layout principal du clavier avec toutes les rangées
+     * Les panneaux alphabétique et numérique coexistent dans un même conteneur :
+     * passer de l'un à l'autre bascule leur `visibility` au lieu de reconstruire
+     * ~34 touches à chaque appui sur « 123 » (mesuré à 3 ou 4 frames perdues sur
+     * A21s, voir PERF_CLAVIER.md). Le panneau emoji est monté à la demande et
+     * démonté en sortie, pour que « Récents » soit recalculé à chaque ouverture.
      */
-    fun createKeyboardLayout(): LinearLayout {
+    private var panelHolder: FrameLayout? = null
+    private var alphaPanel: View? = null
+    private var numericPanel: View? = null
+    private var emojiPanel: View? = null
+    // Touches de la rangée de contrôle emoji : suivies à part pour ne pas gonfler
+    // keyboardButtons d'une ouverture du panneau à l'autre.
+    private val emojiPanelButtons = mutableListOf<View>()
+
+    /**
+     * Construit le conteneur du clavier : les panneaux alpha et numérique, prêts
+     * tous les deux, seul celui du mode courant visible. À appeler une fois, à la
+     * création de la vue de saisie ; les bascules de mode passent ensuite par
+     * [applyMode].
+     */
+    fun createKeyboardLayout(): View {
         Log.d("KeyboardLayoutManager", "🎯 createKeyboardLayout - isNumericMode: $isNumericMode")
-        
+
+        keyboardButtons.clear()
+        emojiPanelButtons.clear()
+
+        val holder = FrameLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val alpha = buildPanel { createAlphabeticLayout(it) }
+        val numeric = buildPanel { createNumericLayout(it) }
+        holder.addView(alpha)
+        holder.addView(numeric)
+
+        alphaPanel = alpha
+        numericPanel = numeric
+        panelHolder = holder
+        emojiPanel = null
+        applyMode()
+        return holder
+    }
+
+    /** Enveloppe une série de rangées dans le conteneur vertical à padding du clavier. */
+    private fun buildPanel(remplir: (LinearLayout) -> Unit): LinearLayout {
         val verticalPaddingPx = dpToPx(verticalPaddingDp(context))
-        val mainLayout = LinearLayout(context).apply {
+        val panel = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(
                 dpToPx(KEYBOARD_SIDE_PADDING_DP), verticalPaddingPx,
                 dpToPx(KEYBOARD_SIDE_PADDING_DP), verticalPaddingPx
             )
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
         }
-        
-        // Créer les différentes rangées selon le mode
-        when {
-            isEmojiMode -> {
-                Log.d("KeyboardLayoutManager", "😀 Création du layout EMOJI")
-                createEmojiLayout(mainLayout)
-            }
-            isNumericMode -> {
-                Log.d("KeyboardLayoutManager", "🔢 Création du layout NUMÉRIQUE")
-                createNumericLayout(mainLayout)
-            }
-            else -> {
-                Log.d("KeyboardLayoutManager", "🔤 Création du layout ALPHABÉTIQUE")
-                createAlphabeticLayout(mainLayout)
-            }
+        remplir(panel)
+        return panel
+    }
+
+    /**
+     * Affiche le panneau du mode courant, masque les autres. Remplace la
+     * reconstruction complète du clavier qui avait lieu à chaque bascule.
+     * Idempotent : peut être appelée à chaque `onModeChanged`.
+     *
+     * Alpha et numérique se masquent en `INVISIBLE` et non `GONE` : les deux
+     * ont la même hauteur (quatre rangées), donc rien ne bouge, et la liste
+     * d'affichage du panneau masqué reste enregistrée. La bascule n'est alors
+     * qu'un redessin, pas une remise en page suivie d'un ré-enregistrement.
+     * Le panneau emoji, lui, a une autre hauteur : on le retire vraiment.
+     */
+    fun applyMode() {
+        val holder = panelHolder ?: return
+        if (isEmojiMode) rebuildEmojiPanel(holder) else dropEmojiPanel(holder)
+        val alphaVisible = !isNumericMode && !isEmojiMode
+        alphaPanel?.visibility = if (alphaVisible) View.VISIBLE else View.INVISIBLE
+        numericPanel?.visibility = if (isNumericMode && !isEmojiMode) View.VISIBLE else View.INVISIBLE
+        emojiPanel?.visibility = if (isEmojiMode) View.VISIBLE else View.GONE
+    }
+
+    private fun rebuildEmojiPanel(holder: FrameLayout) {
+        dropEmojiPanel(holder)
+        val avant = keyboardButtons.size
+        val panel = buildPanel { createEmojiLayout(it) }
+        emojiPanelButtons.addAll(keyboardButtons.subList(avant, keyboardButtons.size))
+        emojiPanel = panel
+        holder.addView(panel)
+    }
+
+    private fun dropEmojiPanel(holder: FrameLayout) {
+        emojiPanel?.let { holder.removeView(it) }
+        emojiPanel = null
+        if (emojiPanelButtons.isNotEmpty()) {
+            keyboardButtons.removeAll(emojiPanelButtons.toSet())
+            emojiPanelButtons.clear()
         }
-        
-        return mainLayout
     }
     
     /**
@@ -343,6 +418,10 @@ class KeyboardLayoutManager(private val context: Context) {
      * chaque catégorie défilant verticalement, le swipe latéral changeant de
      * catégorie (EmojiPickerView, RecyclerView/ViewPager2 virtualisés).
      * Accessible depuis le clavier alphabétique et depuis le mode 123.
+     *
+     * Reconstruit à chaque entrée en mode emoji (voir [rebuildEmojiPanel]) : la
+     * catégorie « Récents » y est figée à la construction, la reconstruire est ce
+     * qui la tient à jour d'une ouverture à l'autre.
      */
     private fun createEmojiLayout(mainLayout: LinearLayout) {
         val controlRow = arrayOf("ABC", "⌫", " ", "⏎")
@@ -781,14 +860,19 @@ class KeyboardLayoutManager(private val context: Context) {
                 else -> keyForeground(key)
             })
             
-            // Ombre portée pour l'effet de profondeur
-            // setShadowLayer() sous rendu accéléré matériellement est une source connue
-            // de texte invisible sur certains GPU/drivers (rapporté sur Honor 200/SDK 36) ;
-            // LAYER_TYPE_SOFTWARE force le rendu logiciel de cette vue pour l'éviter.
+            // Ombre portée pour l'effet de profondeur.
             // L'espace en est exempté : son ombre détourait la signature sur le
             // bleu et lui rendait la présence que l'alpha vient de lui retirer.
             if (key != " ") {
-                view.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                // setShadowLayer() sous rendu accéléré matériellement rendait le
+                // texte invisible selon le pilote GPU (signalé Honor 200 / Magic
+                // UI, commit caa64aca). Le calque logiciel écarte ce bug mais fait
+                // re-rastériser chaque touche à chaque (re)construction : ~18 ms
+                // d'upload GPU sur A21s (PERF_CLAVIER.md). On le réserve donc aux
+                // familles concernées et on garde l'ombre partout.
+                if (forcerRenduLogiciel) {
+                    view.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                }
                 view.setShadowLayer(SHADOW_RADIUS, 0f, dpToPx(1).toFloat(), Color.parseColor("#40000000"))
             }
         }
@@ -1151,6 +1235,11 @@ class KeyboardLayoutManager(private val context: Context) {
             cleanupView(button)
         }
         keyboardButtons.clear()
+        emojiPanelButtons.clear()
+        panelHolder = null
+        alphaPanel = null
+        numericPanel = null
+        emojiPanel = null
         interactionListener = null
     }
     

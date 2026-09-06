@@ -1111,25 +1111,13 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
 
     /**
-     * Actualise le layout du clavier en préservant le conteneur avec padding
+     * Applique le mode courant (alpha / numérique / emoji) au clavier déjà en
+     * place : bascule la visibilité des panneaux préconstruits au lieu de
+     * reconstruire toutes les touches. Sur A21s la bascule « 123 » passe ainsi de
+     * 3 ou 4 frames perdues à une seule (voir android_keyboard/PERF_CLAVIER.md).
      */
     private fun refreshKeyboardLayout() {
-        mainKeyboardView?.let { containerView ->
-            // mainKeyboardView est le conteneur avec padding, pas le clavier directement
-            if (containerView is LinearLayout && containerView.childCount > 0) {
-                // Retirer l'ancien clavier du conteneur
-                val oldKeyboard = containerView.getChildAt(0)
-                containerView.removeView(oldKeyboard)
-                
-                // Créer et ajouter le nouveau clavier dans le même conteneur
-                val newKeyboard = keyboardLayoutManager.createKeyboardLayout()
-                containerView.addView(newKeyboard)
-                
-                Log.d(TAG, "🔄 Clavier actualisé (padding préservé: ${containerView.paddingBottom}px)")
-            } else {
-                Log.w(TAG, "⚠️ mainKeyboardView n'est pas un conteneur LinearLayout valide")
-            }
-        }
+        keyboardLayoutManager.applyMode()
     }
     
     // ===== MÉTHODES DE CYCLE DE VIE =====
@@ -1229,6 +1217,11 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         if (!restarting) {
             keyboardLayoutManager.forceAlphabeticMode()
             keyboardLayoutManager.updateKeyboardDisplay()
+            // Depuis que les panneaux sont préconstruits et seulement masqués,
+            // remettre les drapeaux à l'alpha ne suffit plus : il faut rendre le
+            // bon panneau visible si l'on revient sur un champ en ayant quitté le
+            // précédent en mode 123 ou emoji.
+            keyboardLayoutManager.applyMode()
             Log.d(TAG, "✅ Mode alphabétique garanti lors du démarrage de la saisie")
         }
 

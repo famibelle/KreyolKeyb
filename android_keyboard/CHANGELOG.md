@@ -5,6 +5,36 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.0] - 2026-09-06
+
+### 🐛 Corrigé
+
+- **La touche « 123 » ne fige plus le clavier.** Chaque passage entre les
+  lettres, les chiffres ou les emojis détruisait et reconstruisait tout l'arbre
+  de touches, trente-quatre boutons neufs avec leur fond dégradé, d'un seul
+  bloc sur le fil principal. Mesuré sur un Galaxy A21s, cela bloquait l'écran
+  quatre à cinq images à chaque appui, soit le petit délai que l'on sentait.
+  Désormais les pavés alphabétique et numérique sont montés une seule fois et
+  la bascule ne fait que changer lequel est visible : la même mesure tombe à
+  une ou deux images, deux fois et demie plus rapide.
+- **Fuite mémoire sur les changements de mode.** La liste interne des touches
+  n'était jamais vidée tant que le clavier vivait, elle grossissait d'une
+  trentaine d'entrées à chaque bascule 123, ABC ou emoji, pour toute la durée
+  du processus. Elle est maintenant remise à zéro à chaque (re)construction.
+
+### 🔧 Modifié
+
+- Le rendu logiciel forcé sur chaque touche, ajouté pour un défaut d'affichage
+  propre aux ROM Honor et Huawei, n'est plus appliqué ailleurs : il ne servait
+  qu'à renchérir chaque redessin. L'ombre portée des libellés, elle, ne change
+  pas.
+- Le panneau des emojis conserve son instance le temps d'une ouverture au lieu
+  d'être reconstruit avec le reste du clavier ; sa catégorie « Récents » reste
+  recalculée à chaque fois qu'on l'ouvre.
+
+Détail technique, mesures avant et après, et méthode de reproduction dans
+`android_keyboard/PERF_CLAVIER.md`.
+
 ## [17.0.1] - 2026-09-05
 
 ### 🔧 Modifié

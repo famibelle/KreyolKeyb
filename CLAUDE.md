@@ -64,6 +64,20 @@ Corpus word counts **replace** stored frequencies rather than adding to them, so
 
 The refactored IME coordinates four components (`KeyboardLayoutManager`, `SuggestionEngine`, `AccentHandler`, `InputProcessor`) via listener interfaces.
 
+### Keyboard Panels / Mode Switching (`KeyboardLayoutManager`)
+
+Since 18.0.0 `createKeyboardLayout()` builds a `FrameLayout` holding the alphabetic **and** numeric panels at once, and `applyMode()` toggles which is shown. Before, every `123` / `ABC` / emoji press ran `refreshKeyboardLayout()` which threw the whole view tree away and rebuilt ~34 fresh `Button`s on the main thread: measured at 3 to 5 dropped frames per press on a Galaxy A21s (`android_keyboard/PERF_CLAVIER.md`). The service's `refreshKeyboardLayout()` and the settings-screen demo now just call `applyMode()`.
+
+Three things there are load-bearing:
+
+- **The two panels hide as `INVISIBLE`, not `GONE`.** They are the same height (four rows), so nothing reflows, and the hidden panel keeps its display list recorded: the switch is then a redraw, not a re-layout plus a re-record. `GONE` would drop the display list and cost most of what the rebuild cost.
+- **The emoji panel is the exception: built on entry, removed on exit.** Its height differs, and `EmojiPickerView` freezes its « Récents » category at construction, so rebuilding it each time is what keeps that category current. Its control-row keys are tracked in `emojiPanelButtons` and pulled out of `keyboardButtons` on teardown, or the leak below comes back one notch at a time.
+- **`keyboardButtons` is cleared at the top of `createKeyboardLayout()`.** It used to be cleared only in `cleanup()` (i.e. `onDestroy()`, ~never for an IME), so it grew ~13 to 34 stale `View` refs per mode switch for the life of the process, and `updateKeyboardDisplay()` walked the lot on every shift.
+
+`onStartInputView()` calls `applyMode()` after `forceAlphabeticMode()`: resetting the mode flags no longer changes what is visible on its own.
+
+`applyGuadeloupeStyleToView()` only forces `LAYER_TYPE_SOFTWARE` per key when `forcerRenduLogiciel` is true (Honor / Huawei ROMs, the `caa64aca` GPU bug). Elsewhere it was pure cost, re-rasterising every key on each redraw; the text `setShadowLayer` shadow stays everywhere.
+
 ### Space Bar Gestures (`KeyboardLayoutManager.setupSpaceLongPress()`)
 
 Three gestures share one `OnTouchListener`: tap (space), one-second long press (IME picker), and, since 14.0.0, a horizontal drag that moves the caret one character per `SPACE_CURSOR_STEP_DP` (10 dp). Past `scaledTouchSlop` the long-press timer is cancelled and the release no longer inserts a space.
