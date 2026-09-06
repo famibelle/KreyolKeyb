@@ -40,6 +40,34 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "20.0.0": [
+        {
+            "emoji": "🧩",
+            "title": "« Mokwaré », une grille de mots croisés kréyòl",
+            "description": (
+                "Cinquième jeu de l'onglet « Jé », et le seul où l'on écrit "
+                "soi-même le mot au lieu de le reconnaître. Chaque définition "
+                "est le sens français d'un mot kréyòl, à poser dans la grille "
+                "lettre par lettre. Le pavé reprend la disposition et la "
+                "taille des touches du clavier kréyòl, pour que les doigts "
+                "retombent où ils ont l'habitude, et il promeut É, È et Ò en "
+                "touches directes : écrire « kréyòl » sans accent est la faute "
+                "que le jeu corrige. La faute ne se voit qu'une fois le mot "
+                "rempli ; un mot trouvé rappelle sa forme et son sens. "
+                "180 grilles, trois niveaux de difficulté."
+            ),
+            "image": "Screenshots/nouveaute_20.0.0_mokware.png",
+            "image_alt": (
+                "Une partie de Mokwaré en difficulté Facile, 4 mots sur 6 "
+                "trouvés : awa, avè, vyé et fanmi sont écrits en vert dans la "
+                "grille et se croisent, les accents È et É compris. En haut, "
+                "la définition du mot en cours, « colère, 6 lettres ». En bas, "
+                "posé sous la grille et fixe, le pavé de saisie du jeu, dans "
+                "la disposition du clavier kréyòl (azertyuiop, qsdfghjklm), "
+                "avec É, È et Ò à la fin de la troisième rangée."
+            ),
+        }
+    ],
     "18.0.0": [
         {
             "emoji": "⚡",
@@ -52,6 +80,13 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "l'on sentait sans savoir le nommer. Les deux pavés sont "
                 "désormais montés une fois pour toutes et la bascule ne fait "
                 "que changer lequel se voit, deux fois et demie plus vite."
+            ),
+            "image": "Screenshots/nouveaute_18.0.0_bascule_numerique.png",
+            "image_alt": (
+                "Le pavé numérique du clavier : deux rangées de chiffres et de "
+                "symboles, la touche ABC en bas à gauche pour revenir aux lettres. "
+                "Depuis la 18.0.0 il est monté en même temps que le pavé "
+                "alphabétique, et la bascule ne fait que changer lequel s'affiche."
             ),
         }
     ],
@@ -67,6 +102,13 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "faire une margelle. Les touches y regagnent leur relief, sans "
                 "que le clavier prenne un point de hauteur de plus."
             ),
+            "image": "Screenshots/nouveaute_17.0.0_barre_creusee.png",
+            "image_alt": (
+                "La barre de suggestions au-dessus des touches : son fond est plus "
+                "sombre que celui du clavier, le clavier réapparaît de chaque côté "
+                "pour lui faire une margelle, et les propositions kwè, vwè, travay, "
+                "rété y sont posées comme au fond d'une cuvette."
+            ),
         },
         {
             "emoji": "🎨",
@@ -78,6 +120,13 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "4,93. La langue pour laquelle ce clavier existe avait donc la "
                 "proposition la moins lisible des deux. Même teinte, un ton "
                 "plus bas, pour un écart que personne ne voit."
+            ),
+            "image": "Screenshots/nouveaute_17.0.0_vert_propositions.png",
+            "image_alt": (
+                "Quatre propositions dans la barre de suggestions : la première, "
+                "kwè, sur une pastille verte, les autres sur fond clair. Le vert a "
+                "été assombri en 17.0.0 pour que le blanc du texte s'y lise avec le "
+                "contraste d'un texte courant."
             ),
         },
     ],
@@ -94,6 +143,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "choisie en appui long y revient telle quelle. Ces emojis ne "
                 "quittent pas le téléphone, et un bouton des réglages vide la "
                 "liste."
+            ),
+            "image": "Screenshots/nouveaute_15.0.0_emoji_recents.png",
+            "image_alt": (
+                "Le panneau emoji ouvert sur la catégorie Récents, marquée par une "
+                "horloge : les derniers emojis employés apparaissent en tête, du "
+                "plus récent au plus ancien."
             ),
         }
     ],
@@ -134,6 +189,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "que les trois autres jeux du clavier portent déjà un nom que "
                 "la langue reconnaît. Le nom kréyòl vient d'un locuteur, pas "
                 "d'une traduction faite au passage."
+            ),
+            "image": "Screenshots/nouveaute_11.0.0_fraz_a_twou.png",
+            "image_alt": (
+                "Une partie de Fraz a twou : une phrase de Max Rippon avec un mot "
+                "masqué, et quatre propositions kréyòl dont une seule est celle de "
+                "l'auteur."
             ),
         }
     ],
@@ -178,6 +239,11 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "depuis Kreyolopedia et le Wiktionnaire, deux sources libres "
                 "citées dans l'application."
             ),
+            "image": "Screenshots/nouveaute_12.0.0_mot_du_jour.png",
+            "image_alt": (
+                "La carte Mot du jour de l'onglet Kréyòl an mwen : le mot pyés, et "
+                "juste en dessous « en français : champ, pièce »."
+            ),
         },
     ],
     "11.0.0": [
@@ -192,6 +258,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "donc juste tant qu'on ne lit pas toute la phrase. 389 phrases, "
                 "sur trois niveaux."
             ),
+            "image": "Screenshots/nouveaute_11.0.0_fraz_a_twou.png",
+            "image_alt": (
+                "Une partie de Fraz a twou au niveau Normal : une phrase de Max "
+                "Rippon avec un mot masqué, sa référence sous la phrase, et quatre "
+                "propositions kréyòl dont une seule est celle de l'auteur."
+            ),
         },
         {
             "emoji": "🧭",
@@ -202,6 +274,13 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "tiennent désormais dans une seule destination, le guide et "
                 "« À propos » descendent au pied de l'onglet Démarrage, et ce "
                 "qui reste respire."
+            ),
+            "image": "Screenshots/nouveaute_11.0.0_onglet_je.png",
+            "image_alt": (
+                "L'onglet Jé de l'application, actif dans la barre du haut : les "
+                "quatre jeux réunis sur une même page, Mots Mêlés, Mots Mélangés, "
+                "Mo an Karénaj et Fraz a twou, chacun avec une phrase qui dit sa "
+                "règle."
             ),
         },
         {
@@ -247,6 +326,13 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "passant du blanc à l'anthracite. Le vert, l'orange et le bleu "
                 "de la charte, eux, ne changent pas."
             ),
+            "image": "Screenshots/nouveaute_10.13.0_theme_sombre.png",
+            "image_alt": (
+                "Le clavier en thème sombre : les touches de lettres passées à "
+                "l'anthracite, tandis que le vert des touches de mode, l'orange de "
+                "la ponctuation et le bleu de la barre d'espace restent ceux du "
+                "thème clair."
+            ),
         },
         {
             "emoji": "🎚️",
@@ -258,6 +344,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "surcouches, le réglage jour/nuit du téléphone ne descend pas "
                 "jusqu'aux claviers tiers. Le choix s'applique dès le retour "
                 "dans un champ de saisie."
+            ),
+            "image": "Screenshots/nouveaute_10.13.0_apparence.png",
+            "image_alt": (
+                "La carte « Apparence » des réglages du clavier : trois positions à "
+                "cocher, « Comme le téléphone », « Toujours clair » et « Toujours "
+                "sombre »."
             ),
         },
     ],
@@ -338,6 +430,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "maintenant un écran « Réglages du clavier », comme partout "
                 "ailleurs sur Android."
             ),
+            "image": "Screenshots/nouveaute_10.12.1_reglages_ecran.png",
+            "image_alt": (
+                "L'écran « Réglages du clavier », ouvert depuis l'engrenage de "
+                "l'application, avec sa propre barre de titre bleue et sa flèche de "
+                "retour."
+            ),
         },
         {
             "emoji": "🏷️",
@@ -372,6 +470,12 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "« Son de frappe », actifs par défaut, dans les réglages du "
                 "clavier. Le choix s'applique dès le retour dans un champ de "
                 "saisie."
+            ),
+            "image": "Screenshots/nouveaute_10.11.7_vibration_son.png",
+            "image_alt": (
+                "La carte « Retour de frappe » des réglages du clavier : deux "
+                "interrupteurs, « Vibration à la frappe » et « Son de frappe », "
+                "tous deux actifs."
             ),
         },
     ],
