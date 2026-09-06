@@ -5,6 +5,36 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [20.0.2] - 2026-09-06
+
+Deux retours d'usage sur Mokwaré, et les deux portaient juste.
+
+### 🔧 Modifié
+
+- **Les touches du pavé retrouvent la taille de celles du clavier.** Elles
+  faisaient 30 dp de haut, soit 37 % de moins que le clavier de l'application
+  et bien en dessous du minimum de 48 dp au-delà duquel le doigt vise sans y
+  penser. Elles sont maintenant à 48 dp, comme celles sur lesquelles on écrit
+  tous les jours. Même correction pour les trois boutons de difficulté, qui
+  tenaient dans 26 dp alors qu'un appui y change de grille, et pour les
+  définitions de la liste, qui se touchent pour choisir un mot.
+- **Le pavé ne défile plus.** Il est posé sous la grille et y reste, sur son
+  propre fond. La grille défile dans la place qui reste quand elle est trop
+  haute, ce qui arrive en Difficile ; le pavé, lui, est toujours là.
+
+### 🐛 Corrigé
+
+- **Le bouton « Solution » ne se touche plus par erreur.** Il se trouvait à
+  7 dp sous la touche d'effacement, avec une surface huit fois plus grande
+  qu'une touche. Or l'effacement est ce que l'on frappe quand on vient de se
+  tromper, donc sans viser : le doigt qui le manquait révélait toute la grille,
+  sans retour possible. Les deux boutons passent sous la liste des définitions,
+  et « Solution » demande désormais confirmation.
+- **Changer de grille ne jette plus la partie en cours sans prévenir.**
+  « Nouvelle grille » et les boutons de difficulté demandent confirmation dès
+  qu'au moins un mot a été trouvé. Sur une grille encore vierge, rien ne
+  s'interpose.
+
 ## [20.0.1] - 2026-09-06
 
 ### 🔧 Modifié

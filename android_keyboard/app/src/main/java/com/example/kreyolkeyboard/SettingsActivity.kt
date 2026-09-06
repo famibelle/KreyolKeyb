@@ -6204,10 +6204,35 @@ class SettingsActivity : AppCompatActivity() {
      *   comme mémo de vocabulaire.
      * - Rien n'est corrigé lettre à lettre. Une case fausse ne se signale
      *   qu'une fois son mot entièrement rempli, sinon le jeu dicte la réponse.
+     * - **Le pavé est épinglé sous la zone défilante, pas dedans.** C'est ce
+     *   qui lui permet de tenir ses 48 dp de haut sans être chassé de l'écran
+     *   par une grille de onze rangées : la grille défile dans ce qui reste,
+     *   le pavé ne bouge jamais. Les deux boutons destructifs sont à l'autre
+     *   bout du défilement, sous la liste des définitions.
      */
     class CrosswordFragment : Fragment() {
 
-        private var rootView: ScrollView? = null
+        private companion object {
+            /**
+             * Hauteur d'une touche du pavé, et écart entre deux touches.
+             *
+             * 48 dp est le minimum tactile Android, et c'est aussi ce que
+             * mesurent les touches du clavier de l'application : 48 dp de haut,
+             * pour un pas de 51,6 dp. Le pavé du jeu ne doit pas être plus
+             * petit que celui sur lequel le joueur écrit tous les jours.
+             *
+             * Jusqu'à la 20.0.1 il l'était : les touches faisaient 30,2 dp de
+             * haut, soit 37 % de moins que le clavier et bien en dessous du
+             * minimum, parce que le rembourrage vertical était écrit en pixels
+             * bruts (`setPadding(0, 12, 0, 12)`). Douze pixels valent 4,4 dp
+             * sur un écran à 440 dpi, et 3,4 dp sur un écran plus dense. D'où
+             * [dp], utilisé partout où une dimension touche au doigt.
+             */
+            const val HAUTEUR_TOUCHE_DP = 48
+            const val ECART_TOUCHES_DP = 4
+        }
+
+        private var rootView: LinearLayout? = null
 
         private lateinit var tvProgres: TextView
         private lateinit var tvDefinition: TextView
@@ -6230,6 +6255,19 @@ class SettingsActivity : AppCompatActivity() {
         /** Mots déjà trouvés, pour ne féliciter qu'une fois. */
         private val resolus = mutableSetOf<Int>()
 
+        /**
+         * Vrai dès que « Solution » a rempli la grille.
+         *
+         * Sert à ne pas demander confirmation pour la grille suivante : après
+         * une solution, [resolus] contient tous les mots sans que le joueur en
+         * ait trouvé un seul, et il n'a rien à perdre.
+         */
+        private var solutionAffichee = false
+
+        /** Dimension en pixels, depuis une valeur en dp. Voir [HAUTEUR_TOUCHE_DP]. */
+        private fun dp(valeur: Int): Int =
+            (valeur * resources.displayMetrics.density).toInt()
+
         private val couleurNeutre = Color.parseColor("#1976D2")
         private val couleurJuste = Color.parseColor("#4CAF50")
         private val couleurFausse = Color.parseColor("#E53935")
@@ -6248,12 +6286,19 @@ class SettingsActivity : AppCompatActivity() {
         ): View {
             val activity = requireActivity() as SettingsActivity
 
-            rootView = ScrollView(activity).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+            // La zone défilante, qui prend toute la place que le pavé ne prend
+            // pas. Le pavé, lui, est épinglé dessous et ne défile jamais.
+            //
+            // C'est ce qui permet aux touches de faire leurs 48 dp : tant que
+            // tout tenait dans une seule ScrollView, agrandir le pavé le
+            // poussait hors de l'écran sur les grandes grilles, et il fallait
+            // faire défiler entre chaque lettre. Épinglé, il est toujours là,
+            // et c'est la grille qui défile dans ce qui reste quand elle est
+            // trop haute (11 rangées en Difficile).
+            val defilement = ScrollView(activity).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
                 )
-                setBackgroundColor(Color.parseColor("#F5F5F5"))
 
                 val colonne = LinearLayout(activity).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -6261,11 +6306,7 @@ class SettingsActivity : AppCompatActivity() {
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     )
                     orientation = LinearLayout.VERTICAL
-                    // Marges serrées, et elles ne sont pas décoratives : la
-                    // grille et le pavé doivent tenir ensemble sous la barre
-                    // d'onglets, sinon il faut faire défiler l'écran entre
-                    // chaque lettre.
-                    setPadding(24, 10, 24, 16)
+                    setPadding(dp(8), dp(4), dp(8), dp(6))
 
                     val entete = LinearLayout(activity).apply {
                         layoutParams = LinearLayout.LayoutParams(
@@ -6298,7 +6339,7 @@ class SettingsActivity : AppCompatActivity() {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
-                        ).apply { bottomMargin = 10 }
+                        ).apply { bottomMargin = dp(10) }
                         orientation = LinearLayout.HORIZONTAL
                         gravity = Gravity.CENTER
                     }
@@ -6306,18 +6347,21 @@ class SettingsActivity : AppCompatActivity() {
                         ligneDifficulte.addView(Button(activity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                            ).apply { setMargins(4, 0, 4, 0) }
+                            ).apply { setMargins(dp(4), 0, dp(4), 0) }
                             text = niveau.label
-                            textSize = 12f
+                            textSize = 13f
                             isAllCaps = false
-                            minHeight = 0
-                            minimumHeight = 0
-                            setPadding(0, 14, 0, 14)
+                            // Ces trois-là annulaient le minimum tactile d'un
+                            // Button (minHeight = 0 hérité du portage) pour
+                            // tomber à 26 dp, alors qu'un appui y jette la
+                            // grille en cours. Elles reviennent à 48 dp.
+                            minHeight = dp(HAUTEUR_TOUCHE_DP)
+                            minimumHeight = dp(HAUTEUR_TOUCHE_DP)
+                            setPadding(0, dp(4), 0, dp(4))
                             setTextColor(Color.WHITE)
                             tag = niveau
                             setOnClickListener {
-                                difficulte = niveau
-                                nouvelleGrille()
+                                demanderNouvelleGrille(niveau)
                             }
                         })
                     }
@@ -6390,50 +6434,6 @@ class SettingsActivity : AppCompatActivity() {
                     }
                     addView(tvRetour)
 
-                    conteneurPave = LinearLayout(activity).apply {
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                        ).apply { bottomMargin = 14 }
-                        orientation = LinearLayout.VERTICAL
-                    }
-                    addView(conteneurPave)
-                    construirePave(activity)
-
-                    val ligneBoutons = LinearLayout(activity).apply {
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                        ).apply { bottomMargin = 16 }
-                        orientation = LinearLayout.HORIZONTAL
-
-                        addView(Button(activity).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                            ).apply { rightMargin = 8 }
-                            text = "🔄 Nouvelle grille"
-                            textSize = 13f
-                            isAllCaps = false
-                            setBackgroundColor(Color.parseColor("#C2185B"))
-                            setTextColor(Color.WHITE)
-                            setTypeface(null, Typeface.BOLD)
-                            setOnClickListener { nouvelleGrille() }
-                        })
-                        addView(Button(activity).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                            )
-                            text = "💡 Solution"
-                            textSize = 13f
-                            isAllCaps = false
-                            setBackgroundColor(couleurInerte)
-                            setTextColor(Color.WHITE)
-                            setTypeface(null, Typeface.BOLD)
-                            setOnClickListener { montrerLaSolution() }
-                        })
-                    }
-                    addView(ligneBoutons)
-
                     val carteDefinitions = LinearLayout(activity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -6479,6 +6479,52 @@ class SettingsActivity : AppCompatActivity() {
                         addView(conteneurVertical)
                     }
                     addView(carteDefinitions)
+
+                    // Les deux boutons sont ici, sous la liste des définitions,
+                    // et non plus contre le pavé.
+                    //
+                    // Ils y étaient à 7 dp de la touche ⌫, avec une aire huit
+                    // fois plus grande qu'une touche et « Solution » exactement
+                    // sous ⌫. Or ⌫ est la touche que l'on frappe quand on vient
+                    // de se tromper, donc sans viser : le pouce qui la manquait
+                    // vers le bas révélait la grille entière, sans retour
+                    // possible. Les deux sont destructifs, « Nouvelle grille »
+                    // jetant la progression, donc les deux s'éloignent, et les
+                    // deux demandent confirmation quand il y a quelque chose à
+                    // perdre.
+                    val ligneBoutons = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = dp(16) }
+                        orientation = LinearLayout.HORIZONTAL
+
+                        addView(Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            ).apply { rightMargin = dp(8) }
+                            text = "🔄 Nouvelle grille"
+                            textSize = 13f
+                            isAllCaps = false
+                            setBackgroundColor(Color.parseColor("#C2185B"))
+                            setTextColor(Color.WHITE)
+                            setTypeface(null, Typeface.BOLD)
+                            setOnClickListener { demanderNouvelleGrille() }
+                        })
+                        addView(Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            )
+                            text = "💡 Solution"
+                            textSize = 13f
+                            isAllCaps = false
+                            setBackgroundColor(couleurInerte)
+                            setTextColor(Color.WHITE)
+                            setTypeface(null, Typeface.BOLD)
+                            setOnClickListener { demanderLaSolution() }
+                        })
+                    }
+                    addView(ligneBoutons)
 
                     val carteRegles = LinearLayout(activity).apply {
                         layoutParams = LinearLayout.LayoutParams(
@@ -6532,6 +6578,36 @@ class SettingsActivity : AppCompatActivity() {
                 }
 
                 addView(colonne)
+            }
+
+            rootView = LinearLayout(activity).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                orientation = LinearLayout.VERTICAL
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+
+                addView(defilement)
+
+                // Le pavé, épinglé. Son fond est un ton plus sombre que celui
+                // de la page et un filet le borde en haut : c'est une surface
+                // fixe posée sous le contenu, comme un clavier, et non un bloc
+                // qui se serait arrêté là au fil du défilement.
+                conteneurPave = LinearLayout(activity).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(6), dp(8), dp(6), dp(8))
+                    background = GradientDrawable().apply {
+                        setColor(Color.parseColor("#EDEDED"))
+                        setStroke(dp(1), Color.parseColor("#DADADA"))
+                    }
+                }
+                addView(conteneurPave)
+                construirePave(activity)
 
                 post {
                     // Même précaution que les autres jeux : ce post() peut
@@ -6557,7 +6633,7 @@ class SettingsActivity : AppCompatActivity() {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply { bottomMargin = 6 }
+                    ).apply { bottomMargin = dp(ECART_TOUCHES_DP) }
                     orientation = LinearLayout.HORIZONTAL
                 }
                 rangee.forEach { lettre ->
@@ -6588,29 +6664,89 @@ class SettingsActivity : AppCompatActivity() {
         ) = TextView(activity).apply {
             layoutParams = LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, poids
-            ).apply { setMargins(3, 0, 3, 0) }
+            ).apply { setMargins(dp(2), 0, dp(2), 0) }
             text = libelle
-            textSize = 16f
+            textSize = 18f
             gravity = Gravity.CENTER
-            setPadding(0, 12, 0, 12)
+            // La hauteur vient de minHeight et non du rembourrage : à grande
+            // échelle de police système le libellé grandit et la touche suit,
+            // au lieu d'être rognée. Le rembourrage ne sert qu'à ne pas coller
+            // la lettre au bord quand cela arrive.
+            minHeight = dp(HAUTEUR_TOUCHE_DP)
+            minimumHeight = dp(HAUTEUR_TOUCHE_DP)
+            setPadding(0, dp(4), 0, dp(4))
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.parseColor("#212121"))
             background = GradientDrawable().apply {
                 cornerRadius = 8f * resources.displayMetrics.density
                 setColor(Color.WHITE)
-                setStroke(
-                    (1f * resources.displayMetrics.density).toInt(),
-                    Color.parseColor("#D0D0D0")
-                )
+                setStroke(dp(1), Color.parseColor("#C4C4C4"))
             }
             isClickable = true
             setOnClickListener { action() }
+        }
+
+        /**
+         * « Nouvelle grille », avec confirmation s'il y a quelque chose à
+         * perdre.
+         *
+         * Une grille vierge ne demande rien : ajouter une question à un geste
+         * sans conséquence l'apprend à être expédié, et la confirmation qui
+         * compte vraiment finirait par l'être aussi. Une grille révélée par
+         * « Solution » ne demande rien non plus, puisque le joueur n'y a rien
+         * trouvé lui-même.
+         */
+        private fun demanderNouvelleGrille(
+            nouveauNiveau: CrosswordDifficulty? = null
+        ) {
+            val appliquer = {
+                if (nouveauNiveau != null) difficulte = nouveauNiveau
+                nouvelleGrille()
+            }
+            val trouves = session?.motsJustes() ?: 0
+            if (trouves == 0 || solutionAffichee) {
+                appliquer()
+                return
+            }
+            AlertDialog.Builder(requireActivity())
+                .setTitle("Changer de grille ?")
+                .setMessage(
+                    if (trouves == 1) "Vous avez trouvé 1 mot sur cette grille. " +
+                        "Il sera perdu."
+                    else "Vous avez trouvé $trouves mots sur cette grille. " +
+                        "Ils seront perdus."
+                )
+                .setPositiveButton("Changer") { _, _ -> appliquer() }
+                .setNegativeButton("Continuer", null)
+                .show()
+        }
+
+        /**
+         * « Solution », toujours avec confirmation.
+         *
+         * C'est le seul correctif qui rende l'erreur rattrapable : éloigner le
+         * bouton du pavé rend l'appui accidentel plus rare, il ne le rend pas
+         * réversible. Remplir la grille ne se défait pas.
+         */
+        private fun demanderLaSolution() {
+            val partie = session ?: return
+            if (partie.termine()) return
+            AlertDialog.Builder(requireActivity())
+                .setTitle("Afficher la solution ?")
+                .setMessage(
+                    "Toutes les cases seront remplies et cette grille ne " +
+                        "comptera pas."
+                )
+                .setPositiveButton("Afficher") { _, _ -> montrerLaSolution() }
+                .setNegativeButton("Annuler", null)
+                .show()
         }
 
         private fun nouvelleGrille() {
             val activity = requireActivity()
             val grille = CrosswordData.newGrid(activity, difficulte)
             resolus.clear()
+            solutionAffichee = false
             surlignerDifficulte()
             // Sans cela « Solution affichée, cette grille ne compte pas »
             // survit au changement de grille et accuse la suivante.
@@ -6742,11 +6878,17 @@ class SettingsActivity : AppCompatActivity() {
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT
-                            ).apply { bottomMargin = 8 }
+                            ).apply { bottomMargin = dp(4) }
                             text = "${grille.numeros[index]}. ${mot.clue} " +
                                 "(${mot.length} lettres)"
-                            textSize = 14f
+                            textSize = 15f
                             setLineSpacing(0f, 1.15f)
+                            // Toucher une définition sélectionne son mot :
+                            // c'est une cible tactile, pas une ligne de texte,
+                            // et elle tenait dans 17 dp de haut.
+                            minHeight = dp(HAUTEUR_TOUCHE_DP)
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dp(4), dp(4), dp(4), dp(4))
                             isClickable = true
                             setOnClickListener {
                                 session?.selectionnerMot(index)
@@ -6833,6 +6975,7 @@ class SettingsActivity : AppCompatActivity() {
         private fun montrerLaSolution() {
             val partie = session ?: return
             partie.reveler()
+            solutionAffichee = true
             resolus.addAll(partie.grid.words.indices)
             rafraichir()
             tvRetour.text = "💡 Solution affichée, cette grille ne compte pas."
