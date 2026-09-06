@@ -6193,10 +6193,12 @@ class SettingsActivity : AppCompatActivity() {
      * C'est le seul jeu qui demande d'**écrire** le kréyòl. Trois conséquences
      * sur l'écran :
      *
-     * - Le pavé de lettres est fourni par le jeu et non par le clavier système.
-     *   Il porte É, È et Ò, que le clavier actif de l'appareil n'a aucune raison
-     *   d'offrir : si le joueur ne peut pas écrire « kréyòl », la seule chose
-     *   que le jeu lui apprend est de laisser tomber l'accent.
+     * - Le pavé de lettres est fourni par le jeu et non par le clavier système,
+     *   mais il en reprend la disposition (AZERTY kréyòl) : le joueur tape
+     *   dessus tous les jours, ses doigts savent où sont les lettres. Il
+     *   promeut É, È et Ò en touches visibles, là où le clavier laisse `ò` en
+     *   appui long : si le joueur ne peut pas écrire « kréyòl » d'un doigt, la
+     *   seule chose que le jeu lui apprend est de laisser tomber l'accent.
      * - La grille est en capitales, comme toute grille de mots croisés ; le mot
      *   trouvé est rappelé dans sa forme du dictionnaire, avec sa définition,
      *   comme mémo de vocabulaire.
@@ -6500,8 +6502,9 @@ class SettingsActivity : AppCompatActivity() {
                         addView(TextView(activity).apply {
                             text = "Chaque définition est le sens français d'un mot " +
                                 "kréyòl : à vous de l'écrire dans la grille, lettre " +
-                                "par lettre et accents compris. É, È et Ò sont sur " +
-                                "le pavé.\n\n" +
+                                "par lettre et accents compris. Le pavé reprend la " +
+                                "disposition du clavier kréyòl, avec É, È et Ò en " +
+                                "touches directes.\n\n" +
                                 "Touchez une case pour choisir un mot, touchez-la de " +
                                 "nouveau pour passer à l'autre sens. Une faute ne se " +
                                 "voit qu'une fois le mot entièrement écrit.\n\n" +
@@ -6541,9 +6544,12 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         /**
-         * Le pavé de saisie : quatre rangées alphabétiques, plus l'effacement.
+         * Le pavé de saisie : trois rangées dans la disposition du clavier de
+         * l'application, plus l'effacement.
          *
-         * Construit une fois pour toutes, il ne dépend pas de la grille.
+         * Construit une fois pour toutes, il ne dépend pas de la grille. Voir
+         * [CrosswordData.LETTRES] pour ce que cette disposition reprend au
+         * clavier et les deux points où elle s'en écarte.
          */
         private fun construirePave(activity: SettingsActivity) {
             CrosswordData.LETTRES.forEachIndexed { rang, rangee ->
@@ -6560,10 +6566,10 @@ class SettingsActivity : AppCompatActivity() {
                         apresSaisie()
                     })
                 }
-                // La dernière rangée porte deux lettres de moins que les autres :
-                // le retour arrière y prend une des places libres, ce qui garde
-                // les rangées de largeur comparable et évite une rangée pour lui
-                // seul.
+                // La dernière rangée porte une lettre de moins que les autres :
+                // le retour arrière y prend la place libre, les trois rangées
+                // font dix touches et se retrouvent de largeur égale. Il est à
+                // droite, comme le ⌫ de la rangée 3 du clavier.
                 if (rang == CrosswordData.LETTRES.lastIndex) {
                     ligne.addView(toucheDuPave(activity, "⌫") {
                         session?.effacer()

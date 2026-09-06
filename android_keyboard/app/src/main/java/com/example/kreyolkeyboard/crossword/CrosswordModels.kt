@@ -242,15 +242,34 @@ object CrosswordData {
     /**
      * Les lettres du pavé de saisie, dans l'ordre où il les range.
      *
-     * L'ordre est alphabétique et non celui du clavier : on ne compose pas de
-     * texte ici, on cherche une lettre précise, et une personne qui apprend la
-     * trouve plus vite dans l'alphabet. Les trois voyelles accentuées ferment
-     * la dernière rangée, sans elles « kréyòl », « manjé », « bòdmè » seraient
-     * inécrivables, et `generate_crossword.py` ne retient que des mots qui
-     * s'écrivent avec ces vingt-neuf lettres.
+     * **C'est la disposition du clavier de l'application, pas l'alphabet.** Le
+     * joueur est un locuteur qui tape sur cet AZERTY tous les jours : ses
+     * doigts savent déjà où sont les lettres, alors qu'un pavé alphabétique
+     * l'oblige à une recherche visuelle à chaque touche. Les rangées 1 et 2
+     * reprennent donc `KeyboardLayoutManager.createAlphabeticLayout()` à
+     * l'identique, soit vingt lettres sur vingt-six et l'essentiel de la
+     * frappe, et la rangée 3 garde l'ordre `w x c v b n`.
+     *
+     * Deux différences avec le clavier, et elles sont voulues :
+     *
+     * - **Les trois accents sont des touches visibles.** Sur le clavier, `é` et
+     *   `è` sont en rangée 4 autour de la barre d'espace, et `ò` n'est pas une
+     *   touche du tout : il est en appui long sur `o` (v10.11.3, qui l'a retiré
+     *   de la rangée la plus frappée). Ici la case est vide et produire
+     *   l'accent *est* le jeu : cacher `ò` sous un appui long apprendrait
+     *   exactement la faute que Mokwaré existe pour corriger. Rien ne se perd
+     *   côté mémoire musculaire, puisque `ò` n'a pas de position à retenir et
+     *   que `é`/`è` sont ancrés à une barre d'espace que le jeu n'a pas.
+     * - **Pas de ⇧, pas d'apostrophe, pas de barre d'espace.** La grille est en
+     *   capitales et une case porte une lettre. Les trois rangées font donc dix
+     *   touches chacune, accents et effacement compris, et sont de largeur
+     *   égale : c'est le résultat que visait la v10.11.3 pour le clavier.
+     *
+     * `generate_crossword.py` ne retient que les mots qui s'écrivent avec ces
+     * vingt-neuf lettres.
      */
     val LETTRES: List<String> = (
-        "ABCDEFGH IJKLMNOP QRSTUVWX YZÉÈÒ"
+        "AZERTYUIOP QSDFGHJKLM WXCVBNÉÈÒ"
         ).split(" ")
 
     private var cachedGrids: List<CrosswordGrid>? = null

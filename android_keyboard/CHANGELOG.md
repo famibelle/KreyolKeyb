@@ -5,6 +5,20 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [20.0.1] - 2026-09-06
+
+### 🔧 Modifié
+
+- **Le pavé de Mokwaré reprend la disposition du clavier kréyòl.** Il rangeait
+  ses touches dans l'ordre alphabétique, ce qui obligeait à chercher chaque
+  lettre des yeux. Le joueur tape sur l'AZERTY de ce clavier tous les jours :
+  ses doigts savent déjà où sont les lettres. Les deux premières rangées sont
+  désormais celles du clavier, à l'identique, et la troisième garde l'ordre
+  `w x c v b n` avant É, È et Ò. Trois rangées de dix touches au lieu de
+  quatre, donc plus de place pour la grille.
+- É, È et Ò restent des touches directes, alors que le clavier laisse `ò` en
+  appui long sur `o` : dans ce jeu, écrire l'accent est le but.
+
 ## [20.0.0] - 2026-09-06
 
 Un cinquième jeu entre sous l'onglet « Jé », porté du Lëtzebuergesch Clavier
