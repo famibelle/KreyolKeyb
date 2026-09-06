@@ -518,6 +518,12 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 dpToPx(8),
                 dpToPx(suggestionRowInnerPadDp())
             )
+            // Sans ça, dès que les puces dépassent la largeur, la barre de défilement
+            // par défaut se dessine en style « insideOverlay », c'est-à-dire par-dessus
+            // le contenu et à l'intérieur du padding : sur une rangée aussi basse elle
+            // barre les mots au lieu de passer sous eux. La position est déjà lisible
+            // sans elle, la rangée ne contenant que quelques puces.
+            isHorizontalScrollBarEnabled = false
         }
         kreyolRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -556,6 +562,8 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                     dpToPx(8),
                     dpToPx(SUGGESTION_ROW_OUTER_PAD_DP)
                 )
+                // Même raison que sur kreyolScroll : la barre barrerait les puces.
+                isHorizontalScrollBarEnabled = false
                 visibility = View.INVISIBLE
             }
             frenchRow = LinearLayout(this).apply {

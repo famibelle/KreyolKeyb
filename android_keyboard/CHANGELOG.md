@@ -5,6 +5,17 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [20.0.3] - 2026-09-06
+
+### 🐛 Corrigé
+
+- **Plus de trait en travers des suggestions.** Quand la barre proposait plus
+  de mots qu'elle n'en pouvait montrer, faire défiler la rangée traçait une
+  ligne sur les puces : la barre de défilement d'Android se dessine par-dessus
+  le contenu, et la rangée est trop basse pour qu'elle passe dessous. Elle est
+  retirée des deux rangées, kréyòl et française. Le défilement, lui, ne change
+  pas.
+
 ## [20.0.2] - 2026-09-06
 
 Deux retours d'usage sur Mokwaré, et les deux portaient juste.
