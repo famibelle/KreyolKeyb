@@ -92,7 +92,20 @@ jobs:
         # c'est le garde-fou de volume plus bas qui arrête le build.
         echo "📖 Génération de la table de traductions..."
         python generate_translations.py
-        
+
+        # Mokwaré, le jeu de mots croisés, se dérive des DEUX actifs précédents :
+        # les mots viennent du dictionnaire de fréquences, les définitions de la
+        # table des traductions. Il passe donc en dernier. Ne pas le régénérer
+        # laisserait des grilles dont un mot a pu quitter le dictionnaire ou
+        # perdre sa glose, et CrosswordAssetTest le verrait échouer.
+        #
+        # Sans --strict pour la même raison que les deux précédents : une panne
+        # de HF ou d'une source de gloses ne doit pas rendre le build rouge. Le
+        # garde-fou de volume plus bas arrête quand même le build si l'actif est
+        # vide ou tronqué.
+        echo "🧩 Génération du jeu Mokwaré..."
+        python generate_crossword.py
+
         echo "📁 Contenu après génération:"
         ls -la
         
@@ -196,6 +209,41 @@ jobs:
           exit 1
         fi
 
+        # Mokwaré n'a pas de repli codé en dur non plus : sans son actif,
+        # CrosswordFragment affiche un écran qui le dit. Une grille dont un mot
+        # a quitté le dictionnaire, dont une définition contient sa réponse ou
+        # dont deux mots se collent en fabriquant une suite que personne n'a
+        # écrite reste du JSON valide et s'affiche normalement : c'est le joueur
+        # qui découvre que la grille est insoluble. CrosswordAssetTest vérifie
+        # tout cela mot à mot ; ici on ne garde que ce que jq dit vite, le
+        # volume et l'attribution.
+        GRILLES=$(jq '.grilles | length' android_keyboard/app/src/main/assets/creole_crossword.json)
+        echo "🧩 Grilles de Mokwaré : $GRILLES"
+        # Le vivier de mots glosés est mince : le générateur vise 60 grilles par
+        # niveau sans toujours les atteindre. 90 au total laisse la marge sans
+        # tolérer un effondrement de la table de gloses.
+        if [ "$GRILLES" -lt 90 ]; then
+          echo "::error::Seulement $GRILLES grilles dans creole_crossword.json, le vivier de mots glosés s'est probablement effondré. Lancez Dictionnaires/generate_crossword.py"
+          exit 1
+        fi
+
+        # Chaque niveau doit garder de quoi jouer : une réserve vide fait
+        # resservir les mêmes grilles sans que rien n'échoue.
+        for NIVEAU in 1 2 3; do
+          COMPTE=$(jq --argjson n "$NIVEAU" '[.grilles[] | select(.l == $n)] | length' android_keyboard/app/src/main/assets/creole_crossword.json)
+          if [ "$COMPTE" -lt 25 ]; then
+            echo "::error::Difficulté $NIVEAU : $COMPTE grilles seulement dans creole_crossword.json."
+            exit 1
+          fi
+        done
+
+        # Les définitions viennent de Kreyolopedia et du Wiktionnaire (CC BY-SA),
+        # les mots du corpus PawolKreyol : le jeu affiche ces crédits.
+        if ! jq -e '.attribution | length >= 3' android_keyboard/app/src/main/assets/creole_crossword.json > /dev/null; then
+          echo "::error::creole_crossword.json ne porte pas l'attribution de ses sources."
+          exit 1
+        fi
+
     - name: 🎯 Dictionary Assets Ready
       run: |
         echo "✅ Assets de dictionnaire prêts pour les builds Android"
@@ -204,10 +252,12 @@ jobs:
         NGRAMS_COUNT=$(jq 'length' android_keyboard/app/src/main/assets/creole_ngrams.json)
         CLOZE_COUNT=$(jq '.items | length' android_keyboard/app/src/main/assets/creole_cloze.json)
         TRAD_COUNT=$(jq '.translations | length' android_keyboard/app/src/main/assets/creole_translations.json)
+        CROSSWORD_COUNT=$(jq '.grilles | length' android_keyboard/app/src/main/assets/creole_crossword.json)
         echo "   - Mots: $DICT_COUNT"
         echo "   - N-grams: $NGRAMS_COUNT"
         echo "   - Phrases à trous: $CLOZE_COUNT"
         echo "   - Formes traduites: $TRAD_COUNT"
+        echo "   - Grilles de mots croisés: $CROSSWORD_COUNT"
         echo "� Fichiers disponibles pour tous les jobs de build"
 
     # 🔧 FIX CRITIQUE : sans cet upload, chaque job de build ci-dessous fait son
@@ -224,6 +274,7 @@ jobs:
           android_keyboard/app/src/main/assets/creole_ngrams.json
           android_keyboard/app/src/main/assets/creole_cloze.json
           android_keyboard/app/src/main/assets/creole_translations.json
+          android_keyboard/app/src/main/assets/creole_crossword.json
         retention-days: 1
 
   # 🔧 ÉTAPE 2A : BUILD DEBUG APK

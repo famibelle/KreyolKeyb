@@ -46,6 +46,10 @@ import kotlin.random.Random
 import com.example.kreyolkeyboard.cloze.ClozeData
 import com.example.kreyolkeyboard.cloze.ClozeDifficulty
 import com.example.kreyolkeyboard.cloze.ClozeQuestion
+import com.example.kreyolkeyboard.crossword.CrosswordData
+import com.example.kreyolkeyboard.crossword.CrosswordDifficulty
+import com.example.kreyolkeyboard.crossword.CrosswordGrid
+import com.example.kreyolkeyboard.crossword.CrosswordSession
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -2780,10 +2784,10 @@ class SettingsActivity : AppCompatActivity() {
 
         addGuideSection(
             mainLayout, "#F0F8E8", "🎮 Jeux de vocabulaire",
-            "Quatre jeux — « Mots Mêlés », « Mots Mélangés », « Mo an Karénaj » et " +
-                    "« Fraz a twou » — sont réunis sous l'onglet « Jé ». Ils font revoir du " +
-                    "vocabulaire créole en s'amusant, à partir des mots déjà présents dans le " +
-                    "dictionnaire du clavier."
+            "Cinq jeux (« Mots Mêlés », « Mots Mélangés », « Mo an Karénaj », " +
+                    "« Fraz a twou » et « Mokwaré ») sont réunis sous l'onglet « Jé ». Ils " +
+                    "font revoir du vocabulaire créole en s'amusant, à partir des mots déjà " +
+                    "présents dans le dictionnaire du clavier."
         )
 
         addGuideSection(
@@ -6183,6 +6187,733 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
+     * Fragment « Mokwaré » : une grille de mots croisés numérotée, ses
+     * définitions en français, et un pavé de lettres pour y répondre.
+     *
+     * C'est le seul jeu qui demande d'**écrire** le kréyòl. Trois conséquences
+     * sur l'écran :
+     *
+     * - Le pavé de lettres est fourni par le jeu et non par le clavier système.
+     *   Il porte É, È et Ò, que le clavier actif de l'appareil n'a aucune raison
+     *   d'offrir : si le joueur ne peut pas écrire « kréyòl », la seule chose
+     *   que le jeu lui apprend est de laisser tomber l'accent.
+     * - La grille est en capitales, comme toute grille de mots croisés ; le mot
+     *   trouvé est rappelé dans sa forme du dictionnaire, avec sa définition,
+     *   comme mémo de vocabulaire.
+     * - Rien n'est corrigé lettre à lettre. Une case fausse ne se signale
+     *   qu'une fois son mot entièrement rempli, sinon le jeu dicte la réponse.
+     */
+    class CrosswordFragment : Fragment() {
+
+        private var rootView: ScrollView? = null
+
+        private lateinit var tvProgres: TextView
+        private lateinit var tvDefinition: TextView
+        private lateinit var tvNumero: TextView
+        private lateinit var tvRetour: TextView
+        private lateinit var conteneurGrille: LinearLayout
+        private lateinit var conteneurPave: LinearLayout
+        private lateinit var conteneurHorizontal: LinearLayout
+        private lateinit var conteneurVertical: LinearLayout
+        private lateinit var ligneDifficulte: LinearLayout
+
+        private var session: CrosswordSession? = null
+        private var difficulte = CrosswordDifficulty.NORMALE
+
+        /** Fond de chaque case jouable, indexé par ligne × largeur + colonne. */
+        private val fondsCase = mutableMapOf<Int, GradientDrawable>()
+        private val lettresCase = mutableMapOf<Int, TextView>()
+        private val lignesDefinition = mutableMapOf<Int, TextView>()
+
+        /** Mots déjà trouvés, pour ne féliciter qu'une fois. */
+        private val resolus = mutableSetOf<Int>()
+
+        private val couleurNeutre = Color.parseColor("#1976D2")
+        private val couleurJuste = Color.parseColor("#4CAF50")
+        private val couleurFausse = Color.parseColor("#E53935")
+        private val couleurInerte = Color.parseColor("#BDBDBD")
+        private val fondCase = Color.WHITE
+        private val fondMotChoisi = Color.parseColor("#E3F2FD")
+        private val fondCaseChoisie = Color.parseColor("#90CAF9")
+        private val fondJuste = Color.parseColor("#C8E6C9")
+        private val fondJusteChoisi = Color.parseColor("#A5D6A7")
+        private val fondFaux = Color.parseColor("#FFCDD2")
+
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View {
+            val activity = requireActivity() as SettingsActivity
+
+            rootView = ScrollView(activity).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+
+                val colonne = LinearLayout(activity).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    // Marges serrées, et elles ne sont pas décoratives : la
+                    // grille et le pavé doivent tenir ensemble sous la barre
+                    // d'onglets, sinon il faut faire défiler l'écran entre
+                    // chaque lettre.
+                    setPadding(24, 10, 24, 16)
+
+                    val entete = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 8 }
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+
+                        addView(TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            )
+                            text = "🧩 Mokwaré"
+                            textSize = 18f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(couleurNeutre)
+                        })
+
+                        tvProgres = TextView(activity).apply {
+                            textSize = 14f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(Color.parseColor("#333333"))
+                        }
+                        addView(tvProgres)
+                    }
+                    addView(entete)
+
+                    ligneDifficulte = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 10 }
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER
+                    }
+                    CrosswordDifficulty.values().forEach { niveau ->
+                        ligneDifficulte.addView(Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            ).apply { setMargins(4, 0, 4, 0) }
+                            text = niveau.label
+                            textSize = 12f
+                            isAllCaps = false
+                            minHeight = 0
+                            minimumHeight = 0
+                            setPadding(0, 14, 0, 14)
+                            setTextColor(Color.WHITE)
+                            tag = niveau
+                            setOnClickListener {
+                                difficulte = niveau
+                                nouvelleGrille()
+                            }
+                        })
+                    }
+                    addView(ligneDifficulte)
+
+                    // La définition du mot sélectionné, en grand et au-dessus de
+                    // la grille. C'est le choix qui remplace les cases-flèches :
+                    // une définition écrite dans une case de trente pixels ne se
+                    // lit pas, et la reléguer sous la grille obligerait à faire
+                    // défiler l'écran entre chaque lettre.
+                    val carteDefinition = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 10 }
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(20, 14, 20, 14)
+                        background = GradientDrawable().apply {
+                            cornerRadius = 12f
+                            setColor(Color.WHITE)
+                        }
+
+                        tvNumero = TextView(activity).apply {
+                            textSize = 16f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(couleurNeutre)
+                            setPadding(0, 0, 14, 0)
+                        }
+                        addView(tvNumero)
+
+                        tvDefinition = TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            )
+                            textSize = 16f
+                            setLineSpacing(0f, 1.2f)
+                            setTextColor(Color.parseColor("#212121"))
+                        }
+                        addView(tvDefinition)
+                    }
+                    addView(carteDefinition)
+
+                    // La grille, ligne par ligne. Un LinearLayout et non une
+                    // GridView : celle-ci vole le geste de défilement vertical
+                    // à la ScrollView parente, même en lecture seule.
+                    conteneurGrille = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { gravity = Gravity.CENTER_HORIZONTAL; bottomMargin = 14 }
+                        orientation = LinearLayout.VERTICAL
+                    }
+                    addView(conteneurGrille)
+
+                    tvRetour = TextView(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 10 }
+                        textSize = 14f
+                        gravity = Gravity.CENTER
+                        setTypeface(null, Typeface.BOLD)
+                        setLineSpacing(0f, 1.2f)
+                        visibility = View.INVISIBLE
+                        // La ligne garde sa place même vide : sans cela, la
+                        // grille et le pavé sautent d'un cran à chaque mot
+                        // trouvé, et le doigt tombe à côté de la touche visée.
+                        text = " "
+                    }
+                    addView(tvRetour)
+
+                    conteneurPave = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 14 }
+                        orientation = LinearLayout.VERTICAL
+                    }
+                    addView(conteneurPave)
+                    construirePave(activity)
+
+                    val ligneBoutons = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 16 }
+                        orientation = LinearLayout.HORIZONTAL
+
+                        addView(Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            ).apply { rightMargin = 8 }
+                            text = "🔄 Nouvelle grille"
+                            textSize = 13f
+                            isAllCaps = false
+                            setBackgroundColor(Color.parseColor("#C2185B"))
+                            setTextColor(Color.WHITE)
+                            setTypeface(null, Typeface.BOLD)
+                            setOnClickListener { nouvelleGrille() }
+                        })
+                        addView(Button(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                            )
+                            text = "💡 Solution"
+                            textSize = 13f
+                            isAllCaps = false
+                            setBackgroundColor(couleurInerte)
+                            setTextColor(Color.WHITE)
+                            setTypeface(null, Typeface.BOLD)
+                            setOnClickListener { montrerLaSolution() }
+                        })
+                    }
+                    addView(ligneBoutons)
+
+                    val carteDefinitions = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { bottomMargin = 16 }
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(24, 20, 24, 20)
+                        background = GradientDrawable().apply {
+                            cornerRadius = 12f
+                            setColor(Color.WHITE)
+                        }
+
+                        addView(TextView(activity).apply {
+                            text = "➡️ Horizontalement"
+                            textSize = 15f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(couleurNeutre)
+                            setPadding(0, 0, 0, 8)
+                        })
+                        conteneurHorizontal = LinearLayout(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply { bottomMargin = 14 }
+                            orientation = LinearLayout.VERTICAL
+                        }
+                        addView(conteneurHorizontal)
+
+                        addView(TextView(activity).apply {
+                            text = "⬇️ Verticalement"
+                            textSize = 15f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(couleurNeutre)
+                            setPadding(0, 0, 0, 8)
+                        })
+                        conteneurVertical = LinearLayout(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            )
+                            orientation = LinearLayout.VERTICAL
+                        }
+                        addView(conteneurVertical)
+                    }
+                    addView(carteDefinitions)
+
+                    val carteRegles = LinearLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(24, 20, 24, 20)
+                        background = GradientDrawable().apply {
+                            cornerRadius = 12f
+                            setColor(Color.WHITE)
+                        }
+
+                        addView(TextView(activity).apply {
+                            text = "📜 Règles du jeu"
+                            textSize = 16f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(couleurNeutre)
+                            setPadding(0, 0, 0, 12)
+                        })
+                        addView(TextView(activity).apply {
+                            text = "Chaque définition est le sens français d'un mot " +
+                                "kréyòl : à vous de l'écrire dans la grille, lettre " +
+                                "par lettre et accents compris. É, È et Ò sont sur " +
+                                "le pavé.\n\n" +
+                                "Touchez une case pour choisir un mot, touchez-la de " +
+                                "nouveau pour passer à l'autre sens. Une faute ne se " +
+                                "voit qu'une fois le mot entièrement écrit.\n\n" +
+                                "La grille est en capitales, comme toutes les grilles " +
+                                "de mots croisés. Chaque mot trouvé rappelle son " +
+                                "orthographe et son sens.\n\n" +
+                                "La difficulté porte sur la taille de la grille et le " +
+                                "nombre de mots."
+                            textSize = 14f
+                            setLineSpacing(0f, 1.2f)
+                            setTextColor(Color.parseColor("#333333"))
+                        })
+                        addView(TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply { topMargin = 16 }
+                            text = "Définitions et vocabulaire :\n" +
+                                CrosswordData.attribution(activity)
+                            textSize = 11f
+                            setTextColor(Color.parseColor("#757575"))
+                        })
+                    }
+                    addView(carteRegles)
+                }
+
+                addView(colonne)
+
+                post {
+                    // Même précaution que les autres jeux : ce post() peut
+                    // s'exécuter après un changement d'onglet.
+                    if (isAdded) nouvelleGrille()
+                }
+            }
+
+            return rootView!!
+        }
+
+        /**
+         * Le pavé de saisie : quatre rangées alphabétiques, plus l'effacement.
+         *
+         * Construit une fois pour toutes, il ne dépend pas de la grille.
+         */
+        private fun construirePave(activity: SettingsActivity) {
+            CrosswordData.LETTRES.forEachIndexed { rang, rangee ->
+                val ligne = LinearLayout(activity).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = 6 }
+                    orientation = LinearLayout.HORIZONTAL
+                }
+                rangee.forEach { lettre ->
+                    ligne.addView(toucheDuPave(activity, lettre.toString()) {
+                        session?.ecrire(lettre)
+                        apresSaisie()
+                    })
+                }
+                // La dernière rangée porte deux lettres de moins que les autres :
+                // le retour arrière y prend une des places libres, ce qui garde
+                // les rangées de largeur comparable et évite une rangée pour lui
+                // seul.
+                if (rang == CrosswordData.LETTRES.lastIndex) {
+                    ligne.addView(toucheDuPave(activity, "⌫") {
+                        session?.effacer()
+                        apresSaisie()
+                    })
+                }
+                conteneurPave.addView(ligne)
+            }
+        }
+
+        private fun toucheDuPave(
+            activity: SettingsActivity,
+            libelle: String,
+            poids: Float = 1f,
+            action: () -> Unit
+        ) = TextView(activity).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, poids
+            ).apply { setMargins(3, 0, 3, 0) }
+            text = libelle
+            textSize = 16f
+            gravity = Gravity.CENTER
+            setPadding(0, 12, 0, 12)
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#212121"))
+            background = GradientDrawable().apply {
+                cornerRadius = 8f * resources.displayMetrics.density
+                setColor(Color.WHITE)
+                setStroke(
+                    (1f * resources.displayMetrics.density).toInt(),
+                    Color.parseColor("#D0D0D0")
+                )
+            }
+            isClickable = true
+            setOnClickListener { action() }
+        }
+
+        private fun nouvelleGrille() {
+            val activity = requireActivity()
+            val grille = CrosswordData.newGrid(activity, difficulte)
+            resolus.clear()
+            surlignerDifficulte()
+            // Sans cela « Solution affichée, cette grille ne compte pas »
+            // survit au changement de grille et accuse la suivante.
+            tvRetour.visibility = View.INVISIBLE
+
+            if (grille == null) {
+                session = null
+                conteneurGrille.removeAllViews()
+                conteneurHorizontal.removeAllViews()
+                conteneurVertical.removeAllViews()
+                tvProgres.text = ""
+                tvNumero.text = ""
+                tvDefinition.text = "Aucune grille disponible : l'actif " +
+                    "creole_crossword.json manque à l'application."
+                return
+            }
+
+            val nouvelle = CrosswordSession(grille)
+            session = nouvelle
+            // On commence sur le 1, pas sur le premier mot du fichier : celui-ci
+            // est le mot d'amorce du générateur, qui peut porter n'importe quel
+            // numéro et laisse croire que la grille commence au milieu.
+            nouvelle.selectionnerMot(maxOf(0, grille.numeros.indexOf(1)))
+            construireGrille(requireActivity() as SettingsActivity, grille)
+            construireDefinitions(requireActivity() as SettingsActivity, grille)
+            rafraichir()
+        }
+
+        private fun surlignerDifficulte() {
+            for (i in 0 until ligneDifficulte.childCount) {
+                val bouton = ligneDifficulte.getChildAt(i) as Button
+                bouton.setBackgroundColor(
+                    if (bouton.tag == difficulte) couleurNeutre else couleurInerte
+                )
+            }
+        }
+
+        /**
+         * Dessine la grille.
+         *
+         * Le côté d'une case se déduit de la largeur de l'écran et du nombre de
+         * colonnes : une taille fixe déborderait sur les grandes grilles, et
+         * laisserait la moitié de l'écran vide sur les petites.
+         */
+        private fun construireGrille(activity: SettingsActivity, grille: CrosswordGrid) {
+            conteneurGrille.removeAllViews()
+            fondsCase.clear()
+            lettresCase.clear()
+
+            val densite = resources.displayMetrics.density
+            val disponible = resources.displayMetrics.widthPixels - (48 * 2)
+            val cote = minOf(disponible / grille.width, (44 * densite).toInt())
+
+            for (r in 0 until grille.height) {
+                val ligne = LinearLayout(activity).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.HORIZONTAL
+                }
+
+                for (c in 0 until grille.width) {
+                    val cadre = FrameLayout(activity).apply {
+                        layoutParams = LinearLayout.LayoutParams(cote, cote).apply {
+                            setMargins(1, 1, 1, 1)
+                        }
+                    }
+
+                    if (grille.estCaseJouable(r, c)) {
+                        val fond = GradientDrawable().apply {
+                            cornerRadius = 3f * densite
+                            setColor(fondCase)
+                            setStroke((1f * densite).toInt(), Color.parseColor("#9E9E9E"))
+                        }
+                        cadre.background = fond
+
+                        grille.numerosParCase[r * grille.width + c]?.let { numero ->
+                            cadre.addView(TextView(activity).apply {
+                                layoutParams = FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                                    FrameLayout.LayoutParams.WRAP_CONTENT
+                                ).apply { gravity = Gravity.START or Gravity.TOP }
+                                text = numero.toString()
+                                textSize = 8f
+                                setPadding((2 * densite).toInt(), 0, 0, 0)
+                                setTextColor(Color.parseColor("#757575"))
+                            })
+                        }
+
+                        val lettre = TextView(activity).apply {
+                            layoutParams = FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                            )
+                            gravity = Gravity.CENTER
+                            textSize = 16f
+                            setTypeface(null, Typeface.BOLD)
+                            setTextColor(Color.parseColor("#212121"))
+                        }
+                        cadre.addView(lettre)
+
+                        cadre.isClickable = true
+                        cadre.setOnClickListener {
+                            session?.selectionner(r, c)
+                            rafraichir()
+                        }
+
+                        fondsCase[r * grille.width + c] = fond
+                        lettresCase[r * grille.width + c] = lettre
+                    }
+
+                    ligne.addView(cadre)
+                }
+                conteneurGrille.addView(ligne)
+            }
+        }
+
+        private fun construireDefinitions(activity: SettingsActivity, grille: CrosswordGrid) {
+            conteneurHorizontal.removeAllViews()
+            conteneurVertical.removeAllViews()
+            lignesDefinition.clear()
+
+            listOf(true to conteneurHorizontal, false to conteneurVertical)
+                .forEach { (horizontal, conteneur) ->
+                    grille.definitions(horizontal).forEach { index ->
+                        val mot = grille.words[index]
+                        val vue = TextView(activity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply { bottomMargin = 8 }
+                            text = "${grille.numeros[index]}. ${mot.clue} " +
+                                "(${mot.length} lettres)"
+                            textSize = 14f
+                            setLineSpacing(0f, 1.15f)
+                            isClickable = true
+                            setOnClickListener {
+                                session?.selectionnerMot(index)
+                                rafraichir()
+                            }
+                        }
+                        lignesDefinition[index] = vue
+                        conteneur.addView(vue)
+                    }
+                }
+        }
+
+        /**
+         * Appelé après chaque touche du pavé : rafraîchit, puis dit ce qui vient
+         * d'être trouvé.
+         *
+         * Le message n'apparaît qu'au moment où un mot devient juste, et il
+         * rappelle la forme du dictionnaire et le sens : un mémo de vocabulaire,
+         * puisque c'est ce qu'apprend le jeu.
+         */
+        private fun apresSaisie() {
+            val partie = session ?: return
+            val grille = partie.grid
+
+            val nouveaux = grille.words.indices.filter {
+                it !in resolus && partie.motJuste(it)
+            }
+            resolus.addAll(nouveaux)
+            // Un mot achevé rend la main au suivant : sans cela le pavé continue
+            // d'écrire dans un mot déjà juste, et le joueur doit viser une case
+            // pour repartir.
+            if (partie.motSelectionne in resolus && !partie.termine()) {
+                avancerAuMotSuivant(partie)
+            }
+            rafraichir()
+
+            when {
+                partie.termine() -> {
+                    tvRetour.text = "🎉 Grille terminée : ${grille.words.size} mots sur " +
+                        "${grille.words.size} !"
+                    tvRetour.setTextColor(couleurJuste)
+                    tvRetour.visibility = View.VISIBLE
+                }
+                nouveaux.isNotEmpty() -> {
+                    val mot = grille.words[nouveaux.first()]
+                    tvRetour.text = "✅ ${mot.canonical} : ${mot.clue}"
+                    tvRetour.setTextColor(couleurJuste)
+                    tvRetour.visibility = View.VISIBLE
+                }
+                else -> {
+                    val choisi = partie.motSelectionne
+                    if (choisi >= 0 && partie.motRempli(choisi) && !partie.motJuste(choisi)) {
+                        tvRetour.text = "❌ Ce n'est pas le mot attendu : effacez et " +
+                            "reprenez."
+                        tvRetour.setTextColor(couleurFausse)
+                        tvRetour.visibility = View.VISIBLE
+                    } else {
+                        tvRetour.visibility = View.INVISIBLE
+                    }
+                }
+            }
+        }
+
+        /**
+         * Passe au premier mot encore faux, dans l'ordre des numéros. Le tour
+         * est circulaire : après le dernier on revient au début, parce que les
+         * mots trouvés ne le sont pas dans l'ordre de la grille.
+         */
+        private fun avancerAuMotSuivant(partie: CrosswordSession) {
+            val grille = partie.grid
+            val ordre = grille.words.indices.sortedWith(
+                compareBy({ grille.numeros[it] }, { !grille.words[it].across })
+            )
+            val depuis = ordre.indexOf(partie.motSelectionne)
+            for (pas in 1..ordre.size) {
+                val candidat = ordre[(depuis + pas) % ordre.size]
+                if (!partie.motJuste(candidat)) {
+                    partie.selectionnerMot(candidat)
+                    return
+                }
+            }
+        }
+
+        private fun montrerLaSolution() {
+            val partie = session ?: return
+            partie.reveler()
+            resolus.addAll(partie.grid.words.indices)
+            rafraichir()
+            tvRetour.text = "💡 Solution affichée, cette grille ne compte pas."
+            tvRetour.setTextColor(Color.parseColor("#757575"))
+            tvRetour.visibility = View.VISIBLE
+        }
+
+        /** Repeint la grille, la définition courante et les listes. */
+        private fun rafraichir() {
+            val partie = session ?: return
+            val grille = partie.grid
+
+            val choisi = partie.motSelectionne
+            val mot = grille.words.getOrNull(choisi)
+
+            for (r in 0 until grille.height) {
+                for (c in 0 until grille.width) {
+                    val cle = r * grille.width + c
+                    val fond = fondsCase[cle] ?: continue
+                    val vue = lettresCase[cle] ?: continue
+
+                    val lettre = partie.lettreAt(r, c)
+                    vue.text = lettre?.toString() ?: ""
+
+                    val dansLeMot = mot != null && mot.indexOf(r, c) >= 0
+                    val caseCourante = dansLeMot &&
+                        mot!!.indexOf(r, c) == partie.caseSelectionnee
+                    // Une faute ne se montre qu'une fois le mot rempli : le
+                    // signaler à la frappe reviendrait à dicter la réponse
+                    // lettre par lettre.
+                    val revelee = grille.motsSur(r, c).any { partie.motRempli(it) }
+                    val fausse = revelee && partie.caseFausse(r, c)
+                    val juste = grille.motsSur(r, c).any {
+                        partie.motRempli(it) && partie.motJuste(it)
+                    }
+
+                    // Un mot trouvé reste vert de bout en bout, curseur compris :
+                    // laisser la dernière case en bleu donnait un mot vert à
+                    // une case près, qu'on lit comme une faute.
+                    fond.setColor(
+                        when {
+                            fausse -> fondFaux
+                            juste && caseCourante -> fondJusteChoisi
+                            juste -> fondJuste
+                            caseCourante -> fondCaseChoisie
+                            dansLeMot -> fondMotChoisi
+                            else -> fondCase
+                        }
+                    )
+                    vue.setTextColor(
+                        if (fausse) couleurFausse else Color.parseColor("#212121")
+                    )
+                }
+            }
+
+            if (mot != null) {
+                tvNumero.text = "${grille.numeros[choisi]} " +
+                    if (mot.across) "➡️" else "⬇️"
+                tvDefinition.text = "${mot.clue}  ·  ${mot.length} lettres"
+            }
+
+            lignesDefinition.forEach { (index, vue) ->
+                val trouve = index in resolus
+                vue.setTextColor(
+                    when {
+                        trouve -> Color.parseColor("#9E9E9E")
+                        index == choisi -> couleurNeutre
+                        else -> Color.parseColor("#333333")
+                    }
+                )
+                vue.setTypeface(null, if (index == choisi) Typeface.BOLD else Typeface.NORMAL)
+            }
+
+            tvProgres.text = "${partie.motsJustes()} / ${grille.words.size} mots"
+        }
+
+        override fun onDestroyView() {
+            super.onDestroyView()
+            fondsCase.clear()
+            lettresCase.clear()
+            lignesDefinition.clear()
+            session = null
+            rootView = null
+        }
+    }
+
+    /**
      * Onglet « Jé » : le choix des jeux, puis le jeu choisi.
      *
      * Ce fragment ne joue à rien lui-même. Il montre une carte par jeu et, au
@@ -6224,7 +6955,9 @@ class SettingsActivity : AppCompatActivity() {
             Jeu("🟩", "Mo an Karénaj", "Devinez le mot de 5 lettres en 6 essais",
                 "#4CAF50") { MoKarenajFragment() },
             Jeu("📝", "Fraz a twou", "Complétez la phrase à laquelle il manque un mot",
-                "#FF8C00") { ClozeFragment() }
+                "#FF8C00") { ClozeFragment() },
+            Jeu("🧩", "Mokwaré", "Écrivez les mots dans la grille, d'après leur sens",
+                "#C2185B") { CrosswordFragment() }
         )
 
         override fun onCreateView(
@@ -6301,7 +7034,7 @@ class SettingsActivity : AppCompatActivity() {
                 setPadding(4, 0, 4, 6)
             })
             colonne.addView(TextView(activity).apply {
-                text = "Quatre façons de jouer avec les mots du dictionnaire " +
+                text = "Cinq façons de jouer avec les mots du dictionnaire " +
                         "kréyòl du clavier."
                 textSize = 14f
                 setTextColor(Color.parseColor("#666666"))
@@ -6309,11 +7042,11 @@ class SettingsActivity : AppCompatActivity() {
                 setPadding(4, 0, 4, 20)
             })
 
-            // Deux cartes par ligne : quatre jeux tombent juste, et une carte
-            // pleine largeur pour chacun aurait poussé le quatrième hors de
-            // l'écran, là où on ne le découvre plus. Une ligne incomplète
-            // reçoit une cale de même poids, faute de quoi sa carte s'étirerait
-            // sur toute la largeur.
+            // Deux cartes par ligne : une carte pleine largeur pour chacun
+            // aurait poussé les derniers jeux hors de l'écran, là où on ne les
+            // découvre plus. Une ligne incomplète (le nombre de jeux est
+            // impair) reçoit une cale de même poids, faute de quoi sa carte
+            // s'étirerait sur toute la largeur.
             jeux.chunked(2).forEach { paire ->
                 colonne.addView(LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL

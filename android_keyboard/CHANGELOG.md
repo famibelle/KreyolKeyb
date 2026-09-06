@@ -5,6 +5,28 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [20.0.0] - 2026-09-06
+
+Un cinquième jeu entre sous l'onglet « Jé », porté du Lëtzebuergesch Clavier
+qui partage cette base de code.
+
+### 🎉 Ajouté
+
+- **« Mokwaré », une grille de mots croisés.** Chaque définition est le sens
+  français d'un mot kréyòl, et c'est au joueur de l'écrire dans la grille,
+  lettre par lettre. C'est le seul jeu où l'on produit l'orthographe au lieu
+  de la reconnaître : les quatre autres montrent le mot, le remettent en
+  ordre ou le font choisir. Le jeu fournit son propre pavé de saisie, avec É,
+  È et Ò, parce que le clavier système n'a aucune raison de les offrir et
+  qu'écrire « kréyòl » sans accent est justement la faute à corriger. Une
+  faute ne se signale qu'une fois le mot entièrement rempli ; un mot trouvé
+  rappelle sa forme et son sens. Trois niveaux, qui se distinguent par la
+  taille de la grille et le nombre de mots.
+- 180 grilles livrées, 60 par niveau, construites hors ligne à partir du
+  dictionnaire de fréquences et de la table des traductions, puis vérifiées
+  une par une : aucune suite de lettres qui ne soit un mot posé, aucune
+  définition qui contienne sa réponse.
+
 ## [19.0.0] - 2026-09-06
 
 Version qui porte aux utilisateurs le travail de vitesse de saisie de la
