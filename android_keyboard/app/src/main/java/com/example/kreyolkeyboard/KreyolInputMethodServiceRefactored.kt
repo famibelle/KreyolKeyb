@@ -909,11 +909,10 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             Log.d(TAG, "Container de suggestions trouvé, vidage des vues existantes")
             container.removeAllViews()
 
-            suggestions.take(MAX_SUGGESTIONS).forEachIndexed { rang, suggestion ->
+            suggestions.take(MAX_SUGGESTIONS).forEach { suggestion ->
                 addSuggestionChip(
                     container,
-                    BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL),
-                    premier = rang == 0
+                    BilingualSuggestion(suggestion, 0f, SuggestionLanguage.KREYOL)
                 )
             }
         }
@@ -939,18 +938,15 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
 
         if (kreyolSuggestions.isNotEmpty()) {
             addLanguageLabel(kreyolContainer, kreyolSuggestions.first().getShortLabel())
-            kreyolSuggestions.forEachIndexed { rang, suggestion ->
-                addSuggestionChip(kreyolContainer, suggestion, premier = rang == 0)
+            kreyolSuggestions.forEach { suggestion ->
+                addSuggestionChip(kreyolContainer, suggestion)
             }
         }
 
         if (frenchSuggestions.isNotEmpty()) {
             addLanguageLabel(frenchContainer, frenchSuggestions.first().getShortLabel())
-            // Chaque rangée a son propre rang : la première proposition
-            // française est pleine elle aussi, ce qui garde à l'écran les deux
-            // couleurs de langue.
-            frenchSuggestions.forEachIndexed { rang, suggestion ->
-                addSuggestionChip(frenchContainer, suggestion, premier = rang == 0)
+            frenchSuggestions.forEach { suggestion ->
+                addSuggestionChip(frenchContainer, suggestion)
             }
         }
         // INVISIBLE (jamais GONE) : garder la hauteur de la rangée réservée en permanence
@@ -986,29 +982,29 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     /**
      * Ajoute une proposition dans une rangée.
      *
-     * Depuis la v17.0.0, **le remplissage dit le rang et non la langue**. La
-     * barre encodait la langue trois fois, par la rangée, par l'étiquette KR/FR
-     * et par la couleur de la pastille, et n'encodait le rang nulle part, alors
-     * que c'est tout le travail de [SuggestionEngine] : fréquence du corpus,
-     * n-grammes, usage personnel, tolérance aux fautes de frappe. La première
-     * proposition, celle qui a gagné ce calcul, ressemblait à la troisième.
+     * **Le remplissage dit la langue.** La 17.0.0 l'avait basculé du côté du
+     * rang, en partant d'un constat juste (la barre disait la langue trois
+     * fois, par la rangée, par l'étiquette KR/FR et par la couleur, et ne
+     * disait le rang nulle part) mais d'une conclusion fausse : le rang était
+     * déjà dit, par la **position**. De gauche à droite, la première est la
+     * meilleure, sur toutes les barres de suggestion de tous les claviers.
+     * La couleur redisait donc ce que l'ordre disait déjà, en cessant de dire
+     * la seule chose qu'elle disait utilement.
      *
-     * Seule la première de chaque rangée porte donc la couleur de sa langue ;
-     * les suivantes partagent toutes le même fond, quel que soit leur rang et
-     * quelle que soit leur rangée. La langue reste dite par la rangée et par
-     * l'étiquette, qui deviennent du coup porteuses : les retirer redeviendrait
-     * ambigu.
+     * Toutes les propositions d'une rangée portent donc à nouveau la couleur
+     * de leur langue, sans distinction de rang. Deux raisons de la garder là :
+     * une rangée se lit d'un bloc, trois pastilles vertes disant « ceci est du
+     * kréyòl » sans qu'on ait à lire ; et la couleur travaille en vision
+     * périphérique, pendant que le regard est resté sur le texte en cours,
+     * là où l'étiquette KR/FR, écrite à 10 sp, ne se voit que si on la cherche.
      *
-     * La 17.0.0 posait ces suivantes à nu sur le plateau, sans fond. C'était un
-     * cran trop loin : le rang se lisait, mais plus rien ne disait qu'un mot
-     * s'appuie, et l'appui lui-même n'avait plus de confirmation visuelle. Elles
-     * reprennent en 17.0.1 la matière d'une touche, en gardant la forme d'une
-     * puce.
+     * Les deux couleurs sont conformes sur du texte courant (4,56:1 et 4,93:1
+     * avec le blanc, cf. [KeyboardColors]), ce qui est le seuil applicable :
+     * une puce se lit à 18 sp.
      */
     private fun addSuggestionChip(
         container: LinearLayout,
-        bilingualSuggestion: BilingualSuggestion,
-        premier: Boolean
+        bilingualSuggestion: BilingualSuggestion
     ) {
         val suggestionButton = Button(this).apply {
             text = bilingualSuggestion.word
@@ -1020,34 +1016,12 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             // contre 14 en dessous).
             includeFontPadding = false
 
-            if (premier) {
-                val bgColor = bilingualSuggestion.getColor()
-                setTextColor(KeyboardColors.CHIP_TEXT)
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = dpToPx(16).toFloat()
-                    setColor(bgColor)
-                }
-                val colorHex = String.format("#%06X", 0xFFFFFF and bgColor)
-                Log.d(TAG, "🎨 '${bilingualSuggestion.word}' en tête : ${bilingualSuggestion.getLanguageName()} → fond $colorHex")
-            } else {
-                // Matière de touche, forme de puce. La 17.0.0 posait ces
-                // propositions à nu sur le plateau : plus rien ne disait qu'on
-                // pouvait les toucher, et l'appui n'avait plus de confirmation
-                // visuelle. Elles reprennent donc le fond, le contour et l'encre
-                // d'une touche de lettre, ce qui est le vocabulaire que ce
-                // clavier emploie déjà pour dire « ceci s'appuie », tout en
-                // gardant le rayon des puces pour ne pas se faire prendre pour
-                // une touche égarée dans la barre.
-                val palette = KeyboardTheme.palette()
-                setTextColor(palette.encre)
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = dpToPx(16).toFloat()
-                    setColors(palette.touche.couleurs())
-                    orientation = GradientDrawable.Orientation.TOP_BOTTOM
-                    setStroke(dpToPx(1), palette.bordure)
-                }
+            val bgColor = bilingualSuggestion.getColor()
+            setTextColor(KeyboardColors.CHIP_TEXT)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(16).toFloat()
+                setColor(bgColor)
             }
 
             setPadding(

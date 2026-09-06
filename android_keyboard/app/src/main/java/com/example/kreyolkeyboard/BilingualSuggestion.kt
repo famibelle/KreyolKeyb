@@ -69,9 +69,10 @@ object KeyboardColors {
     // telles quelles sur le fond clair comme sur le fond sombre de la barre.
     // Tout ce qui bascule vit dans KeyboardTheme.
     //
-    // Depuis la v17.0.0 elles ne colorent plus que la **première** proposition
-    // de chaque rangée, le remplissage disant désormais le rang. Elles restent
-    // la couleur de langue du clavier, sur un support réduit.
+    // La 17.0.0 les avait réduites à la première proposition de chaque rangée,
+    // pour que le remplissage dise le rang. La 19.0.0 les a rendues à toutes les
+    // puces : le rang était déjà dit par la position, la langue par rien d'autre
+    // qui se voie sans être lu. Voir addSuggestionChip().
 
     // 🟢 Vert pour Guadeloupéen/Kreyòl (fond plein, texte blanc)
     //

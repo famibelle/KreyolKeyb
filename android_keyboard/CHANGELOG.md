@@ -5,6 +5,22 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0] - 2026-09-06
+
+Version qui porte aux utilisateurs le travail de vitesse de saisie de la
+18.0.0, jamais publiée sur le magasin, et la barre de suggestions revue.
+
+### 🔧 Modifié
+
+- **Toutes les propositions d'une rangée reprennent la couleur de leur
+  langue**, vert pour le kréyòl, bleu pour le français, sans distinction entre
+  la première et les suivantes. La 17.0.0 avait réservé la couleur à la
+  première pour dire laquelle le clavier juge la plus probable ; l'ordre des
+  puces le disait déjà, de gauche à droite. Une rangée se lit à nouveau d'un
+  bloc, et la langue se voit sans qu'on ait à lire la petite étiquette KR/FR.
+- Les puces n'ayant plus de fond à distinguer, l'astuce n° 41 dit désormais que
+  le classement va de gauche à droite.
+
 ## [18.0.0] - 2026-09-06
 
 ### 🐛 Corrigé

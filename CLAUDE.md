@@ -140,9 +140,11 @@ Three implementation points are load-bearing:
 
 Measured on the emulator, monotone in both themes: light floor `#ECECEC` in a `#F5F5F5` ground, shadow from `#CECECE` over 11 px, lip `#FDFDFD`; dark floor `#0C0C0C` in `#131313`, shadow from `#070707`, lip `#363636`.
 
-**Colour encodes rank, not language, since 17.0.0.** The bar stated the language three times (row, KR/FR label, chip colour) and the rank nowhere, though ranking is the whole job of `SuggestionEngine`. Only the first chip of each row carries its language colour; every other chip shares one fill regardless of rank or row. The row and the label are therefore now load-bearing.
+**Chip colour encodes the language, and only the language.** 17.0.0 moved it onto rank instead, from a correct observation and a wrong conclusion: the bar did state the language three times (row, KR/FR label, chip colour) and the rank nowhere, but rank was already carried by **position**, left to right, as on every suggestion bar. Colour was spent restating what order said, and stopped saying the one thing nothing else said as well. 19.0.0 gave it back to every chip in a row.
 
-17.0.0 went one step too far and left those other chips bare, with no background at all. The rank read fine, but nothing said a word was tappable and the tap lost its visual confirmation. 17.0.1 gives them a key's material (`palette.touche` gradient, `palette.bordure` stroke, `palette.encre` ink) while keeping the chip's 16 dp radius: the keyboard's own vocabulary for "this is pressable", in the shape of a suggestion. The hairline dividers went with them, having existed only because two bare words read as a phrase.
+Two reasons the language belongs on the fill rather than on the label alone: a row is read as a block, three green pills saying "this is Kreyòl" without being read; and colour works in peripheral vision while the eye stays on the text being typed, where a 10 sp KR/FR label only registers if you look for it. Rank is left to position alone, which is what 17.0.0 should have concluded.
+
+This makes two intermediate states dead ends, worth knowing before reopening the question: 17.0.0 left ranks 2+ with no background at all, which read the rank fine but stopped saying a word was tappable and lost the tap's visual confirmation; 17.0.1 fixed that by giving them a key's material, at the cost of the suggestion bar borrowing the keyboard's vocabulary for something the keyboard does not do. Both are gone, and so are the hairline dividers 17.0.0 added, which existed only because two bare words read as a phrase.
 
 `KREYOL_GREEN` was darkened to `#27864D` in 17.0.0: a suggestion is read at 18 sp, which is WCAG normal text (4.5:1), and the old `#2E9E5B` gave 3.41:1 against white while the French blue gave 4.93:1.
 
