@@ -1,8 +1,56 @@
 {
   "production_version": "10.6.0",
-  "latest_version": "12.0.1",
-  "as_of": "2026-09-05",
+  "latest_version": "19.0.0",
+  "as_of": "2026-09-06",
   "features": [
+    {
+      "version": "18.0.0",
+      "emoji": "⚡",
+      "title": "Le passage aux chiffres et aux emojis ne marque plus d'arrêt",
+      "description": "Chaque appui sur « 123 », « ABC » ou la touche emoji reconstruisait le clavier entier, trente-quatre touches neuves d'un seul bloc : sur un téléphone d'entrée de gamme, l'écran se figeait quatre à cinq images, ce petit retard que l'on sentait sans savoir le nommer. Les deux pavés sont désormais montés une fois pour toutes et la bascule ne fait que changer lequel se voit, deux fois et demie plus vite.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v18.0.0",
+      "curated": true
+    },
+    {
+      "version": "17.0.0",
+      "emoji": "🔳",
+      "title": "La barre des propositions est creusée dans le clavier",
+      "description": "Elle était de plain-pied avec les touches, sans que rien ne dise qu'il s'agit d'une autre surface. Son fond passe un ton plus sombre, une ombre borde son bord haut, un liséré éclairé son bord bas, et le clavier apparaît de chaque côté pour lui faire une margelle. Les touches y regagnent leur relief, sans que le clavier prenne un point de hauteur de plus.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v17.0.0",
+      "curated": true
+    },
+    {
+      "version": "17.0.0",
+      "emoji": "🎨",
+      "title": "Le vert des propositions kréyòl se lit mieux",
+      "description": "Un mot proposé s'affiche à la taille d'un texte courant, qui demande un contraste de 4,5:1 : le blanc sur l'ancien vert n'en donnait que 3,41, quand le bleu du français était à 4,93. La langue pour laquelle ce clavier existe avait donc la proposition la moins lisible des deux. Même teinte, un ton plus bas, pour un écart que personne ne voit.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v17.0.0",
+      "curated": true
+    },
+    {
+      "version": "15.0.0",
+      "emoji": "😀",
+      "title": "Le panneau emoji s'ouvre sur ceux que vous venez d'employer",
+      "description": "Il en propose près de 1 900 en neuf catégories, quand chacun en emploie une poignée : le même envoi recommençait par la même descente dans la grille. Une catégorie « Récents » ouvre maintenant le panneau, avec les trente derniers, soit exactement ce qui tient à l'écran. Une couleur de peau choisie en appui long y revient telle quelle. Ces emojis ne quittent pas le téléphone, et un bouton des réglages vide la liste.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v15.0.0",
+      "curated": true
+    },
+    {
+      "version": "14.0.0",
+      "emoji": "👉",
+      "title": "Le curseur se déplace en glissant le doigt sur la barre d'espace",
+      "description": "Poser un curseur entre deux lettres est le geste le plus raté de la saisie sur téléphone : la cible fait deux millimètres et le doigt en couvre dix. Le doigt part de la barre d'espace, le curseur suit lettre par lettre, avec une courte vibration à chaque caractère franchi. Le geste ne s'arrête pas au bord de la touche : il court sur toute la largeur de l'écran, de quoi traverser une phrase sans lever le doigt.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v14.0.0",
+      "curated": true
+    },
+    {
+      "version": "12.1.0",
+      "emoji": "🔄",
+      "title": "L'application annonce elle-même ses nouvelles versions",
+      "description": "Elle s'en remettait au Play Store, qui ne pose aucune pastille sur l'icône quand une mise à jour attend. Le téléchargement se fait maintenant en fond et l'installation attend votre geste : rien ne barre l'écran de quelqu'un venu changer le son des touches.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v12.1.0",
+      "curated": true
+    },
     {
       "version": "12.0.1",
       "emoji": "🏷️",
