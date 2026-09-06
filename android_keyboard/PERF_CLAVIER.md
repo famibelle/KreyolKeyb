@@ -327,34 +327,71 @@ liste des catégories est déjà figée à la construction (voir la note dans
 
 ### Mesures après coup
 
-**Samsung Galaxy A21s réel**, build 17.0.1 debug avec puis sans les corrections,
-même appareil, même champ. 22 bascules `123` / `ABC` consécutives, pire frame de
-chaque (méthode de l'annexe) :
+Toutes sur le **Samsung Galaxy A21s réel**, en réinstallant successivement le
+build debug avec puis sans les corrections, même appareil, même champ.
+
+#### Bascule `123` / `ABC`
+
+22 à 24 bascules consécutives, pire frame de chaque (méthode de l'annexe).
 
 | | avant | après |
 |---|---|---|
-| médiane | ~74 ms | **~32 ms** |
-| moyenne | ~72 ms | **~32 ms** |
-| plage | 57 à 85 ms | 23 à 40 ms |
+| médiane | ~72 ms | **~25 ms** |
+| moyenne | ~72 ms | **~25 ms** |
+| plage | 57 à 89 ms | 19 à 40 ms |
 | frames sautées à 60 Hz | ~4 à 5 | **~1 à 2** |
+| dérive sur 24 bascules | légère | nulle (fuite fermée) |
 
-Soit **2,3 fois plus rapide** sur le matériel visé. La bascule passe d'un gel
-nettement perceptible à un accroc à peine visible. Une lettre reste à ~1 frame.
+Soit près de **trois fois plus rapide** sur le matériel visé. La bascule passe
+d'un gel nettement perceptible à un accroc à peine visible. Deux séries à une
+heure d'écart : la première mesurait ~74 → ~32 ms, la seconde ~72 → ~25 ms une
+fois le processus complètement en régime.
 
 Émulateur (rendu logiciel swiftshader, pire cas) pour mémoire : ~90 ms → ~40 ms,
 et surtout la dérive de la fuite disparaît (avant : 84 → 184 ms sur 20 bascules ;
 après : plate).
 
-Le plancher restant (~32 ms sur l'A21s) est la ré-inscription de la liste
+Le plancher restant (~25 ms sur l'A21s) est la ré-inscription de la liste
 d'affichage et la rastérisation des ~34 `GradientDrawable` quand le panneau
 `INVISIBLE` repasse `VISIBLE`. Le supprimer demanderait une vue clavier unique
 qui peint ses touches elle-même (à la façon d'AOSP), soit une réécriture bien
 plus lourde, non entreprise ici.
 
-Validé à la main sur A21s réel : bascule 123 aller-retour (×22), pavé numérique
-complet, panneau emoji complet, majuscule, IME stable. Sur émulateur en plus :
-popup d'accents, catégorie « Récents » à jour, frappe et suggestions. Tests
-unitaires au vert.
+#### Saisie de phrases
+
+Trois phrases kréyòl tirées de `creole_cloze.json` (auteurs guadeloupéens),
+86 caractères, tapées touche par touche à 130 ms d'intervalle, trois passes de
+chaque côté. Agrégat `gfxinfo` de la session de frappe :
+
+| | avant | après |
+|---|---|---|
+| frame médiane (p50) | ~25 ms | ~25 ms |
+| p90 | ~33 ms | ~31 ms |
+| p95 | ~37 ms | ~33 ms |
+| **p99 (pire 1 %)** | **~60 ms** | **~39 ms** |
+| **« Slow bitmap uploads »** | **5 à 6 par passe** | **0** |
+| frames en retard sur la vsync | 18 à 62 | 3 à 13 |
+| durée de frappe | ~37 s | ~37 s |
+
+La frappe lettre par lettre était déjà correcte des deux côtés : une frappe = un
+redessin de la barre de suggestions, ~1 frame, inchangé par le correctif qui
+vise le changement de mode. Ce que le correctif enlève, c'est la queue de
+distribution : le p99 tombe de ~60 à ~39 ms, et surtout les uploads GPU de
+bitmaps disparaissent. La `baseline` re-rastérise et ré-uploade les 34 calques
+logiciels des touches à chaque redessin du clavier (capitalisation automatique
+après « . », bascule Maj) ; hors Honor et Huawei le correctif ne le fait plus.
+Le jank est divisé par environ quatre. Le débit de frappe est borné par la
+cadence du test, pas par le clavier, dans les deux cas.
+
+Phrases : « An ka voyé on sms ba-w. », « Ka kouté tousa, ka louké tousa. »,
+« Nou ni èvè mori poulé zé fwomaj. ».
+
+#### Validation fonctionnelle
+
+Sur A21s réel : bascule 123 aller-retour, pavé numérique complet, panneau emoji
+complet, majuscule, frappe des trois phrases, IME stable. Sur émulateur en plus :
+popup d'accents, catégorie « Récents » à jour, suggestions. Tests unitaires au
+vert.
 
 ## Annexe : reproduire la mesure
 
@@ -396,6 +433,17 @@ Dépouillement du bloc `---PROFILEDATA---`, colonnes utiles sur cet appareil
 
 - frame = `(FrameCompleted - Vsync) / 1e6` en ms
 - latence = `(FrameCompleted - IntendedVsync) / 1e6` en ms
+
+Pour le volet **saisie de phrases**, la mesure ne porte plus sur une frame mais
+sur la session entière : `dumpsys gfxinfo $PKG reset`, taper les phrases touche
+par touche (`input tap` sur chaque lettre, ~130 ms d'intervalle, champ vidé au
+`⌫` à l'écran entre deux phrases), puis relire l'agrégat de `dumpsys gfxinfo
+$PKG` (hors `framestats`) : `Total frames rendered`, `Janky frames`, les
+centiles `50th`/`90th`/`95th`/`99th percentile`, `Number Slow bitmap uploads`,
+`Number Missed Vsync`. Le champ « Nom » des contacts met les mots en majuscule
+tout seul, on tape donc en minuscule. Le `%` de jank est trompeur sur une frappe
+scriptée (les `input tap` ne s'alignent pas sur la vsync comme un vrai doigt) :
+comparer les centiles et les compteurs, pas le pourcentage brut.
 
 Pièges rencontrés :
 
