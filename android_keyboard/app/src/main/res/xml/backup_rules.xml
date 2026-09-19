@@ -3,7 +3,7 @@
    Règles de sauvegarde (API 31 et moins ; au-delà c'est data_extraction_rules.xml).
    https://developer.android.com/guide/topics/data/autobackup
 -->
-<full-backup-content>
+<full-backup-content xmlns:tools="http://schemas.android.com/tools">
     <!-- Inclure les préférences du clavier -->
     <include domain="sharedpref" path="kreyol_keyboard_prefs.xml"/>
     <include domain="sharedpref" path="."/>
@@ -29,7 +29,13 @@
        Le carnet lui-même (kreyol_carnet_prefs) est un SharedPreferences, donc
        sauvegardé : ce sont des mots d'un dictionnaire livré, et seule une date
        d'échéance en sort. Voir la note de classe de PreuveDeFrappe.
+
+       Lint (FullBackupContent) tient pour une erreur d'exclure un chemin
+       qu'aucun <include> ne couvre, et bloque le build release. C'est
+       justement le cas voulu ici, d'où tools:ignore plutôt que le retrait.
     -->
-    <exclude domain="file" path="creole_dict_with_usage.json"/>
-    <exclude domain="file" path="carnet_vu.json"/>
+    <exclude domain="file" path="creole_dict_with_usage.json"
+        tools:ignore="FullBackupContent"/>
+    <exclude domain="file" path="carnet_vu.json"
+        tools:ignore="FullBackupContent"/>
 </full-backup-content>

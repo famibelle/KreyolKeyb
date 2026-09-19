@@ -3,7 +3,7 @@
    Sauvegarde nuage et transfert d'appareil (Android 12+).
    https://developer.android.com/about/versions/12/backup-restore#xml-changes
 -->
-<data-extraction-rules>
+<data-extraction-rules xmlns:tools="http://schemas.android.com/tools">
     <cloud-backup>
         <!-- Préférences du clavier, carnet de cartes compris -->
         <include domain="sharedpref" path="."/>
@@ -12,16 +12,21 @@
         <exclude domain="sharedpref" path="device.xml"/>
 
         <!-- Voir backup_rules.xml : ce qui a été tapé ne quitte pas
-             l'appareil, pas même vers la sauvegarde du constructeur. -->
-        <exclude domain="file" path="creole_dict_with_usage.json"/>
-        <exclude domain="file" path="carnet_vu.json"/>
+             l'appareil, pas même vers la sauvegarde du constructeur.
+             tools:ignore pour la même raison que là-bas. -->
+        <exclude domain="file" path="creole_dict_with_usage.json"
+            tools:ignore="FullBackupContent"/>
+        <exclude domain="file" path="carnet_vu.json"
+            tools:ignore="FullBackupContent"/>
     </cloud-backup>
 
     <device-transfer>
         <!-- Le carnet suit le joueur d'un téléphone à l'autre -->
         <include domain="sharedpref" path="."/>
 
-        <exclude domain="file" path="creole_dict_with_usage.json"/>
-        <exclude domain="file" path="carnet_vu.json"/>
+        <exclude domain="file" path="creole_dict_with_usage.json"
+            tools:ignore="FullBackupContent"/>
+        <exclude domain="file" path="carnet_vu.json"
+            tools:ignore="FullBackupContent"/>
     </device-transfer>
 </data-extraction-rules>
