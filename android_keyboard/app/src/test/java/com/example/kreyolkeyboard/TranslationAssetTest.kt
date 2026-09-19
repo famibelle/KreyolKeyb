@@ -131,4 +131,17 @@ class TranslationAssetTest {
             glosees >= 400
         )
     }
+
+    @Test
+    fun `chaque forme prioritaire existe dans la table avec le sens qui la commande`() {
+        val table = table()
+        for ((sens, forme) in TranslationDictionary.FORMES_PRIORITAIRES) {
+            assertTrue("$forme absente de la table", table.has(forme))
+            val glose = table.getJSONObject(forme).getString("g").lowercase()
+            assertTrue(
+                "$forme ne se glose pas « $sens » : $glose",
+                glose.split(",").any { it.trim() == sens }
+            )
+        }
+    }
 }

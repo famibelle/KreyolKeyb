@@ -43,6 +43,21 @@ object TranslationDictionary {
     private const val SOURCE_TRADUCTION = "T"
 
     /**
+     * Corrections faites à la main, qui ne dépendent pas de la table générée.
+     *
+     * L'actif est régénéré à chaque build à partir du Wiktionnaire, qui range
+     * sous « parce que » sept formes sans les hiérarchiser. Le classement à
+     * rang égal (le mot le plus court d'abord) mettait alors `pas` en tête,
+     * alors que la forme du kréyòl guadeloupéen est `padavwa`. Chercher le sens
+     * français ci-dessous place donc la forme indiquée avant les autres. Clé :
+     * le sens exact tapé ; valeur : la forme kréyòl. Les deux sont comparés
+     * sans casse ni accents, comme le reste de la recherche.
+     */
+    internal val FORMES_PRIORITAIRES: Map<String, String> = mapOf(
+        "parce que" to "padavwa"
+    )
+
+    /**
      * Une entrée de la table, telle qu'elle est livrée.
      *
      * [glose] tient sur une ligne sous le mot ; [definition] est vide quand
@@ -382,6 +397,10 @@ object TranslationDictionary {
         val requeteFrancaise = index.any { sensExact(it.third) }
         val rangFormeExacte = if (requeteFrancaise) 1 else 0
 
+        val prioritaire = FORMES_PRIORITAIRES.entries
+            .firstOrNull { AccentTolerantMatcher.normalize(it.key) == pliee }
+            ?.let { AccentTolerantMatcher.normalize(it.value) }
+
         val trouves = ArrayList<Pair<Int, Entree>>()
         for ((entree, formePliee, glosePliee) in index) {
             val rang = when {
@@ -398,7 +417,13 @@ object TranslationDictionary {
         }
 
         return trouves
-            .sortedWith(compareBy({ it.first }, { it.second.mot.length }, { it.second.mot }))
+            .sortedWith(compareBy(
+                { it.first },
+                { if (prioritaire != null &&
+                    AccentTolerantMatcher.normalize(it.second.mot) == prioritaire) 0 else 1 },
+                { it.second.mot.length },
+                { it.second.mot }
+            ))
             .take(maximum)
             .map { it.second }
     }
