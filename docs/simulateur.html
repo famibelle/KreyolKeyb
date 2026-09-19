@@ -418,6 +418,98 @@
   }
   .status-line.error { color: var(--hibiscus); }
 
+  /* ---- exemples rejoués, avec compteur de frappes ---- */
+  .demo-section {
+    margin: 26px 0 0;
+    padding: 18px;
+    text-align: center;
+  }
+  .demo-section h2 {
+    font-size: 16px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .demo-section > p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 auto 14px;
+    max-width: 460px;
+  }
+  .demo-groupe { margin: 0 0 12px; }
+  .demo-groupe-titre {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+  .demo-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 7px;
+  }
+  .demo-chip {
+    font: inherit;
+    font-size: 13.5px;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .demo-chip:hover { background: var(--sea-soft); border-color: var(--sea); }
+  .demo-chip:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+  .demo-chip[aria-pressed="true"] {
+    background: var(--sea);
+    border-color: var(--sea);
+    color: #fff;
+  }
+  .demo-section.joue .demo-chip:not([aria-pressed="true"]) { opacity: .55; }
+
+  .demo-live { text-align: center; }
+  .demo-meter {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px auto 0;
+    padding: 8px 14px;
+    max-width: 380px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--stripe);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .demo-meter strong { color: var(--ink); font-size: 17px; }
+  .demo-meter .demo-gain { color: var(--sea); font-size: 15px; font-weight: 700; }
+  .demo-meter.fini { border-color: var(--sea); }
+  .demo-meter[hidden] { display: none; } /* sinon display:flex l'emporte sur [hidden] */
+  .demo-stop {
+    display: none;
+    font: inherit;
+    font-size: 12.5px;
+    margin-top: 10px;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  body.demo-joue .demo-stop { display: inline-block; }
+  html.embed-mode .demo-section { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-chip { transition: none; }
+  }
+
   .cta-row {
     text-align: center;
     margin: 28px 0 12px;
@@ -557,7 +649,55 @@
 
       <div class="keyboard" id="keyboard"></div>
     </div>
+    <div class="demo-live">
+      <div class="demo-meter" id="demo-meter" hidden>
+        <span><strong id="demo-taps">0</strong> frappes</span>
+        <span>pour <strong id="demo-chars">0</strong> caractères</span>
+        <strong class="demo-gain" id="demo-gain"></strong>
+      </div>
+      <button type="button" class="demo-stop" id="demo-stop">■ Arrêter</button>
+    </div>
     <p class="status-line" id="status-line">Chargement du dictionnaire…</p>
+  </div>
+
+  <div class="card demo-section" id="demo-section">
+    <h2>▶ Exemples à rejouer</h2>
+    <p>Le clavier tape la phrase à ta place, lettre à lettre, et touche la
+       suggestion dès qu'elle apparaît. Le compteur ne simule rien : il
+       additionne les frappes réellement faites. Toutes les phrases viennent
+       du corpus du clavier.</p>
+    <div class="demo-groupe">
+      <span class="demo-groupe-titre">Se saluer</span>
+      <div class="demo-chips">
+        <button type="button" class="demo-chip" data-phrase="Sa ou fè ?">Sa ou fè ?</button>
+        <button type="button" class="demo-chip" data-phrase="Mèsi onpil">Mèsi onpil</button>
+        <button type="button" class="demo-chip" data-phrase="Pa ni pwoblèm !">Pa ni pwoblèm !</button>
+      </div>
+    </div>
+    <div class="demo-groupe">
+      <span class="demo-groupe-titre">Au quotidien</span>
+      <div class="demo-chips">
+        <button type="button" class="demo-chip" data-phrase="An kay òwganizé on diné">An kay òwganizé on diné</button>
+        <button type="button" class="demo-chip" data-phrase="Nou kay bengné !">Nou kay bengné !</button>
+        <button type="button" class="demo-chip" data-phrase="Kriyé vitman on doktè !">Kriyé vitman on doktè !</button>
+      </div>
+    </div>
+    <div class="demo-groupe">
+      <span class="demo-groupe-titre">Poser une question</span>
+      <div class="demo-chips">
+        <button type="button" class="demo-chip" data-phrase="Koté ki lè ou ka fèmé ?">Koté ki lè ou ka fèmé ?</button>
+        <button type="button" class="demo-chip" data-phrase="Otila nou pou kontré ?">Otila nou pou kontré ?</button>
+        <button type="button" class="demo-chip" data-phrase="Nou ka vwè pou nou ay sinéma ?">Nou ka vwè pou nou ay sinéma ?</button>
+      </div>
+    </div>
+    <div class="demo-groupe">
+      <span class="demo-groupe-titre">Typiquement kréyòl</span>
+      <div class="demo-chips">
+        <button type="button" class="demo-chip" data-phrase="Bèf pa ka di savann mèsi.">Bèf pa ka di savann mèsi.</button>
+        <button type="button" class="demo-chip" data-phrase="Yo anonsé on siklòn ka vin si Gwadloup.">Yo anonsé on siklòn ka vin si Gwadloup.</button>
+        <button type="button" class="demo-chip" data-phrase="Manjé tikrazi pli méyè pasé pa manjé hak.">Manjé tikrazi pli méyè pasé pa manjé hak.</button>
+      </div>
+    </div>
   </div>
 
   <div class="cta-row">
@@ -581,6 +721,7 @@
 
 <script src="assets/simulateur-engine.js"></script>
 <script src="assets/simulateur-ui.js"></script>
+<script src="assets/simulateur-demo.js"></script>
 <script>
 (function () {
   const statusEl = document.getElementById('status-line');
@@ -615,7 +756,8 @@
       engine.loadNgramModel(ngrams);
       engine.loadFrenchDictionary(french);
 
-      new window.KreyolKeyboardSimulator(engine, els);
+      const sim = new window.KreyolKeyboardSimulator(engine, els);
+      brancherExemples(sim);
 
       const fmt = (n) => n.toLocaleString('fr-FR');
       statusEl.textContent =
@@ -628,6 +770,51 @@
       placeholderEl.textContent = 'Simulateur indisponible pour le moment.';
       console.error(err);
     }
+  }
+
+  // ---- exemples rejoués ----
+  function brancherExemples(sim) {
+    const section = document.getElementById('demo-section');
+    if (!section) return;
+
+    const demo = new window.KreyolSimulatorDemo(sim, {
+      rowKreyol: els.rowKreyol,
+      demoSection: section,
+      compteur: document.getElementById('demo-meter'),
+      compteurFrappes: document.getElementById('demo-taps'),
+      compteurCaracteres: document.getElementById('demo-chars'),
+      compteurGain: document.getElementById('demo-gain')
+    });
+
+    const chips = Array.from(section.querySelectorAll('.demo-chip'));
+    const relacher = () => chips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    relacher();
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', async () => {
+        const dejaEnCours = chip.getAttribute('aria-pressed') === 'true' && demo.enCours;
+        relacher();
+        if (dejaEnCours) { demo.arreter(); return; }
+        chip.setAttribute('aria-pressed', 'true');
+        await demo.jouer(chip.dataset.phrase);
+        if (!demo.enCours) chip.setAttribute('aria-pressed', 'false');
+      });
+    });
+
+    document.getElementById('demo-stop')?.addEventListener('click', () => {
+      demo.arreter();
+      relacher();
+    });
+
+    // Reprendre la main à tout moment : taper ou effacer interrompt le rejeu.
+    const interrompre = () => {
+      if (!demo.enCours) return;
+      demo.arreter();
+      relacher();
+    };
+    els.keyboard.addEventListener('pointerdown', interrompre);
+    els.resetBtn?.addEventListener('click', interrompre);
+    document.addEventListener('keydown', interrompre);
   }
 
   init();
