@@ -106,6 +106,13 @@ jobs:
         echo "🧩 Génération du jeu Mokwaré..."
         python generate_crossword.py
 
+        # Mo an plas réutilise le moteur de placement de Mokwaré et consomme
+        # les deux mêmes actifs, donc il vient après lui. Sans --strict pour la
+        # même raison que les précédents ; le garde-fou de volume plus bas
+        # arrête le build si l'actif est vide ou tronqué.
+        echo "🔡 Génération du jeu Mo an plas..."
+        python generate_chassecroise.py
+
         # Les phrases d'exemple du carnet (Sanblé) consomment le dictionnaire
         # ET la table de gloses : seuls les mots glosés peuvent devenir des
         # cartes, donc seuls eux sont illustrés. Le script relit le corpus HF,
@@ -254,6 +261,35 @@ jobs:
           exit 1
         fi
 
+        # Mo an plas se garde comme Mokwaré, dont il partage le schéma d'actif,
+        # avec un invariant de plus que jq ne sait pas voir : chaque grille ne
+        # doit avoir qu'une seule solution. Une grille qui en a deux s'affiche
+        # normalement et refuse une réponse juste ; c'est ChasseCroiseAssetTest
+        # qui la rattrape, grille par grille.
+        PLACER=$(jq '.grilles | length' android_keyboard/app/src/main/assets/creole_chassecroise.json)
+        echo "🔡 Grilles de Mo an plas : $PLACER"
+        # 180 grilles à la génération du 19 septembre 2026, 60 par niveau. Le
+        # plancher est plus haut que celui de Mokwaré parce que les mots étant
+        # affichés, la difficulté ne tient qu'à la géométrie : aucun niveau ne
+        # se tarit sur la rareté du vocabulaire.
+        if [ "$PLACER" -lt 150 ]; then
+          echo "::error::Seulement $PLACER grilles dans creole_chassecroise.json. Lancez Dictionnaires/generate_chassecroise.py"
+          exit 1
+        fi
+
+        for NIVEAU in 1 2 3; do
+          COMPTE=$(jq --argjson n "$NIVEAU" '[.grilles[] | select(.l == $n)] | length' android_keyboard/app/src/main/assets/creole_chassecroise.json)
+          if [ "$COMPTE" -lt 50 ]; then
+            echo "::error::Difficulté $NIVEAU : $COMPTE grilles seulement dans creole_chassecroise.json."
+            exit 1
+          fi
+        done
+
+        if ! jq -e '.attribution | length >= 3' android_keyboard/app/src/main/assets/creole_chassecroise.json > /dev/null; then
+          echo "::error::creole_chassecroise.json ne porte pas l'attribution de ses sources."
+          exit 1
+        fi
+
         # Le carnet, lui, dégrade en silence : sans phrases, les cartes se
         # retournent sur leur glose seule et la révision continue de tourner.
         # Rien ne le signalerait, d'où le plancher. 479 mots illustrés à la
@@ -282,11 +318,13 @@ jobs:
         CLOZE_COUNT=$(jq '.items | length' android_keyboard/app/src/main/assets/creole_cloze.json)
         TRAD_COUNT=$(jq '.translations | length' android_keyboard/app/src/main/assets/creole_translations.json)
         CROSSWORD_COUNT=$(jq '.grilles | length' android_keyboard/app/src/main/assets/creole_crossword.json)
+        PLACER_COUNT=$(jq '.grilles | length' android_keyboard/app/src/main/assets/creole_chassecroise.json)
         echo "   - Mots: $DICT_COUNT"
         echo "   - N-grams: $NGRAMS_COUNT"
         echo "   - Phrases à trous: $CLOZE_COUNT"
         echo "   - Formes traduites: $TRAD_COUNT"
         echo "   - Grilles de mots croisés: $CROSSWORD_COUNT"
+        echo "   - Grilles de chassé-croisé: $PLACER_COUNT"
         echo "� Fichiers disponibles pour tous les jobs de build"
 
     # 🔧 FIX CRITIQUE : sans cet upload, chaque job de build ci-dessous fait son
@@ -304,6 +342,7 @@ jobs:
           android_keyboard/app/src/main/assets/creole_cloze.json
           android_keyboard/app/src/main/assets/creole_translations.json
           android_keyboard/app/src/main/assets/creole_crossword.json
+          android_keyboard/app/src/main/assets/creole_chassecroise.json
         retention-days: 1
 
   # 🔧 ÉTAPE 2A : BUILD DEBUG APK

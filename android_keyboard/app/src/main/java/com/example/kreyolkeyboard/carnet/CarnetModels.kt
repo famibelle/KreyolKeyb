@@ -31,7 +31,8 @@ enum class JeuCarte(
     MOTS_MELANGES("mx", "Mots Mélangés", "🔤", 0xFF1976D2.toInt()),
     MO_AN_KARENAJ("mk", "Mo an Karénaj", "🟩", 0xFF4CAF50.toInt()),
     FRAZ_A_TWOU("ft", "Fraz a twou", "📝", 0xFFFF8C00.toInt()),
-    MOKWARE("mw", "Mokwaré", "🧩", 0xFFC2185B.toInt());
+    MOKWARE("mw", "Mokwaré", "🧩", 0xFFC2185B.toInt()),
+    MO_AN_PLAS("mp", "Mo an plas", "🔡", 0xFF00796B.toInt());
 
     companion object {
         private val PAR_ID = values().associateBy { it.id }

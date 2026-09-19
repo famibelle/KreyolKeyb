@@ -1222,6 +1222,13 @@ object Ornement {
                     carre(-6f + i * 4f, -6f + j * 4f, 4f, (i == 0 && j == 0) || (i == 2 && j == 1) || (i == 1 && j == 2))
                 }
             }
+            // Des mots placés en croix : la case commune pleine.
+            JeuCarte.MO_AN_PLAS -> {
+                p.strokeWidth = 1f
+                for (i in -1..1) carre(-1.9f + i * 4.2f, -1.9f, 3.8f, i == 0)
+                carre(-1.9f, -1.9f - 4.2f, 3.8f, false)
+                carre(-1.9f, -1.9f + 4.2f, 3.8f, false)
+            }
         }
         p.style = Paint.Style.FILL
     }
