@@ -166,6 +166,11 @@ claviers standards.
   une carte à collectionner, avec son sens en français et une phrase
   d'auteur guadeloupéen, puis revient en révision à intervalles réguliers
   (voir *Apprendre en jouant*, plus bas)
+- **Le créole entre dans le clavier de l'iPhone** : avec iOS 27, Apple ajoute
+  le créole guadeloupéen et le créole martiniquais à ses claviers
+  (« Kréyòl Gwadloup »), sans correction automatique ni saisie prédictive.
+  L'occasion de comparer ce que fait un clavier généraliste et ce que fait un
+  clavier dédié à la langue (voir *Face aux autres claviers*, plus haut)
 - **Open source citoyen** : un projet indépendant, auditable, sans modèle
   publicitaire
 - **Les racines du kréyòl** : en février 2026, des chercheurs créolistes
@@ -190,11 +195,12 @@ les réseaux sociaux de centaines de milliers de créolophones.
 
 ## Le problème
 
-Les claviers standards (Gboard, Samsung...) ne connaissent pas le créole
-guadeloupéen : ils soulignent chaque mot en rouge, « corrigent » le kréyòl
-vers le français et découragent celles et ceux qui veulent écrire dans leur
-langue. Résultat : le créole recule dans les usages numériques quotidiens :
-SMS, WhatsApp, réseaux sociaux.
+Les claviers généralistes ont longtemps ignoré le créole guadeloupéen.
+Gboard en propose une disposition depuis novembre 2018, et Apple l'ajoute
+avec iOS 27 en septembre 2026, sans correction automatique ni saisie
+prédictive d'après sa page officielle. Une disposition seule aide peu à
+écrire vite : le créole recule dans les usages numériques quotidiens, SMS,
+WhatsApp, réseaux sociaux, et l'aide à la frappe reste à construire.
 
 ## La réponse
 
@@ -210,6 +216,28 @@ Un clavier qui **travaille pour le kréyòl au lieu de le combattre** :
   collectionner** (voir *Apprendre en jouant*, plus bas), plus une
   **progression gamifiée** en 7 niveaux culturels, de « Pipirit » à « Potomitan »
 - **100 % local, zéro collecte de données**, code source public (licence MIT)
+
+## Face aux autres claviers
+
+Trois voies existent aujourd'hui pour écrire en créole guadeloupéen sur un
+téléphone. Le tableau ne retient que ce que nous avons pu constater ; une case
+« non vérifié » signale ce que nous n'avons pas pu contrôler, pas une absence.
+
+| | Klavyé Kréyòl | Gboard | Clavier Apple |
+|---|---|---|---|
+| Langue proposée | Oui, sa seule raison d'être | Oui, depuis novembre 2018 (Android) | Oui, depuis iOS 27 (septembre 2026) |
+| Suggestions en créole | Oui | non vérifié | Non, selon la page officielle d'Apple |
+| Prédiction du mot suivant | Oui | non vérifié | Non, selon la page officielle d'Apple |
+| Créole et français ensemble | Oui, sans réglage | Plusieurs langues, à activer | Non pour cette langue |
+| Dictionnaire consultable | Oui, dans le dépôt public | Non | Non |
+| Accès à Internet | Aucune permission | Permission déclarée | Frappe embarquée |
+| Jeux de vocabulaire | Oui, six jeux et un carnet | Non | Non |
+| Prix | Gratuit, sans publicité | Gratuit | Inclus dans le système |
+
+Gboard couvre une surface fonctionnelle plus large (saisie glissée, dictée,
+traduction, presse-papiers), et le clavier d'Apple s'intègre au système sans
+rien à installer. Le détail, les sources et les limites de chaque case sont
+dans le [comparatif complet](comparatif.html).
 
 ## Un usage en classe de langue vivante régionale
 
@@ -325,6 +353,7 @@ Les suggestions s'appuient sur les œuvres de :
 | Données embarquées | Fréquences et probabilités de succession, aucun texte d'auteur |
 | Dictionnaire | 5 284 mots kréyòl + 662 mots français (fallback bilingue) |
 | Modèle de prédiction | 4 601 mots-pivots (n-grams contextuels) |
+| Comparatif | [Face à Gboard et au clavier Apple](comparatif.html), avec sources et cases « non vérifié » |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
 | Utilisateurs | <span id="pk-users">3 223</span> installations au <span id="pk-date">23 août 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
@@ -422,7 +451,9 @@ conditions d'utilisation.
 - [Le corpus en chiffres](corpus.html) : composition, sources, méthode de calcul
 - [Notes techniques](notes_techniques.html) : architecture, moteur de
   suggestions, protocoles de test
-- [Comparatif avec Gboard](comparatif-gboard.html) : mesures de performance et
+- [Comparatif des claviers](comparatif.html) : Klavyé Kréyòl, Gboard et
+  clavier Apple (iOS 27), avec les sources
+- [Mesures face à Gboard](comparatif-gboard.html) : mesures de performance et
   inventaire de fonctions
 - [Fiche d'usage en ergothérapie](ergotherapie.html) : intérêt pour les
   personnes ayant des difficultés motrices de saisie

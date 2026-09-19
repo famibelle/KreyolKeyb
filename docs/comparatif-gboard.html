@@ -53,6 +53,7 @@ td.v,th.v{width:26%;font-variant-numeric:tabular-nums;}
 .yes{color:var(--sea);font-weight:700;}
 .no{color:var(--ink-soft);}
 .win{font-weight:700;}
+.nv{color:var(--ink-soft);font-style:italic;}
 
 ul.plain{list-style:none;padding:0;margin:0 0 12px;}
 ul.plain li{position:relative;padding-left:20px;margin-bottom:9px;}
@@ -140,6 +141,20 @@ code{font-family:var(--mono);font-size:.93em;}
     dans le code source du projet, qui est public.
   </p>
 </header>
+
+<div class="card note">
+  <h2>Mise à jour du 19 septembre 2026</h2>
+  <p class="muted">
+    Les mesures de vitesse plus bas datent d'août 2026 et n'ont pas été
+    refaites : elles portent sur la version 10.11.4 et sur Gboard en
+    disposition <strong>française</strong>. Or Gboard propose aussi, depuis
+    novembre 2018, une disposition « créole guadeloupéen », que ces mesures
+    n'ont pas testée. Les cases qui en dépendent sont donc marquées « non
+    vérifié ». L'inventaire des fonctions a été remis à jour sur la version
+    22.0.2. Pour la comparaison élargie au clavier d'Apple, voir
+    <a href="comparatif.html">Klavyé Kréyòl, Gboard ou clavier Apple</a>.
+  </p>
+</div>
 
 <div class="card note">
   <h2>Conditions de mesure</h2>
@@ -292,12 +307,12 @@ code{font-family:var(--mono);font-size:.93em;}
       <tbody>
         <tr><td>Majuscule simple et verrouillage</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Caractères accentués en appui long</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Touches dédiées aux lettres du créole (ò, é, è, tiret)</td><td class="v yes">oui</td><td class="v no">non</td></tr>
+        <tr><td>Touches dédiées aux lettres du créole (é, è, tiret ; le ò reste en appui long sur o)</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
         <tr><td>Aperçu de la lettre au-dessus du doigt</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Effacement continu en maintenant la touche</td><td class="v">par mots</td><td class="v">par lettres puis par mots</td></tr>
         <tr><td>Saisie par glissement du doigt</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Dictée vocale, écriture manuscrite</td><td class="v no">non</td><td class="v yes">oui</td></tr>
-        <tr><td>Panneau emoji</td><td class="v">1 900 emoji par catégories, teintes de peau</td><td class="v">avec recherche et récents</td></tr>
+        <tr><td>Panneau emoji</td><td class="v">1 900 emoji par catégories, teintes de peau, récents</td><td class="v">avec recherche et récents</td></tr>
         <tr><td>Effacement propre des emoji composés</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
       </tbody>
     </table>
@@ -311,10 +326,10 @@ code{font-family:var(--mono);font-size:.93em;}
       </thead>
       <tbody>
         <tr><td>Propositions dès la première lettre</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Propositions en créole et en français ensemble</td><td class="v yes">oui</td><td class="v no">non</td></tr>
-        <tr><td>Prédiction du mot suivant en créole</td><td class="v yes">oui</td><td class="v no">non</td></tr>
+        <tr><td>Propositions en créole et en français ensemble</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
+        <tr><td>Prédiction du mot suivant en créole</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
         <tr><td>Tolérance aux accents oubliés et aux fautes de frappe</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Correcteur orthographique créole dans les autres applications</td><td class="v yes">oui</td><td class="v no">non</td></tr>
+        <tr><td>Correcteur orthographique créole dans les autres applications</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
         <tr><td>Correction automatique du mot validé</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Apprentissage des mots nouveaux que vous tapez</td><td class="v no">non</td><td class="v yes">oui</td></tr>
       </tbody>
@@ -329,7 +344,7 @@ code{font-family:var(--mono);font-size:.93em;}
       </thead>
       <tbody>
         <tr><td>Reprise d'un mot déjà écrit, curseur au milieu</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Déplacement du curseur en glissant sur la barre d'espace</td><td class="v no">non</td><td class="v yes">oui</td></tr>
+        <tr><td>Déplacement du curseur en glissant sur la barre d'espace</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Presse-papiers avec historique</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Majuscule automatique en début de phrase</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Respect du type de champ demandé par l'application</td><td class="v no">non</td><td class="v yes">oui</td></tr>
@@ -346,10 +361,10 @@ code{font-family:var(--mono);font-size:.93em;}
         <tr><th>Fonction</th><th class="v">Klavyé Kréyòl</th><th class="v">Gboard</th></tr>
       </thead>
       <tbody>
-        <tr><td>Thème sombre</td><td class="v no">non</td><td class="v yes">oui</td></tr>
+        <tr><td>Thème sombre</td><td class="v yes">oui, ou celui du système</td><td class="v yes">oui</td></tr>
         <tr><td>Hauteur du clavier réglable</td><td class="v no">non</td><td class="v yes">oui</td></tr>
-        <tr><td>Son de touche</td><td class="v no">non</td><td class="v yes">oui</td></tr>
-        <tr><td>Vibration réglable</td><td class="v no">non</td><td class="v yes">oui</td></tr>
+        <tr><td>Son de touche</td><td class="v yes">oui, interrupteur</td><td class="v yes">oui</td></tr>
+        <tr><td>Vibration réglable</td><td class="v yes">oui, interrupteur</td><td class="v yes">oui</td></tr>
         <tr><td>Mode une main, clavier flottant</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Adaptation automatique au format paysage</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Aucune permission d'accès à Internet</td><td class="v yes">oui</td><td class="v no">non</td></tr>
@@ -359,16 +374,16 @@ code{font-family:var(--mono);font-size:.93em;}
 </section>
 
 <section>
-  <h2>Ce que Gboard ne peut pas faire</h2>
+  <h2>Ce que Klavyé Kréyòl propose</h2>
   <p>
-    Quatre choses ne dépendent pas de la puissance de calcul mais de la langue
-    elle-même, et aucun clavier généraliste ne les propose pour le créole
-    guadeloupéen.
+    Quatre choses tiennent à la langue plus qu'à la puissance de calcul. Nous
+    ne les avons pas constatées chez Gboard, mais nous ne pouvons pas affirmer
+    qu'elles y manquent : sa disposition créole n'a pas été testée.
   </p>
   <ul class="plain">
-    <li><strong>Proposer le mot suivant en créole.</strong> Le clavier embarque un modèle construit sur un corpus de textes créoles, avec 8 852 contextes de deux mots.</li>
+    <li><strong>Proposer le mot suivant en créole.</strong> Le clavier embarque un modèle construit sur un corpus de textes créoles, avec près de 8 850 contextes de deux et trois mots, et un dictionnaire de plus de 5 200 formes que l'on peut ouvrir dans le dépôt.</li>
     <li><strong>Cesser de souligner le créole comme une faute.</strong> Le correcteur orthographique fourni s'applique dans toutes les applications du téléphone, pas seulement dans le clavier.</li>
-    <li><strong>Écrire les accents du créole sans détour</strong>, le ò, le é et le è étant directement sur la disposition plutôt qu'en appui long.</li>
+    <li><strong>Écrire les accents du créole sans détour</strong>, le é et le è étant directement sur la disposition plutôt qu'en appui long.</li>
     <li><strong>Rester entièrement hors ligne.</strong> Le dictionnaire est embarqué dans l'application, qui ne demande aucune permission d'accès à Internet : rien de ce que vous écrivez ne peut techniquement quitter le téléphone.</li>
   </ul>
 </section>
@@ -377,13 +392,13 @@ code{font-family:var(--mono);font-size:.93em;}
   <h2>Ce qui manque encore</h2>
   <p>
     Le tableau ci-dessus se lit dans les deux sens. Les manques les plus
-    demandés sont connus et assumés comme chantiers :
+    demandés sont connus et assumés comme chantiers (le thème sombre, le son et la
+    vibration réglables, qui figuraient dans cette liste en août, sont livrés) :
   </p>
   <ul class="plain caution">
-    <li>Le thème sombre, absent alors que la moitié des messages s'écrivent le soir.</li>
     <li>L'apprentissage des mots nouveaux : prénoms, lieux, mots de famille ne sont pas mémorisés.</li>
     <li>La saisie par glissement et la dictée vocale, qui demandent l'une et l'autre un travail important.</li>
-    <li>Les réglages de confort : hauteur du clavier, vibration, son des touches.</li>
+    <li>La hauteur du clavier réglable, le mode une main, le presse-papiers.</li>
   </ul>
   <p class="muted">
     Le projet est ouvert et son code est public. Les remarques d'usage sont la
@@ -427,13 +442,14 @@ adb shell dumpsys meminfo &lt;paquet&gt;</pre>
   <p>
     Klavyé Kréyòl est plus rapide à revenir à l'écran, consomme deux fois moins
     de calcul par frappe et trois fois moins de mémoire. Il est à égalité sur la
-    réactivité au quotidien. Il sait faire pour le créole ce qu'aucun clavier
-    généraliste ne fait, et il lui manque encore plusieurs conforts que Gboard
+    réactivité au quotidien. Il sait faire pour le créole ce que nous n'avons
+    pas constaté chez Gboard, et il lui manque encore plusieurs conforts que Gboard
     offre depuis longtemps.
   </p>
   <p class="muted">
     Mesures du 17 août 2026, Klavyé Kréyòl Karukera 10.11.4 face à Gboard
-    12.4.05 sur Android 14.
+    12.4.05 sur Android 14. Inventaire des fonctions mis à jour le 19 septembre
+    2026 sur la version 22.0.2.
   </p>
 </section>
 
