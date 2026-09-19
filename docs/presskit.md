@@ -417,11 +417,17 @@ Les suggestions s'appuient sur les œuvres de :
 
 ### Le clavier et l'application
 
-Une phrase écrite de bout en bout dans une conversation SMS (« An kay òwganizé on diné ») : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. Animation de 14 secondes, réalisée sur l'application 22.0.2 (septembre 2026), numéro de destinataire fictif.
+Deux phrases écrites de bout en bout dans une conversation SMS. La première, « An kay òwganizé on diné » : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. La seconde, « An kréyòl nou ka palé, an kréyòl nou ka maké », l'accroche du projet : les suggestions touchées pour *kréyòl*, *nou*, *ka* et *maké*, puis l'envoi. Animations de 14 et 19 secondes, réalisées sur l'application 22.0.2 (septembre 2026), numéros de destinataire fictifs.
 
-<div align="center" style="margin: 1.5em 0;">
-  <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" style="width: 30%; min-width: 200px; border-radius: 8px;">
-  <p><small>Une phrase en kréyòl écrite et envoyée par SMS</small></p>
+<div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" style="width: 100%; border-radius: 8px;">
+    <p><small>Une phrase avec ses accents, envoyée par SMS</small></p>
+  </div>
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_an_kreyol_nou_ka_pale.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » écrit dans un SMS, avec les suggestions kréyòl touchées pour kréyòl, nou, ka et maké, puis envoyé" style="width: 100%; border-radius: 8px;">
+    <p><small>L'accroche du projet, écrite avec les suggestions</small></p>
+  </div>
 </div>
 
 Captures d'écran de chaque section de l'application, version 22.0.2 (septembre 2026) :
@@ -465,11 +471,11 @@ Captures d'écran de chaque section de l'application, version 22.0.2 (septembre 
   </div>
 </div>
 
-**[Télécharger le kit presse (ZIP, 7,9 Mo)](presse/kit-presse.zip)** :
-les quinze captures ci-dessus en pleine résolution, les quatre animations et
+**[Télécharger le kit presse (ZIP, 8,1 Mo)](presse/kit-presse.zip)** :
+les quinze captures ci-dessus en pleine résolution, les cinq animations et
 le logo, avec leurs conditions d'utilisation.
 
-- [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
+- [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif) et [l'accroche « An kréyòl nou ka palé, an kréyòl nou ka maké »](Screenshots/gif_an_kreyol_nou_ka_pale.gif)
 - [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
 - [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)

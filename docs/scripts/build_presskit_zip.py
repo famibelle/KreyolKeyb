@@ -6,7 +6,7 @@ archive, l'ouvre, et prend ce dont il a besoin. Ce script produit
 docs/presse/kit-presse.zip à partir des visuels déjà présents dans le dépôt,
 sans les dupliquer dans les sources.
 
-Les quatre animations GIF sont incluses depuis que « Klavyé An Aktion » a été
+Les cinq animations GIF sont incluses depuis que « Klavyé An Aktion » a été
 ramenée de 25 à 3 Mo (360 px de large, 7 images par seconde). Les extraits
 vidéo des reportages restent exclus : ils pèsent à eux seuls plus de
 cinquante mégaoctets, ce qui transformerait l'archive en obstacle. Ils restent
@@ -47,6 +47,7 @@ ANIMATIONS = {
     "Screenshots/gif_eventail_cartes.gif":     "animations/02-cartes-en-eventail.gif",
     "Screenshots/gif_boite_leitner.gif":       "animations/03-revision-sonje.gif",
     "Screenshots/KlavyéAnAktion.gif":          "animations/04-conversation-sms-au-clavier-kreyol.gif",
+    "Screenshots/gif_an_kreyol_nou_ka_pale.gif": "animations/05-accroche-an-kreyol-nou-ka-pale.gif",
 }
 
 LISEZMOI = """KIT PRESSE - Klavye Kreyol Karukera
@@ -54,13 +55,14 @@ Clavier Android pour le creole guadeloupeen.
 
 CONTENU
   captures/     Captures d'ecran de l'application
-  animations/   Quatre animations GIF (une phrase ecrite et envoyee par SMS,
-                cartes en eventail, revision Sonje, conversation SMS)
+  animations/   Cinq animations GIF (une phrase ecrite et envoyee par SMS,
+                cartes en eventail, revision Sonje, conversation SMS,
+                accroche du projet ecrite avec les suggestions)
   logo/         Logo Potomitan(TM)
 
   L'animation 04 date d'une version anterieure de l'application : le o accent
   grave y a une touche dediee, alors qu'il se tape aujourd'hui par appui long
-  sur la touche o. Les animations 01 a 03 montrent la version actuelle.
+  sur la touche o. Les animations 01 a 03 et 05 montrent la version actuelle.
 
 CONDITIONS D'UTILISATION
   Ces visuels sont mis a disposition des redactions pour illustrer un sujet
