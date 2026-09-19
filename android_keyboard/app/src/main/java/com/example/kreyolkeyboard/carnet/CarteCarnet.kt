@@ -219,11 +219,12 @@ object CarteCarnet {
         // qui demandait un emplacement calculé.
         // La police monte avec la rareté, comme la matière de la plaque : voir
         // [PolicesCarnet].
+        // Gravé dans la plaque, pas imprimé dessus : voir [MotGrave].
         carte.posee(
-            ligne(
-                context, c.carte.forme, taille = 21f * PolicesCarnet.echelle(c.rarete),
-                couleur = ENCRE, gras = true
-            ).apply { setTypeface(PolicesCarnet.pour(context, c.rarete), Typeface.NORMAL) },
+            MotGrave(context, c.carte.forme, Ornement.support(c.rarete)).apply {
+                setTypeface(PolicesCarnet.pour(context, c.rarete), Typeface.NORMAL)
+                tag = floatArrayOf(21f * PolicesCarnet.echelle(c.rarete), 0f)
+            },
             Ornement.PLAQUE
         )
 

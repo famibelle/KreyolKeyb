@@ -5,6 +5,29 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Non publié]
+
+### 🔒 Confidentialité
+
+- **Plus aucune sauvegarde dans le cloud.** Jusqu'ici la sauvegarde Android
+  emportait les fichiers de préférences en entier, donc le carnet, la progression
+  et les emojis récents, alors que la politique de confidentialité dit que rien ne
+  quitte l'appareil. La sauvegarde est désormais fermée, et un test le vérifie. Le
+  carnet suit toujours le joueur quand il change de téléphone par câble ou Wi-Fi
+  direct, sans passer par un serveur.
+
+### ✨ Ajouté
+
+- **La carte vibre sur tous les téléphones.** Sur les vibreurs simples (Galaxy
+  A21s), la vibration d'une carte qu'on parcourt du doigt ne se déclenchait pas :
+  elle est maintenant assurée par une impulsion brève. Une grande marche de relief
+  dure plus longtemps (40 à 80 ms) pour se sentir.
+- **Le relief se lit de haut en bas.** En plus du sens horizontal, le doigt suit
+  le relief d'une carte en colonne, et la plaque du mot est plus épaisse.
+- **Une plaque rivetée, un mot gravé.** La plaque du mot porte quatre rivets qui
+  montent avec la rareté, le mot y est gravé, et une ferronnerie orne l'angle haut
+  droit des cartes rares.
+
 ## [22.1.0] - 2026-09-19
 
 ### ✨ Ajouté

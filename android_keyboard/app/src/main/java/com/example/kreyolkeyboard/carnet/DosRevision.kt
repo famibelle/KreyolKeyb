@@ -160,6 +160,36 @@ class DosRevision(context: Context) : Carton(context) {
         return Ornement.crans(brut)
     }
 
+    /**
+     * La même gravure parcourue de haut en bas : le haut et le bas du carton,
+     * et les obliques là où elles coupent l'abscisse [x]. Même règle que la
+     * rangée, et pour la même raison : rien ici ne dépend du mot.
+     */
+    override fun aretesColonne(x: Float): Ornement.Relief {
+        val h = Ornement.HAUTEUR
+        val brut = ArrayList<Ornement.Arete>(12)
+        brut.add(Ornement.Arete(Ornement.BORD_CARTE, Ornement.Z_FACE))
+        brut.add(Ornement.Arete(h - Ornement.BORD_CARTE, -Ornement.Z_FACE))
+        obliqueHauteEnColonne(brut, x, ANGLE_HAUT, ANGLE_BAS)
+        obliqueHauteEnColonne(brut, x, ANGLE_HAUT - RETRAIT_X, ANGLE_BAS - RETRAIT_Y)
+        obliqueBasseEnColonne(brut, x, ANGLE_HAUT, ANGLE_BAS)
+        obliqueBasseEnColonne(brut, x, ANGLE_HAUT - RETRAIT_X, ANGLE_BAS - RETRAIT_Y)
+        return Ornement.crans(brut)
+    }
+
+    /** Où l'oblique de l'angle haut-gauche coupe l'abscisse [x]. */
+    private fun obliqueHauteEnColonne(brut: MutableList<Ornement.Arete>, x: Float, x0: Float, y0: Float) {
+        if (x < 0f || x >= x0) return
+        filet(brut, y0 * (1f - x / x0))
+    }
+
+    /** La même, pour l'angle bas-droit. */
+    private fun obliqueBasseEnColonne(brut: MutableList<Ornement.Arete>, x: Float, x0: Float, y0: Float) {
+        val depuisLaDroite = Ornement.LARGEUR - x
+        if (depuisLaDroite < 0f || depuisLaDroite >= x0) return
+        filet(brut, Ornement.HAUTEUR - y0 * (1f - depuisLaDroite / x0))
+    }
+
     /** Un filet imprimé : une montée et sa descente, fondues en accroc. */
     private fun filet(brut: MutableList<Ornement.Arete>, x: Float) {
         brut.add(Ornement.Arete(x - 1f, Z_FILET))
