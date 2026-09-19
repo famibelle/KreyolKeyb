@@ -77,10 +77,11 @@ Article dédié : [« Si le créole guadeloupéen n'existe pas, petit à petit, 
 ## 📱 Aperçu
 
 <div align="center">
+   <img src="docs/Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="25%">
    <img src="Screenshots/KlavyéKreyol_x2.gif" alt="Clavier kréyòl Karukera en Action" width="25%">
 </div>
 
-*Clavier créole avec suggestions basés sur les textes littéraires fondateurs du kréyòl*
+*Clavier créole avec suggestions basés sur les textes littéraires fondateurs du kréyòl. À gauche : « An kay òwganizé on diné » écrit et envoyé par SMS, avec le `ò` en appui long et la suggestion `òwganizé`.*
 
 <div align="center">
    <img src="KreyolKeybPlayStore/graphics/screenshots-phone/Screenshot_clavier_suggestions_kreyol.png" alt="Suggestions Kréyòl et Français en temps réel" width="23%">
