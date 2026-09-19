@@ -302,6 +302,23 @@ la répétition espacée, jusqu'à être considérées comme acquises. Un mot qu
 l'on a tapé avec le clavier depuis la dernière révision avance de lui-même
 d'une case : le clavier fait office d'examen.
 
+Les cartes sont rangées dans une boîte en bois à six casiers, un par
+intervalle. Toucher un casier déploie ses cartes en éventail, qu'on fait
+défiler du doigt ; toucher « Réviser » lance la séance : chaque carte montre
+son mot, se retourne pour donner son sens et sa phrase d'auteur, et se range
+selon la réponse (« Je savais » ou « Pas su »).
+
+<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_eventail_cartes.gif" alt="Animation : un casier de la boîte s'ouvre et ses huit cartes se déploient en éventail, défilent sous le doigt (kouté, pyé, rivyè, solèy), puis la carte pyébwa s'ouvre en grand : arbre, avec une phrase du corpus" style="width: 100%; border-radius: 8px;">
+    <p><small>Un casier de la boîte : les cartes en éventail</small></p>
+  </div>
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_boite_leitner.gif" alt="Animation : la révision Sonjé. Cinq cartes (pyébwa, solèy, kouté, rivyè, chanjé) montrent leur mot, se retournent pour donner leur sens, puis se rangent selon « Je savais » ou « Pas su » ; la boîte se met à jour" style="width: 100%; border-radius: 8px;">
+    <p><small>La révision Sonjé, carte après carte</small></p>
+  </div>
+</div>
+
 *Sanblé* (rassembler) et *Sonjé* (se souvenir) sont tirés du dictionnaire
 embarqué. Comme le reste de l'application, les jeux et le carnet
 fonctionnent hors connexion et sans compte : la collection reste sur le
@@ -449,6 +466,7 @@ les quinze captures ci-dessus en pleine résolution et le logo, avec leurs
 conditions d'utilisation.
 
 - [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
+- [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
 - [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)
 - [Reportage Canal 10](Medias/TV_Canal10.mp4) et [reportage Guadeloupe la 1ère](Medias/TV_Guadeloupe1ère.mp4) (extraits vidéo, voir aussi ci-dessus)

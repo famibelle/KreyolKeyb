@@ -97,15 +97,33 @@ CURATED: dict[str, list[dict[str, str]]] = {
                 "carte d'une boîte, un oubli la ramène au début. Pas plus de "
                 "douze cartes par séance. Un mot que vous avez écrit au "
                 "clavier depuis la dernière révision avance tout seul, sans "
-                "question : le clavier fait office d'examen."
+                "question : le clavier fait office d'examen. Dans la boîte, "
+                "un casier se déploie en éventail : on fait défiler ses "
+                "cartes du doigt, et toucher l'une d'elles l'ouvre en grand."
             ),
-            "image": "Screenshots/nouveaute_22.0.2_sonje.png",
+            "image": "Screenshots/gif_boite_leitner.gif",
             "image_alt": (
-                "Les boîtes de révision de Sonjé, en bois : neuf cartes dans "
-                "la boîte « 1 jour », cinq dans « 3 jours », les boîtes "
-                "« 1 sem. », « 2 sem. », « 1 mois », « 3 mois » et « acquis » "
-                "encore vides. En bas, un bouton « Réviser 9 cartes »."
+                "Animation : la révision Sonjé. Une carte montre son mot "
+                "seul, puis se retourne et donne son sens en français avec "
+                "une phrase du corpus, sous deux boutons, « Pas su » et « Je "
+                "savais ». Cinq cartes défilent : pyébwa, arbre ; solèy, "
+                "soleil ; kouté, écouter ; rivyè, rivière ; chanjé, changer. "
+                "À la fin, les boîtes en bois sont revenues à l'écran avec "
+                "leurs cartes redistribuées et un bouton « Réviser 7 "
+                "cartes »."
             ),
+            "images_suite": [
+                {
+                    "image": "Screenshots/gif_eventail_cartes.gif",
+                    "image_alt": (
+                        "Animation : le casier « 1 jour » de la boîte "
+                        "s'ouvre et ses huit cartes se déploient en éventail. "
+                        "Elles défilent sous le doigt (kouté, pyé, rivyè, "
+                        "solèy), puis la carte pyébwa s'ouvre en grand : "
+                        "arbre, avec une phrase du corpus."
+                    ),
+                },
+            ],
         },
     ],
     "20.0.0": [
@@ -901,7 +919,9 @@ def build_features(
                 # Illustration facultative : la page ne l'affiche que si la
                 # clé est présente, une nouveauté sans capture reste donc
                 # rendue comme avant.
-                for cle in ("image", "image_alt"):
+                # `images_suite` : illustrations supplémentaires, affichées
+                # sous la première (une entrée qui montre deux gestes).
+                for cle in ("image", "image_alt", "images_suite"):
                     if item.get(cle):
                         feature[cle] = item[cle]
                 features.append(feature)
