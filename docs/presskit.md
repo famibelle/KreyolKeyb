@@ -425,7 +425,7 @@ Deux phrases écrites de bout en bout dans une conversation SMS. La première, �
     <p><small>Une phrase avec ses accents, envoyée par SMS</small></p>
   </div>
   <div style="width: 30%; min-width: 200px;">
-    <img src="Screenshots/gif_an_kreyol_nou_ka_pale.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » écrit dans un SMS, avec les suggestions kréyòl touchées pour kréyòl, nou, ka et maké, puis envoyé" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » écrit dans un SMS, avec les suggestions kréyòl touchées pour kréyòl, nou, ka et maké, puis envoyé" style="width: 100%; border-radius: 8px;">
     <p><small>L'accroche du projet, écrite avec les suggestions</small></p>
   </div>
 </div>
@@ -471,13 +471,13 @@ Captures d'écran de chaque section de l'application, version 22.0.2 (septembre 
   </div>
 </div>
 
-**[Télécharger le kit presse (ZIP, 8,1 Mo)](presse/kit-presse.zip)** :
-les quinze captures ci-dessus en pleine résolution, les cinq animations et
+**[Télécharger le kit presse (ZIP, 5,8 Mo)](presse/kit-presse.zip)** :
+les quinze captures ci-dessus en pleine résolution, les quatre animations et
 le logo, avec leurs conditions d'utilisation.
 
-- [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif) et [l'accroche « An kréyòl nou ka palé, an kréyòl nou ka maké »](Screenshots/gif_an_kreyol_nou_ka_pale.gif)
+- [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
 - [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)
-- [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
+- [Animation du clavier en action : l'accroche « An kréyòl nou ka palé, an kréyòl nou ka maké »](Screenshots/KlavyéAnAktion.gif)
 - [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)
 - [Reportage Canal 10](Medias/TV_Canal10.mp4) et [reportage Guadeloupe la 1ère](Medias/TV_Guadeloupe1ère.mp4) (extraits vidéo, voir aussi ci-dessus)
 - [Logo Potomitan™ en haute résolution](assets/potomitan-logo.png)
