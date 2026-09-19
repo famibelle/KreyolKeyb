@@ -233,7 +233,8 @@ Le code source est ouvert et public sur
       <a href="partenaires.html">Partenariats institutionnels</a>
       <a href="notes_techniques.html">Notes techniques</a>
       <a href="ergotherapie.html">Fiche ergothérapie</a>
-      <a href="comparatif-gboard.html">Comparatif avec Gboard</a>
+      <a href="comparatif.html">Comparatif des claviers</a>
+      <a href="comparatif-gboard.html">Mesures face à Gboard</a>
       <a href="https://github.com/famibelle/KreyolKeyb">Code source</a>
     </div>
     <div>

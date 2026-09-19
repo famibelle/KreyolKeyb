@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klavyé Kréyòl, Gboard ou clavier Apple : lequel pour écrire en kréyòl ?</title>
+<meta name="description" content="Comparatif de Klavyé Kréyòl Karukera, de Gboard et du clavier d'Apple (iOS 27) pour écrire en créole guadeloupéen : disposition, dictionnaire, suggestions, vie privée, et ce que les autres font mieux.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="assets/theme.css">
+<script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+<script defer src="assets/theme.js"></script>
+<style>
+*{box-sizing:border-box;}
+html{overflow-x:clip;}
+body{
+  margin:0; padding:0 18px 70px;
+  background:var(--paper); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  line-height:1.55;
+  overflow-x:clip;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:820px;margin:0 auto;}
+header.page{padding:22px 0 4px;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--sea);margin:0 0 10px;}
+h1{font-size:clamp(26px,5.6vw,36px);font-weight:800;line-height:1.12;letter-spacing:-0.02em;margin:0 0 12px;text-wrap:balance;}
+.lead{font-size:16.5px;color:var(--ink-soft);max-width:64ch;margin:0 0 10px;}
+section{margin-top:44px;}
+h2{font-size:21px;font-weight:800;margin:0 0 8px;letter-spacing:-0.01em;}
+h3{font-size:15px;font-weight:700;margin:24px 0 6px;}
+p{margin:0 0 12px;}
+.muted{color:var(--ink-soft);font-size:14.5px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 14px;}
+.card h2{font-size:16px;margin-bottom:6px;}
+.note{border-left:4px solid var(--sun);background:var(--sun-soft);}
+a{color:var(--sea);}
+
+/* Chiffres clés : la comparaison tient dans ces quatre tuiles. */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:18px 0 6px;}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.tile .n{display:block;font-size:clamp(22px,4.4vw,28px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-variant-numeric:tabular-nums;}
+.tile .vs{display:block;font-size:13.5px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
+.tile .k{display:block;font-size:13px;color:var(--ink-soft);margin-top:6px;border-top:1px solid var(--line);padding-top:6px;}
+
+/* Tableaux comparatifs : deux colonnes de verdict, défilables sur petit écran. */
+.t-wrap{overflow-x:auto;margin:0 0 14px;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:520px;}
+caption{text-align:left;font-size:15px;font-weight:700;padding:14px 0 8px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;}
+tr:nth-child(even) td{background:var(--stripe);}
+td.v,th.v{width:26%;font-variant-numeric:tabular-nums;}
+.yes{color:var(--sea);font-weight:700;}
+.no{color:var(--ink-soft);}
+.win{font-weight:700;}
+.nv{color:var(--ink-soft);font-style:italic;}
+td.us,th.us{background:var(--sea-soft);}
+tr:nth-child(even) td.us{background:var(--sea-soft);}
+td.v,th.v{width:24%;}
+sup.n{font-size:.75em;}
+
+ul.plain{list-style:none;padding:0;margin:0 0 12px;}
+ul.plain li{position:relative;padding-left:20px;margin-bottom:9px;}
+ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:2px;background:var(--sea);}
+ul.plain.caution li::before{background:var(--sun);}
+
+pre{background:var(--sea-soft);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.5;margin:0 0 12px;}
+code{font-family:var(--mono);font-size:.93em;}
+
+@media print{
+  nav.site,.install-bar,footer.site,.theme-toggle{display:none !important;}
+  body{background:#fff;color:#000;padding:0;font-size:11pt;}
+  .card,.tile{border-color:#bbb;background:#fff;}
+  section{margin-top:22px;page-break-inside:avoid;}
+  table{min-width:0;}
+}
+</style>
+</head>
+<body>
+<!-- nav:start -->
+<nav class="site">
+  <a class="nav-brand" href="./">⌨️ Klavyé Kréyòl</a>
+  <a href="simulateur.html">🧪 Essayer</a>
+  <a href="nouveautes.html">🎁 Nouveautés</a>
+  <details class="menu" name="navmenu">
+    <summary>ℹ️ Le projet</summary>
+    <div class="menu-panel">
+      <a href="corpus.html">Le corpus en chiffres</a>
+      <a href="presskit.html">Dossier de presse</a>
+      <a href="partenaires.html">Partenariats institutionnels</a>
+      <a href="notes_techniques.html">Notes techniques</a>
+      <a href="https://github.com/famibelle/KreyolKeyb">Code source</a>
+      <a href="privacy/privacy-policy.html">Confidentialité</a>
+    </div>
+  </details>
+  <a href="faq.html">❓ FAQ</a>
+  <a class="nav-cta" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dnav">📲 Installer, c'est gratuit</a>
+  <details class="menu nav-after" name="navmenu">
+    <summary>Déjà installé ?</summary>
+    <div class="menu-panel">
+      <a href="guide.html">Guide d'installation</a>
+      <a href="feedbacks_form.html">Donner son avis</a>
+      <a href="beta_onboarding.html">Devenir bêta-testeur</a>
+    </div>
+  </details>
+  <details class="menu nav-after" name="navmenu">
+    <summary>📣 Ambassadeurs</summary>
+    <div class="menu-panel">
+      <a href="ambassadeurs.html">Espace ambassadeurs</a>
+      <a href="ambassade.html">Vin Anbasadè</a>
+      <a href="charte-ambassadeur.html">Charte de l'ambassadeur</a>
+      <a href="tract.html">Tract à imprimer</a>
+      <a href="affiche.html">Affiche à imprimer</a>
+      <a href="triptyque.html">Triptyque à imprimer</a>
+      <a href="publicites.html">Visuels publicitaires</a>
+      <a href="charte-graphique.html">Charte graphique</a>
+    </div>
+  </details>
+  <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
+</nav>
+<!-- Sur mobile, le bouton de la barre est masqué et remplacé par celle-ci,
+     fixée en bas dans la zone du pouce, donc atteignable à toute profondeur
+     de défilement. -->
+<div class="install-bar">
+  <a class="install-bar-cta" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dbarre-mobile">📲 Installer, c'est gratuit</a>
+  <a class="install-bar-alt" href="simulateur.html">Essayer d'abord dans le navigateur</a>
+</div>
+<!-- nav:end -->
+
+<div class="wrap">
+
+<header class="page">
+  <p class="eyebrow">Comparatif</p>
+  <h1>Klavyé Kréyòl, Gboard ou clavier Apple : lequel pour écrire en kréyòl ?</h1>
+  <p class="lead">
+    Pour écrire en créole guadeloupéen sur un téléphone, trois voies existent
+    aujourd'hui : Gboard, le clavier de Google, qui propose la langue depuis
+    novembre 2018 ; le clavier d'Apple, qui l'ajoute avec iOS 27, en
+    septembre 2026 ; et celui-ci. Voici ce qui les sépare, ligne par ligne.
+  </p>
+  <p class="lead">
+    Une case « non vérifié » veut dire que nous n'avons pas pu le constater
+    nous-mêmes, pas que la fonction n'existe pas. Nous préférons une case vide
+    à une affirmation que nous ne pourrions pas défendre.
+  </p>
+</header>
+
+<div class="card note">
+  <h2>Ce qu'Apple a ajouté avec iOS 27</h2>
+  <p class="muted">
+    Le créole guadeloupéen figure dans la liste « QuickType Keyboard : Language
+    Support » d'Apple, avec le créole martiniquais. Il ne figure dans aucune
+    des listes de correction automatique, de saisie prédictive, de dictionnaire,
+    de Siri, de dictée ni de traduction. Le clavier ajoute donc la langue à la
+    liste des dispositions, sans les aides à la frappe. Le créole haïtien n'a
+    lui non plus ni correction automatique ni saisie prédictive.
+  </p>
+  <p class="muted">
+    Relevé le 19 septembre 2026 sur la page « iOS and iPadOS feature
+    availability » d'Apple. C'est une bonne nouvelle pour la langue : elle
+    entre dans le système de tous les iPhone.
+  </p>
+</div>
+
+<section>
+  <h2>Le tableau</h2>
+  <div class="t-wrap">
+    <table>
+      <caption>La langue</caption>
+      <thead>
+        <tr><th></th><th class="v us">Klavyé Kréyòl</th><th class="v">Gboard (Google)</th><th class="v">Clavier Apple (iOS 27)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Créole guadeloupéen pris en charge</td><td class="v us"><strong>Oui</strong>, c'est sa raison d'être</td><td class="v">Oui, <strong>depuis novembre 2018</strong>, sur Android</td><td class="v">Oui, <strong>depuis iOS 27</strong> (septembre 2026), sous le nom « Kréyòl Gwadloup »</td></tr>
+        <tr><td>Disposition</td><td class="v us">AZERTY, avec <code>é</code> <code>è</code> et le tiret sur leur propre touche</td><td class="v">AZERTY</td><td class="v">Clavier français où <code>é</code> et <code>è</code> remplacent <code>Q</code> et <code>X</code> <sup class="n">1</sup></td></tr>
+        <tr><td>La lettre <code>ò</code></td><td class="v us">Appui long sur <code>o</code></td><td class="v"><span class="nv">non vérifié</span></td><td class="v"><span class="nv">non vérifié</span></td></tr>
+        <tr><td>Dictionnaire</td><td class="v us"><strong>5 296 formes</strong>, tirées d'un corpus de textes créoles, fichier lisible dans le dépôt public</td><td class="v">Modèle propriétaire, non consultable</td><td class="v">Modèle propriétaire, non consultable</td></tr>
+        <tr><td>Suggestions de mots en créole</td><td class="v us"><span class="yes">Oui</span></td><td class="v"><span class="nv">non vérifié</span></td><td class="v">Non : la langue est absente de la liste d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Prédiction du mot suivant</td><td class="v us"><strong>Oui</strong>, 8 852 contextes (bigrammes et trigrammes)</td><td class="v"><span class="nv">non vérifié</span></td><td class="v">Non : absente de la liste d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Correction automatique</td><td class="v us"><span class="no">Non</span></td><td class="v"><span class="nv">non vérifié</span></td><td class="v">Non : absente de la liste d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Correcteur orthographique qui ne souligne pas le créole dans les autres applications</td><td class="v us"><strong>Oui</strong>, à activer dans les réglages Android</td><td class="v"><span class="nv">non vérifié</span></td><td class="v"><span class="nv">non vérifié</span></td></tr>
+        <tr><td>Deux langues à la fois</td><td class="v us"><strong>Oui</strong>, suggestions kréyòl et français ensemble, sans réglage</td><td class="v">Plusieurs langues, à activer</td><td class="v">Non pour cette langue : absente de la liste « saisie multilingue » <sup class="n">2</sup></td></tr>
+        <tr><td>Définition française d'un mot créole</td><td class="v us"><strong>Oui</strong>, 1 145 formes glosées (onglet Dictionnaire)</td><td class="v"><span class="no">Non</span></td><td class="v">Non : absente de la liste « Dictionary » d'Apple <sup class="n">2</sup></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="t-wrap">
+    <table>
+      <caption>Vie privée et diffusion</caption>
+      <thead>
+        <tr><th></th><th class="v us">Klavyé Kréyòl</th><th class="v">Gboard (Google)</th><th class="v">Clavier Apple (iOS 27)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Accès à Internet</td><td class="v us"><strong>Aucune permission</strong>, hors ligne intégral</td><td class="v"><span class="no">Non</span></td><td class="v">Frappe embarquée</td></tr>
+        <tr><td>Code ouvert</td><td class="v us"><strong>Oui</strong>, licence MIT</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Plateformes</td><td class="v us">Android 5.0 et plus</td><td class="v">Android et iOS</td><td class="v">iPhone et iPad, iOS 27 et iPadOS 27</td></tr>
+        <tr><td>Prix</td><td class="v us">Gratuit, sans publicité</td><td class="v">Gratuit</td><td class="v">Inclus dans le système</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="t-wrap">
+    <table>
+      <caption>Au-delà de la saisie</caption>
+      <thead>
+        <tr><th></th><th class="v us">Klavyé Kréyòl</th><th class="v">Gboard (Google)</th><th class="v">Clavier Apple (iOS 27)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Jeux de vocabulaire et progression</td><td class="v us"><strong>Oui</strong>, six jeux, un carnet de cartes et 7 niveaux</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Saisie glissée</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, <span class="nv">non vérifié pour le créole</span></td><td class="v">Non : absente de la liste d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Dictée vocale</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, <span class="nv">non vérifié pour le créole</span></td><td class="v">Non : absente de la liste « Dictation » d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Traduction intégrée, presse-papiers, écriture manuscrite</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui</td><td class="v">Traduction absente de la liste d'Apple pour cette langue</td></tr>
+        <tr><td>Thèmes et personnalisation</td><td class="v us">Clair, sombre ou celui du système</td><td class="v">Très étendus</td><td class="v">Limités</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="muted">
+    <sup class="n">1</sup> Disposition rapportée par la presse locale
+    (<a href="https://rci.fm/deuxiles/infos/Informations-pratiques/Les-creoles-guadeloupeen-et-martiniquais-ajoutes-au-clavier-de-liPhone">RCI</a>,
+    <a href="https://www.etv.gp/tv/guadeloupe-ios-27-les-creoles-guadeloupeen-et-martiniquais-enfin-disponibles-sur-iphone/">ETV</a>),
+    non vérifiée sur un iPhone. <sup class="n">2</sup> Absence constatée dans toutes les autres listes de
+    la page officielle d'<a href="https://www.apple.com/ios/feature-availability/">Apple</a>
+    le 19 septembre 2026. Colonne Gboard : présence du créole guadeloupéen
+    constatée dans la <a href="https://support.google.com/gboard/answer/6380730?hl=en&amp;co=GENIE.Platform%3DAndroid">liste des langues de Gboard</a>
+    le 19 septembre 2026, disposition AZERTY et date d'ajout d'après
+    <a href="https://actu-medias.info/2018/10/gboard-prend-en-charge-le-creole-guadeloupeen.html">ActuMédias</a>
+    (2 novembre 2018). Colonne Klavyé Kréyòl : chiffres des fichiers livrés
+    dans la version 22.0.2. Le clavier Samsung n'est pas comparé : nous n'avons
+    pas vérifié s'il propose le créole guadeloupéen.
+  </p>
+</section>
+
+<section>
+  <h2>Trois choses que le tableau montre</h2>
+  <p>
+    <strong>Un dictionnaire que l'on peut ouvrir.</strong> Le corpus est
+    public, le script qui en tire le dictionnaire est dans le dépôt, et le
+    fichier embarqué dans l'application est lisible. Pour Gboard comme pour
+    Apple, on ne peut pas savoir quels mots créoles sont connus ni d'où ils
+    viennent.
+  </p>
+  <p>
+    <strong>Le créole et le français dans la même barre.</strong> On écrit
+    rarement dans une seule langue aux Antilles. Les suggestions viennent des
+    deux langues à la fois, chaque mot sachant de laquelle il vient, avec la
+    priorité au créole.
+  </p>
+  <p>
+    <strong>Ce qui se passe après la saisie.</strong> Une définition française
+    pour 1 145 formes créoles, six jeux de vocabulaire et un carnet de cartes
+    où chaque mot gagné garde son sens et une phrase d'auteur. Aucun des deux
+    autres claviers n'en propose.
+  </p>
+</section>
+
+<section>
+  <h2>Ce que les autres font mieux</h2>
+  <p>
+    Gboard couvre une surface fonctionnelle bien plus large : saisie glissée,
+    dictée vocale, traduction, presse-papiers, écriture manuscrite, thèmes,
+    et une correction affinée par un très grand nombre de frappes. Klavyé
+    Kréyòl ne cherche pas à le rattraper sur ce terrain. Apple gagne sur
+    l'intégration : rien à installer, et une place dans les réglages de langue
+    du système.
+  </p>
+  <p>
+    Le clavier d'Apple touche aussi ce que nous ne touchons pas encore : les
+    utilisateurs d'iPhone. Une version iOS de Klavyé Kréyòl est en cours, sans
+    date de sortie.
+  </p>
+</section>
+
+<section>
+  <h2>Et les mesures de vitesse ?</h2>
+  <p>
+    Une comparaison chiffrée de la rapidité, de la mémoire et du calcul par
+    frappe face à Gboard existe, prise en août 2026 sur la version 10.11.4 :
+    voir <a href="comparatif-gboard.html">Klavyé Kréyòl face à Gboard</a>.
+    Elle date d'avant les versions récentes, et n'a pas été refaite pour cette
+    page.
+  </p>
+</section>
+
+</div>
+<!-- footer:start -->
+<footer class="site">
+  <div class="footer-cta">
+    <p class="footer-baseline">Maké on bèl Kréyòl asi téléfòn a-w.</p>
+    <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dpied">📲 Installer, c'est gratuit</a>
+  </div>
+  <div class="footer-cols">
+    <div>
+      <strong>Le clavier</strong>
+      <a href="./">Accueil</a>
+      <a href="simulateur.html">Essayer en ligne</a>
+      <a href="guide.html">Guide d'installation</a>
+      <a href="faq.html">Questions fréquentes</a>
+      <a href="nouveautes.html">Nouveautés</a>
+    </div>
+    <div>
+      <strong>Le projet</strong>
+      <a href="corpus.html">Le corpus en chiffres</a>
+      <a href="presskit.html">Dossier de presse</a>
+      <a href="partenaires.html">Partenariats institutionnels</a>
+      <a href="notes_techniques.html">Notes techniques</a>
+      <a href="ergotherapie.html">Fiche ergothérapie</a>
+      <a href="comparatif.html" aria-current="page">Comparatif des claviers</a>
+      <a href="comparatif-gboard.html">Mesures face à Gboard</a>
+      <a href="https://github.com/famibelle/KreyolKeyb">Code source</a>
+    </div>
+    <div>
+      <strong>Faire connaître</strong>
+      <a href="ambassadeurs.html">Espace ambassadeurs</a>
+      <a href="ambassade.html">Vin Anbasadè</a>
+      <a href="charte-ambassadeur.html">Charte de l'ambassadeur</a>
+      <a href="tract.html">Tract</a>
+      <a href="affiche.html">Affiche</a>
+      <a href="triptyque.html">Triptyque</a>
+      <a href="publicites.html">Visuels publicitaires</a>
+      <a href="charte-graphique.html">Charte graphique</a>
+    </div>
+    <div>
+      <strong>Participer</strong>
+      <a href="beta_onboarding.html">Devenir bêta-testeur</a>
+      <a href="feedbacks_form.html">Donner son avis</a>
+      <a href="jauge.html">La jauge des 10 000</a>
+      <a href="mailto:contact@potomitan.io">contact@potomitan.io</a>
+    </div>
+  </div>
+  <div class="footer-legal">
+    <span>Potomitan™, Teknoloji pou tout moun.</span>
+    <a href="privacy/privacy-policy.html">Politique de confidentialité</a>
+    <span>Gratuit, open source (MIT), zéro pub, 100&nbsp;% hors ligne.</span>
+  </div>
+</footer>
+<!-- footer:end -->
+</body>
+</html>
