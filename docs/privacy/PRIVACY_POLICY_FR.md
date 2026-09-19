@@ -178,7 +178,7 @@ Les données suivantes existent **uniquement sur votre appareil** et ne sont **j
    - Niveau actuel (Pipirit, Ti moun, Débrouya, An mitan, Kompè Lapen, Kompè Zamba ou Potomitan)
    - Récompenses débloquées (ex: "100 premiers mots tapés")
    - Stockés localement dans la base de données de l'app
-   - Non synchronisés avec le cloud ou d'autres appareils
+   - Non synchronisés avec le cloud (le transfert direct vers un nouveau téléphone peut les emporter)
    - Utilisés uniquement pour les fonctionnalités motivationnelles
 
 4. **Utilisation de l'App (Local Uniquement) :**
@@ -410,9 +410,7 @@ Les données suivantes persistent sur votre appareil tant que l'app est install�
 - Option nucléaire : Réinitialise l'appareil entier et supprime toutes les apps
 
 **Note sur les Sauvegardes Cloud :**
-Si vous avez activé la sauvegarde Android (Paramètres > Google > Sauvegarde), Google peut sauvegarder les préférences de l'app.
-Ceci est contrôlé par la politique de confidentialité de Google, pas la nôtre. Pour empêcher cela :
-- Paramètres > Google > Sauvegarde > Désactiver "Sauvegarder sur Google Drive"
+L'app demande à Android de ne rien envoyer à la sauvegarde cloud : ni préférences, ni carnet, ni progression. Si vous changez de téléphone, le transfert direct d'appareil à appareil (câble ou Wi-Fi direct) peut emporter vos préférences et votre carnet, sans passer par un serveur. Rien de ce que vous avez tapé n'est emporté.
 
 **Note :** Il n'y a pas de compte ou de données cloud à supprimer puisque nous n'utilisons pas de stockage cloud.
 

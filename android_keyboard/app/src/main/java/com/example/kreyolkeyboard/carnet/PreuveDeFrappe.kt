@@ -23,8 +23,9 @@ import java.io.File
  *   `backup_rules.xml` et `data_extraction_rules.xml` excluent tous les deux.
  *   C'est ce qui rend vraie la confidentialité publiée : ce qui a été tapé ne
  *   quitte jamais l'appareil, pas même vers la sauvegarde du constructeur.
- * - Le carnet, lui, est un `SharedPreferences`, donc sauvegardé et transféré
- *   d'un téléphone à l'autre.
+ * - Le carnet, lui, est un `SharedPreferences` : aucune sauvegarde cloud ne
+ *   l'emporte (`BackupRulesTest`), mais le transfert direct d'appareil à appareil
+ *   le suit d'un téléphone à l'autre.
  *
  * La référence de comptage est donc écrite **ici, dans `filesDir`**, à côté du
  * fichier dont elle dérive, et jamais dans les préférences. Le carnet, lui, ne
