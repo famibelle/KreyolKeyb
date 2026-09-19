@@ -7460,7 +7460,7 @@ class SettingsActivity : AppCompatActivity() {
                 setPadding(4, 0, 4, 6)
             })
             colonne.addView(TextView(activity).apply {
-                text = "Cinq façons de jouer avec les mots du dictionnaire " +
+                text = "Six façons de jouer avec les mots du dictionnaire " +
                         "kréyòl du clavier, et de quoi les revoir."
                 textSize = 14f
                 setTextColor(Color.parseColor("#666666"))
