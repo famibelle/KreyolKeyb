@@ -88,6 +88,7 @@ object WordSearchGenerator {
                     placeWord(grid, word, position.first, position.second, direction)
                     placedWords.add(WordSearchWord(
                         word = word.uppercase(),
+                        canonical = word,
                         startRow = position.first,
                         startCol = position.second,
                         direction = direction

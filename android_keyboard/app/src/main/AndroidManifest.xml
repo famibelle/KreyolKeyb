@@ -2,8 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Seule permission demandée, et seule exercée par le code : la notification
-         qui annonce un nouveau niveau de vocabulaire (Android 13+).
+    <!-- Deux permissions demandées, et toutes deux exercées par le code :
+         la notification qui annonce un nouveau niveau de vocabulaire
+         (Android 13+), et la vibration du relief des cartes du carnet.
+
+         VIBRATE a un appelant réel depuis le carnet : KeyFeedback.onCardRidge()
+         joue un cran composé sous le pouce qui traverse une carte, ce que
+         performHapticFeedback ne sait pas faire (pas d'amplitude, pas de
+         signe). Sans elle rien ne casse — KeyFeedback.sonder() retombe sur
+         NiveauTactile.CANNED et la carte se sent comme une touche — mais le
+         relief signé disparaît. Les touches du clavier, elles, n'en ont
+         jamais eu besoin et n'en dépendent toujours pas.
 
          WRITE_USER_DICTIONARY et READ_EXTERNAL_STORAGE ont été retirées en
          10.14.3. La première servait au dictionnaire personnel de la 10.5.0,
@@ -13,6 +22,7 @@
          aucune ligne ne se sert coûte de la confiance sans rien apporter.
          Ne pas les remettre sans un appelant réel. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"

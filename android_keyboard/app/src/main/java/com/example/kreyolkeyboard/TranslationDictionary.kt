@@ -34,6 +34,7 @@ import java.io.InputStreamReader
 object TranslationDictionary {
 
     private const val ASSET = "creole_translations.json"
+    private const val ASSET_EXEMPLES = "creole_exemples.json"
     private const val TAG = "TranslationDictionary"
 
     /** Code de source écrit dans chaque entrée par le générateur. */
@@ -175,6 +176,111 @@ object TranslationDictionary {
             parFormePliee = emptyMap()
             proposables = emptySet()
         }
+    }
+
+    /**
+     * Une phrase du corpus qui montre un mot au travail, avec son crédit.
+     *
+     * [credit] est ce qui s'affiche sous la phrase, au dos d'une carte du
+     * carnet : un nom d'auteur ou un titre, taillé par le générateur pour
+     * tenir sur une ligne. [source] est la référence bibliographique entière,
+     * gardée parce que l'attribution doit rester exacte dans l'actif même
+     * quand l'écran ne peut pas la montrer en entier.
+     */
+    data class Exemple(
+        val phrase: String,
+        val credit: String,
+        val source: String
+    )
+
+    /**
+     * Les phrases, indexées deux fois comme les gloses le sont.
+     *
+     * [exemplesExacts] garde la graphie livrée, [exemplesPlies] la graphie
+     * repliée. Les 479 mots illustrés ne font que 401 clés repliées : `bo` et
+     * `bò` s'y confondent alors que ce sont deux entrées du dictionnaire. La
+     * table exacte est ce qui rend à chacune ses propres phrases, la table
+     * repliée ce qui permet à une carte gagnée dans Mots Mêlés, donc en
+     * capitales, de retrouver les siennes.
+     */
+    private var exemplesExacts: Map<String, List<Exemple>> = emptyMap()
+    private var exemplesPlies: Map<String, List<Exemple>> = emptyMap()
+    private var exemplesCharges = false
+
+    /**
+     * Charge `creole_exemples.json`, les phrases d'exemple du carnet.
+     *
+     * Séparé de [charger] parce que les deux actifs ne servent pas les mêmes
+     * écrans : la glose est lue par le clavier, les jeux et le mot du jour,
+     * la phrase seulement par une carte ouverte. Le carnet appelle donc les
+     * deux, le reste de l'application la première.
+     *
+     * **À appeler hors du fil principal** : 188 Ko à analyser.
+     */
+    @Synchronized
+    fun chargerExemples(context: Context) {
+        if (exemplesCharges) return
+        exemplesCharges = true
+
+        try {
+            val contenu = BufferedReader(
+                InputStreamReader(context.assets.open(ASSET_EXEMPLES))
+            ).use { it.readText() }
+
+            val table = JSONObject(contenu).getJSONObject("exemples")
+            val exacts = HashMap<String, List<Exemple>>(table.length())
+            val plies = HashMap<String, List<Exemple>>(table.length())
+            val cles = table.keys()
+            while (cles.hasNext()) {
+                val mot = cles.next()
+                val liste = table.getJSONArray(mot)
+                val phrases = ArrayList<Exemple>(liste.length())
+                for (i in 0 until liste.length()) {
+                    val o = liste.getJSONObject(i)
+                    val phrase = o.optString("p")
+                    if (phrase.isEmpty()) continue
+                    phrases.add(
+                        Exemple(
+                            phrase = phrase,
+                            credit = o.optString("crd"),
+                            source = o.optString("src")
+                        )
+                    )
+                }
+                if (phrases.isEmpty()) continue
+                exacts[mot] = phrases
+                // Premier arrivé, premier servi sur la clé repliée, comme pour
+                // les gloses : le générateur écrit dans l'ordre du
+                // dictionnaire, donc c'est la forme la plus fréquente qui
+                // répond pour les graphies qui se confondent.
+                val cle = AccentTolerantMatcher.normalize(mot)
+                if (!plies.containsKey(cle)) plies[cle] = phrases
+            }
+            exemplesExacts = exacts
+            exemplesPlies = plies
+            Log.d(TAG, "${exacts.size} mots illustrés, ${plies.size} clés repliées")
+        } catch (e: Exception) {
+            // Une carte sans phrase reste une carte : elle montre sa glose et
+            // rien d'autre, ce qui est l'état de 143 mots du vivier de toute
+            // façon. L'actif absent ne doit pas éteindre le carnet.
+            Log.e(TAG, "Actif $ASSET_EXEMPLES illisible: ${e.message}", e)
+            exemplesExacts = emptyMap()
+            exemplesPlies = emptyMap()
+        }
+    }
+
+    /**
+     * Les phrases d'un mot, la meilleure d'abord, ou une liste vide.
+     *
+     * Demande [chargerExemples] au passage : un appelant qui oublie de
+     * précharger paiera l'analyse sur son fil plutôt que de n'avoir rien.
+     */
+    fun exemples(context: Context, mot: String): List<Exemple> {
+        chargerExemples(context)
+        if (mot.isEmpty()) return emptyList()
+        return exemplesExacts[mot]
+            ?: exemplesPlies[AccentTolerantMatcher.normalize(mot)]
+            ?: emptyList()
     }
 
     /** L'entrée d'un mot, ou null s'il n'en a pas. */

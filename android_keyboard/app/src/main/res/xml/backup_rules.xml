@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Règles de sauvegarde (API 31 et moins ; au-delà c'est data_extraction_rules.xml).
+   https://developer.android.com/guide/topics/data/autobackup
 -->
 <full-backup-content>
     <!-- Inclure les préférences du clavier -->
     <include domain="sharedpref" path="kreyol_keyboard_prefs.xml"/>
     <include domain="sharedpref" path="."/>
-    
+
     <!-- Exclure les données sensibles -->
     <exclude domain="sharedpref" path="device.xml"/>
+
+    <!--
+       filesDir n'est PAS sauvegardé, et c'est une garantie, pas un oubli.
+
+       Déclarer des <include> restreint la sauvegarde à ce qui est déclaré :
+       en n'incluant que `sharedpref`, tout `filesDir` reste au sol. Les deux
+       exclusions ci-dessous ne changent donc rien aujourd'hui — elles fixent
+       la frontière pour qu'un futur <include domain="file"> ne l'emporte pas
+       par mégarde.
+
+       Ce qui vit là et doit y rester :
+       - creole_dict_with_usage.json, les compteurs de frappe par mot de la
+         gamification, écrits derrière isSensitiveField() ;
+       - carnet_vu.json, la référence que PreuveDeFrappe compare pour décider
+         qu'un mot a été écrit depuis la dernière révision.
+
+       Le carnet lui-même (kreyol_carnet_prefs) est un SharedPreferences, donc
+       sauvegardé : ce sont des mots d'un dictionnaire livré, et seule une date
+       d'échéance en sort. Voir la note de classe de PreuveDeFrappe.
+    -->
+    <exclude domain="file" path="creole_dict_with_usage.json"/>
+    <exclude domain="file" path="carnet_vu.json"/>
 </full-backup-content>

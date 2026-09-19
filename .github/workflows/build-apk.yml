@@ -106,6 +106,16 @@ jobs:
         echo "🧩 Génération du jeu Mokwaré..."
         python generate_crossword.py
 
+        # Les phrases d'exemple du carnet (Sanblé) consomment le dictionnaire
+        # ET la table de gloses : seuls les mots glosés peuvent devenir des
+        # cartes, donc seuls eux sont illustrés. Le script relit le corpus HF,
+        # comme generate_cloze.py, et se replie sur l'instantané local pour la
+        # même raison : une panne de Hugging Face ne doit pas rendre le build
+        # rouge. Le garde-fou de volume plus bas arrête quand même le build si
+        # l'actif est tronqué.
+        echo "🃏 Génération des phrases du carnet..."
+        python generate_exemples.py
+
         echo "📁 Contenu après génération:"
         ls -la
         
@@ -241,6 +251,25 @@ jobs:
         # les mots du corpus PawolKreyol : le jeu affiche ces crédits.
         if ! jq -e '.attribution | length >= 3' android_keyboard/app/src/main/assets/creole_crossword.json > /dev/null; then
           echo "::error::creole_crossword.json ne porte pas l'attribution de ses sources."
+          exit 1
+        fi
+
+        # Le carnet, lui, dégrade en silence : sans phrases, les cartes se
+        # retournent sur leur glose seule et la révision continue de tourner.
+        # Rien ne le signalerait, d'où le plancher. 479 mots illustrés à la
+        # génération du 19 septembre 2026, sur les 622 du vivier glosé.
+        EXEMPLES=$(jq '.exemples | length' android_keyboard/app/src/main/assets/creole_exemples.json)
+        echo "🃏 Mots illustrés : $EXEMPLES"
+        if [ "$EXEMPLES" -lt 400 ]; then
+          echo "::error::Seulement $EXEMPLES mots illustrés dans creole_exemples.json — le corpus ou la table de gloses s'est effondré. Lancez Dictionnaires/generate_exemples.py"
+          exit 1
+        fi
+
+        # Les phrases sont des extraits d'auteurs guadeloupéens, et la carte
+        # affiche le crédit de chacune. L'attribution voyage dans l'actif, au
+        # même titre que celle de creole_cloze.json qui cite les mêmes textes.
+        if ! jq -e '.sources | length > 0' android_keyboard/app/src/main/assets/creole_exemples.json > /dev/null; then
+          echo "::error::creole_exemples.json ne porte pas l'attribution de son corpus."
           exit 1
         fi
 
