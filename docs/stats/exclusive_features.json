@@ -1,6 +1,37 @@
 {
   "production_version": "20.0.3",
-  "latest_version": "20.0.3",
+  "latest_version": "22.0.2",
   "as_of": "2026-09-19",
-  "features": []
+  "features": [
+    {
+      "version": "22.0.2",
+      "emoji": "🔡",
+      "title": "« Mo an plas », des mots à caser dans une grille vide",
+      "description": "Sixième jeu de l'onglet « Jé », et le seul qui se joue sans connaître un mot de kréyòl : tous les mots sont donnés, il s'agit de trouver leur place d'après leur longueur et les lettres qu'ils partagent avec leurs voisins. Un mot qui contredirait une lettre déjà posée ne se pose pas. Le sens en français n'arrive qu'une fois tous les croisements d'un mot posés : c'est la récompense. Chaque grille n'a qu'une seule solution. 180 grilles, trois niveaux.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.0.2",
+      "curated": true,
+      "image": "Screenshots/nouveaute_22.0.2_mo_an_plas.png",
+      "image_alt": "Une partie de Mo an plas en difficulté Facile, 4 mots sur 6 posés. Pwazonné, lanm et souvan, dont tous les croisements sont posés, sont passés au vert et un bandeau orange annonce « 3 mots d'un coup ! ». Jòdijou est posé mais pas encore confirmé, et trois cases restent vides pour les mots de trois lettres. Sous la grille, les sens gagnés : pwazonné, empoisonner ; souvan, souvent ; lanm, lame, vague."
+    },
+    {
+      "version": "22.0.2",
+      "emoji": "📔",
+      "title": "« Sanblé », le carnet des mots gagnés",
+      "description": "Chaque mot trouvé dans un jeu devient une carte : son sens en français et, quand le corpus en offre une, une phrase tirée d'un texte d'auteur guadeloupéen, avec le nom de cet auteur. Les cartes se trient par date, par ordre alphabétique ou par rareté, et se filtrent par jeu. Un mot dont le sens n'est pas connu ne devient pas une carte. Le carnet vous suit d'un téléphone à l'autre ; ce que vous tapez, lui, ne quitte pas l'appareil.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.0.2",
+      "curated": true,
+      "image": "Screenshots/nouveaute_22.0.2_sanble.png",
+      "image_alt": "Le carnet Sanblé : 14 mots, avec des filtres par jeu (Fraz a twou, Mo an plas) et des tris (Récent, A → Z, Rareté, Étagère). Quatre cartes illustrées sont visibles, chacune avec son mot et son sens : lanm, lame, vague ; souvan, souvent ; pwazonné, empoisonner ; bwak, surpris. Leur cadre et leur couleur changent d'une carte à l'autre."
+    },
+    {
+      "version": "22.0.2",
+      "emoji": "🔁",
+      "title": "« Sonjé », les cartes reviennent au bon moment",
+      "description": "Les cartes du carnet reviennent à intervalles croissants, d'un jour à trois mois : une bonne réponse fait avancer la carte d'une boîte, un oubli la ramène au début. Pas plus de douze cartes par séance. Un mot que vous avez écrit au clavier depuis la dernière révision avance tout seul, sans question : le clavier fait office d'examen.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.0.2",
+      "curated": true,
+      "image": "Screenshots/nouveaute_22.0.2_sonje.png",
+      "image_alt": "Les boîtes de révision de Sonjé, en bois : neuf cartes dans la boîte « 1 jour », cinq dans « 3 jours », les boîtes « 1 sem. », « 2 sem. », « 1 mois », « 3 mois » et « acquis » encore vides. En bas, un bouton « Réviser 9 cartes »."
+    }
+  ]
 }
