@@ -5,6 +5,35 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.0.2] - 2026-09-19
+
+Première version publiée depuis la 20.0.3 : elle réunit un carnet de cartes,
+sa révision, et un sixième jeu.
+
+### ✨ Ajouté
+
+- **Mo an plas, un sixième jeu.** Tous les mots vous sont donnés : il s'agit de
+  trouver leur place dans une grille vide, d'après leur longueur et les lettres
+  qu'ils partagent avec leurs voisins. C'est le seul jeu qui se joue sans
+  connaître un mot de kréyòl. Le sens d'un mot n'apparaît qu'une fois tous ses
+  croisements posés, et c'est la récompense. Chaque grille n'a qu'une seule
+  solution. 180 grilles, en trois niveaux qui se distinguent par le nombre de
+  mots de même longueur, donc par ce qu'il faut déduire.
+- **Sanblé, le carnet de cartes.** Chaque mot trouvé dans un jeu devient une
+  carte : son sens en français, et, quand le corpus en offre une, une phrase
+  tirée d'un texte d'auteur guadeloupéen avec le nom de cet auteur. Un mot dont
+  le sens n'est pas connu ne devient pas une carte. Le carnet vous suit d'un
+  téléphone à l'autre ; ce que vous tapez, lui, ne quitte pas l'appareil.
+- **Sonjé, la révision.** Les cartes reviennent à intervalles croissants : 1, 3,
+  7, 16, 35 puis 90 jours. Un mot que vous avez écrit au clavier depuis la
+  dernière révision avance tout seul, sans question : le clavier fait office
+  d'examen.
+
+### 🔧 Modifié
+
+- **Les jeux passent en deuxième onglet**, juste après Démarrage, avant le
+  Dictionnaire et Kréyòl an mwen.
+
 ## [20.0.3] - 2026-09-06
 
 ### 🐛 Corrigé
