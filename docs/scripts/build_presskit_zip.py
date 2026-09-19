@@ -30,6 +30,13 @@ VISUELS = {
     "Screenshots/app_jeu_mots_melanges.png":   "captures/06-jeu-mots-melanges.png",
     "Screenshots/app_onglet_apropos.png":      "captures/07-a-propos-mission.png",
     "Screenshots/app_selecteur_clavier.png":   "captures/08-selecteur-de-clavier-systeme.png",
+    "Screenshots/app_jeux_menu.png":           "captures/09-jeux-et-carnet.png",
+    "Screenshots/app_carnet_carte.png":        "captures/10-carte-du-carnet.png",
+    "Screenshots/app_carnet_sanble.png":       "captures/11-carnet-sanble.png",
+    "Screenshots/app_carnet_eventail.png":     "captures/12-cartes-a-revoir.png",
+    "Screenshots/app_carnet_sonje.png":        "captures/13-revision-sonje.png",
+    "Screenshots/app_jeu_mo_an_plas.png":      "captures/14-jeu-mo-an-plas.png",
+    "Screenshots/app_jeu_mokware.png":         "captures/15-jeu-mokware.png",
     "assets/potomitan-logo.png":               "logo/potomitan-logo.png",
 }
 

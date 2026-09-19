@@ -56,7 +56,7 @@ lang: fr
 
 # Dossier de presse : Klavyé Kréyòl Karukera
 
-*Dernière mise à jour : 24 août 2026*
+*Dernière mise à jour : 19 septembre 2026*
 
 ## En une phrase
 
@@ -162,6 +162,10 @@ claviers standards.
   famille pour des raisons d'équipement ou de forfait. Une
   [fiche d'usage en ergothérapie](ergotherapie.html) documente par ailleurs
   son intérêt pour les personnes ayant des difficultés motrices de saisie
+- **Apprendre en jouant** : chaque mot trouvé dans l'un des six jeux devient
+  une carte à collectionner, avec son sens en français et une phrase
+  d'auteur guadeloupéen, puis revient en révision à intervalles réguliers
+  (voir *Apprendre en jouant*, plus bas)
 - **Open source citoyen** : un projet indépendant, auditable, sans modèle
   publicitaire
 - **Les racines du kréyòl** : en février 2026, des chercheurs créolistes
@@ -202,7 +206,8 @@ Un clavier qui **travaille pour le kréyòl au lieu de le combattre** :
   authentiques
 - **Accents du kréyòl** (é, è, à, ò...) par simple appui long
 - **Bilingue** : le français prend le relais quand aucun mot créole ne correspond
-- **Jeux de vocabulaire** intégrés (Mots Mêlés, Mots Mélangés) et
+- **Six jeux de vocabulaire** intégrés et un **carnet de cartes à
+  collectionner** (voir *Apprendre en jouant*, plus bas), plus une
   **progression gamifiée** en 7 niveaux culturels, de « Pipirit » à « Potomitan »
 - **100 % local, zéro collecte de données**, code source public (licence MIT)
 
@@ -216,8 +221,8 @@ Ce que le clavier apporte dans ce cadre, aujourd'hui :
 
 - La suggestion des mots kréyòl **avec leurs accents**, sur un dictionnaire
   construit à partir de textes créoles
-- Deux jeux de vocabulaire et un parcours de progression en niveaux,
-  utilisables comme support d'activité
+- Six jeux de vocabulaire, un carnet de cartes avec révision espacée et un
+  parcours de progression en niveaux, utilisables comme support d'activité
 - Gratuit, sans compte, sans connexion, sur des appareils Android anciens :
   aucune famille n'en est écartée pour des raisons d'équipement, de forfait ou
   de moyens
@@ -227,13 +232,52 @@ Ce que le clavier apporte dans ce cadre, aujourd'hui :
   télémétrie, ce qui simplifie considérablement l'introduction de l'outil dans
   un établissement
 
-**Une précision qui a son importance :** ce n'est pas une méthode
-d'apprentissage du créole et cela ne prétend pas l'être. C'est un outil
-d'écriture, qui sert l'enseignement de l'écrit.
+**Une précision qui a son importance :** l'application est d'abord un outil
+d'écriture, qui sert l'enseignement de l'écrit. Les jeux et le carnet de
+cartes permettent de découvrir et de retenir du vocabulaire en jouant, sans
+prétendre remplacer un cours de créole.
 
 Les formes de collaboration possibles avec les académies, les établissements
 et les collectivités sont décrites sur la page
 [Partenariats institutionnels](partenaires.html#lvr).
+
+## Apprendre en jouant : six jeux et un carnet de cartes
+
+L'onglet *Jé* de l'application réunit six jeux autour des mots du
+dictionnaire kréyòl du clavier :
+
+| Jeu | Principe |
+|---|---|
+| Mots Mêlés | Retrouver les mots cachés dans une grille de lettres |
+| Mots Mélangés | Remettre les lettres d'un mot dans l'ordre |
+| Mo an Karénaj | Deviner un mot de cinq lettres en six essais |
+| Fraz a twou | Compléter une phrase d'auteur à laquelle il manque un mot |
+| Mokwaré | Mots croisés : écrire les mots d'après leur sens en français |
+| Mo an plas | Placer dans une grille vide des mots donnés, d'après leur longueur et leurs croisements |
+
+*Mo an plas*, ajouté en septembre 2026, est le seul des six qui se joue sans
+connaître un mot de kréyòl : les mots sont fournis, il reste à trouver leur
+place. Le sens en français de chaque mot apparaît une fois le mot et ses
+croisements en place.
+
+**Le carnet *Sanblé*.** Chaque mot gagné dans un jeu devient une carte à
+collectionner. La carte porte le mot, son sens en français avec la source de
+la définition (Kreyolopedia ou Wiktionnaire, sous licence CC BY-SA), et, pour
+479 mots, une phrase extraite d'un texte d'auteur du corpus, avec son
+crédit. Sa rareté est calculée d'après la fréquence réelle du mot dans ce
+corpus. Seuls les mots dont le sens est connu deviennent des cartes, soit
+622 mots à collectionner.
+
+**La révision *Sonjé*.** Les cartes reviennent à intervalles croissants
+(1 jour, 3 jours, 1 semaine, 2 semaines, 1 mois, 3 mois) selon la méthode de
+la répétition espacée, jusqu'à être considérées comme acquises. Un mot que
+l'on a tapé avec le clavier depuis la dernière révision avance de lui-même
+d'une case : le clavier fait office d'examen.
+
+*Sanblé* (rassembler) et *Sonjé* (se souvenir) sont tirés du dictionnaire
+embarqué. Comme le reste de l'application, les jeux et le carnet
+fonctionnent hors connexion et sans compte : la collection reste sur le
+téléphone.
 
 ## Ce que l'application contient, et ce qu'elle ne contient pas
 
@@ -281,11 +325,47 @@ Les suggestions s'appuient sur les œuvres de :
 | Données embarquées | Fréquences et probabilités de succession, aucun texte d'auteur |
 | Dictionnaire | 5 284 mots kréyòl + 662 mots français (fallback bilingue) |
 | Modèle de prédiction | 4 601 mots-pivots (n-grams contextuels) |
+| Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
 | Utilisateurs | <span id="pk-users">3 223</span> installations au <span id="pk-date">23 août 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
 | Partenariats | [Partenariats institutionnels](partenaires.html) |
 
 ## Visuels
+
+### Les jeux et le carnet de cartes (septembre 2026)
+
+<div align="center" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_jeux_menu.png" alt="Onglet Jé : le bandeau du carnet Sanblé au-dessus des cartes des jeux Sonjé, Mots Mêlés, Mots Mélangés, Mo an Karénaj, Fraz a twou et Mokwaré" style="width: 100%; border-radius: 8px;">
+    <p><small>Les six jeux et le carnet</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_carnet_carte.png" alt="Carte du mot lanm, sens « lame, vague », avec la phrase « Dèyè dènyé lizyè a on lanm a lanmè » créditée à On lannuit Gwadloup, gagnée à Mo an plas" style="width: 100%; border-radius: 8px;">
+    <p><small>Une carte : le mot lanm</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_carnet_sanble.png" alt="Carnet Sanblé : cartes des mots lanm, souvan, pwazonné, bwak, zannanna et krab, avec leur sens en français" style="width: 100%; border-radius: 8px;">
+    <p><small>Le carnet Sanblé</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_carnet_eventail.png" alt="Cartes d'une case de révision présentées en éventail, la carte lanm au centre" style="width: 100%; border-radius: 8px;">
+    <p><small>Les cartes à revoir</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_carnet_sonje.png" alt="Révision Sonjé : casier en bois à sept cases, de 1 jour à acquis, et bouton Réviser 5 cartes" style="width: 100%; border-radius: 8px;">
+    <p><small>La révision Sonjé</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_jeu_mo_an_plas.png" alt="Jeu Mo an plas : les mots boukèt, gri, kui et lanm placés dans la grille, le bandeau affiche « kui : ceinture »" style="width: 100%; border-radius: 8px;">
+    <p><small>Jeu Mo an plas</small></p>
+  </div>
+  <div style="width: 22%; min-width: 140px;">
+    <img src="Screenshots/app_jeu_mokware.png" alt="Jeu Mokwaré : mots croisés, le mot krab trouvé pour la définition « crabe », pavé de saisie AZERTY avec É, È et Ò" style="width: 100%; border-radius: 8px;">
+    <p><small>Jeu Mokwaré</small></p>
+  </div>
+</div>
+
+### Le clavier et l'application
 
 Captures d'écran de chaque section de l'application (juillet 2026) :
 
@@ -328,12 +408,12 @@ Captures d'écran de chaque section de l'application (juillet 2026) :
   </div>
 </div>
 
-**[Télécharger le kit presse (ZIP, 1,7 Mo)](presse/kit-presse.zip)** :
-les huit captures ci-dessus en pleine résolution et le logo, avec leurs
+**[Télécharger le kit presse (ZIP, 3,8 Mo)](presse/kit-presse.zip)** :
+les quinze captures ci-dessus en pleine résolution et le logo, avec leurs
 conditions d'utilisation.
 
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
-- [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, gamification)
+- [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)
 - [Reportage Canal 10](Medias/TV_Canal10.mp4) et [reportage Guadeloupe la 1ère](Medias/TV_Guadeloupe1ère.mp4) (extraits vidéo, voir aussi ci-dessus)
 - [Logo Potomitan™ en haute résolution](assets/potomitan-logo.png)
 
