@@ -120,9 +120,9 @@ class SettingsActivity : AppCompatActivity() {
 
         /** Onglet à ouvrir au démarrage, quand l'activité est lancée depuis le clavier. */
         const val EXTRA_OPEN_TAB = "open_tab"
-        const val TAB_STATS = 1
-        const val TAB_JEUX = 2
-        const val TAB_DICO = 3
+        const val TAB_JEUX = 1
+        const val TAB_DICO = 2
+        const val TAB_STATS = 3
 
         /** Code de la demande de permission POST_NOTIFICATIONS (pastille de niveau). */
         private const val REQUEST_NOTIFICATIONS = 4201
@@ -781,12 +781,7 @@ class SettingsActivity : AppCompatActivity() {
             val startTab = createTab(0, "🚀", "Démarrage")
             tabContainer.addView(startTab)
             Log.d("SettingsActivity", "Onglet Démarrage créé et ajouté")
-            
-            // Tab Statistiques  
-            val statsTab = createTab(1, "📊", "Kréyòl an mwen")
-            tabContainer.addView(statsTab)
-            Log.d("SettingsActivity", "Onglet Statistiques créé et ajouté")
-            
+
             // Tab Jé : les trois jeux derrière une seule destination. Ils
             // occupaient trois onglets sur sept, soit 43 % de la barre, pour
             // une activité que l'on choisit une fois par session.
@@ -802,6 +797,11 @@ class SettingsActivity : AppCompatActivity() {
             val dictionaryTab = createTab(TAB_DICO, "📚", "Dictionnaire")
             tabContainer.addView(dictionaryTab)
             Log.d("SettingsActivity", "Onglet Dictionnaire créé et ajouté")
+
+            // Tab Statistiques
+            val statsTab = createTab(TAB_STATS, "📊", "Kréyòl an mwen")
+            tabContainer.addView(statsTab)
+            Log.d("SettingsActivity", "Onglet Statistiques créé et ajouté")
 
             // Guide et À Propos ne sont plus des onglets : ce sont des pages de
             // référence que l'on lit une fois, pas des destinations
@@ -4132,9 +4132,9 @@ class SettingsActivity : AppCompatActivity() {
             val realPosition = position % REAL_COUNT
             return when (realPosition) {
                 0 -> OnboardingFragment()
-                1 -> StatsFragment()
-                2 -> GamesFragment()
-                3 -> DictionaryFragment()
+                1 -> GamesFragment()
+                2 -> DictionaryFragment()
+                3 -> StatsFragment()
                 else -> OnboardingFragment()
             }
         }
