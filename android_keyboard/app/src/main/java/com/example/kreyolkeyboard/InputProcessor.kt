@@ -1,6 +1,7 @@
 package com.example.kreyolkeyboard
 
 import android.inputmethodservice.InputMethodService
+import android.os.SystemClock
 import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
@@ -54,6 +55,45 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
          */
         internal fun trailingWordLength(textAfterCursor: String): Int =
             textAfterCursor.takeWhile { isWordCharacter(it) }.length
+
+        /** Délai maximal entre deux espaces pour que le second pose un point. */
+        internal const val DELAI_DOUBLE_ESPACE_MS = 700L
+
+        /**
+         * Le second espace d'un double espace doit-il devenir « . » ?
+         *
+         * Oui quand il suit le premier de près et que ce premier suivait
+         * immédiatement une lettre ou un chiffre. Le contrôle porte sur le texte
+         * réellement présent avant le curseur et pas seulement sur le
+         * chronomètre : un espace posé après une ponctuation (« bonjou, ») ou au
+         * début d'un champ ne doit pas devenir « ., » ni « . ».
+         */
+        internal fun doubleEspaceEnPoint(avantLeCurseur: String, ecouleMs: Long): Boolean =
+            ecouleMs in 0..DELAI_DOUBLE_ESPACE_MS &&
+                avantLeCurseur.length >= 2 &&
+                avantLeCurseur.last() == ' ' &&
+                avantLeCurseur[avantLeCurseur.length - 2].isLetterOrDigit()
+
+        /** Les ponctuations qui retirent l'espace posé automatiquement avant elles. */
+        private val PONCTUATION_SANS_ESPACE_AVANT = setOf(",", ".")
+
+        /** Les ponctuations qui valident le mot en cours, comme un espace. */
+        private val PONCTUATION_QUI_VALIDE = setOf(",", ".", ";", ":", "?", "!")
+
+        /**
+         * La ponctuation [touche] doit-elle retirer l'espace qui la précède ?
+         *
+         * Seulement `,` et `.` : le corpus écrit une espace avant `?` et `!`
+         * (« Nou kay bengné ! »), typographie française que ce clavier n'a pas à
+         * défaire. Et seulement l'espace posé par le clavier lui-même après une
+         * suggestion, jamais celui que l'utilisateur a tapé (l'appelant a déjà
+         * vérifié cette origine).
+         */
+        internal fun retireEspaceAuto(avantLeCurseur: String, touche: String): Boolean =
+            touche in PONCTUATION_SANS_ESPACE_AVANT &&
+                avantLeCurseur.length >= 2 &&
+                avantLeCurseur.last() == ' ' &&
+                avantLeCurseur[avantLeCurseur.length - 2].isLetterOrDigit()
     }
     
     // État du processeur
@@ -62,6 +102,25 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     private var isCapsLock = false
     private var isNumericMode = false
     private var isEmojiMode = false
+
+    // Aides à l'écriture. Posées par le service à chaque prise de focus, d'après
+    // le champ et les réglages : ici, rien n'est relu à la frappe.
+    private var aides: AidesEcriture = AidesEcriture.AUCUNE
+    private var restaurateurDAccents: ((String) -> String?)? = null
+
+    /** Une correction d'accents à peine faite, que le retour arrière peut défaire. */
+    private data class Restauration(val tape: String, val restitue: String, val suite: String)
+
+    // Ces trois états ne valent que pour la touche qui suit et sont remis à zéro
+    // au début de chaque appui (voir processKeyPress).
+    private var derniereRestauration: Restauration? = null
+    private var espaceAutoEnAttente = false
+    private var instantDernierEspace = 0L
+
+    // Le mot dont l'utilisateur vient de défaire la correction : la prochaine
+    // validation le laisse tel quel, faute de quoi le retour arrière serait
+    // inutile (le mot serait aussitôt recorrigé).
+    private var motRefuse: String? = null
 
     // Callbacks
     interface InputProcessorListener {
@@ -77,6 +136,30 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     fun setInputProcessorListener(listener: InputProcessorListener) {
         this.processorListener = listener
     }
+
+    fun setAidesEcriture(aides: AidesEcriture) {
+        this.aides = aides
+        derniereRestauration = null
+        espaceAutoEnAttente = false
+        instantDernierEspace = 0L
+        motRefuse = null
+    }
+
+    /** La règle de restauration, fournie par le moteur de suggestions. */
+    fun setRestaurateurDAccents(restaurateur: (String) -> String?) {
+        this.restaurateurDAccents = restaurateur
+    }
+
+    /**
+     * Ouvre le pavé de chiffres (ou revient aux lettres) sans passer par la touche
+     * « 123 » : c'est ce qui permet d'ouvrir un champ numérique sur les chiffres.
+     */
+    fun setNumericMode(numeric: Boolean) {
+        if (isNumericMode == numeric && !isEmojiMode) return
+        isNumericMode = numeric
+        isEmojiMode = false
+        processorListener?.onModeChanged(isNumericMode, isEmojiMode, isCapitalMode, isCapsLock)
+    }
     
     /**
      * 🎮 Gamification: Définit le listener pour le tracking des mots committés
@@ -91,11 +174,22 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     fun processKeyPress(key: String): Boolean {
         Log.d(TAG, "processKeyPress appelé avec: '$key'")
         val inputConnection = inputMethodService.currentInputConnection ?: return false
-        
+
+        // Lus puis remis à zéro : chacun ne concerne que la touche qui suit l'action
+        // qui l'a posé. Une correction que l'utilisateur ne défait pas tout de
+        // suite est acquise, un espace automatique suivi d'autre chose que de la
+        // ponctuation est un espace comme un autre.
+        val espaceAuto = espaceAutoEnAttente
+        val restauration = derniereRestauration
+        val instantEspace = instantDernierEspace
+        espaceAutoEnAttente = false
+        if (key != "⌫") derniereRestauration = null
+        if (key != " ") instantDernierEspace = 0L
+
         return when (key) {
             "⌫" -> {
                 Log.d(TAG, "Handling backspace")
-                handleBackspace(inputConnection)
+                handleBackspace(inputConnection, restauration)
             }
             "⏎" -> {
                 Log.d(TAG, "Handling enter")
@@ -115,11 +209,11 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
             }
             " " -> {
                 Log.d(TAG, "Handling space")
-                handleSpace(inputConnection)
+                handleSpace(inputConnection, instantEspace)
             }
             else -> {
                 Log.d(TAG, "Handling character input: '$key'")
-                handleCharacterInput(key, inputConnection)
+                handleCharacterInput(key, inputConnection, espaceAuto)
             }
         }
     }
@@ -127,7 +221,11 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     /**
      * Traite l'entrée d'un caractère normal
      */
-    private fun handleCharacterInput(key: String, inputConnection: InputConnection): Boolean {
+    private fun handleCharacterInput(
+        key: String,
+        inputConnection: InputConnection,
+        espaceAuto: Boolean = false
+    ): Boolean {
         val character = if (shouldCapitalize()) {
             key.uppercase()
         } else {
@@ -143,7 +241,28 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
         } else {
             // Caractère non alphabétique - finaliser le mot courant
             Log.d(TAG, "Caractère '$character' non alphabétique - finalisation du mot")
+
+            // La ponctuation valide le mot comme le ferait un espace : les accents
+            // s'y rétablissent aussi. Elle ne le fait pas pour le tiret ni pour
+            // l'apostrophe, qui prolongent un mot (« ba-w ») au lieu de le clore.
+            val restauration = if (character in PONCTUATION_QUI_VALIDE) {
+                restaurerLesAccents(inputConnection, character)
+            } else null
+
+            // L'espace que le clavier vient de poser après une suggestion ne doit
+            // pas rester devant une virgule ou un point.
+            if (aides.retirerEspaceAuto && espaceAuto) {
+                val avant = inputConnection.getTextBeforeCursor(2, 0)?.toString() ?: ""
+                if (retireEspaceAuto(avant, character)) {
+                    inputConnection.deleteSurroundingText(1, 0)
+                }
+            }
+
             finalizeCurrentWord()
+            inputConnection.commitText(character, 1)
+            derniereRestauration = restauration
+            handleAutoCapitalization()
+            return true
         }
         
         // Envoyer le caractère à l'éditeur
@@ -159,7 +278,16 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     /**
      * Traite la touche Retour arrière
      */
-    private fun handleBackspace(inputConnection: InputConnection): Boolean {
+    private fun handleBackspace(
+        inputConnection: InputConnection,
+        restauration: Restauration? = null
+    ): Boolean {
+        // Un retour arrière juste après une correction d'accents la défait : le mot
+        // revient tel que tapé, et la prochaine validation ne le corrigera pas.
+        if (restauration != null && annulerRestauration(inputConnection, restauration)) {
+            return true
+        }
+
         // Supprimer le(s) caractère(s) précédent(s) dans l'éditeur. La plupart des
         // emojis (panneau emoji, mais aussi ceux tapés via un autre clavier avant de
         // basculer sur Kréyòl) sont hors du plan de base Unicode et occupent une
@@ -208,6 +336,9 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
      */
     private fun handleEnter(inputConnection: InputConnection): Boolean {
         Log.d(TAG, "🔵 === DEBUT handleEnter() ===")
+        // Un message qu'on envoie d'un appui sur Entrée doit partir avec ses accents.
+        // Rien à défaire ici : l'action de l'éditeur suit aussitôt.
+        restaurerLesAccents(inputConnection, "")
         finalizeCurrentWord()
         Log.d(TAG, "🔵 Mot finalisé")
         
@@ -346,13 +477,87 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
     /**
      * Traite la barre d'espace
      */
-    private fun handleSpace(inputConnection: InputConnection): Boolean {
+    private fun handleSpace(inputConnection: InputConnection, instantPrecedent: Long = 0L): Boolean {
+        val maintenant = SystemClock.uptimeMillis()
+
+        // Deux espaces de suite après un mot : le second devient un point.
+        if (aides.doubleEspaceEnPoint && instantPrecedent > 0L) {
+            val avant = inputConnection.getTextBeforeCursor(2, 0)?.toString() ?: ""
+            if (doubleEspaceEnPoint(avant, maintenant - instantPrecedent)) {
+                inputConnection.deleteSurroundingText(1, 0)
+                inputConnection.commitText(". ", 1)
+                instantDernierEspace = 0L
+                handleAutoCapitalization()
+                return true
+            }
+        }
+
+        val restauration = restaurerLesAccents(inputConnection, " ")
         finalizeCurrentWord()
         inputConnection.commitText(" ", 1)
-        
+        derniereRestauration = restauration
+        instantDernierEspace = maintenant
+
         // Activer la capitalisation automatique après certains signes
         handleAutoCapitalization()
         
+        return true
+    }
+
+    /**
+     * Rétablit les accents du mot en cours, à sa validation par [suite] (un
+     * espace ou une ponctuation), et retient de quoi défaire la correction.
+     *
+     * La règle elle-même (et tout ce qu'elle s'interdit) est dans
+     * [AccentRestoration] ; ici on ne s'occupe que de l'éditeur : le mot doit être
+     * exactement ce qui précède le curseur, et le curseur au bout du mot, sinon on
+     * n'écrit rien. C'est la même prudence que `processSuggestionSelection`.
+     */
+    private fun restaurerLesAccents(inputConnection: InputConnection, suite: String): Restauration? {
+        if (!aides.restaurerLesAccents) return null
+
+        val mot = currentWord
+        val refuse = motRefuse
+        motRefuse = null
+        if (mot.length < AccentRestoration.LONGUEUR_MINIMALE) return null
+        if (!mot.all { isWordCharacter(it) }) return null
+        if (refuse != null && refuse == mot.lowercase()) return null
+
+        val restitue = restaurateurDAccents?.invoke(mot) ?: return null
+        if (restitue == mot) return null
+
+        val avant = inputConnection.getTextBeforeCursor(mot.length, 0)?.toString() ?: return null
+        if (avant != mot) return null
+        val apres = inputConnection.getTextAfterCursor(1, 0)?.toString() ?: ""
+        if (apres.isNotEmpty() && isWordCharacter(apres[0])) return null
+
+        inputConnection.deleteSurroundingText(mot.length, 0)
+        inputConnection.commitText(restitue, 1)
+        currentWord = restitue
+        Log.d(TAG, "Accents rétablis: '$mot' -> '$restitue'")
+        return Restauration(mot, restitue, suite)
+    }
+
+    /**
+     * Défait une correction d'accents : le mot corrigé et ce qui l'a validé sont
+     * retirés, le mot tapé revient et redevient le mot en cours.
+     * `false` si le texte a changé depuis, auquel cas le retour arrière se fait
+     * comme d'habitude.
+     */
+    private fun annulerRestauration(
+        inputConnection: InputConnection,
+        restauration: Restauration
+    ): Boolean {
+        val attendu = restauration.restitue + restauration.suite
+        val avant = inputConnection.getTextBeforeCursor(attendu.length, 0)?.toString() ?: return false
+        if (avant != attendu) return false
+
+        inputConnection.deleteSurroundingText(attendu.length, 0)
+        inputConnection.commitText(restauration.tape, 1)
+        currentWord = restauration.tape
+        motRefuse = restauration.tape.lowercase()
+        processorListener?.onWordChanged(currentWord)
+        Log.d(TAG, "Correction défaite: '${restauration.restitue}' -> '${restauration.tape}'")
         return true
     }
     
@@ -450,6 +655,8 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
         
         // Insérer la suggestion avec un espace automatique
         inputConnection.commitText("$suggestion ", 1)
+        espaceAutoEnAttente = true
+        instantDernierEspace = SystemClock.uptimeMillis()
         
         // Finaliser le mot (le tracking se fera dans finalizeCurrentWord)
         currentWord = suggestion
@@ -510,9 +717,9 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
         val editorInfo = inputMethodService.currentInputEditorInfo ?: return false
         val inputType = editorInfo.inputType
         
-        // Pas de capitalisation automatique en mode mot de passe ou numérique
-        if (inputType and InputType.TYPE_TEXT_VARIATION_PASSWORD != 0 ||
-            inputType and InputType.TYPE_CLASS_NUMBER != 0) {
+        // Pas de majuscule automatique hors du texte courant : mot de passe,
+        // nombre, téléphone, date, adresse électronique ou web
+        if (FieldKind.de(inputType).interditLaMajusculeAuto) {
             return false
         }
         
@@ -581,6 +788,10 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
      */
     fun resetState() {
         currentWord = ""
+        derniereRestauration = null
+        espaceAutoEnAttente = false
+        instantDernierEspace = 0L
+        motRefuse = null
         isCapitalMode = false
         isCapsLock = false
         // Ne pas réinitialiser isNumericMode pour conserver le mode choisi

@@ -132,6 +132,20 @@ class KeyboardLayoutManager(private val context: Context) {
     private var isCapitalMode = false
     private var isCapsLock = false
     private var isNumericMode = false // FORCE ALPHABÉTIQUE PAR DÉFAUT
+
+    /**
+     * Le champ pour lequel la rangée du bas est composée. Seuls [FieldKind.EMAIL] et
+     * [FieldKind.URI] changent quelque chose ; tout autre type garde la rangée
+     * habituelle. Les panneaux sont construits une fois et masqués (voir
+     * [createKeyboardLayout]) : changer ce type impose donc de reconstruire la vue,
+     * ce que fait le service, comme pour un changement de thème.
+     */
+    var fieldKind: FieldKind = FieldKind.TEXT
+        private set
+
+    fun setFieldKind(kind: FieldKind) {
+        fieldKind = if (kind == FieldKind.EMAIL || kind == FieldKind.URI) kind else FieldKind.TEXT
+    }
     private var isEmojiMode = false
     private val keyboardButtons = mutableListOf<View>() // Changé de TextView à View pour supporter ImageButton
 
@@ -382,7 +396,17 @@ class KeyboardLayoutManager(private val context: Context) {
         // v9.1.0 : "'" retiré (0 occurrence dans creole_dict.json, contre 1088
         // mots pour "-") au profit d'une touche emoji dédiée ; l'apostrophe
         // reste accessible en appui long sur "," (AccentHandler).
-        val row4 = arrayOf("123", ",", "é", "-", " ", "è", ".", "EMOJI", "⏎")
+        //
+        // Dans un champ d'adresse, é et è cèdent la place à ce qu'une adresse exige
+        // (arobase et tiret bas pour un courriel, barre oblique et tiret bas pour
+        // une adresse web), dans les mêmes emplacements : aucune touche ne change
+        // de largeur, et personne n'écrit du kréyòl dans une adresse. Sans cela,
+        // l'arobase n'existait que sous « 123 ».
+        val row4 = when (fieldKind) {
+            FieldKind.EMAIL -> arrayOf("123", ",", "@", "-", " ", "_", ".", "EMOJI", "⏎")
+            FieldKind.URI -> arrayOf("123", ",", "/", "-", " ", "_", ".", "EMOJI", "⏎")
+            else -> arrayOf("123", ",", "é", "-", " ", "è", ".", "EMOJI", "⏎")
+        }
         
         mainLayout.addView(createKeyboardRow(row1))
         mainLayout.addView(createKeyboardRow(row2))

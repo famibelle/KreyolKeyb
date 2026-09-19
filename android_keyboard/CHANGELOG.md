@@ -5,6 +5,39 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Non publié]
+
+### ✨ Ajouté
+
+- **Les accents reviennent tout seuls.** Un mot tapé sans accent (« pale »,
+  « kreyol », « zot ») reçoit ses accents (« palé », « kréyòl », « zòt ») quand
+  vous le validez par un espace, une ponctuation ou Entrée. Le clavier ne
+  remplace jamais un mot par un autre : les lettres restent exactement les
+  vôtres, seuls les accents s'ajoutent. Il s'abstient quand le dictionnaire
+  connaît plusieurs graphies rivales (« pé » et « pè »), quand le mot est du
+  français, et quand vous avez vous-même tapé un accent. Un retour arrière
+  juste après rend le mot tel que vous l'aviez tapé. Réglage « Rétablir les
+  accents ».
+- **Deux espaces posent un point.** Après un mot, un second espace tapé dans la
+  foulée devient un point suivi d'un espace. Réglage « Deux espaces posent un
+  point ».
+- **Ponctuation collée au mot.** Après une suggestion, le clavier pose un
+  espace ; une virgule ou un point tapé aussitôt le retire (« bonjou, » et non
+  « bonjou , »). Le point d'interrogation et le point d'exclamation gardent
+  l'espace que vous tapez, comme l'écrit le corpus (« Sa ou fè ? »). Réglage
+  « Ponctuation collée au mot ».
+- **Le clavier s'adapte au champ.** Un nombre, un numéro de téléphone ou une date
+  s'ouvrent sur le pavé de chiffres. Une adresse électronique porte l'arobase et
+  le tiret bas sur les lettres (à la place de é et è), une adresse web la barre
+  oblique et le tiret bas. Aucune suggestion, aucune correction et aucune
+  majuscule automatique dans ces champs, ni dans un mot de passe.
+
+### Ce qui reste comme avant
+
+- Aucune de ces aides ne s'applique dans un mot de passe, un nombre, une adresse
+  ou un nom de personne (pour la correction). Trois interrupteurs, dans les
+  réglages du clavier, les coupent chacun.
+
 ## [22.0.2] - 2026-09-19
 
 Première version publiée depuis la 20.0.3 : elle réunit un carnet de cartes,

@@ -146,6 +146,46 @@ class KeyboardSettingsActivity : AppCompatActivity() {
         addView(espacement())
 
         addView(carte().apply {
+            addView(titreSection("Écriture"))
+            addView(explication(
+                "Trois aides qui touchent à ce que vous tapez. Elles ne servent que " +
+                        "dans les champs de texte courant, jamais dans un mot de passe, un " +
+                        "nombre ou une adresse."
+            ))
+            addView(interrupteur(
+                "Rétablir les accents",
+                KeyboardPreferences.restoreAccents(this@KeyboardSettingsActivity)
+            ) { actif ->
+                KeyboardPreferences.setRestoreAccents(this@KeyboardSettingsActivity, actif)
+            })
+            addView(explication(
+                "Un mot tapé sans accent (« pale ») reçoit ses accents (« palé ») quand " +
+                        "vous le validez, à condition que le dictionnaire n'en connaisse qu'une " +
+                        "graphie. Le clavier ne remplace jamais un mot par un autre. Un retour " +
+                        "arrière juste après rend le mot tel que vous l'aviez tapé."
+            ))
+            addView(interrupteur(
+                "Deux espaces posent un point",
+                KeyboardPreferences.doubleSpacePeriod(this@KeyboardSettingsActivity)
+            ) { actif ->
+                KeyboardPreferences.setDoubleSpacePeriod(this@KeyboardSettingsActivity, actif)
+            })
+            addView(interrupteur(
+                "Ponctuation collée au mot",
+                KeyboardPreferences.dropAutoSpace(this@KeyboardSettingsActivity)
+            ) { actif ->
+                KeyboardPreferences.setDropAutoSpace(this@KeyboardSettingsActivity, actif)
+            })
+            addView(explication(
+                "Après une suggestion, le clavier pose un espace. Une virgule ou un " +
+                        "point tapé aussitôt le retire, pour que « bonjou » ne devienne pas " +
+                        "« bonjou , ». Les points d'interrogation et d'exclamation gardent " +
+                        "l'espace que vous tapez."
+            ))
+        })
+        addView(espacement())
+
+        addView(carte().apply {
             addView(titreSection("Emojis récents"))
             addView(explication(
                 "Le panneau emoji place en tête les 30 derniers emojis que vous " +

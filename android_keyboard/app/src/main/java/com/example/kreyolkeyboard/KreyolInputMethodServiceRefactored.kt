@@ -199,6 +199,20 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
      * main. `null` tant qu'aucune vue n'a été construite.
      */
     private var paletteDeLaVue: KeyboardTheme.Palette? = null
+
+    /**
+     * Le type du champ courant, relu à chaque prise de focus. Il décide de ce que le
+     * clavier propose (suggestions, aides à l'écriture, pavé de chiffres) sans que
+     * rien d'autre n'ait à interroger l'éditeur à la frappe.
+     */
+    private var champCourant: FieldKind = FieldKind.TEXT
+
+    /**
+     * La rangée du bas avec laquelle la vue en cache a été construite : un courriel
+     * ou une adresse web ne l'ont pas, et une vue construite pour l'un ne convient
+     * pas à l'autre.
+     */
+    private var dispositionDeLaVue: FieldKind? = null
     
     // État du service
     private var isInitialized = false
@@ -331,6 +345,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         
         inputProcessor = InputProcessor(this).apply {
             setInputProcessorListener(this@KreyolInputMethodServiceRefactored)
+            // La règle des accents vit dans le moteur, qui seul connaît le
+            // dictionnaire ; le processeur, lui, ne connaît que l'éditeur.
+            setRestaurateurDAccents { mot -> suggestionEngine.restoreAccents(mot) }
         }
         
         // 🎮 Gamification: Initialiser le tracking d'utilisation du vocabulaire
@@ -468,6 +485,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // IME accordera réellement (voir availableRowsHeightPx)
         keyboardLayoutManager.setAvailableRowsHeight(computeAvailableRowsHeight())
         val keyboardLayout = keyboardLayoutManager.createKeyboardLayout()
+        dispositionDeLaVue = keyboardLayoutManager.fieldKind
         keyboardContainer.addView(keyboardLayout)
         mainLayout.addView(keyboardContainer)
         mainKeyboardView = keyboardContainer
@@ -853,7 +871,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     
     override fun onWordChanged(word: String) {
         Log.d(TAG, "onWordChanged appelé avec: '$word'")
-        if (word.isNotEmpty() && isInitialized) {
+        if (word.isNotEmpty() && isInitialized && champCourant.proposeDesMots) {
             Log.d(TAG, "� Génération suggestions SIMPLES pour: '$word'")
             suggestionEngine.setSuggestionMode(SuggestionEngine.SuggestionMode.DICTIONARY)
             suggestionEngine.generateDictionarySuggestions(word)  // Retour méthode simple
@@ -864,6 +882,9 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     }
     
     override fun onWordCompleted(word: String) {
+        // Ni suggestion ni historique de mots hors du texte courant : un mot de
+        // passe ou une adresse n'ont pas à alimenter la prédiction du mot suivant.
+        if (!champCourant.proposeDesMots) return
         Log.d(TAG, "Mot complété: '$word' - Ajout à l'historique")
         suggestionEngine.addWordToHistory(word)
         
@@ -1190,8 +1211,30 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // rafraîchi la palette globale, si bien qu'un tel booléen serait toujours
         // faux ici et que le clavier garderait ses anciennes couleurs.
         KeyboardTheme.refresh(this)
-        if (paletteDeLaVue !== KeyboardTheme.palette()) {
-            Log.d(TAG, "Thème changé : reconstruction de la vue d'entrée")
+
+        // Type du champ et aides à l'écriture, relus à chaque prise de focus au même
+        // titre que le retour de frappe : un interrupteur changé dans l'application
+        // s'applique dès le retour dans un champ.
+        val typeDeChamp = info?.inputType ?: 0
+        champCourant = FieldKind.de(typeDeChamp)
+        inputProcessor.setAidesEcriture(
+            AidesEcriture.pour(
+                champ = champCourant,
+                refuseLesSuggestions = FieldKind.refuseLesSuggestions(typeDeChamp),
+                accents = KeyboardPreferences.restoreAccents(this),
+                doubleEspace = KeyboardPreferences.doubleSpacePeriod(this),
+                espaceAuto = KeyboardPreferences.dropAutoSpace(this)
+            )
+        )
+        if (!champCourant.proposeDesMots) displaySuggestions(emptyList())
+
+        // La rangée du bas dépend du champ : la vue en cache n'est reconstruite que
+        // quand l'adresse (courriel, web) change de nature, pas à chaque champ.
+        keyboardLayoutManager.setFieldKind(champCourant)
+        val dispositionChangee = dispositionDeLaVue != keyboardLayoutManager.fieldKind
+
+        if (paletteDeLaVue !== KeyboardTheme.palette() || dispositionChangee) {
+            Log.d(TAG, "Thème ou disposition changés : reconstruction de la vue d'entrée")
             setInputView(onCreateInputView())
         }
 
@@ -1205,6 +1248,12 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             // précédent en mode 123 ou emoji.
             keyboardLayoutManager.applyMode()
             Log.d(TAG, "✅ Mode alphabétique garanti lors du démarrage de la saisie")
+
+            // Un nombre, un numéro de téléphone, une date : le pavé de chiffres
+            // d'abord. Aussi pour les autres champs, où cela remet le processeur
+            // d'accord avec le gestionnaire de disposition qui vient d'être ramené
+            // aux lettres.
+            inputProcessor.setNumericMode(champCourant.ouvreLesChiffres)
         }
 
         maybeShowFirstRealUseTip(info)

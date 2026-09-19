@@ -185,6 +185,10 @@ class SuggestionEngine(private val context: Context) {
     // Formes normalisées (sans accents) alignées index à index avec `dictionary`,
     // précalculées au chargement pour éviter de normaliser 3600+ mots à chaque frappe
     private var normalizedWords: List<String> = emptyList()
+    // Graphies du dictionnaire regroupées par forme sans accent, pour la
+    // restauration des accents (AccentRestoration). Construit une fois au
+    // chargement : la consulter à la validation d'un mot ne parcourt rien.
+    private var accentGroups: Map<String, List<Pair<String, Int>>> = emptyMap()
     private var ngramModel: Map<String, List<Map<String, Any>>> = emptyMap()
     private val wordHistory = mutableListOf<String>()
 
@@ -613,6 +617,19 @@ class SuggestionEngine(private val context: Context) {
     }
 
     /**
+     * La graphie accentuée à substituer à [word] tapé sans accent, ou `null` quand
+     * il faut le laisser tel quel. Toute la règle, et ses interdits, sont dans
+     * [AccentRestoration] ; ce qui revient ici est seulement de lui fournir les
+     * graphies du dictionnaire et de dire si le mot est du français.
+     */
+    fun restoreAccents(word: String): String? {
+        if (word.length < AccentRestoration.LONGUEUR_MINIMALE) return null
+        val groupe = accentGroups[AccentTolerantMatcher.normalize(word)] ?: return null
+        val estFrancais = ::frenchDictionary.isInitialized && frenchDictionary.containsWord(word)
+        return AccentRestoration.choisir(word, groupe, estFrancais)
+    }
+
+    /**
      * Suggestions de correction pour un mot absent des deux dictionnaires, en réutilisant
      * telle quelle la logique Levenshtein + scoring existante (chantier G) — la casse de
      * `word` est reportée sur chaque suggestion, comme pour la frappe normale.
@@ -643,6 +660,7 @@ class SuggestionEngine(private val context: Context) {
             // Trier par fréquence décroissante
             dictionary = loadedDictionary.sortedByDescending { it.second }
             normalizedWords = dictionary.map { AccentTolerantMatcher.normalize(it.first) }
+            accentGroups = dictionary.indices.groupBy({ normalizedWords[it] }, { dictionary[it] })
 
             withContext(Dispatchers.Main) {
                 suggestionListener?.onDictionaryLoaded(dictionary.size)

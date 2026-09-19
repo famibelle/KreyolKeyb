@@ -35,6 +35,9 @@ object KeyboardPreferences {
     private const val KEY_HAPTIC_ENABLED = "haptic_enabled"
     private const val KEY_SOUND_ENABLED = "sound_enabled"
     private const val KEY_THEME_MODE = "theme_mode"
+    private const val KEY_RESTORE_ACCENTS = "restore_accents"
+    private const val KEY_DOUBLE_SPACE_PERIOD = "double_space_period"
+    private const val KEY_DROP_AUTO_SPACE = "drop_auto_space"
 
     /** Les deux retours sont actifs par défaut, comme sur les autres claviers. */
     private const val DEFAULT_ENABLED = true
@@ -56,6 +59,36 @@ object KeyboardPreferences {
     fun setSoundEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_SOUND_ENABLED, enabled).apply()
         KeyFeedback.refresh(context)
+    }
+
+    /**
+     * Les trois aides à l'écriture (voir [AidesEcriture]). Toutes actives par
+     * défaut, comme sur les autres claviers, et toutes désactivables : elles
+     * touchent à ce que l'utilisateur a tapé, ce qui se doit d'être un choix.
+     *
+     * La restauration des accents est la seule qui réécrive un mot. Elle est
+     * bornée (jamais un autre mot, voir [AccentRestoration]) et un retour
+     * arrière juste après elle rend le mot tel que tapé.
+     */
+    fun restoreAccents(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_RESTORE_ACCENTS, DEFAULT_ENABLED)
+
+    fun doubleSpacePeriod(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_DOUBLE_SPACE_PERIOD, DEFAULT_ENABLED)
+
+    fun dropAutoSpace(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_DROP_AUTO_SPACE, DEFAULT_ENABLED)
+
+    fun setRestoreAccents(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_RESTORE_ACCENTS, enabled).apply()
+    }
+
+    fun setDoubleSpacePeriod(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_DOUBLE_SPACE_PERIOD, enabled).apply()
+    }
+
+    fun setDropAutoSpace(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_DROP_AUTO_SPACE, enabled).apply()
     }
 
     /**
