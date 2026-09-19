@@ -1,6 +1,6 @@
 ---
 title: "Dossier de presse : Klavyé Kréyòl Karukera, clavier créole guadeloupéen"
-description: "Kit presse du premier clavier mobile intelligent dédié au créole guadeloupéen : faits clés, visuels, contact."
+description: "Kit presse d'un clavier mobile intelligent dédié au créole guadeloupéen : faits clés, visuels, contact."
 lang: fr
 ---
 
@@ -60,8 +60,8 @@ lang: fr
 
 ## En une phrase
 
-**Klavyé Kréyòl Karukera est le premier clavier mobile intelligent dédié au
-créole guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
+**Klavyé Kréyòl Karukera est un clavier mobile intelligent dédié au créole
+guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
 partir d'un corpus littéraire créole authentique. Gratuit, open source, et
 sans aucune collecte de données.
 
