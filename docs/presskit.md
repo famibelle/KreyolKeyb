@@ -65,6 +65,10 @@ créole guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
 partir d'un corpus littéraire créole authentique. Gratuit, open source, et
 sans aucune collecte de données.
 
+L'ambition du projet va au-delà d'Android : que le kréyòl s'écrive bien sur
+tous les claviers, y compris celui de l'iPhone. Aujourd'hui, seule la version
+Android est publiée ; la version iOS est en préparation.
+
 ## L'éditeur
 
 Klavyé Kréyòl Karukera est édité par **Potomitan™**, société par actions
@@ -335,7 +339,7 @@ Ces éléments sont vérifiables dans le
   liste des mots suivants observés avec leur probabilité. La plus longue
   séquence de mots reconstructible depuis ces données est de **trois mots**
 - **Chaque entrée du corpus source porte sa source**, ce qui rend la
-  provenance traçable entrée par entrée. Le corpus rassemble 86 sources
+  provenance traçable entrée par entrée. Le corpus rassemble 87 sources
   distinctes, dont la majorité est produite dans le cadre du projet
 - **Aucune donnée ne quitte l'appareil.** Pas de compte, pas de serveur, pas
   de statistique d'usage remontée, y compris de manière anonyme. Le clavier
@@ -358,7 +362,7 @@ Les suggestions s'appuient sur les œuvres de :
 
 | | |
 |---|---|
-| Plateforme | Android 5.0+ (iOS en préparation) |
+| Plateforme | Android 5.0+ aujourd'hui. L'ambition est de couvrir tous les claviers, iPhone compris : la version iOS est en préparation |
 | Prix | Gratuit, sans pub, sans achat intégré |
 | Données personnelles | Aucune collecte, fonctionnement 100 % hors ligne |
 | Licence | Open source (MIT), code sur [GitHub](https://github.com/famibelle/KreyolKeyb) |
@@ -366,13 +370,13 @@ Les suggestions s'appuient sur les œuvres de :
 | Écosystème | Développe aussi [POTOMITAN](https://potomitan.io), traducteur d'urgence français ↔ créole |
 | Téléchargement | [Google Play](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dpresse%26utm_campaign%3Dlaunch10k) |
 | Couverture presse | Canal 10, Guadeloupe la 1ère (TV, juillet 2026), France-Antilles Guadeloupe (04/08/2026) |
-| Corpus source | 86 sources distinctes, provenance tracée entrée par entrée ([le corpus en chiffres](corpus.html)) |
+| Corpus source | 87 sources distinctes, provenance tracée entrée par entrée ([le corpus en chiffres](corpus.html)) |
 | Données embarquées | Fréquences et probabilités de succession, aucun texte d'auteur |
-| Dictionnaire | 5 284 mots kréyòl + 662 mots français (fallback bilingue) |
-| Modèle de prédiction | 4 601 mots-pivots (n-grams contextuels) |
+| Dictionnaire | Plus de 5 200 mots kréyòl + 662 mots français (fallback bilingue) |
+| Modèle de prédiction | Plus de 4 600 mots-pivots (n-grams contextuels) |
 | Comparatif | [Face à Gboard et au clavier Apple](comparatif.html), avec sources et cases « non vérifié » |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
-| Utilisateurs | <span id="pk-users">3 223</span> installations au <span id="pk-date">23 août 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
+| Utilisateurs | <span id="pk-users">3 356</span> installations au <span id="pk-date">19 septembre 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
 | Partenariats | [Partenariats institutionnels](partenaires.html) |
 
@@ -420,39 +424,39 @@ Une phrase écrite de bout en bout dans une conversation SMS (« An kay òwganiz
   <p><small>Une phrase en kréyòl écrite et envoyée par SMS</small></p>
 </div>
 
-Captures d'écran de chaque section de l'application (juillet 2026) :
+Captures d'écran de chaque section de l'application, version 22.0.2 (septembre 2026) :
 
 <div align="center" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_clavier_suggestions.png" alt="Suggestions bilingues Kréyòl et Français en temps réel, dans une conversation SMS" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_clavier_suggestions.png" alt="Conversation SMS en kréyòl : le mot « Bon » en cours de saisie, avec trois suggestions kréyòl (Bon, Bonjou, Bondyé) et une suggestion française (Bonheur) au-dessus du clavier" style="width: 100%; border-radius: 8px;">
     <p><small>Suggestions en conditions réelles</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_accueil.png" alt="Écran d'accueil : configuration et activation guidée du clavier" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_accueil.png" alt="Écran d'accueil : « Tout est prêt ! », configuration rapide terminée en 3 étapes, puis le correcteur orthographique proposé en option" style="width: 100%; border-radius: 8px;">
     <p><small>Accueil / configuration</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_stats.png" alt="Tableau de bord Mon Kréyòl : niveau, mot du jour, mots découverts" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_stats.png" alt="Onglet Kréyòl an mwen : niveau An mitan, 12,1 % du dictionnaire découvert, mot du jour biki et mots à découvrir" style="width: 100%; border-radius: 8px;">
     <p><small>Progression gamifiée</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_guide.png" alt="Guide de l'utilisateur avec démonstration du popup d'accents" style="width: 100%; border-radius: 8px;">
-    <p><small>Guide + popup accents</small></p>
+    <img src="Screenshots/app_guide.png" alt="Guide de l'utilisateur : installation et activation du clavier, avec l'écran système « Clavier à l'écran »" style="width: 100%; border-radius: 8px;">
+    <p><small>Guide d'utilisation</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_jeu_mots_meles.png" alt="Mini-jeu Mots Mêlés (grille de lettres à trouver)" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_jeu_mots_meles.png" alt="Mini-jeu Mots Mêlés : une grille de lettres où retrouver des mots kréyòl, avec la liste des mots à trouver et leur sens en français" style="width: 100%; border-radius: 8px;">
     <p><small>Jeu Mots Mêlés</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_jeu_mots_melanges.png" alt="Mini-jeu Mots Mélangés (lettres à remettre dans l'ordre)" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_jeu_mots_melanges.png" alt="Mini-jeu Mots Mélangés : des lettres à remettre dans l'ordre, avec les boutons Effacer, Indice, Valider et Passer" style="width: 100%; border-radius: 8px;">
     <p><small>Jeu Mots Mélangés</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_onglet_apropos.png" alt="Écran À propos : mission du projet et sources littéraires" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_onglet_apropos.png" alt="Écran À propos : la mission du projet, les boutons Partager et Noter l'application, et les sources littéraires" style="width: 100%; border-radius: 8px;">
     <p><small>À propos / mission</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
-    <img src="Screenshots/app_selecteur_clavier.png" alt="Sélecteur de clavier Android : Klavyé Kréyòl Karukera aux côtés de Gboard" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/app_selecteur_clavier.png" alt="Sélecteur de mode de saisie d'Android : Gboard, Klavyé Kréyòl Karukéra (sélectionné) et Saisie vocale Google" style="width: 100%; border-radius: 8px;">
     <p><small>Sélecteur de clavier système</small></p>
   </div>
   <div style="width: 22%; min-width: 140px;">
@@ -461,9 +465,9 @@ Captures d'écran de chaque section de l'application (juillet 2026) :
   </div>
 </div>
 
-**[Télécharger le kit presse (ZIP, 3,8 Mo)](presse/kit-presse.zip)** :
-les quinze captures ci-dessus en pleine résolution et le logo, avec leurs
-conditions d'utilisation.
+**[Télécharger le kit presse (ZIP, 7,9 Mo)](presse/kit-presse.zip)** :
+les quinze captures ci-dessus en pleine résolution, les quatre animations et
+le logo, avec leurs conditions d'utilisation.
 
 - [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
 - [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)

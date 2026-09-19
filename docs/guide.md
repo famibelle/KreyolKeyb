@@ -111,7 +111,7 @@ Correction orthographique, puis activez « Klavyé Kréyòl Karukera ».
 ## Utilisation au quotidien
 
 <div align="center" style="margin: 16px 0;">
-  <img src="Screenshots/app_clavier_suggestions.png" alt="Clavier Klavyé Kréyòl Karukera dans un message : « Bonjou tout moun » écrit, et la barre de suggestions proposant ki, an, ka, sé au-dessus des touches" width="32%">
+  <img src="Screenshots/app_clavier_suggestions.png" alt="Clavier Klavyé Kréyòl Karukera dans un message : « Bon » en cours de saisie, et la barre de suggestions proposant Bon, Bonjou, Bondyé en kréyòl et Bonheur en français au-dessus des touches" width="32%">
 </div>
 
 ### Écrire en kréyòl

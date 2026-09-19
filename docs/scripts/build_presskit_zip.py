@@ -6,9 +6,11 @@ archive, l'ouvre, et prend ce dont il a besoin. Ce script produit
 docs/presse/kit-presse.zip à partir des visuels déjà présents dans le dépôt,
 sans les dupliquer dans les sources.
 
-L'animation GIF et les extraits vidéo sont volontairement exclus : ils pèsent
-à eux seuls plus de cinquante mégaoctets, ce qui transformerait l'archive en
-obstacle. Ils restent accessibles par lien direct depuis le dossier de presse.
+Les quatre animations GIF sont incluses depuis que « Klavyé An Aktion » a été
+ramenée de 25 à 3 Mo (360 px de large, 7 images par seconde). Les extraits
+vidéo des reportages restent exclus : ils pèsent à eux seuls plus de
+cinquante mégaoctets, ce qui transformerait l'archive en obstacle. Ils restent
+accessibles par lien direct depuis le dossier de presse.
 
     python3 docs/scripts/build_presskit_zip.py
 """
@@ -25,7 +27,7 @@ VISUELS = {
     "Screenshots/app_clavier_suggestions.png": "captures/01-suggestions-en-conditions-reelles.png",
     "Screenshots/app_accueil.png":             "captures/02-accueil-configuration.png",
     "Screenshots/app_stats.png":               "captures/03-progression-gamifiee.png",
-    "Screenshots/app_guide.png":               "captures/04-guide-et-accents.png",
+    "Screenshots/app_guide.png":               "captures/04-guide-utilisation.png",
     "Screenshots/app_jeu_mots_meles.png":      "captures/05-jeu-mots-meles.png",
     "Screenshots/app_jeu_mots_melanges.png":   "captures/06-jeu-mots-melanges.png",
     "Screenshots/app_onglet_apropos.png":      "captures/07-a-propos-mission.png",
@@ -40,12 +42,25 @@ VISUELS = {
     "assets/potomitan-logo.png":               "logo/potomitan-logo.png",
 }
 
+ANIMATIONS = {
+    "Screenshots/gif_ownganize_sms.gif":       "animations/01-phrase-kreyol-envoyee-par-sms.gif",
+    "Screenshots/gif_eventail_cartes.gif":     "animations/02-cartes-en-eventail.gif",
+    "Screenshots/gif_boite_leitner.gif":       "animations/03-revision-sonje.gif",
+    "Screenshots/KlavyéAnAktion.gif":          "animations/04-conversation-sms-au-clavier-kreyol.gif",
+}
+
 LISEZMOI = """KIT PRESSE - Klavye Kreyol Karukera
 Clavier Android pour le creole guadeloupeen.
 
 CONTENU
-  captures/   Captures d'ecran de l'application
-  logo/       Logo Potomitan(TM)
+  captures/     Captures d'ecran de l'application
+  animations/   Quatre animations GIF (une phrase ecrite et envoyee par SMS,
+                cartes en eventail, revision Sonje, conversation SMS)
+  logo/         Logo Potomitan(TM)
+
+  L'animation 04 date d'une version anterieure de l'application : le o accent
+  grave y a une touche dediee, alors qu'il se tape aujourd'hui par appui long
+  sur la touche o. Les animations 01 a 03 montrent la version actuelle.
 
 CONDITIONS D'UTILISATION
   Ces visuels sont mis a disposition des redactions pour illustrer un sujet
@@ -53,8 +68,8 @@ CONDITIONS D'UTILISATION
   recadres ou retouches au point d'en alterer le sens.
 
 NON INCLUS DANS L'ARCHIVE, POUR NE PAS L'ALOURDIR
-  Animation du clavier en action, extraits des reportages Canal 10 et
-  Guadeloupe la 1ere : liens directs dans le dossier de presse en ligne.
+  Extraits des reportages Canal 10 et Guadeloupe la 1ere : liens directs
+  dans le dossier de presse en ligne.
 
 DOSSIER DE PRESSE COMPLET, FAITS CLES ET CONTACT
   https://famibelle.github.io/KreyolKeyb/presskit.html
@@ -66,21 +81,21 @@ CONTACT
 
 def main() -> int:
     SORTIE.parent.mkdir(parents=True, exist_ok=True)
-    manquants = [s for s in VISUELS if not (DOCS / s).exists()]
+    manquants = [s for s in (*VISUELS, *ANIMATIONS) if not (DOCS / s).exists()]
     if manquants:
         for s in manquants:
             print(f"introuvable : {s}")
         return 1
 
-    # ZIP_DEFLATED sur des PNG deja compresses ne gagne presque rien, mais
+    # ZIP_DEFLATED sur des PNG et des GIF deja compresses ne gagne presque rien, mais
     # coute encore moins : l'archive reste lisible par tous les outils.
     with zipfile.ZipFile(SORTIE, "w", zipfile.ZIP_DEFLATED) as z:
-        for source, destination in VISUELS.items():
+        for source, destination in {**VISUELS, **ANIMATIONS}.items():
             z.write(DOCS / source, destination)
         z.writestr("LISEZ-MOI.txt", LISEZMOI)
 
     poids = SORTIE.stat().st_size / (1024 * 1024)
-    print(f"{SORTIE.relative_to(DOCS.parent)} : {len(VISUELS) + 1} entrées, {poids:.1f} Mo")
+    print(f"{SORTIE.relative_to(DOCS.parent)} : {len(VISUELS) + len(ANIMATIONS) + 1} entrées, {poids:.1f} Mo")
     return 0
 
 
