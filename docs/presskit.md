@@ -396,6 +396,13 @@ Les suggestions s'appuient sur les œuvres de :
 
 ### Le clavier et l'application
 
+Une phrase écrite de bout en bout dans une conversation SMS (« An kay òwganizé on diné ») : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. Animation de 14 secondes, réalisée sur l'application 22.0.2 (septembre 2026), numéro de destinataire fictif.
+
+<div align="center" style="margin: 1.5em 0;">
+  <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" style="width: 30%; min-width: 200px; border-radius: 8px;">
+  <p><small>Une phrase en kréyòl écrite et envoyée par SMS</small></p>
+</div>
+
 Captures d'écran de chaque section de l'application (juillet 2026) :
 
 <div align="center" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
@@ -441,6 +448,7 @@ Captures d'écran de chaque section de l'application (juillet 2026) :
 les quinze captures ci-dessus en pleine résolution et le logo, avec leurs
 conditions d'utilisation.
 
+- [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
 - [Animation du clavier en action](Screenshots/KlavyéAnAktion.gif)
 - [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)
 - [Reportage Canal 10](Medias/TV_Canal10.mp4) et [reportage Guadeloupe la 1ère](Medias/TV_Guadeloupe1ère.mp4) (extraits vidéo, voir aussi ci-dessus)

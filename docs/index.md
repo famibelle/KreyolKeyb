@@ -81,9 +81,10 @@ les accents par appui long.
 ## Le clavier en action
 
 <div align="center" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-   <img src="Screenshots/KlavyéAnAktion.gif" alt="Clavier créole guadeloupéen en action avec suggestions kréyòl" width="25%">
-   <img src="Screenshots/Screenshot_1761763560.png" alt="Suggestions de mots en créole guadeloupéen" width="25%">
-   <img src="Screenshots/Screenshot_1761763491.png" alt="Clavier kréyòl avec accents" width="25%">
+   <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="22%">
+   <img src="Screenshots/KlavyéAnAktion.gif" alt="Clavier créole guadeloupéen en action avec suggestions kréyòl" width="22%">
+   <img src="Screenshots/Screenshot_1761763560.png" alt="Suggestions de mots en créole guadeloupéen" width="22%">
+   <img src="Screenshots/Screenshot_1761763491.png" alt="Clavier kréyòl avec accents" width="22%">
 </div>
 
 <div align="center" style="margin: 18px 0;">
