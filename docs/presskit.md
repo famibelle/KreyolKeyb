@@ -381,7 +381,7 @@ Les suggestions s'appuient sur les œuvres de :
 | Couverture presse | Canal 10, Guadeloupe la 1ère (TV, juillet 2026), France-Antilles Guadeloupe (04/08/2026) |
 | Corpus source | 87 sources distinctes, provenance tracée entrée par entrée ([le corpus en chiffres](corpus.html)) |
 | Données embarquées | Fréquences et probabilités de succession, aucun texte d'auteur |
-| Dictionnaire | Plus de 5 200 mots kréyòl + 662 mots français (fallback bilingue) |
+| Dictionnaire | Plus de 5 200 mots kréyòl, plus un appoint français qui couvre le vocabulaire courant : les deux langues sont proposées ensemble, sans réglage |
 | Modèle de prédiction | Plus de 4 600 mots-pivots (n-grams contextuels) |
 | Comparatif | [Quel clavier pour écrire en kréyòl ?](comparatif.html), en étoiles, et le [détail ligne par ligne](comparatif_d%C3%A9taill%C3%A9s.html) avec ses sources |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
