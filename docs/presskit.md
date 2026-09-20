@@ -200,11 +200,13 @@ les réseaux sociaux de centaines de milliers de créolophones.
 ## Le problème
 
 Les claviers généralistes ont longtemps ignoré le créole guadeloupéen.
-Gboard en propose une disposition depuis novembre 2018, et Apple l'ajoute
-avec iOS 27 en septembre 2026, sans correction automatique ni saisie
-prédictive d'après sa page officielle. Une disposition seule aide peu à
-écrire vite : le créole recule dans les usages numériques quotidiens, SMS,
-WhatsApp, réseaux sociaux, et l'aide à la frappe reste à construire.
+Gboard en propose une disposition depuis novembre 2018, avec des
+suggestions de mots, et Apple l'ajoute avec iOS 27 en septembre 2026, sans
+correction automatique ni saisie prédictive d'après sa page officielle. Dans
+notre essai sur douze phrases tapées sans accent, Gboard a remplacé huit mots
+par d'autres mots (voir le comparatif, avec ses limites). Le créole recule dans les usages numériques
+quotidiens, SMS, WhatsApp, réseaux sociaux, et l'aide à la frappe reste à
+construire.
 
 ## La réponse
 
@@ -230,8 +232,9 @@ téléphone. Le tableau ne retient que ce que nous avons pu constater ; une case
 | | Klavyé Kréyòl | Gboard | Clavier Apple |
 |---|---|---|---|
 | Langue proposée | Oui, sa seule raison d'être | Oui, depuis novembre 2018 (Android) | Oui, depuis iOS 27 (septembre 2026) |
-| Suggestions en créole | Oui | non vérifié | Non, selon la page officielle d'Apple |
-| Prédiction du mot suivant | Oui | non vérifié | Non, selon la page officielle d'Apple |
+| Suggestions en créole | Oui | Oui (constaté le 19 septembre 2026) | Non, selon la page officielle d'Apple |
+| Prédiction du mot suivant | Oui | Oui (constaté le 19 septembre 2026) | Non, selon la page officielle d'Apple |
+| Correction automatique | Les accents seulement (depuis la 22.1.0), jamais un mot pour un autre | Oui : accents rétablis, et des mots remplacés | Non, selon la page officielle d'Apple |
 | Créole et français ensemble | Oui, sans réglage | Plusieurs langues, à activer | Non pour cette langue |
 | Dictionnaire consultable | Oui, dans le dépôt public | Non | Non |
 | Accès à Internet | Aucune permission | Permission déclarée | Frappe embarquée |

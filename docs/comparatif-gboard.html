@@ -270,7 +270,8 @@ code{font-family:var(--mono);font-size:.93em;}
     Le coût de calcul par frappe est environ deux fois moindre, et la mémoire
     occupée trois fois moindre. Il faut lire ce résultat honnêtement : Gboard
     fait à chaque frappe des choses que le clavier créole ne fait pas du tout,
-    comme la saisie par glissement, la correction automatique et l'apprentissage
+    comme la saisie par glissement, la correction automatique des mots (le
+    clavier créole ne rétablit que les accents) et l'apprentissage
     d'un dictionnaire personnel. Il dessine d'ailleurs deux fois plus d'images
     par frappe. La bonne lecture n'est donc pas que son code serait mal écrit,
     mais qu'un clavier plus simple coûte moins cher à faire tourner. C'est
@@ -284,7 +285,7 @@ code{font-family:var(--mono);font-size:.93em;}
       graphique : les valeurs absolues de temps de dessin y sont pessimistes
       pour les deux claviers, et seuls les écarts entre eux sont exploitables.
       Par ailleurs 59 ms de calcul par frappe reste beaucoup dans l'absolu pour
-      un clavier qui ne fait ni glissement ni correction automatique. Deux
+      un clavier qui ne fait ni glissement ni correction de mots. Deux
       pistes d'optimisation sont identifiées dans le code et restent à traiter.
     </p>
   </div>
@@ -307,7 +308,7 @@ code{font-family:var(--mono);font-size:.93em;}
       <tbody>
         <tr><td>Majuscule simple et verrouillage</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Caractères accentués en appui long</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Touches dédiées aux lettres du créole (é, è, tiret ; le ò reste en appui long sur o)</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
+        <tr><td>Touches dédiées aux lettres du créole (é, è, tiret ; le ò reste en appui long sur o)</td><td class="v yes">oui</td><td class="v no">non : é et è en appui long sur e, ò en appui long sur o</td></tr>
         <tr><td>Aperçu de la lettre au-dessus du doigt</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Effacement continu en maintenant la touche</td><td class="v">par mots</td><td class="v">par lettres puis par mots</td></tr>
         <tr><td>Saisie par glissement du doigt</td><td class="v no">non</td><td class="v yes">oui</td></tr>
@@ -327,10 +328,10 @@ code{font-family:var(--mono);font-size:.93em;}
       <tbody>
         <tr><td>Propositions dès la première lettre</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Propositions en créole et en français ensemble</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
-        <tr><td>Prédiction du mot suivant en créole</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
+        <tr><td>Prédiction du mot suivant en créole</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Tolérance aux accents oubliés et aux fautes de frappe</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Correcteur orthographique créole dans les autres applications</td><td class="v yes">oui</td><td class="v"><span class="nv">non vérifié avec la disposition créole</span></td></tr>
-        <tr><td>Correction automatique du mot validé</td><td class="v no">non</td><td class="v yes">oui</td></tr>
+        <tr><td>Correcteur orthographique créole dans les autres applications</td><td class="v yes">oui</td><td class="v"><span class="nv">aucun soulignement constaté, sur un téléphone Samsung</span></td></tr>
+        <tr><td>Correction automatique du mot validé</td><td class="v">les accents seulement, jamais un mot pour un autre (depuis la 22.1.0)</td><td class="v">oui, accents rétablis, et des mots remplacés</td></tr>
         <tr><td>Apprentissage des mots nouveaux que vous tapez</td><td class="v no">non</td><td class="v yes">oui</td></tr>
       </tbody>
     </table>
@@ -347,9 +348,9 @@ code{font-family:var(--mono);font-size:.93em;}
         <tr><td>Déplacement du curseur en glissant sur la barre d'espace</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
         <tr><td>Presse-papiers avec historique</td><td class="v no">non</td><td class="v yes">oui</td></tr>
         <tr><td>Majuscule automatique en début de phrase</td><td class="v yes">oui</td><td class="v yes">oui</td></tr>
-        <tr><td>Respect du type de champ demandé par l'application</td><td class="v no">non</td><td class="v yes">oui</td></tr>
-        <tr><td>Double espace qui pose un point</td><td class="v no">non</td><td class="v yes">oui</td></tr>
-        <tr><td>Espace retiré devant une ponctuation</td><td class="v no">non</td><td class="v yes">oui</td></tr>
+        <tr><td>Respect du type de champ demandé par l'application</td><td class="v yes">oui, depuis la 22.1.0</td><td class="v yes">oui</td></tr>
+        <tr><td>Double espace qui pose un point</td><td class="v yes">oui, depuis la 22.1.0</td><td class="v yes">oui</td></tr>
+        <tr><td>Espace retiré devant une ponctuation</td><td class="v">virgule et point seulement, depuis la 22.1.0</td><td class="v yes">oui</td></tr>
       </tbody>
     </table>
   </div>
@@ -376,14 +377,16 @@ code{font-family:var(--mono);font-size:.93em;}
 <section>
   <h2>Ce que Klavyé Kréyòl propose</h2>
   <p>
-    Quatre choses tiennent à la langue plus qu'à la puissance de calcul. Nous
-    ne les avons pas constatées chez Gboard, mais nous ne pouvons pas affirmer
-    qu'elles y manquent : sa disposition créole n'a pas été testée.
+    Avec sa disposition créole, Gboard propose lui aussi des mots et prédit le
+    mot suivant : nous l'avons constaté le 19 septembre 2026. Ce qui distingue
+    Klavyé Kréyòl tient à d'autres choses, qui relèvent de la langue plus que de
+    la puissance de calcul.
   </p>
   <ul class="plain">
-    <li><strong>Proposer le mot suivant en créole.</strong> Le clavier embarque un modèle construit sur un corpus de textes créoles, avec près de 8 850 contextes de deux et trois mots, et un dictionnaire de plus de 5 200 formes que l'on peut ouvrir dans le dépôt.</li>
+    <li><strong>Un dictionnaire et un modèle que l'on peut ouvrir.</strong> Le clavier embarque un modèle construit sur un corpus de textes créoles, avec près de 8 850 contextes de deux et trois mots, et un dictionnaire de plus de 5 200 formes que l'on peut ouvrir dans le dépôt.</li>
     <li><strong>Cesser de souligner le créole comme une faute.</strong> Le correcteur orthographique fourni s'applique dans toutes les applications du téléphone, pas seulement dans le clavier.</li>
     <li><strong>Écrire les accents du créole sans détour</strong>, le é et le è étant directement sur la disposition plutôt qu'en appui long.</li>
+    <li><strong>Rétablir un accent oublié sans jamais changer de mot.</strong> Sur douze phrases du corpus tapées sans accent, Gboard remplace huit mots par un autre mot ; Klavyé Kréyòl n'en remplace aucun (voir le <a href="comparatif.html">comparatif</a>, avec ses limites).</li>
     <li><strong>Rester entièrement hors ligne.</strong> Le dictionnaire est embarqué dans l'application, qui ne demande aucune permission d'accès à Internet : rien de ce que vous écrivez ne peut techniquement quitter le téléphone.</li>
   </ul>
 </section>
