@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.2.1] - 2026-09-20
+
+### ✨ Ajouté
+
+- **Le carnet compte les six jeux.** L'écran d'accueil de la collection et la
+  bannière de l'onglet Jé annonçaient cinq jeux : ils nomment maintenant les six,
+  *Mo an plas* compris.
+
 ## [22.2.0] - 2026-09-20
 
 ### 🔒 Confidentialité
