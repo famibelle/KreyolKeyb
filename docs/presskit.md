@@ -236,14 +236,17 @@ téléphone. Le tableau ne retient que ce que nous avons pu constater ; une case
 | Prédiction du mot suivant | Oui | Oui (constaté le 19 septembre 2026) | Non, selon la page officielle d'Apple |
 | Correction automatique | Les accents seulement (depuis la 22.1.0), jamais un mot pour un autre | Oui : accents rétablis, et des mots remplacés | Non, selon la page officielle d'Apple |
 | Créole et français ensemble | Oui, sans réglage | Plusieurs langues, à activer | Non pour cette langue |
-| Dictionnaire consultable | Oui, dans le dépôt public | Non | Non |
+| Dictionnaire consultable | Oui, dans le dépôt public, et dans l'application (1 145 mots traduits, recherche dans les deux sens) | Non | Non |
 | Accès à Internet | Aucune permission | Permission déclarée | Frappe embarquée |
-| Jeux de vocabulaire | Oui, six jeux et un carnet | Non | Non |
+| Jeux de vocabulaire | Oui, six jeux, un carnet de cartes et une révision espacée | Non | Non |
+| Progression personnelle | Oui, sept niveaux et le compte des mots découverts | Non | Non |
 | Prix | Gratuit, sans publicité | Gratuit | Inclus dans le système |
 
 Gboard couvre une surface fonctionnelle plus large (saisie glissée, dictée,
 traduction, presse-papiers), et le clavier d'Apple s'intègre au système sans
-rien à installer. Le détail, les sources et les limites de chaque case sont
+rien à installer. À l'inverse, ni l'un ni l'autre ne porte de dictionnaire
+consultable, de jeux ni de progression : ce sont des claviers, là où Klavyé
+Kréyòl est aussi un outil de vocabulaire. Le détail, les sources et les limites de chaque case sont
 dans le [comparatif complet](comparatif.html).
 
 ## Un usage en classe de langue vivante régionale

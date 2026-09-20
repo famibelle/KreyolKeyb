@@ -205,7 +205,10 @@ code{font-family:var(--mono);font-size:.93em;}
         <tr><th></th><th class="v us">Klavyé Kréyòl</th><th class="v">Gboard (Google)</th><th class="v">Clavier Apple (iOS 27)</th></tr>
       </thead>
       <tbody>
-        <tr><td>Jeux de vocabulaire et progression</td><td class="v us"><strong>Oui</strong>, six jeux, un carnet de cartes et 7 niveaux</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Jeux de vocabulaire</td><td class="v us"><strong>Oui</strong>, six jeux qui puisent dans le dictionnaire du clavier</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Carnet de cartes et révision espacée</td><td class="v us"><strong>Oui</strong> : chaque mot gagné devient une carte avec son sens et une phrase d'auteur, revue à intervalles croissants</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Dictionnaire consultable dans l'application</td><td class="v us"><strong>Oui</strong>, 1 145 mots traduits, recherche dans les deux sens</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
+        <tr><td>Progression personnelle</td><td class="v us"><strong>Oui</strong>, sept niveaux de Pipirit à Potomitan, mots découverts sur 5 296</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
         <tr><td>Saisie glissée</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, constatée avec la disposition créole <sup class="n">3</sup></td><td class="v">Non : absente de la liste d'Apple <sup class="n">2</sup></td></tr>
         <tr><td>Dictée vocale</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, <span class="nv">non vérifié pour le créole</span></td><td class="v">Non : absente de la liste « Dictation » d'Apple <sup class="n">2</sup></td></tr>
         <tr><td>Traduction intégrée, presse-papiers, écriture manuscrite</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui</td><td class="v">Traduction absente de la liste d'Apple pour cette langue</td></tr>
@@ -263,9 +266,10 @@ code{font-family:var(--mono);font-size:.93em;}
   <h2>Douze phrases tapées sans accent</h2>
   <p>
     Nous avons tapé douze phrases du simulateur, lettre à lettre, sans accent ni
-    ponctuation, sans toucher aucune suggestion, sur Gboard 18.2.4 (téléphone
-    réel) et sur Klavyé Kréyòl 22.2.0 (émulateur). Les deux rétablissent la
-    plupart des accents. La différence tient à ce qu'ils s'autorisent.
+    ponctuation, sans toucher aucune suggestion, sur un même Samsung Galaxy A21s
+    (Android 12), avec Gboard 18.2.4 puis avec Klavyé Kréyòl 22.2.0. Les deux
+    rétablissent la plupart des accents. La différence tient à ce qu'ils
+    s'autorisent.
   </p>
   <div class="t-wrap">
     <table>
@@ -277,14 +281,15 @@ code{font-family:var(--mono);font-size:.93em;}
         <tr><td>Mots exacts, sur 59</td><td class="v us">55</td><td class="v">48</td></tr>
         <tr><td>Mots restés sans leur accent</td><td class="v us">4</td><td class="v">3</td></tr>
         <tr><td>Mots remplacés par un autre mot</td><td class="v us">0</td><td class="v">8 (<code>onpil</code> devient <code>anpil</code>, <code>vitman</code> devient <code>vitamin</code>, <code>hak</code> devient <code>Jak</code>…)</td></tr>
+        <tr><td>Mémoire occupée pendant la saisie</td><td class="v us">57 Mo</td><td class="v">132 Mo</td></tr>
       </tbody>
     </table>
   </div>
   <p class="muted">
     Limites : les phrases viennent du corpus de Klavyé Kréyòl, dont le
     dictionnaire est tiré, ce qui favorise ce clavier face à un autre qui a
-    appris une autre graphie. Deux appareils différents, une seule passe, une
-    seule version de chaque clavier. Ce n'est pas une mesure de qualité générale,
+    appris une autre graphie. Une seule passe, une seule version de chaque
+    clavier, un seul appareil. Ce n'est pas une mesure de qualité générale,
     et un utilisateur réel touche les suggestions au fil de la frappe, ce que
     l'essai ne simule pas. La prudence de Klavyé a un prix : quatre mots
     (<code>doktè</code>, <code>bèf</code>, <code>siklòn</code>, <code>lè</code>)

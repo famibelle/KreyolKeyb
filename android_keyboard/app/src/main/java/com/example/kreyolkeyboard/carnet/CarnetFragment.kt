@@ -373,7 +373,7 @@ class CarnetFragment : DialogFragment() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { topMargin = (40 * d).toInt() }
-                text = "Chaque mot gagné dans l'un des cinq jeux devient une " +
+                text = "Chaque mot gagné dans l'un des six jeux devient une " +
                     "carte et vient s'ajouter ici. Trouvez un mot, devinez-en " +
                     "un, écrivez-en un : la première carte est à une partie " +
                     "d'ici."

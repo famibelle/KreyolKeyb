@@ -7633,7 +7633,7 @@ class SettingsActivity : AppCompatActivity() {
             val jeux = Carnet.jeuxRepresentes(ctx)
             tvCarnetDetail?.apply {
                 if (jeux.isEmpty()) {
-                    text = "Les cinq jeux y versent."
+                    text = "Les six jeux y versent."
                     setTextColor(0xFFCFC2F0.toInt())
                 } else {
                     // Les emojis des jeux qui ont déjà donné une carte : la

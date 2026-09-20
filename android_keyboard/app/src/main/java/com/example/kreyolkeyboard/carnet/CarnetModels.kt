@@ -55,14 +55,14 @@ enum class JeuCarte(
  *
  * - **Il ne fait que grandir, et il survit à l'application.** Une collection
  *   qui repart de zéro à chaque partie n'est pas une collection. Le stockage
- *   est un `SharedPreferences`, domaine que `backup_rules.xml` et
- *   `data_extraction_rules.xml` incluent tous les deux : le carnet est donc
- *   sauvegardé dans le nuage et transféré d'un téléphone à l'autre. Ce sont
- *   des mots de dictionnaire, tirés d'un ensemble fermé et livré — rien de
- *   personnel n'y entre, contrairement au fichier d'usage de la gamification,
- *   qui vit dans `filesDir` et reste délibérément hors sauvegarde. C'est la
- *   même frontière que les emojis récents : des identifiants d'un jeu livré,
- *   jamais du texte libre.
+ *   est un `SharedPreferences`. Depuis la 22.2.0 les deux fichiers de règles
+ *   ferment la sauvegarde dans le nuage (voir `BackupRulesTest`) : seul le
+ *   transfert direct vers un nouveau téléphone emporte le carnet, sans serveur
+ *   entre les deux. Ce sont des mots de dictionnaire, tirés d'un ensemble fermé
+ *   et livré : rien de personnel n'y entre, contrairement au fichier d'usage de
+ *   la gamification, qui vit dans `filesDir` et que les deux fichiers excluent
+ *   explicitement même du transfert. C'est la même frontière que les emojis
+ *   récents : des identifiants d'un jeu livré, jamais du texte libre.
  * - **La rareté est la fréquence, pas une invention.** `creole_dict.json` est
  *   trié par fréquence décroissante : le rang d'une forme *est* sa rareté,
  *   sans qu'il faille fabriquer la moindre statistique. Poser des « points de
