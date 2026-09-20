@@ -40,6 +40,71 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "22.2.0": [
+        {
+            "emoji": "🔒",
+            "title": "Rien ne quitte votre téléphone",
+            "description": (
+                "Le carnet, la progression et les emojis récents restent sur "
+                "l'appareil : aucune sauvegarde dans le cloud, comme le dit la "
+                "politique de confidentialité. Quand vous changez de "
+                "téléphone, le carnet vous suit par câble ou en Wi-Fi direct, "
+                "sans passer par un serveur."
+            ),
+        },
+        {
+            "emoji": "📳",
+            "title": "Des cartes qui se sentent sous le doigt",
+            "description": (
+                "Une carte du carnet se parcourt du bout du doigt : le relief "
+                "se lit en largeur comme en hauteur, et la vibration est "
+                "assurée sur tous les téléphones, vibreurs simples compris. "
+                "La plaque du mot porte quatre rivets qui montent avec la "
+                "rareté, le mot y est gravé, et une ferronnerie orne l'angle "
+                "des cartes rares."
+            ),
+        },
+    ],
+    "22.1.0": [
+        {
+            "emoji": "✍️",
+            "title": "Les accents reviennent tout seuls",
+            "description": (
+                "Un mot tapé sans accent (« pale », « kreyol », « zot ») "
+                "reçoit ses accents (« palé », « kréyòl », « zòt ») quand "
+                "vous le validez par un espace, une ponctuation ou Entrée. "
+                "Le clavier ne remplace jamais un mot par un autre : les "
+                "lettres restent exactement les vôtres, seuls les accents "
+                "s'ajoutent. Un retour arrière juste après rend le mot tel "
+                "que vous l'aviez tapé, et un interrupteur dans les réglages "
+                "le coupe."
+            ),
+        },
+        {
+            "emoji": "⏱️",
+            "title": "Une frappe plus fluide",
+            "description": (
+                "Deux espaces de suite posent un point suivi d'un espace. "
+                "Une virgule ou un point tapé juste après une suggestion se "
+                "colle au mot (« bonjou, »), tandis que le point "
+                "d'interrogation et le point d'exclamation gardent leur "
+                "espace, comme l'écrit le corpus. Chaque aide a son "
+                "interrupteur dans les réglages."
+            ),
+        },
+        {
+            "emoji": "🔢",
+            "title": "Le clavier s'adapte au champ",
+            "description": (
+                "Un nombre, un numéro de téléphone ou une date s'ouvrent sur "
+                "le pavé de chiffres. Une adresse électronique porte "
+                "l'arobase et le tiret bas sur les lettres, une adresse web "
+                "la barre oblique et le tiret bas. Dans ces champs comme "
+                "dans un mot de passe, le clavier reste discret : ni "
+                "suggestion, ni correction, ni majuscule automatique."
+            ),
+        },
+    ],
     "22.0.2": [
         {
             "emoji": "🔡",
