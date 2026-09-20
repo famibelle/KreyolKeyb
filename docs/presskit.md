@@ -247,7 +247,7 @@ traduction, presse-papiers), et le clavier d'Apple s'intègre au système sans
 rien à installer. À l'inverse, ni l'un ni l'autre ne porte de dictionnaire
 consultable, de jeux ni de progression : ce sont des claviers, là où Klavyé
 Kréyòl est aussi un outil de vocabulaire. Le détail, les sources et les limites de chaque case sont
-dans le [comparatif complet](comparatif.html).
+dans le [comparatif détaillé](comparatif_d%C3%A9taill%C3%A9s.html).
 
 ## Un usage en classe de langue vivante régionale
 
@@ -380,7 +380,7 @@ Les suggestions s'appuient sur les œuvres de :
 | Données embarquées | Fréquences et probabilités de succession, aucun texte d'auteur |
 | Dictionnaire | Plus de 5 200 mots kréyòl + 662 mots français (fallback bilingue) |
 | Modèle de prédiction | Plus de 4 600 mots-pivots (n-grams contextuels) |
-| Comparatif | [Face à Gboard et au clavier Apple](comparatif.html), avec sources et cases « non vérifié » |
+| Comparatif | [Quel clavier pour écrire en kréyòl ?](comparatif.html), en étoiles, et le [détail ligne par ligne](comparatif_d%C3%A9taill%C3%A9s.html) avec ses sources |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
 | Utilisateurs | <span id="pk-users">3 356</span> installations au <span id="pk-date">19 septembre 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
