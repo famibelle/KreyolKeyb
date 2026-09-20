@@ -5,6 +5,23 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.3.0] - 2026-09-20
+
+### ✨ Ajouté
+
+- **Plus d'accents reviennent tout seuls.** « bef » devient « bèf », « siklon »
+  devient « siklòn », « dokte » devient « doktè ». Le clavier reconnaît
+  maintenant qu'une graphie sans accent vue dans les textes n'est pas forcément
+  un mot à part : quand elle n'a pas de sens propre et que la graphie accentuée
+  est la plus courante, l'accent est rétabli. Sur les douze phrases du
+  simulateur tapées sans aucun accent, onze reviennent exactes, contre huit
+  auparavant.
+- **La règle garde toutes ses prudences.** Elle ne remplace toujours jamais un
+  mot par un autre, ne touche pas au français, laisse « bo » le baiser en face
+  de « bò » le côté, et ne tranche pas entre deux graphies qui se valent, comme
+  « pé » et « pè ». Un retour arrière annule toujours la correction, et le
+  réglage « Écriture » la coupe.
+
 ## [22.2.1] - 2026-09-20
 
 ### ✨ Ajouté
