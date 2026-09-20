@@ -93,6 +93,11 @@ figure.preuve{margin:18px 0 0;padding:0;}
 figure.preuve img{width:100%;max-width:520px;display:block;margin:0 auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
 figure.preuve figcaption{font-size:14px;color:var(--ink-soft);margin-top:8px;text-align:center;line-height:1.4;}
 .resume tr.groupe th{background:var(--sea-soft);text-align:left;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);padding:11px 12px;font-weight:700;}
+.reponse{background:var(--sea-soft);border:1px solid var(--line);border-left:4px solid var(--sea);border-radius:10px;padding:16px 18px;margin:0 0 16px;}
+.reponse p.tete{font-size:19px;line-height:1.4;color:var(--ink);margin:0 0 12px;}
+.reponse ul.plain{margin:0;}
+.reponse ul.plain li{font-size:15.5px;color:var(--ink-soft);}
+@media (max-width:760px){.reponse p.tete{font-size:17.5px;} .reponse{padding:14px 15px;}}
 </style>
 </head>
 <body>
@@ -151,25 +156,34 @@ figure.preuve figcaption{font-size:14px;color:var(--ink-soft);margin-top:8px;tex
 <header class="page">
   <p class="eyebrow">Comparatif</p>
   <h1>Quel clavier pour écrire en kréyòl ?</h1>
+  <div class="reponse">
+    <p class="tete">
+      <strong>Le nôtre, Klavyé Kréyòl, si vous écrivez le kréyòl de Guadeloupe
+      sur un téléphone Android.</strong> Et sans rien désinstaller.
+    </p>
+    <ul class="plain">
+      <li><strong>Le clavier Samsung ne propose pas notre langue.</strong> Haïtien,
+      jamaïcain, mauricien, seychellois, oui. Guadeloupéen, non.</li>
+      <li><strong>Gboard la propose, mais ce n'est pas la nôtre.</strong> Il donne
+      à la Guadeloupe le clavier de Sainte-Lucie, au pixel près, avec le nom
+      saint-lucien écrit sur sa barre d'espace. Et il remplace des mots : huit sur
+      cinquante-neuf dans notre essai, « onpil » devenu « anpil », « vitman »
+      devenu « vitamin ».</li>
+      <li><strong>Le nôtre ne peut pas faire ça.</strong> Il ajoute des accents et
+      rien d'autre : le mot rendu a exactement les lettres du mot tapé. Ce n'est
+      pas une promesse, c'est vérifié sur tout le dictionnaire à chaque nouvelle
+      version.</li>
+    </ul>
+  </div>
   <p class="lead">
-    Pour écrire en kréyòl sur un téléphone, il y a quatre chemins : le clavier
-    livré avec les Samsung, celui livré avec l'iPhone, Gboard, celui de Google
-    qu'on trouve sur presque tous les Android, et celui-ci. Voici ce qui les
-    sépare, sans enjoliver.
-  </p>
-  <p class="lead">
-    Disons-le tout de suite. <strong>Un seul de ces quatre claviers écrit le
-    kréyòl de Guadeloupe.</strong> Celui du Samsung ne connaît pas notre langue
-    du tout. Celui de l'iPhone en pose les lettres, rien de plus. Gboard, lui,
-    propose bien des mots créoles, mais ce sont ceux d'une autre île :
-    <strong>il donne à la Guadeloupe le clavier de Sainte-Lucie</strong>, avec le
-    nom qui va avec, et il lui arrive de remplacer un mot par un autre.
+    Sur iPhone, la réponse honnête est : aucun, pour l'instant. Depuis iOS 27,
+    Apple pose les lettres du kréyòl, sans rien proposer pendant la frappe. Notre
+    version iPhone est en préparation, sans date annoncée.
   </p>
   <p class="lead">
     Gboard fait aussi des choses que le nôtre ne fait pas, comme écrire en
     glissant le doigt. C'est dans le tableau, plus bas, et ce n'est pas la
-    question de cette page. La question, c'est d'écrire correctement notre
-    langue.
+    question de cette page.
   </p>
 </header>
 
@@ -210,7 +224,6 @@ figure.preuve figcaption{font-size:14px;color:var(--ink-soft);margin-top:8px;tex
 <section>
   <h2>🏆 En deux mots</h2>
   <ul class="plain">
-    <li><strong>Le clavier de votre Samsung ne connaît pas le créole guadeloupéen.</strong> Il propose le créole haïtien, jamaïcain, mauricien et seychellois, mais pas le nôtre.</li>
     <li><strong>Gboard donne le même clavier à la Guadeloupe et à Sainte-Lucie.</strong>
     Exactement le même : même dessin, et le même nom « Kwéyòl » écrit sur la barre
     d'espace. Or « Kwéyòl », c'est ainsi qu'on l'écrit à Sainte-Lucie ; en Guadeloupe
@@ -221,10 +234,6 @@ figure.preuve figcaption{font-size:14px;color:var(--ink-soft);margin-top:8px;tex
       <figcaption>Les deux écrans de réglages de Gboard, le 20 septembre 2026. Deux langues, un seul clavier, un seul nom.</figcaption>
     </figure>
     </li>
-    <li><strong>Gboard remplace parfois un mot par un autre.</strong> Dans notre
-    essai, huit mots sur cinquante-neuf : « onpil » est devenu « anpil », « vitman »
-    est devenu « vitamin ». Notre clavier ne peut pas le faire : il ajoute des
-    accents, et jamais autre chose.</li>
     <li><strong>Ce que notre clavier fait aussi bien ou mieux :</strong> proposer des mots kréyòl et français ensemble, remettre les accents oubliés sans jamais changer votre mot, garder vos textes chez vous, peser trois fois moins lourd, et vous faire apprendre du vocabulaire avec un dictionnaire, des jeux et des cartes.</li>
     <li><strong>Ce qu'il ne fait pas :</strong> écrire en glissant le doigt, garder un presse-papiers, ni retenir les prénoms et les noms de lieux que vous tapez. Gboard fait tout cela.</li>
     <li><strong>Dicter à voix haute en kréyòl n'existe chez aucun des quatre.</strong> La dictée marche en français, pas dans notre langue.</li>
