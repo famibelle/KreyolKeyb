@@ -45,6 +45,21 @@ a{color:var(--sea);}
 /* Tableaux comparatifs : deux colonnes de verdict, défilables sur petit écran. */
 .t-wrap{overflow-x:auto;margin:0 0 14px;-webkit-overflow-scrolling:touch;}
 table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:520px;}
+.resume table{min-width:600px;}
+.resume td.k,.resume th.k{width:20%;text-align:center;font-size:15px;line-height:1.35;}
+.resume td:first-child,.resume th:first-child{width:20%;}
+.resume .etoiles{font-size:17px;letter-spacing:1px;white-space:nowrap;}
+.resume .rien{color:var(--ink-soft);font-size:17px;}
+.resume .prec{display:block;font-size:12.5px;color:var(--ink-soft);line-height:1.3;margin-top:2px;}
+.legende{background:var(--sea-soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 14px;font-size:14.5px;}
+.legende span{white-space:nowrap;margin-right:14px;display:inline-block;}
+@media (max-width:760px){
+  .resume table{min-width:540px;font-size:13.5px;}
+  .resume td.k,.resume th.k{font-size:13.5px;}
+  .resume td:first-child,.resume th:first-child{width:24%;}
+  .resume .etoiles{font-size:15px;letter-spacing:0;}
+  .resume .prec{font-size:11.5px;}
+}
 caption{text-align:left;font-size:15px;font-weight:700;padding:14px 0 8px;}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;}
@@ -131,12 +146,12 @@ code{font-family:var(--mono);font-size:.93em;}
 
 <header class="page">
   <p class="eyebrow">Comparatif</p>
-  <h1>Klavyé Kréyòl, Gboard ou clavier Apple : lequel pour écrire en kréyòl ?</h1>
+  <h1>Quel clavier pour écrire en kréyòl ?</h1>
   <p class="lead">
-    Pour écrire en créole guadeloupéen sur un téléphone, trois voies existent
-    aujourd'hui : Gboard, le clavier de Google, qui propose la langue depuis
-    novembre 2018 ; le clavier d'Apple, qui l'ajoute avec iOS 27, en
-    septembre 2026 ; et celui-ci. Voici ce qui les sépare, ligne par ligne.
+    Quatre claviers sont comparés ici : Klavyé Kréyòl, Gboard (Google), le
+    clavier Samsung installé d'origine sur ses téléphones, et le clavier d'Apple
+    depuis iOS 27. Le résumé en étoiles se lit d'un coup d'œil ; les tableaux
+    détaillés qui suivent donnent chaque constat et sa source.
   </p>
   <p class="lead">
     Une case « non vérifié » veut dire que nous n'avons pas pu le constater
@@ -161,6 +176,43 @@ code{font-family:var(--mono);font-size:.93em;}
     entre dans le système de tous les iPhone.
   </p>
 </div>
+
+<section class="resume">
+  <h2>En un coup d'œil</h2>
+  <p class="legende">
+    <span>⭐⭐⭐ oui, complètement</span>
+    <span>⭐⭐ oui, en partie</span>
+    <span>⭐ à peine</span>
+    <span>✕ non</span>
+  </p>
+  <div class="t-wrap">
+    <table>
+      <thead>
+        <tr><th></th><th class="k us">Klavyé Kréyòl</th><th class="k">Gboard<br><small>Google</small></th><th class="k">Clavier Samsung</th><th class="k">Clavier Apple<br><small>iOS 27</small></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Le créole guadeloupéen est proposé</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">sa seule langue</span></td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">depuis 2018</span></td><td class="k"><span class="rien">✕</span><span class="prec">absent : il a l'haïtien, le jamaïcain, le mauricien, le seychellois, pas le guadeloupéen <sup class="n">5</sup></span></td><td class="k"><span class="etoiles">⭐⭐</span><span class="prec">la disposition seule, depuis iOS 27</span></td></tr>
+        <tr><td>Il propose des mots créoles pendant que vous tapez</td><td class="k"><span class="etoiles">⭐⭐⭐</span></td><td class="k"><span class="etoiles">⭐⭐⭐</span></td><td class="k"><span class="rien">✕</span><span class="prec">il n'a pas la langue</span></td><td class="k"><span class="rien">✕</span><span class="prec">absent de la liste d'Apple <sup class="n">2</sup></span></td></tr>
+        <tr><td>Il corrige sans jamais remplacer un mot par un autre</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">0 mot changé sur 59</span></td><td class="k"><span class="etoiles">⭐</span><span class="prec">8 mots changés sur 59</span></td><td class="k"><span class="rien">✕</span><span class="prec">il n'a pas la langue</span></td><td class="k"><span class="rien">✕</span><span class="prec">il ne corrige pas cette langue</span></td></tr>
+        <tr><td>Les lettres é è ò sont faciles à écrire</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">é et è ont leur propre touche</span></td><td class="k"><span class="etoiles">⭐⭐</span><span class="prec">appui long</span></td><td class="k"><span class="rien">✕</span><span class="prec">clavier français seulement</span></td><td class="k"><span class="etoiles">⭐⭐</span><span class="prec">é et è à la place de Q et X <sup class="n">1</sup></span></td></tr>
+        <tr><td>Un dictionnaire créole-français dans l'application</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">1 145 mots, dans les deux sens</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td></tr>
+        <tr><td>Des jeux pour apprendre des mots</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">six jeux, et chaque mot gagné devient une carte à collectionner</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td></tr>
+        <tr><td>Une progression qui suit les mots que vous écrivez</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">sept niveaux, de Pipirit à Potomitan, le compte des mots découverts sur 5 296, un mot du jour et une révision des cartes</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span></td></tr>
+        <tr><td>Léger sur un téléphone modeste</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">53 Mo pendant la saisie</span></td><td class="k"><span class="etoiles">⭐</span><span class="prec">132 Mo</span></td><td class="k"><span class="nv">non mesuré</span></td><td class="k"><span class="nv">non mesuré</span></td></tr>
+        <tr><td>Protection de la vie privée : vos données restent sur le téléphone</td><td class="k"><span class="etoiles">⭐⭐⭐</span><span class="prec">aucun accès à Internet</span></td><td class="k"><span class="rien">✕</span><span class="prec">il accède à Internet</span></td><td class="k"><span class="rien">✕</span><span class="prec">il accède à Internet</span></td><td class="k"><span class="nv">non vérifié</span></td></tr>
+        <tr><td>La dictée vocale en créole guadeloupéen</td><td class="k"><span class="rien">✕</span><span class="prec">pas de dictée</span></td><td class="k"><span class="rien">✕</span><span class="prec">il dicte, mais pas cette langue <sup class="n">4</sup></span></td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="rien">✕</span><span class="prec">absente de la liste d'Apple <sup class="n">2</sup></span></td></tr>
+        <tr><td>Écrire en glissant le doigt, presse-papiers, écriture à la main</td><td class="k"><span class="rien">✕</span></td><td class="k"><span class="etoiles">⭐⭐⭐</span></td><td class="k"><span class="nv">non vérifié</span></td><td class="k"><span class="nv">non vérifié</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">
+    Chaque étoile correspond à un constat des tableaux ci-dessous. Une case
+    « non vérifié » veut dire que nous n'avons pas pu le contrôler nous-mêmes,
+    pas que la fonction manque. Les essais de frappe ont porté sur des phrases
+    tirées du corpus dont le dictionnaire de Klavyé Kréyòl est issu : le test
+    lui est favorable, il faut le savoir en lisant la troisième ligne.
+  </p>
+</section>
 
 <section>
   <h2>Le tableau</h2>
@@ -210,7 +262,7 @@ code{font-family:var(--mono);font-size:.93em;}
         <tr><td>Dictionnaire consultable dans l'application</td><td class="v us"><strong>Oui</strong>, 1 145 mots traduits, recherche dans les deux sens</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
         <tr><td>Progression personnelle</td><td class="v us"><strong>Oui</strong>, sept niveaux de Pipirit à Potomitan, mots découverts sur 5 296</td><td class="v"><span class="no">Non</span></td><td class="v"><span class="no">Non</span></td></tr>
         <tr><td>Saisie glissée</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, constatée avec la disposition créole <sup class="n">3</sup></td><td class="v">Non : absente de la liste d'Apple <sup class="n">2</sup></td></tr>
-        <tr><td>Dictée vocale</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, <span class="nv">non vérifié pour le créole</span></td><td class="v">Non : absente de la liste « Dictation » d'Apple <sup class="n">2</sup></td></tr>
+        <tr><td>Dictée vocale</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui, mais <strong>pas en créole guadeloupéen</strong> : la langue n'est pas donnée comme prise en charge par la saisie vocale <sup class="n">4</sup></td><td class="v">Non : absente de la liste « Dictation » d'Apple <sup class="n">2</sup></td></tr>
         <tr><td>Traduction intégrée, presse-papiers, écriture manuscrite</td><td class="v us"><span class="no">Non</span></td><td class="v">Oui</td><td class="v">Traduction absente de la liste d'Apple pour cette langue</td></tr>
         <tr><td>Thèmes et personnalisation</td><td class="v us">Clair, sombre ou celui du système</td><td class="v">Très étendus</td><td class="v">Limités</td></tr>
       </tbody>
@@ -228,14 +280,27 @@ code{font-family:var(--mono);font-size:.93em;}
     le 19 septembre 2026, disposition AZERTY et date d'ajout d'après
     <a href="https://actu-medias.info/2018/10/gboard-prend-en-charge-le-creole-guadeloupeen.html">ActuMédias</a>
     (2 novembre 2018). Colonne Klavyé Kréyòl : chiffres du dépôt le 19 septembre
-    2026, arrondis, le dictionnaire étant régénéré à chaque version. Le clavier Samsung n'est pas comparé : nous n'avons
-    pas vérifié s'il propose le créole guadeloupéen.
+    2026, arrondis, le dictionnaire étant régénéré à chaque version. Colonne Clavier Samsung : relevé le
+    20 septembre 2026 sur un Galaxy A21s (voir la note 5). Les lignes
+    détaillées ci-dessous ne la comportent pas : faute de créole guadeloupéen,
+    il n'y avait rien à y mesurer.
     <sup class="n">3</sup> Constaté les 19 et 20 septembre 2026 sur Gboard 18.2.4 avec
     la disposition « Créole guadeloupéen », sur un Samsung Galaxy A21s (Android 12),
     dans le champ de message de l'application Messages. Le correcteur système de ce
     téléphone est celui de Samsung : l'absence de soulignement sous un mot inventé
     ne dit rien d'un éventuel correcteur de Gboard sur un autre appareil. La dictée
     n'a pas été testée (micro non autorisé).
+    <sup class="n">4</sup> Google indique que « la saisie vocale ne fonctionne pas
+    avec toutes les langues » et ne donne pas le créole guadeloupéen parmi
+    celles qu'elle couvre
+    (<a href="https://support.google.com/gboard/answer/2781851?hl=fr&amp;co=GENIE.Platform%3DAndroid">Dicter du texte</a>,
+    consulté le 20 septembre 2026). La dictée est une fonction de la reconnaissance
+    vocale de Google, pas du clavier : les réglages de Gboard n'offrent qu'un
+    interrupteur, sans choix de langue.
+    <sup class="n">5</sup> Clavier Samsung 5.4.85.4 sur un Galaxy A21s, le
+    20 septembre 2026 : « Gérer les langues de saisie » propose le créole
+    haïtien, le créole jamaïcain, le créole mauricien et le créole seychellois ;
+    une recherche sur « guadeloup » ne renvoie aucun résultat.
   </p>
 </section>
 
@@ -302,8 +367,9 @@ code{font-family:var(--mono);font-size:.93em;}
   <h2>Ce que les autres font mieux</h2>
   <p>
     Gboard couvre une surface fonctionnelle bien plus large : saisie glissée,
-    dictée vocale, traduction, presse-papiers, écriture manuscrite, thèmes,
-    et une correction affinée par un très grand nombre de frappes. Klavyé
+    traduction, presse-papiers, écriture manuscrite, thèmes, et une correction
+    affinée par un très grand nombre de frappes. Il dicte aussi, mais dans
+    d'autres langues que le créole guadeloupéen. Klavyé
     Kréyòl ne cherche pas à le rattraper sur ce terrain. Apple gagne sur
     l'intégration : rien à installer, et une place dans les réglages de langue
     du système.
