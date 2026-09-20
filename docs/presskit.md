@@ -238,13 +238,16 @@ téléphone. Le tableau ne retient que ce que nous avons pu constater ; une case
 | Créole et français ensemble | Oui, sans réglage | Plusieurs langues, à activer | Non pour cette langue |
 | Dictionnaire consultable | Oui, dans le dépôt public, et dans l'application (1 145 mots traduits, recherche dans les deux sens) | Non | Non |
 | Accès à Internet | Aucune permission | Permission déclarée | Frappe embarquée |
+| Nom donné à la langue par le clavier | « Kréyòl Gwadloup » | « Kwéyòl », le nom saint-lucien, sur la barre d'espace (relevé le 20 septembre 2026) | « Kréyòl Gwadloup », selon la presse locale |
+| Dictée vocale en créole guadeloupéen | Non, pas de dictée | **Non.** Gboard dicte, mais Google ne donne pas cette langue parmi celles que la saisie vocale couvre | Non, absente de la liste « Dictation » d'Apple |
 | Jeux de vocabulaire | Oui, six jeux, un carnet de cartes et une révision espacée | Non | Non |
 | Progression personnelle | Oui, sept niveaux et le compte des mots découverts | Non | Non |
 | Prix | Gratuit, sans publicité | Gratuit | Inclus dans le système |
 
-Gboard couvre une surface fonctionnelle plus large (saisie glissée, dictée,
-traduction, presse-papiers), et le clavier d'Apple s'intègre au système sans
-rien à installer. À l'inverse, ni l'un ni l'autre ne porte de dictionnaire
+Gboard couvre une surface fonctionnelle plus large : saisie glissée,
+presse-papiers, traduction, et une dictée vocale qui ne couvre pas le créole
+guadeloupéen. Aucun des trois claviers ne permet de dicter dans cette langue.
+Le clavier d'Apple, lui, s'intègre au système sans rien à installer. À l'inverse, ni l'un ni l'autre ne porte de dictionnaire
 consultable, de jeux ni de progression : ce sont des claviers, là où Klavyé
 Kréyòl est aussi un outil de vocabulaire. Le détail, les sources et les limites de chaque case sont
 dans le [comparatif détaillé](comparatif_d%C3%A9taill%C3%A9s.html).

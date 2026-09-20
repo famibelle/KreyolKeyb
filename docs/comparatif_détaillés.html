@@ -89,6 +89,9 @@ code{font-family:var(--mono);font-size:.93em;}
   section{margin-top:22px;page-break-inside:avoid;}
   table{min-width:0;}
 }
+figure.preuve{margin:18px 0 0;padding:0;}
+figure.preuve img{width:100%;max-width:520px;display:block;margin:0 auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
+figure.preuve figcaption{font-size:14px;color:var(--ink-soft);margin-top:8px;text-align:center;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -188,7 +191,7 @@ code{font-family:var(--mono);font-size:.93em;}
       </thead>
       <tbody>
         <tr><td>Créole guadeloupéen pris en charge</td><td class="v us"><strong>Oui</strong>, c'est sa raison d'être</td><td class="v">Oui, <strong>depuis novembre 2018</strong>, sur Android</td><td class="v">Oui, <strong>depuis iOS 27</strong> (septembre 2026), sous le nom « Kréyòl Gwadloup »</td></tr>
-        <tr><td>Nom donné à la langue par le clavier</td><td class="v us">« Kréyòl Gwadloup », dans le sélecteur de claviers d'Android</td><td class="v">« <strong>Kwéyòl</strong> », sur sa propre barre d'espace : la graphie de Sainte-Lucie et de la Dominique, pas celle de la Guadeloupe <sup class="n">6</sup></td><td class="v">« Kréyòl Gwadloup » <sup class="n">1</sup></td></tr>
+        <tr><td>Nom donné à la langue par le clavier</td><td class="v us">« Kréyòl Gwadloup », dans le sélecteur de claviers d'Android</td><td class="v">« <strong>Kwéyòl</strong> », sur sa propre barre d'espace : la graphie de Sainte-Lucie, pas celle de la Guadeloupe. C'est aussi le nom, et le clavier au pixel près, qu'il donne au créole saint-lucien <sup class="n">6</sup></td><td class="v">« Kréyòl Gwadloup » <sup class="n">1</sup></td></tr>
         <tr><td>Disposition</td><td class="v us">AZERTY, avec <code>é</code> <code>è</code> et le tiret sur leur propre touche</td><td class="v">AZERTY</td><td class="v">Clavier français où <code>é</code> et <code>è</code> remplacent <code>Q</code> et <code>X</code> <sup class="n">1</sup></td></tr>
         <tr><td>La lettre <code>ò</code></td><td class="v us">Appui long sur <code>o</code></td><td class="v">Appui long sur <code>o</code>, où <code>Ò</code> vient en premier <sup class="n">3</sup></td><td class="v"><span class="nv">non vérifié</span></td></tr>
         <tr><td>Dictionnaire</td><td class="v us"><strong>Plus de 5 200 formes</strong>, tirées d'un corpus de textes créoles, fichier lisible dans le dépôt public</td><td class="v">Modèle propriétaire, non consultable</td><td class="v">Modèle propriétaire, non consultable</td></tr>
@@ -201,6 +204,11 @@ code{font-family:var(--mono);font-size:.93em;}
       </tbody>
     </table>
   </div>
+  <figure class="preuve">
+    <img src="assets/gboard-deux-creoles.png" alt="Deux écrans de réglages de Gboard : sous le titre « Guadeloupean Creole » et sous le titre « Saint Lucian Creole French », le même clavier AZERTY, avec le mot Kwéyòl écrit sur la barre d'espace dans les deux cas.">
+    <figcaption>Les aperçus que Gboard 18.2.4 donne de ses deux claviers, le 20 septembre 2026. Les deux images sont identiques au pixel près, et portent le même nom sur la barre d'espace. Voir la note 6.</figcaption>
+  </figure>
+
   <div class="t-wrap">
     <table>
       <caption>Vie privée et diffusion</caption>
@@ -262,14 +270,20 @@ code{font-family:var(--mono);font-size:.93em;}
     consulté le 20 septembre 2026). La dictée est une fonction de la reconnaissance
     vocale de Google, pas du clavier : les réglages de Gboard n'offrent qu'un
     interrupteur, sans choix de langue.
-    <sup class="n">6</sup> Relevé le 20 septembre 2026 sur le même Galaxy A21s :
-    la disposition ajoutée sous le nom « Créole guadeloupéen » dans les réglages
-    affiche « Kwéyòl » sur sa barre d'espace une fois active. La graphie avec
-    <code>w</code> est celle de Sainte-Lucie et de la Dominique ; en Guadeloupe on
-    écrit « kréyòl ». Dans le corpus guadeloupéen dont est tiré le dictionnaire de
-    ce clavier, « kréyòl » apparaît 50 fois et aucune graphie en <code>kw</code>
-    n'apparaît. Le clavier d'Apple et celui-ci nomment tous deux la langue
-    « Kréyòl Gwadloup ».
+    <sup class="n">6</sup> Relevé le 20 septembre 2026 sur le Galaxy A21s, puis
+    reproduit le même jour sur un émulateur Pixel 7 Pro neuf sous Android 16 avec
+    Gboard 18.2.4 : la disposition ajoutée sous le nom « Créole guadeloupéen »
+    affiche « Kwéyòl » sur sa barre d'espace. L'aperçu que Gboard donne lui-même de
+    ce clavier dans ses réglages, sous le titre « Guadeloupean Creole », porte déjà
+    ce nom, avant toute frappe. Le même aperçu sous le titre « Saint Lucian Creole
+    French » est <strong>identique au pixel près</strong> : 0 pixel différent sur
+    135 725 comparés. Les noms que Gboard écrit sur la barre d'espace de ses quatre
+    claviers créoles à base française se répartissent ainsi : Guadeloupe « Kwéyòl »,
+    Sainte-Lucie « Kwéyòl », Guyane « Kréyòl », Haïti « Kreyòl ». La graphie avec
+    <code>w</code> est celle de Sainte-Lucie ; en Guadeloupe on écrit « kréyòl ».
+    Dans le corpus guadeloupéen dont est tiré le dictionnaire de ce clavier,
+    « kréyòl » apparaît 50 fois et aucune graphie en <code>kw</code> n'apparaît. Le
+    clavier d'Apple et celui-ci nomment tous deux la langue « Kréyòl Gwadloup ».
     <sup class="n">5</sup> Clavier Samsung 5.4.85.4 sur un Galaxy A21s, le
     20 septembre 2026 : « Gérer les langues de saisie » propose le créole
     haïtien, le créole jamaïcain, le créole mauricien et le créole seychellois ;
@@ -340,10 +354,11 @@ code{font-family:var(--mono);font-size:.93em;}
   <h2>Ce que les autres font mieux</h2>
   <p>
     Gboard couvre une surface fonctionnelle bien plus large : saisie glissée,
-    traduction, presse-papiers, écriture manuscrite, thèmes, et une correction
-    affinée par un très grand nombre de frappes. Il dicte aussi, mais dans
-    d'autres langues que le créole guadeloupéen. Klavyé
-    Kréyòl ne cherche pas à le rattraper sur ce terrain. Apple gagne sur
+    traduction, presse-papiers, écriture manuscrite, thèmes. Il dicte aussi, mais
+    dans d'autres langues que le créole guadeloupéen. Aucune de ces fonctions ne
+    porte sur la justesse de ce qui est écrit en kréyòl, qui est la question du
+    tableau plus haut ; elles portent sur le confort de la frappe, et elles le
+    servent bien. Klavyé Kréyòl ne cherche pas à le rattraper sur ce terrain. Apple gagne sur
     l'intégration : rien à installer, et une place dans les réglages de langue
     du système.
   </p>
