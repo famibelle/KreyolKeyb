@@ -17,8 +17,9 @@ class AccentRestorationTest {
     private fun choisir(
         tape: String,
         groupe: List<Pair<String, Int>>,
-        francais: Boolean = false
-    ): String? = AccentRestoration.choisir(tape, groupe, francais)
+        francais: Boolean = false,
+        nueGlosee: Boolean = false
+    ): String? = AccentRestoration.choisir(tape, groupe, francais, nueGlosee)
 
     // ===== Ce qu'elle corrige =====
 
@@ -68,9 +69,26 @@ class AccentRestorationTest {
     }
 
     @Test
-    fun `une forme nue attestee qui n'est pas nettement dominee reste`() {
-        // 10 contre 6 : rien ne dit que la forme nue est une faute
-        assertNull(choisir("mot", listOf("mòt" to 10, "mot" to 6)))
+    fun `une forme nue qui porte un sens propre n'est pas supplantee`() {
+        // « bo » est le baiser, « bò » le côté : deux mots, pas deux graphies.
+        // La glose de la forme nue suffit à le dire, quelles que soient les
+        // fréquences.
+        assertNull(choisir("bo", listOf("bò" to 40, "bo" to 6), nueGlosee = true))
+    }
+
+    @Test
+    fun `une forme nue de deux lettres n'est jamais supplantee`() {
+        // La table de gloses ne couvre que 622 mots : « mo » n'y est pas, et
+        // c'est pourtant le mot du jeu « Mo an plas ». À deux lettres, les
+        // homographes sont trop nombreux pour trancher sur la fréquence.
+        assertNull(choisir("mo", listOf("mò" to 40, "mo" to 6)))
+    }
+
+    @Test
+    fun `une graphie accentuee trop rare ne supplante pas une forme nue attestee`() {
+        // « grandè » n'est vu que 3 fois : sous le plancher, on laisse « grande »,
+        // qui est aussi un mot français que le lexique livré ne connaît pas.
+        assertNull(choisir("grande", listOf("grandè" to 3, "grande" to 1)))
     }
 
     @Test
@@ -92,6 +110,43 @@ class AccentRestorationTest {
     fun `un mot avec un chiffre ou un tiret n'est pas touche`() {
         assertNull(choisir("pale2", listOf("palé" to 75)))
         assertNull(choisir("pa-le", listOf("palé" to 75)))
+    }
+
+    // ===== Ce que la graphie nue muette débloque =====
+
+    @Test
+    fun `une graphie nue sans sens propre cede a la forme accentuee majoritaire`() {
+        // bèf 13 contre bef 7, siklòn 8 contre siklon 7 : « bef » et « siklon »
+        // ne sont pas des mots, ce sont les mêmes mots tapés sans accent.
+        assertEquals("bèf", choisir("bef", listOf("bèf" to 13, "bef" to 7)))
+        assertEquals("siklòn", choisir("siklon", listOf("siklòn" to 8, "siklon" to 7)))
+    }
+
+    @Test
+    fun `la forme nue reste quand elle est la plus frequente`() {
+        assertNull(choisir("siklon", listOf("siklòn" to 7, "siklon" to 8)))
+        assertNull(choisir("siklon", listOf("siklòn" to 7, "siklon" to 7)))
+    }
+
+    @Test
+    fun `une graphie rivale vue deux fois est tenue pour une coquille`() {
+        // doktè 4 contre dòktè 2 : à ce volume, la seconde est une coquille du
+        // corpus, pas une norme concurrente.
+        assertEquals("doktè", choisir("dokte", listOf("doktè" to 4, "dòktè" to 2)))
+    }
+
+    @Test
+    fun `une rivale rare reste quand la graphie de tete est elle aussi rare`() {
+        // 3 contre 2 : la graphie de tête n'atteint pas le plancher, on s'abstient.
+        assertNull(choisir("dokte", listOf("doktè" to 3, "dòktè" to 2)))
+    }
+
+    @Test
+    fun `une rivale assez vue n'est pas ecartee comme une coquille`() {
+        // pé et pè, déjà vu plus haut, et le cas général : 90 occurrences ne sont
+        // pas une coquille.
+        assertNull(choisir("pe", listOf("pé" to 244, "pè" to 90)))
+        assertNull(choisir("swe", listOf("swé" to 10, "swè" to 8)))
     }
 
     // ===== Propriété sur le vrai dictionnaire =====
@@ -124,8 +179,8 @@ class AccentRestorationTest {
                 nu, AccentTolerantMatcher.normalize(restitue)
             )
         }
-        // Et la règle sert : plus de huit cents groupes sont couverts.
-        assertTrue("trop peu de mots restitués : $corriges", corriges > 800)
+        // Et la règle sert : plus de neuf cents groupes sont couverts.
+        assertTrue("trop peu de mots restitués : $corriges", corriges > 900)
     }
 
     @Test
@@ -134,6 +189,9 @@ class AccentRestorationTest {
         fun sur(nu: String) = choisir(nu, groupes.getValue(nu))
         assertEquals("palé", sur("pale"))
         assertEquals("kréyòl", sur("kreyol"))
+        assertEquals("bèf", sur("bef"))
+        assertEquals("siklòn", sur("siklon"))
+        assertEquals("doktè", sur("dokte"))
         assertNotNull(sur("zot"))
         // pé et pè cohabitent : pas de choix à la place de l'utilisateur
         assertNull(sur("pe"))

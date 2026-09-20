@@ -620,13 +620,15 @@ class SuggestionEngine(private val context: Context) {
      * La graphie accentuée à substituer à [word] tapé sans accent, ou `null` quand
      * il faut le laisser tel quel. Toute la règle, et ses interdits, sont dans
      * [AccentRestoration] ; ce qui revient ici est seulement de lui fournir les
-     * graphies du dictionnaire et de dire si le mot est du français.
+     * graphies du dictionnaire, de dire si le mot est du français, et si la forme
+     * sans accent est glosée pour elle-même.
      */
     fun restoreAccents(word: String): String? {
         if (word.length < AccentRestoration.LONGUEUR_MINIMALE) return null
         val groupe = accentGroups[AccentTolerantMatcher.normalize(word)] ?: return null
         val estFrancais = ::frenchDictionary.isInitialized && frenchDictionary.containsWord(word)
-        return AccentRestoration.choisir(word, groupe, estFrancais)
+        val nueAUnSens = TranslationDictionary.aUnSensPropre(context, word.lowercase())
+        return AccentRestoration.choisir(word, groupe, estFrancais, nueAUnSens)
     }
 
     /**

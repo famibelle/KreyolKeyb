@@ -309,6 +309,21 @@ object TranslationDictionary {
     fun traduire(context: Context, mot: String): String? = entree(context, mot)?.glose
 
     /**
+     * Vrai si [mot] est glosé **tel qu'il est écrit**, accents compris.
+     *
+     * Contrairement à [entree], aucun repli sur la forme pliée : c'est tout
+     * l'intérêt ici. `bo` (le baiser) est glosé et `bef` ne l'est pas, alors que
+     * le repli les rattacherait l'un à `bò` et l'autre à `bèf`. La restauration
+     * des accents s'en sert pour savoir si une forme sans accent porte un sens à
+     * elle, ou n'est que la graphie nue d'un mot accentué (voir
+     * [AccentRestoration]).
+     */
+    fun aUnSensPropre(context: Context, mot: String): Boolean {
+        charger(context)
+        return mot.isNotEmpty() && entrees.containsKey(mot)
+    }
+
+    /**
      * Glose prête à afficher à côté du mot, ou chaîne vide.
      * Le tiret cadratin sépare mieux que les parenthèses sur une seule ligne.
      */
