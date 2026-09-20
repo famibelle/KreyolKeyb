@@ -1,8 +1,24 @@
 {
   "production_version": "20.0.3",
-  "latest_version": "22.0.2",
-  "as_of": "2026-09-19",
+  "latest_version": "22.2.0",
+  "as_of": "2026-09-20",
   "features": [
+    {
+      "version": "22.2.0",
+      "emoji": "✨",
+      "title": "Ajouté",
+      "description": "La carte vibre sur tous les téléphones. Sur les vibreurs simples (Galaxy",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.2.0",
+      "curated": false
+    },
+    {
+      "version": "22.1.0",
+      "emoji": "✨",
+      "title": "Ajouté",
+      "description": "Les accents reviennent tout seuls. Un mot tapé sans accent (« pale »,",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.1.0",
+      "curated": false
+    },
     {
       "version": "22.0.2",
       "emoji": "🔡",
