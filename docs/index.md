@@ -100,8 +100,8 @@ touchée, puis une phrase entière tapée sans un seul accent, que le
 clavier rétablit tout seul.**
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-   <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="30%">
-   <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, chaque touche mise en évidence par un halo bleu au moment où elle est pressée, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="30%">
+   <img loading="lazy" src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="30%">
+   <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, un halo bleu glissant d'une touche à l'autre au fil de la frappe, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="30%">
 </div>
 
 ## Fonctionnalités
