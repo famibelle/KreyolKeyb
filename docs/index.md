@@ -122,10 +122,20 @@ presse](presskit.html).
 
 Et ceux qui l'utilisent : **4,35 sur 5** sur Google Play, pour 52 avis.
 
-> ⭐⭐⭐⭐⭐ « Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les
-> traductions des mots dans les jeux juste parfait ! »
-
-> ⭐⭐⭐⭐⭐ « C'est très bien pour aprendre le kréyòl »
+<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:18px 0;">
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les traductions des mots dans les jeux juste parfait ! »</p>
+  </div>
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« Très instructif et permet d'accéder à de nombreux mots. Bravo ! »</p>
+  </div>
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« C'est très bien pour aprendre le kréyòl »</p>
+  </div>
+</div>
 
 <small>Avis publiés sur la fiche Google Play, où [les 52 sont
 consultables](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr).
