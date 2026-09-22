@@ -122,6 +122,11 @@ bilingues qui apparaissent pendant que vous tapez.**
 
 ### En prime
 
+**La gamification n'est pas un gadget : elle donne envie d'écrire encore
+plus de kréyòl.** Chaque mot tapé peut devenir une carte à collectionner,
+et chaque partie fait découvrir un mot qu'on n'aurait pas cherché
+autrement.
+
 | | |
 |---|---|
 | 📔 **Sanblé, le carnet des mots gagnés** | Chaque mot trouvé dans un jeu devient une carte, avec son sens en français et une phrase d'un auteur guadeloupéen |
