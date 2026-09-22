@@ -54,44 +54,63 @@ lang: fr
 </div>
 <!-- nav:end -->
 
-# Klavyé Kréyòl Karukera, le clavier créole guadeloupéen pour Android
+# Osez le Kréyòl
 
-**Écrire en kréyòl sur son téléphone, sans galérer.** Klavyé Kréyòl Karukera
-vous propose vos mots en **créole guadeloupéen** pendant que vous tapez, et
-rétablit tout seul les accents que vous oubliez, construits sur les textes
-des grands défenseurs du kréyòl : Sylviane Telchid, Sonny Rupaire, Max
-Rippon, Robert Fontes, Esnard Boisdur et bien d'autres. Gratuit, open
-source, zéro pub, 100 % hors ligne.
+**Ce n'est pas vous qui écriviez mal le kréyòl. C'est votre clavier qui ne
+le connaissait pas.**
 
-## Pourquoi ce clavier ?
+Klavyé Kréyòl Karukera est le **clavier créole guadeloupéen pour Android**
+qui vous propose vos mots pendant que vous tapez et rétablit tout seul les
+accents que vous oubliez. Ses suggestions sont construites sur les textes
+de Sylviane Telchid, Sonny Rupaire, Max Rippon, Robert Fontes, Esnard
+Boisdur et bien d'autres. Gratuit, open source, zéro pub, 100 % hors ligne.
 
-- 🤔 Votre téléphone **refuse tous les mots créoles** et « corrige » votre kréyòl en français ?
-- 😤 Vous **doutez de l'orthographe** à chaque message, et vous laissez tomber les accents faute de trouver la bonne touche ?
+## Ce qui vous retenait, et ce qui a changé
 
-**Klavyé Kréyòl Karukera règle les deux.** Tapez « kreyol » sans réfléchir
-aux accents : il devient « kréyòl » dès que vous validez le mot. Le
-clavier ajoute les accents qui manquent, il ne remplace jamais vos
-lettres par d'autres.
+| | |
+|---|---|
+| 🤔 **« Mon téléphone corrige mon kréyòl en français »** | Il ne le fait plus. Ce clavier ne remplace jamais un mot par un autre : vos lettres restent exactement les vôtres. |
+| 😤 **« Je ne sais jamais où mettre les accents »** | Tapez « kreyol » sans y penser : il devient « kréyòl » dès que vous validez le mot. Les accents oubliés reviennent tout seuls. |
+| 😬 **« J'ai peur de l'écrire de travers »** | Les mots proposés sortent des textes de nos auteurs. Vous n'inventez rien : vous écrivez ce qu'ils ont écrit. |
+| 🤷 **« De toute façon, personne ne l'écrit »** | <span id="dl-inline">3 356</span> personnes l'écrivent déjà avec ce clavier. |
 
 <div align="center">
   <img src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, un halo suivant le doigt d'une touche à l'autre pendant que les suggestions kréyòl s'affichent au-dessus du clavier. À l'espace, le mot devient « kréyòl » tout seul" width="340">
 </div>
 
-## Maké on bèl Kréyòl : vérifiez tout de suite
+## Vérifiez tout de suite, sans rien installer
 
-Essayez maintenant, directement dans votre navigateur, sans rien
-installer : tapez un mot, regardez les suggestions kréyòl et français
-apparaître, retrouvez l'exemple ci-dessus avec vos propres mots.
+Tapez un mot dans ce clavier d'essai : les suggestions kréyòl et
+françaises apparaissent comme sur votre téléphone, et vous retrouvez
+l'exemple ci-dessus avec vos propres mots.
 
 <div align="center">
   <iframe src="simulateur.html?embed=1" width="380" height="620" style="border:0;max-width:100%;" loading="lazy" title="Simulateur Klavyé Kréyòl Karukera"></iframe>
 </div>
+
+## Ils en ont parlé
+
+**[Guadeloupe la 1ère](https://la1ere.franceinfo.fr/guadeloupe/klavye-kreyol-karukera-l-appli-pour-smartphone-qui-facilite-la-redaction-de-messages-en-creole-guadeloupeen-1723969.html)**
+(France Télévisions) lui a consacré un sujet au journal de 19h30 et un
+article. **Canal 10** l'a présenté dans sa chronique Tech.
+**[France-Antilles](https://www.guadeloupe.franceantilles.fr/actualite/economie/si-le-creole-guadeloupeen-nexiste-pas-petit-a-petit-on-sefface-1088477.php)**
+en a fait un entretien : « Si le créole guadeloupéen n'existe pas, petit à
+petit, on s'efface ». Les extraits sont dans le [dossier de
+presse](presskit.html).
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
     <img src="Screenshots/GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Télécharger Klavyé Kréyòl Karukera sur Google Play" width="60%">
   </a>
 </div>
+
+<p align="center"><em>Gratuit, sans publicité. L'installation prend deux
+minutes, et le <a href="guide.html">guide</a> vous montre chaque écran.</em></p>
+
+> 🔒 **Ce que vous tapez ne quitte pas votre téléphone.** Pas de compte, pas
+> de serveur, aucune sauvegarde dans le nuage, pas même celle d'Android. Le
+> code est public et vérifiable, et la [politique de
+> confidentialité](privacy/privacy-policy.html) le dit en toutes lettres.
 
 ## Le clavier en action
 
@@ -104,7 +123,7 @@ la suggestion, une fois tapé sans accent et rétabli tout seul.**
    <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS, un halo suivant le doigt d'une touche à l'autre. Le premier « kréyòl » est posé en touchant la suggestion kréyòl ; le second est tapé sans accent et le clavier les rétablit à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »" width="30%">
 </div>
 
-## Fonctionnalités
+## Ce que ça change pour vous
 
 **Klavyé Kréyòl Karukera aide à deux niveaux : écrire le kréyòl au
 quotidien, et le pratiquer davantage.**
@@ -117,7 +136,6 @@ quotidien, et le pratiquer davantage.**
 | ✍️ **Les accents ne se perdent plus** | Appui long pour les taper, et depuis peu, ils reviennent tout seuls si vous les oubliez : vos lettres ne changent jamais, seuls les accents s'ajoutent |
 | 🇫🇷 **Un seul clavier pour le kréyòl et le français** | Le français prend le relais quand aucun mot créole ne correspond, pas besoin de changer de clavier |
 | 🔢 **Il s'adapte à ce que vous écrivez** | Pavé de chiffres pour un numéro ou une date, arobase pour un e-mail : sans réglage à chercher |
-| 🔒 **Personne ne lit ce que vous tapez** | Fonctionnement 100 % local, et même la sauvegarde automatique du téléphone est fermée : rien ne part sur un serveur ([politique de confidentialité](privacy/privacy-policy.html)) |
 | 🚫 **Zéro publicité, zéro tracker** | Le clavier reste concentré sur l'essentiel |
 | 🆓 **Gratuit et open source** | Code public sur [GitHub](https://github.com/famibelle/KreyolKeyb), licence MIT |
 
@@ -159,8 +177,9 @@ Orange Antilles-Guyane).
 
 ## À découvrir en exclusivité 🎁
 
-**Le clavier évolue chaque semaine.** De nouvelles fonctionnalités arrivent
-régulièrement, en avance sur le Play Store.
+**Le clavier progresse chaque semaine.** Ce n'est pas une application
+livrée puis abandonnée : les nouveautés arrivent en continu, parfois en
+avance sur le Play Store.
 
 <div class="card" style="margin:16px 0;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
   <span id="ef-teaser" style="color:var(--ink-soft);">Chargement…</span>
@@ -202,6 +221,9 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
   }
   var pct = Math.max(2, Math.min(100, (s.current / s.goal) * 100));
   document.getElementById('g-current').textContent = fmt(s.current);
+  // Le meme chiffre sert de preuve dans le tableau du haut de page.
+  var enligne = document.getElementById('dl-inline');
+  if (enligne) { enligne.textContent = fmt(s.current); }
   document.getElementById('g-next').textContent = fmt(next);
   document.getElementById('g-daily').textContent = fmt(s.daily_target);
   document.getElementById('g-asof').textContent = 'MAJ ' + s.as_of;
@@ -238,12 +260,14 @@ Le code source est ouvert et public sur
 
 ---
 
-*« An kréyòl nou ka palé, an kréyòl nou ka maké ! »*
+<p align="center" style="font-size:22px;font-weight:700;line-height:1.35;margin:28px 0 6px;">An kréyòl nou ka palé,<br>an kréyòl nou ka maké.</p>
+
+<p align="center" style="color:var(--ink-soft);margin:0 0 24px;">C'est ce que vous rejoignez en l'installant.</p>
 
 <!-- footer:start -->
 <footer class="site">
   <div class="footer-cta">
-    <p class="footer-baseline">Maké on bèl Kréyòl asi téléfòn a-w.</p>
+    <p class="footer-baseline">An kréyòl nou ka palé, an kréyòl nou ka maké.</p>
     <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dpied">📲 Installer, c'est gratuit</a>
   </div>
   <div class="footer-cols">
