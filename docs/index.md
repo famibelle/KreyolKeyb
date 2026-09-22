@@ -73,20 +73,20 @@ aux accents : il devient « kréyòl » dès que vous validez le mot. Le
 clavier ajoute les accents qui manquent, il ne remplace jamais vos
 lettres par d'autres.
 
+## Maké on bèl Kréyòl : vérifiez tout de suite
+
+Essayez maintenant, directement dans votre navigateur, sans rien
+installer : tapez un mot, regardez les suggestions kréyòl et français
+apparaître, retrouvez l'exemple ci-dessus avec vos propres mots.
+
+<div align="center">
+  <iframe src="simulateur.html?embed=1" width="380" height="620" style="border:0;max-width:100%;" loading="lazy" title="Simulateur Klavyé Kréyòl Karukera"></iframe>
+</div>
+
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
     <img src="Screenshots/GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Télécharger Klavyé Kréyòl Karukera sur Google Play" width="60%">
   </a>
-</div>
-
-## Maké on bèl Kréyòl et enfin écrire en kréyòl sans galérer !
-
-Essaie-le tout de suite, directement dans ton navigateur, sans rien installer :
-tape un mot, regarde les suggestions kréyòl et français apparaître, découvre
-les accents par appui long.
-
-<div align="center">
-  <iframe src="simulateur.html?embed=1" width="380" height="620" style="border:0;max-width:100%;" loading="lazy" title="Simulateur Klavyé Kréyòl Karukera"></iframe>
 </div>
 
 ## Le clavier en action
@@ -100,10 +100,6 @@ bilingues qui apparaissent pendant que vous tapez.**
    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="22%">
    <img src="Screenshots/app_clavier_suggestions.png" alt="Le mot « Bon » en cours de saisie dans un SMS : trois suggestions kréyòl (Bon, Bonjou, Bondyé) et une suggestion française (Bonheur)" width="22%" style="aspect-ratio: 9 / 20; object-fit: cover;">
    <img src="Screenshots/app_clavier_accents.png" alt="Le mot « Kré » en cours de saisie, avec les suggestions Kréyòl, Krévé, Kréyol et le choix d'accents o, ò, ô, ó, œ ouvert par un appui long sur la touche o" width="22%" style="aspect-ratio: 9 / 20; object-fit: cover;">
-</div>
-
-<div align="center" style="margin: 18px 0;">
-  <a href="simulateur.html" class="btn" style="padding:12px 28px;">🧪 Essayer le clavier dans le navigateur</a>
 </div>
 
 ## Fonctionnalités
