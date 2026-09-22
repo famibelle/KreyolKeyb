@@ -120,12 +120,16 @@ en a fait un entretien : « Si le créole guadeloupéen n'existe pas, petit à
 petit, on s'efface ». Les extraits sont dans le [dossier de
 presse](presskit.html).
 
-Et ceux qui l'utilisent, sur Google Play :
+Et ceux qui l'utilisent : **4,35 sur 5** sur Google Play, pour 52 avis.
 
 > ⭐⭐⭐⭐⭐ « Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les
 > traductions des mots dans les jeux juste parfait ! »
->
-> <small>Lionel TAURUS, 8 septembre 2026 · <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr">les 52 avis sur Google Play</a></small>
+
+> ⭐⭐⭐⭐⭐ « C'est très bien pour aprendre le kréyòl »
+
+<small>Avis publiés sur la fiche Google Play, où [les 52 sont
+consultables](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr).
+Cités sans leurs auteurs.</small>
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
