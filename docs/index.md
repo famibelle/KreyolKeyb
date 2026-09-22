@@ -129,6 +129,12 @@ bilingues qui apparaissent pendant que vous tapez.**
 | 🔡 **Six jeux, dont un jouable sans connaître un mot de créole** | Mo an plas donne les mots tout faits, à vous de les caser dans la grille |
 | 🏆 **Une progression, de Pipirit à Potomitan** | Au fil des mots que vous tapez vraiment |
 
+<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+   <img loading="lazy" src="Screenshots/gif_jeu_mokarenaj.gif" alt="Animation : les essais RIPAJ, TIRAJ puis VIRAJ tapés au clavier, les cases se colorant en vert, orange et gris jusqu'au message « Bravo ! »" width="30%">
+   <img loading="lazy" src="Screenshots/gif_eventail_cartes.gif" alt="Animation : un casier de la boîte s'ouvre et ses huit cartes se déploient en éventail, défilent sous le doigt (kouté, pyé, rivyè, solèy), puis la carte pyébwa s'ouvre en grand : arbre, avec une phrase du corpus" width="30%">
+   <img loading="lazy" src="Screenshots/gif_boite_leitner.gif" alt="Animation : la révision Sonjé. Cinq cartes (pyébwa, solèy, kouté, rivyè, chanjé) montrent leur mot, se retournent pour donner leur sens, puis se rangent selon « Je savais » ou « Pas su » ; la boîte se met à jour" width="30%">
+</div>
+
 ## Un projet de préservation linguistique
 
 Le créole est parlé par **1,6 million de locuteurs en France**.
