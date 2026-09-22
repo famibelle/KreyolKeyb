@@ -69,6 +69,10 @@ RACINE = Path(__file__).resolve().parent.parent
 RACINE_ASSETS = RACINE / "android_keyboard/app/src/main/assets"
 CHEMIN_DICT = RACINE_ASSETS / "creole_dict.json"
 CHEMIN_TRAD = RACINE_ASSETS / "creole_translations.json"
+# Le simulateur du site lit la même table : la restauration des accents s'y
+# abstient devant une forme nue glosée (« bo » le baiser en face de « bò » le
+# côté), donc il lui faut les mêmes clés qu'à l'application.
+CHEMIN_TRAD_DOCS = RACINE / "docs/assets/creole_translations.json"
 DOSSIER_BACKUPS = Path(__file__).resolve().parent / "backups"
 
 # Codes de source, écrits dans chaque entrée. Un seul caractère : répété
@@ -369,12 +373,14 @@ def sauvegarder(table):
         "count": len(table),
         "translations": table,
     }
-    with open(CHEMIN_TRAD, "w", encoding="utf-8") as f:
-        json.dump(charge, f, ensure_ascii=False, separators=(",", ":"))
+    for chemin in (CHEMIN_TRAD, CHEMIN_TRAD_DOCS):
+        chemin.parent.mkdir(parents=True, exist_ok=True)
+        with open(chemin, "w", encoding="utf-8") as f:
+            json.dump(charge, f, ensure_ascii=False, separators=(",", ":"))
 
     taille = CHEMIN_TRAD.stat().st_size
     print(f"   ✅ {CHEMIN_TRAD.name} — {len(table)} formes, "
-          f"{taille / 1024:.0f} Ko")
+          f"{taille / 1024:.0f} Ko (application et simulateur)")
 
 
 def main():

@@ -24,7 +24,7 @@ Release signing reads `KEYSTORE_FILE`, `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSW
 
 ## Dictionary / Data Pipeline
 
-The JSON assets in `android_keyboard/app/src/main/assets/` are the **source of truth** used by both Android and iOS:
+The JSON assets in `android_keyboard/app/src/main/assets/` are the **source of truth** used by Android, iOS **and the browser simulator** (`docs/simulateur.html`, which runs a JS port of `SuggestionEngine` on the same files):
 - `creole_dict.json` — `[word, frequency]` list (~5300 words)
 - `creole_ngrams.json` — n-gram context model, ~8850 keys. Two key families in one flat object: one word (`"ka"`, from bigrams) and two words separated by a space (`"an ka"`, from trigrams). See `android_keyboard/NGRAMS.md`
 - `french_simple_dict.json` — French fallback dictionary, only ~660 words. This thinness constrains both the bilingual suggestions and the spell checker (see below)
@@ -73,6 +73,8 @@ Where the Luxembourgish carnet puts a sentence written by a lexicographer (the L
 Two thresholds are measured, not chosen. The sentence band is **4 to 14 words**: 3 to 18 covers 524 words but does not fit the card, 6 to 16 (the cloze band) covers 483, and 4 to 14 covers 500 on the local snapshot. The lower bound is below the cloze's because the sentence does not have to *designate* an answer here, only to show the word at work, and a four-word proverb does that well. The generator also refuses an occurrence capitalized mid-sentence: Creole capitalizes only proper nouns, so `Viktò` in a line of dialogue does not illustrate the card's `viktò`. Delivered: 479 of the 622 glossed words illustrated, 1 149 sentences, 188 KB. The other 143 keep their gloss alone.
 
 `docs/scripts/generate_corpus_stats.py` computes the figures behind the `docs/corpus.html` page into `docs/assets/corpus_stats.json`. It reads the public parquet export through the HF datasets-server (no `HF_TOKEN`, no `datasets` library) and deliberately mirrors `KreyolComplet.py`'s regex and n-gram thresholds, so its totals stay comparable to the shipped assets. It also stores the dataset's commit SHAs, which is what `rapport-corpus.yml` diffs to decide whether anything needs rebuilding.
+
+`docs/assets/` holds a third copy of the four assets the simulator reads (`creole_dict.json`, `creole_ngrams.json`, `creole_translations.json` in the Android format, plus the two hand-kept `french_simple_dict.json` and `emoji_data.json`). `KreyolComplet.py` and `generate_translations.py` write there as a matter of course, alongside their Android output. They did not until 2026-09-22, and nothing else did either: the simulator ran for seven weeks on the assets of its own first commit, predicting without the 4 251 two-word n-gram keys that had been added since. A copy that only a separate step keeps current is a copy that goes stale, so the generators write it.
 
 Corpus word counts **replace** stored frequencies rather than adding to them, so two consecutive runs produce the same dictionary. Words absent from the corpus (hand-curated additions) are preserved, their frequency rescaled to the current corpus scale.
 

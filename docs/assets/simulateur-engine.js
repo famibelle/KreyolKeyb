@@ -160,6 +160,79 @@
     return score;
   }
 
+  // ---- AccentRestoration ----
+  /*
+   * Port de AccentRestoration.kt. C'est la seule correction automatique du
+   * clavier, et elle est bornée : le mot rendu a exactement les lettres du mot
+   * tapé, aux accents près. Elle ne remplace jamais un mot par un autre, et
+   * s'abstient dès que le corpus ne tranche pas. Les seuils sont ceux du Kotlin,
+   * repris nom pour nom : toute divergence ici est un bug de ce fichier.
+   */
+  const AccentRestoration = {
+    LONGUEUR_MINIMALE: 2,
+    FREQUENCE_MINIMALE: 2,
+    DOMINANCE_ENTRE_ACCENTUEES: 5,
+    DOMINANCE_SUR_LA_FORME_NUE: 8,
+    FREQUENCE_COQUILLE: 3,
+    DOMINANCE_SUR_LA_COQUILLE: 2,
+    FREQUENCE_POUR_SUPPLANTER: 4,
+    LONGUEUR_FORME_NUE_MUETTE: 3,
+
+    /**
+     * @param tape mot tel que tapé, dans sa casse d'origine
+     * @param groupe [[graphie, frequence], ...] ne différant de `tape` que par les accents
+     * @param estMotFrancais vrai si `tape` figure au lexique français du clavier
+     * @param nueAUnSensPropre vrai si la forme sans accent est elle-même glosée
+     * @returns la graphie à substituer, ou null s'il faut laisser le mot tel quel
+     */
+    choisir(tape, groupe, estMotFrancais, nueAUnSensPropre) {
+      if (tape.length < this.LONGUEUR_MINIMALE || estMotFrancais) return null;
+      if (![...tape].every(isLetter)) return null;
+
+      const minuscule = tape.toLowerCase();
+      // Un accent tapé est un choix : on ne le réécrit pas, même s'il est faux.
+      if (AccentTolerantMatcher.hasAccents(minuscule)) return null;
+
+      let accentuees = groupe
+        .filter(([mot, freq]) => AccentTolerantMatcher.hasAccents(mot) && freq >= this.FREQUENCE_MINIMALE)
+        .sort((a, b) => b[1] - a[1]);
+      const meilleure = accentuees[0];
+      if (!meilleure) return null;
+
+      // Une rivale vue moins de trois fois est une coquille du corpus, pas une
+      // norme concurrente : elle ne bloque pas la correction.
+      if (accentuees.length > 1 && meilleure[1] >= this.FREQUENCE_POUR_SUPPLANTER) {
+        accentuees = [meilleure].concat(
+          accentuees.slice(1).filter(
+            (rivale) => !(rivale[1] < this.FREQUENCE_COQUILLE &&
+              meilleure[1] >= this.DOMINANCE_SUR_LA_COQUILLE * rivale[1])
+          )
+        );
+      }
+
+      // Deux graphies accentuées à peu près à égalité : question de norme, pas
+      // de correction. Le clavier n'a pas à la trancher.
+      if (accentuees.length > 1 && meilleure[1] < this.DOMINANCE_ENTRE_ACCENTUEES * accentuees[1][1]) {
+        return null;
+      }
+
+      const entreeNue = groupe.find(([mot]) => mot === minuscule);
+      const frequenceNue = entreeNue ? entreeNue[1] : 0;
+      if (frequenceNue > 0) {
+        const nueMuette = minuscule.length >= this.LONGUEUR_FORME_NUE_MUETTE &&
+          !nueAUnSensPropre &&
+          meilleure[1] >= this.FREQUENCE_POUR_SUPPLANTER;
+        if (nueMuette) {
+          if (meilleure[1] <= frequenceNue) return null;
+        } else if (meilleure[1] < this.DOMINANCE_SUR_LA_FORME_NUE * frequenceNue) {
+          return null;
+        }
+      }
+
+      return applyCasingPattern(tape, meilleure[0]);
+    }
+  };
+
   // ---- BilingualConfig defaults (BilingualSuggestion.kt) ----
 
   const DEFAULT_BILINGUAL_CONFIG = {
@@ -180,6 +253,11 @@
       this.normalizedWords = [];
       this.ngramModel = {}; // { word: [{word, probability}, ...] }
       this.frenchWords = []; // [[word, freq], ...]
+      this.frenchSet = new Set(); // appartenance exacte, pour restoreAccents
+      // Graphies du dictionnaire regroupées par forme sans accent, construites
+      // une fois au chargement : la restauration ne parcourt alors plus rien.
+      this.accentGroups = new Map();
+      this.glosees = new Set(); // clés de creole_translations.json (TranslationDictionary.entrees)
       this.wordHistory = [];
       this.bilingualConfig = { ...DEFAULT_BILINGUAL_CONFIG };
     }
@@ -189,16 +267,54 @@
       list.sort((a, b) => b[1] - a[1]);
       this.dictionary = list;
       this.normalizedWords = list.map(([word]) => AccentTolerantMatcher.normalize(word));
+
+      this.accentGroups = new Map();
+      list.forEach((entree, i) => {
+        const cle = this.normalizedWords[i];
+        const groupe = this.accentGroups.get(cle);
+        if (groupe) groupe.push(entree);
+        else this.accentGroups.set(cle, [entree]);
+      });
     }
 
     loadFrenchDictionary(raw) {
       const list = (raw.words || []).map(([word, freq]) => [String(word).toLowerCase(), freq || 1]);
       list.sort((a, b) => b[1] - a[1]);
       this.frenchWords = list;
+      this.frenchSet = new Set(list.map(([word]) => word));
     }
 
     loadNgramModel(raw) {
       this.ngramModel = raw || {};
+    }
+
+    /**
+     * Table de gloses (creole_translations.json). Seules les clés servent ici :
+     * une forme sans accent qui y figure porte un sens propre (« bo » le baiser
+     * en face de « bò » le côté) et n'est donc pas réécrite.
+     */
+    loadTranslations(raw) {
+      const table = (raw && raw.translations) || {};
+      this.glosees = new Set(Object.keys(table));
+    }
+
+    /**
+     * La graphie accentuée à substituer à `word` tapé sans accent, ou null.
+     * Port de SuggestionEngine.restoreAccents() : toute la règle est dans
+     * AccentRestoration, ici on ne fait que lui fournir le groupe de graphies,
+     * dire si le mot est français, et si la forme nue est glosée.
+     */
+    restoreAccents(word) {
+      if (word.length < AccentRestoration.LONGUEUR_MINIMALE) return null;
+      const groupe = this.accentGroups.get(AccentTolerantMatcher.normalize(word));
+      if (!groupe) return null;
+      const minuscule = word.toLowerCase();
+      return AccentRestoration.choisir(
+        word,
+        groupe,
+        this.frenchSet.has(minuscule),
+        this.glosees.has(minuscule)
+      );
     }
 
     addWordToHistory(word) {
@@ -257,11 +373,27 @@
       return findClosestMatches(input, this.dictionary, 2, MAX_SUGGESTIONS, 2);
     }
 
+    /**
+     * Clé à interroger dans le modèle : le contexte à deux mots (« an ka ») s'il
+     * y figure, sinon le dernier mot seul (« ka »). Port de
+     * SuggestionEngine.resolveNgramContext(). Les deux familles de clés vivent
+     * dans le même objet plat, sans collision possible : la tokenisation du
+     * pipeline exclut les espaces.
+     */
+    resolveNgramContext(previousWord, lastWord) {
+      if (previousWord) {
+        const paire = previousWord + ' ' + lastWord;
+        if (Object.prototype.hasOwnProperty.call(this.ngramModel, paire)) return paire;
+      }
+      return lastWord;
+    }
+
     // → [word, ...] triés par probabilité décroissante
     getNgramSuggestions() {
       const lastWord = this.wordHistory[this.wordHistory.length - 1];
       if (!lastWord) return [];
-      const list = this.ngramModel[lastWord];
+      const previousWord = this.wordHistory[this.wordHistory.length - 2];
+      const list = this.ngramModel[this.resolveNgramContext(previousWord, lastWord)];
       if (!list) return [];
 
       const seen = new Set();
@@ -371,6 +503,7 @@
 
   global.KreyolSimulatorEngine = {
     SuggestionEngine,
+    AccentRestoration,
     AccentTolerantMatcher,
     levenshtein,
     applyCasingPattern,

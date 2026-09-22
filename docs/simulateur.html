@@ -125,7 +125,9 @@
     --kb-encre-sur-couleur: #FFFFFF;
     --kb-encre-etiquette: #6C757D;
     --kb-fond-clavier: #F5F5F5;
-    --kb-fond-suggestions: #FFFFFF;
+    --kb-fond-suggestions: #ECECEC;
+    --kb-ombre-cuvette: rgba(0,0,0,.133);
+    --kb-lisere-cuvette: rgba(255,255,255,.8);
     --kb-popup-haut: #FFFFFF;         --kb-popup-bas: #F8F8F8;
     --kb-popup-bordure: #E0E0E0;
     --kb-popup-accent-haut: #FFFFFF;  --kb-popup-accent-bas: #F0F0F0;
@@ -150,7 +152,9 @@
       --kb-encre-attenuee: #B4B4B4;
       --kb-encre-etiquette: #9AA3AB;
       --kb-fond-clavier: #131313;
-      --kb-fond-suggestions: #202020;
+      --kb-fond-suggestions: #0C0C0C;
+      --kb-ombre-cuvette: rgba(0,0,0,.4);
+      --kb-lisere-cuvette: rgba(255,255,255,.149);
       --kb-popup-haut: #2B2B2B;       --kb-popup-bas: #242424;
       --kb-popup-bordure: #454545;
       --kb-popup-accent-haut: #333333; --kb-popup-accent-bas: #2B2B2B;
@@ -172,7 +176,9 @@
     --kb-encre-attenuee: #B4B4B4;
     --kb-encre-etiquette: #9AA3AB;
     --kb-fond-clavier: #131313;
-    --kb-fond-suggestions: #202020;
+    --kb-fond-suggestions: #0C0C0C;
+    --kb-ombre-cuvette: rgba(0,0,0,.4);
+    --kb-lisere-cuvette: rgba(255,255,255,.149);
     --kb-popup-haut: #2B2B2B;         --kb-popup-bas: #242424;
     --kb-popup-bordure: #454545;
     --kb-popup-accent-haut: #333333;  --kb-popup-accent-bas: #2B2B2B;
@@ -186,13 +192,34 @@
   /* ---- barre de suggestions ----
      Mesures de KreyolInputMethodServiceRefactored : rangée de 44 dp, puces de
      16 dp de rayon, mot à 18 sp, largeur minimale de 88 dp, 12 dp entre deux
-     puces, micro-étiquette KR/FR à 10 sp. */
-  .sugg-bar {
+     puces, micro-étiquette KR/FR à 10 sp.
+
+     Depuis la v17.0.0 la barre est un plateau **creusé dans** le clavier, et
+     non plus un panneau posé dessus. Les trois signaux de CuvetteSuggestions
+     sont nécessaires ensemble, faute de quoi l'œil lit un dégradé et pas un
+     volume : plancher plus sombre que le fond du clavier, ombre interne le long
+     du bord haut (4 dp), liséré éclairé le long du bord bas (1 dp). Le rebord
+     qui porte l'ombre est l'encastrement latéral de 8 dp, par lequel le fond du
+     clavier réapparaît de chaque côté. */
+  .kb-panel {
     margin-top: 8px;
-    background: var(--kb-fond-suggestions);
-    border: 1px solid var(--kb-bordure);
-    border-radius: 12px;
+    background: var(--kb-fond-clavier);
+    border-radius: 16px;
+    padding-bottom: 8px;
+  }
+  .sugg-bar {
+    margin: 0 8px;
     padding: 4px 6px;
+    /* Angles arrondis en bas seulement : le bord haut est celui de la fenêtre
+       de saisie, l'arrondir laisserait voir l'application au travers. */
+    border-radius: 0 0 10px 10px;
+    /* Le dégradé s'éteint sur la même teinte à alpha nul, comme le
+       LinearGradient du Kotlin : « transparent » vaut rgba(0,0,0,0). */
+    background:
+      linear-gradient(to bottom, var(--kb-ombre-cuvette), transparent 4px),
+      var(--kb-fond-suggestions);
+    /* La paroi basse prend la lumière, et le liséré suit la courbe des angles. */
+    box-shadow: inset 0 -1px 0 var(--kb-lisere-cuvette);
   }
   .sugg-row {
     display: flex;
@@ -224,7 +251,10 @@
     color: #fff;
     cursor: pointer;
   }
-  .chip-kreyol { background: #2E9E5B; }
+  /* Assombri en 17.0.0 : un mot de suggestion se lit à 18 sp, donc au seuil
+     WCAG du texte normal (4,5:1). Le #2E9E5B d'origine ne donnait que 3,41:1
+     sur blanc, quand le bleu français en donnait déjà 4,93:1. */
+  .chip-kreyol { background: #27864D; }
   .chip-french { background: #3B6FC4; }
   .chip:active { filter: brightness(0.92); }
 
@@ -235,10 +265,7 @@
      un dp y vaut un pixel. La taille des libellés, elle, se calcule en JS comme
      dans createKeyButton() : elle dépend de la largeur réelle de la touche. */
   .keyboard {
-    margin-top: 8px;
-    background: var(--kb-fond-clavier);
-    border-radius: 16px;
-    padding: 8px;
+    padding: 8px 8px 0;
   }
   .kb-row { display: flex; margin: 2px 0; }
   /* flex-basis nulle : les largeurs suivent alors exactement les poids posés en
@@ -630,6 +657,11 @@
       sur une voyelle (a, e, i, o, u...) pour voir apparaître les accents.
       Le clavier de ton ordinateur fonctionne aussi directement.
     </p>
+    <p class="lede">
+      Tape <strong>pale</strong> puis espace : le clavier écrit <strong>palé</strong>.
+      Il rétablit les accents que tu n'as pas tapés, et rien d'autre : le mot rendu
+      a toujours exactement tes lettres. Un retour arrière défait la correction.
+    </p>
   </header>
 
   <div class="phone-shell">
@@ -642,12 +674,13 @@
         <p class="phone-placeholder" id="screen-placeholder">Koumansé maké an kréyòl isit</p>
       </div>
 
-      <div class="sugg-bar">
-        <div class="sugg-row" id="row-kreyol"></div>
-        <div class="sugg-row" id="row-french"></div>
+      <div class="kb-panel">
+        <div class="sugg-bar">
+          <div class="sugg-row" id="row-kreyol"></div>
+          <div class="sugg-row" id="row-french"></div>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
       </div>
-
-      <div class="keyboard" id="keyboard"></div>
     </div>
     <div class="demo-live">
       <div class="demo-meter" id="demo-meter" hidden>
@@ -745,16 +778,18 @@
 
   async function init() {
     try {
-      const [dict, ngrams, french] = await Promise.all([
+      const [dict, ngrams, french, gloses] = await Promise.all([
         fetchJson('assets/creole_dict.json'),
         fetchJson('assets/creole_ngrams.json'),
-        fetchJson('assets/french_simple_dict.json')
+        fetchJson('assets/french_simple_dict.json'),
+        fetchJson('assets/creole_translations.json')
       ]);
 
       const engine = new window.KreyolSimulatorEngine.SuggestionEngine();
       engine.loadDictionary(dict);
       engine.loadNgramModel(ngrams);
       engine.loadFrenchDictionary(french);
+      engine.loadTranslations(gloses);
 
       const sim = new window.KreyolKeyboardSimulator(engine, els);
       brancherExemples(sim);

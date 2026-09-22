@@ -69,6 +69,14 @@ class KreyolPipelineUnique:
         # Chemins pour synchronisation Android
         self.chemin_dict_android = "../android_keyboard/app/src/main/assets/creole_dict.json"
         self.chemin_ngrams_android = "../android_keyboard/app/src/main/assets/creole_ngrams.json"
+
+        # Troisième destination : le simulateur du site, qui exécute le même
+        # moteur dans le navigateur et lit donc les mêmes actifs, au format
+        # Android. Il les a lus une fois, figés au 1er août 2026, jusqu'à ce
+        # qu'on s'aperçoive qu'il prédisait sans les trigrammes : rien ne les
+        # remettait à jour. Écrire ici plutôt que resynchroniser après coup.
+        self.chemin_dict_docs = "../docs/assets/creole_dict.json"
+        self.chemin_ngrams_docs = "../docs/assets/creole_ngrams.json"
         self.hf_token = None
         self.textes_kreyol = []
         self.dictionnaire_actuel = {}
@@ -988,6 +996,11 @@ class KreyolPipelineUnique:
             with open(android_dict_path, 'w', encoding='utf-8') as f:
                 json.dump(dict_android_format, f, ensure_ascii=False, indent=2)
             print(f"✅ Dictionnaire Android sauvegardé: format array [[mot, freq], ...]")
+
+            os.makedirs(os.path.dirname(self.chemin_dict_docs), exist_ok=True)
+            with open(self.chemin_dict_docs, 'w', encoding='utf-8') as f:
+                json.dump(dict_android_format, f, ensure_ascii=False, indent=2)
+            print(f"✅ Dictionnaire simulateur sauvegardé: docs/assets/")
         
         # Sauvegarder les nouveaux N-grams
         if self.nouveaux_ngrams:
@@ -1002,6 +1015,11 @@ class KreyolPipelineUnique:
             with open(ngrams_android_path, 'w', encoding='utf-8') as f:
                 json.dump(self.nouveaux_ngrams, f, ensure_ascii=False, indent=2)
             print(f"✅ N-grams Android sauvegardés")
+
+            os.makedirs(os.path.dirname(self.chemin_ngrams_docs), exist_ok=True)
+            with open(self.chemin_ngrams_docs, 'w', encoding='utf-8') as f:
+                json.dump(self.nouveaux_ngrams, f, ensure_ascii=False, indent=2)
+            print(f"✅ N-grams simulateur sauvegardés: docs/assets/")
         
         print("\n📱 SYNCHRONISATION TERMINÉE")
         print("-" * 35)

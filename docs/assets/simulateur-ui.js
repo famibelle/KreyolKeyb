@@ -103,6 +103,25 @@
   const DEDICATED_ACCENTED_KEYS = new Set(['à', 'è', 'ò', 'é', 'ù', 'ì', 'ç']);
   const LETTER_RE = /^[a-zA-Zàáâãäåèéêëìíîïòóôõöøùúûüýÿñçĉĝĥĵŝŭ]$/;
 
+  // Ponctuations qui valident le mot comme le ferait un espace, donc qui
+  // rétablissent aussi les accents. Ni « - » ni « ' » n'y figurent : ils
+  // prolongent un mot (« ba-w ») au lieu de le clore (InputProcessor.kt).
+  const PONCTUATION_QUI_VALIDE = new Set([',', '.', ';', ':', '?', '!']);
+
+  const DELAI_DOUBLE_ESPACE_MS = 700;
+
+  /*
+   * Le second espace d'un double espace devient « . » seulement s'il suit le
+   * premier de près ET si ce premier suivait une lettre ou un chiffre. Le
+   * chronomètre seul transformerait « bonjou, » en « ., ».
+   */
+  function doubleEspaceEnPoint(avantLeCurseur, ecouleMs) {
+    return ecouleMs >= 0 && ecouleMs <= DELAI_DOUBLE_ESPACE_MS &&
+      avantLeCurseur.length >= 2 &&
+      avantLeCurseur[avantLeCurseur.length - 1] === ' ' &&
+      /[\p{L}\p{N}]/u.test(avantLeCurseur[avantLeCurseur.length - 2]);
+  }
+
   class KeyboardSimulator {
     constructor(engine, els) {
       this.engine = engine;
@@ -110,6 +129,12 @@
 
       this.screenText = '';
       this.currentWord = '';
+      // États à un coup de la restauration d'accents, lus puis remis à zéro en
+      // tête de processKey : chacun ne concerne que la touche qui suit l'action
+      // qui l'a posé (InputProcessor.kt).
+      this.derniereRestauration = null;
+      this.motRefuse = null;
+      this.instantDernierEspace = 0;
       this.isCapitalMode = false;
       this.isCapsLock = false;
       this.isNumericMode = false;
@@ -183,11 +208,17 @@
     // physique (Maj/Verr.Maj/touches mortes gérées par l'OS) fournit déjà
     // le bon caractère dans e.key.
     insertPhysicalChar(character) {
+      this.instantDernierEspace = 0;
       if (LETTER_RE.test(character)) {
+        this.derniereRestauration = null;
         this.currentWord += character;
         this.onWordChanged();
       } else {
+        const restauration = PONCTUATION_QUI_VALIDE.has(character)
+          ? this.restaurerLesAccents(character)
+          : null;
         this.finalizeCurrentWord();
+        this.derniereRestauration = restauration;
       }
       this.screenText += character;
       this.renderScreen();
@@ -543,9 +574,16 @@
     // ---- logique de saisie (InputProcessor.kt) ----
 
     processKey(key) {
+      // Mêmes états à un coup que InputProcessor.processKeyPress : lus ici pour
+      // toutes les touches, remis à zéro sauf pour celle qui les exploite.
+      const restauration = this.derniereRestauration;
+      const instantEspace = this.instantDernierEspace;
+      if (key !== '⌫') this.derniereRestauration = null;
+      if (key !== ' ') this.instantDernierEspace = 0;
+
       switch (key) {
         case '⌫':
-          this.handleBackspace();
+          this.handleBackspace(restauration);
           break;
         case '⏎':
           this.handleEnter();
@@ -561,7 +599,7 @@
           this.handleEmojiSwitch();
           break;
         case ' ':
-          this.handleSpace();
+          this.handleSpace(instantEspace);
           break;
         default:
           this.handleCharacter(key);
@@ -575,14 +613,26 @@
         this.currentWord += character;
         this.onWordChanged();
       } else {
+        // La ponctuation valide le mot comme le ferait un espace : les accents
+        // s'y rétablissent aussi, avant que le signe ne soit posé.
+        const restauration = PONCTUATION_QUI_VALIDE.has(character)
+          ? this.restaurerLesAccents(character)
+          : null;
         this.finalizeCurrentWord();
+        this.derniereRestauration = restauration;
       }
       this.screenText += character;
       this.renderScreen();
       this.handleAutoCapitalization();
     }
 
-    handleBackspace() {
+    handleBackspace(restauration) {
+      // Un retour arrière juste après une correction la défait, plutôt que
+      // d'effacer une lettre que l'utilisateur n'a pas tapée.
+      if (restauration && this.annulerRestauration(restauration)) {
+        this.renderScreen();
+        return;
+      }
       if (!this.screenText.length) return;
       this.screenText = this.screenText.slice(0, -1);
       if (this.currentWord.length) {
@@ -593,8 +643,10 @@
     }
 
     handleEnter() {
+      const restauration = this.restaurerLesAccents('\n');
       this.finalizeCurrentWord();
       this.screenText += '\n';
+      this.derniereRestauration = restauration;
       this.renderScreen();
     }
 
@@ -630,11 +682,67 @@
       this.isNumericMode = false;
     }
 
-    handleSpace() {
+    handleSpace(instantPrecedent) {
+      const maintenant = Date.now();
+
+      // Deux espaces de suite après un mot : le second devient un point.
+      if (instantPrecedent > 0 &&
+          doubleEspaceEnPoint(this.screenText.slice(-2), maintenant - instantPrecedent)) {
+        this.screenText = this.screenText.slice(0, -1) + '. ';
+        this.instantDernierEspace = 0;
+        this.renderScreen();
+        this.handleAutoCapitalization();
+        return;
+      }
+
+      const restauration = this.restaurerLesAccents(' ');
       this.finalizeCurrentWord();
       this.screenText += ' ';
+      this.derniereRestauration = restauration;
+      this.instantDernierEspace = maintenant;
       this.renderScreen();
       this.handleAutoCapitalization();
+    }
+
+    /**
+     * Rétablit les accents du mot en cours et le réécrit à l'écran, ou rend null
+     * s'il faut le laisser tel quel. Toute la règle est dans AccentRestoration ;
+     * ici on ne gère que le texte et l'état (InputProcessor.restaurerLesAccents).
+     *
+     * @param suite le caractère qui vient valider le mot, conservé pour pouvoir
+     *        défaire la correction au retour arrière suivant
+     */
+    restaurerLesAccents(suite) {
+      const mot = this.currentWord;
+      const refuse = this.motRefuse;
+      this.motRefuse = null;
+      if (mot.length < 2) return null;
+      // Une correction déjà refusée une fois ne revient pas sur le même mot.
+      if (refuse !== null && refuse === mot.toLowerCase()) return null;
+
+      const restitue = this.engine.restoreAccents(mot);
+      if (!restitue || restitue === mot) return null;
+      if (!this.screenText.endsWith(mot)) return null;
+
+      this.screenText = this.screenText.slice(0, -mot.length) + restitue;
+      this.currentWord = restitue;
+      return { tape: mot, restitue: restitue, suite: suite };
+    }
+
+    /**
+     * Défait une correction : le mot corrigé et ce qui l'a validé sont retirés,
+     * le mot tapé revient et redevient le mot en cours. Rend false si le texte a
+     * changé depuis, auquel cas le retour arrière se fait comme d'habitude.
+     */
+    annulerRestauration(restauration) {
+      const attendu = restauration.restitue + restauration.suite;
+      if (!this.screenText.endsWith(attendu)) return false;
+
+      this.screenText = this.screenText.slice(0, -attendu.length) + restauration.tape;
+      this.currentWord = restauration.tape;
+      this.motRefuse = restauration.tape.toLowerCase();
+      this.onWordChanged();
+      return true;
     }
 
     onWordChanged() {
@@ -669,6 +777,11 @@
       }
       this.screenText += word + ' ';
       this.currentWord = word;
+      // Une proposition choisie porte déjà ses accents : rien à rétablir, et
+      // rien à défaire au retour arrière qui suivrait.
+      this.derniereRestauration = null;
+      this.motRefuse = null;
+      this.instantDernierEspace = 0;
       this.finalizeCurrentWord();
       this.renderScreen();
       this.handleAutoCapitalization();
@@ -747,6 +860,9 @@
       this.isCapsLock = false;
       this.isNumericMode = false;
       this.isEmojiMode = false;
+      this.derniereRestauration = null;
+      this.motRefuse = null;
+      this.instantDernierEspace = 0;
       this.engine.clearHistory();
       this.dismissAccentPopup();
       this.updateSuggestions([], false);
