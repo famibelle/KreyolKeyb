@@ -75,6 +75,16 @@ Gratuit, open source, zéro pub, 100 % hors ligne.
 | 😤 **« Je ne sais jamais où mettre les accents »** | Tapez « kreyol » sans y penser : il devient « kréyòl » dès que vous validez le mot. Les accents oubliés reviennent tout seuls. |
 | 🤷 **« De toute façon, personne ne l'écrit »** | <span id="dl-inline">3 356</span> personnes l'écrivent déjà avec ce clavier. |
 
+<script>
+// Le compteur de la preuve sociale se lit dans le même fichier que la jauge
+// des ambassadeurs, qui vit sur sa propre page : un seul chiffre, une seule
+// source, et la valeur écrite en dur ci-dessus ne sert que de repli.
+fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
+  var el = document.getElementById('dl-inline');
+  if (el && s && s.current) { el.textContent = s.current.toLocaleString('fr-FR'); }
+}).catch(function(){});
+</script>
+
 <div align="center" style="display:flex;justify-content:center;align-items:flex-start;gap:18px;flex-wrap:wrap;margin:22px 0;">
   <figure style="margin:0;max-width:340px;">
     <img src="Screenshots/gif_suggestion.gif" alt="Animation : « An kre » tapé au clavier, un halo suivant le doigt, puis la pastille « kréyòl » touchée dans la barre de suggestions. Le mot s'écrit en entier avec ses accents, et le clavier propose aussitôt les mots qui viennent après" width="340">
@@ -199,43 +209,6 @@ fetch('stats/exclusive_features.json').then(function(r){ return r.json(); }).the
   document.getElementById('ef-teaser').textContent = n
     ? n + ' fonctionnalité' + (n > 1 ? 's' : '') + ' déjà disponible' + (n > 1 ? 's' : '') + ', pas encore sur le Play Store.'
     : 'Le Play Store est à jour : rien en exclusivité pour le moment.';
-}).catch(function(){});
-</script>
-
-## La jauge des 10 000 📲
-
-<div id="dl-gauge" class="card" style="margin:16px 0;">
-  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-    <span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);"><span id="g-current">…</span> <small style="font-size:14px;font-weight:400;color:var(--ink-soft);">téléchargements · prochain palier : <span id="g-next">…</span></small></span>
-    <span style="font-weight:700;color:var(--hibiscus);">Objectif du jour : <span id="g-daily">60</span> 📲</span>
-  </div>
-  <div style="height:16px;border-radius:999px;background:var(--sea-soft);overflow:hidden;">
-    <div id="g-fill" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--sea),var(--sun));min-width:8px;width:1%;transition:width .8s ease;"></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--ink-soft);margin-top:8px;">
-    <span id="g-remaining">An nou ay ! Chaque téléchargement fait vivre le kréyòl 🏝️</span>
-    <span>Objectif final : 10 000 · <span id="g-asof"></span></span>
-  </div>
-</div>
-
-<script>
-fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
-  var fmt = function(n){ return n.toLocaleString('fr-FR'); };
-  var tiers = [100, 500, 1000, 5000, 10000];
-  var next = s.goal;
-  for (var i = 0; i < tiers.length; i++) {
-    if (tiers[i] > s.current) { next = tiers[i]; break; }
-  }
-  var pct = Math.max(2, Math.min(100, (s.current / s.goal) * 100));
-  document.getElementById('g-current').textContent = fmt(s.current);
-  // Le meme chiffre sert de preuve dans le tableau du haut de page.
-  var enligne = document.getElementById('dl-inline');
-  if (enligne) { enligne.textContent = fmt(s.current); }
-  document.getElementById('g-next').textContent = fmt(next);
-  document.getElementById('g-daily').textContent = fmt(s.daily_target);
-  document.getElementById('g-asof').textContent = 'MAJ ' + s.as_of;
-  document.getElementById('g-remaining').textContent = 'Ka rété ' + fmt(next - s.current) + ' pou pwochen palyé-la ! 🏝️';
-  document.getElementById('g-fill').style.width = pct + '%';
 }).catch(function(){});
 </script>
 
