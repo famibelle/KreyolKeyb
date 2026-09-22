@@ -108,6 +108,9 @@ bilingues qui apparaissent pendant que vous tapez.**
 
 ## Fonctionnalités
 
+**Klavyé Kréyòl Karukera aide à deux niveaux : écrire le kréyòl au
+quotidien, et le pratiquer davantage.**
+
 ### Pour écrire
 
 | | |
@@ -120,7 +123,7 @@ bilingues qui apparaissent pendant que vous tapez.**
 | 🚫 **Zéro publicité, zéro tracker** | Le clavier reste concentré sur l'essentiel |
 | 🆓 **Gratuit et open source** | Code public sur [GitHub](https://github.com/famibelle/KreyolKeyb), licence MIT |
 
-### En prime
+### Pour pratiquer
 
 **La gamification n'est pas un gadget : elle donne envie d'écrire encore
 plus de kréyòl.** Chaque mot tapé peut devenir une carte à collectionner,
