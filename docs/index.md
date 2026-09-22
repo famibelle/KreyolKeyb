@@ -56,26 +56,34 @@ lang: fr
 
 # Osez le Kréyòl
 
-**Ce n'est pas vous qui écriviez mal le kréyòl. C'est votre clavier qui ne
-le connaissait pas.**
+**Écrire en bon kréyòl, sans avoir à y penser.** Ce n'est pas vous qui
+écriviez mal le kréyòl : c'est votre clavier qui ne le connaissait pas.
 
 Klavyé Kréyòl Karukera est le **clavier créole guadeloupéen pour Android**
-qui vous propose vos mots pendant que vous tapez et rétablit tout seul les
-accents que vous oubliez. Ses suggestions sont construites sur les textes
-de Sylviane Telchid, Sonny Rupaire, Max Rippon, Robert Fontes, Esnard
-Boisdur et bien d'autres. Gratuit, open source, zéro pub, 100 % hors ligne.
+qui vous **propose les mots justes** pendant que vous tapez, puis ceux qui
+viennent habituellement après, et qui **remet les accents** que vous
+oubliez. Ses suggestions sortent des textes de Sylviane Telchid, Sonny
+Rupaire, Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
+Gratuit, open source, zéro pub, 100 % hors ligne.
 
 ## Ce qui vous retenait, et ce qui a changé
 
 | | |
 |---|---|
 | 🤔 **« Mon téléphone corrige mon kréyòl en français »** | Il ne le fait plus. Ce clavier ne remplace jamais un mot par un autre : vos lettres restent exactement les vôtres. |
+| 😬 **« Je ne suis pas sûr d'écrire les mots comme il faut »** | Le clavier vous les propose, tirés des textes de nos auteurs, et devine celui qui vient après. Vous n'inventez rien : vous choisissez. |
 | 😤 **« Je ne sais jamais où mettre les accents »** | Tapez « kreyol » sans y penser : il devient « kréyòl » dès que vous validez le mot. Les accents oubliés reviennent tout seuls. |
-| 😬 **« J'ai peur de l'écrire de travers »** | Les mots proposés sortent des textes de nos auteurs. Vous n'inventez rien : vous écrivez ce qu'ils ont écrit. |
 | 🤷 **« De toute façon, personne ne l'écrit »** | <span id="dl-inline">3 356</span> personnes l'écrivent déjà avec ce clavier. |
 
-<div align="center">
-  <img src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, un halo suivant le doigt d'une touche à l'autre pendant que les suggestions kréyòl s'affichent au-dessus du clavier. À l'espace, le mot devient « kréyòl » tout seul" width="340">
+<div align="center" style="display:flex;justify-content:center;align-items:flex-start;gap:18px;flex-wrap:wrap;margin:22px 0;">
+  <figure style="margin:0;max-width:340px;">
+    <img src="Screenshots/gif_suggestion.gif" alt="Animation : « An kre » tapé au clavier, un halo suivant le doigt, puis la pastille « kréyòl » touchée dans la barre de suggestions. Le mot s'écrit en entier avec ses accents, et le clavier propose aussitôt les mots qui viennent après" width="340">
+    <figcaption style="font-size:14px;color:var(--ink-soft);margin-top:6px;">Trois lettres suffisent : le mot juste est déjà proposé.</figcaption>
+  </figure>
+  <figure style="margin:0;max-width:340px;">
+    <img loading="lazy" src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, un halo suivant le doigt d'une touche à l'autre pendant que les suggestions kréyòl s'affichent au-dessus du clavier. À l'espace, le mot devient « kréyòl » tout seul" width="340">
+    <figcaption style="font-size:14px;color:var(--ink-soft);margin-top:6px;">Et si vous tapez tout, les accents se remettent seuls.</figcaption>
+  </figure>
 </div>
 
 ## Vérifiez tout de suite, sans rien installer
@@ -114,13 +122,12 @@ minutes, et le <a href="guide.html">guide</a> vous montre chaque écran.</em></p
 
 ## Le clavier en action
 
-**En deux animations : un mot créole posé par appui long puis envoyé, et
-une phrase entière où « kréyòl » s'écrit deux fois, une fois en touchant
-la suggestion, une fois tapé sans accent et rétabli tout seul.**
+**Une phrase entière, dans un vrai SMS.** Le mot « kréyòl » s'y écrit deux
+fois : la première en touchant la suggestion, la seconde tapé sans accent,
+que le clavier remet à l'espace. Comme « palé » et « maké » juste après.
 
-<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-   <img loading="lazy" src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="30%">
-   <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS, un halo suivant le doigt d'une touche à l'autre. Le premier « kréyòl » est posé en touchant la suggestion kréyòl ; le second est tapé sans accent et le clavier les rétablit à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »" width="30%">
+<div align="center">
+  <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS, un halo suivant le doigt d'une touche à l'autre. Le premier « kréyòl » est posé en touchant la suggestion kréyòl ; le second est tapé sans accent et le clavier les rétablit à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »" width="380">
 </div>
 
 ## Ce que ça change pour vous
@@ -132,7 +139,7 @@ quotidien, et le pratiquer davantage.**
 
 | | |
 |---|---|
-| 💡 **Le mot vous vient avant d'avoir fini de l'écrire** | Suggestions construites sur un corpus littéraire créole authentique, pas un dictionnaire générique |
+| 💡 **Le mot juste vous est proposé, et le suivant aussi** | Les suggestions sortent d'un corpus littéraire créole, pas d'un dictionnaire générique. Le mot posé, le clavier propose ceux qui viennent habituellement après |
 | ✍️ **Les accents ne se perdent plus** | Appui long pour les taper, et depuis peu, ils reviennent tout seuls si vous les oubliez : vos lettres ne changent jamais, seuls les accents s'ajoutent |
 | 🇫🇷 **Un seul clavier pour le kréyòl et le français** | Le français prend le relais quand aucun mot créole ne correspond, pas besoin de changer de clavier |
 | 🔢 **Il s'adapte à ce que vous écrivez** | Pavé de chiffres pour un numéro ou une date, arobase pour un e-mail : sans réglage à chercher |
