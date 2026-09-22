@@ -10,6 +10,7 @@ savent lire :
   * PNG  : chunks iTXt (UTF-8) + paquet XMP
   * JPEG : segment APP1 Exif + APP1 XMP + commentaire COM
   * SVG  : <title>, <desc> et un bloc <metadata> RDF
+  * GIF  : bloc Comment Extension + paquet XMP en Application Extension
 
 Rien n'est réencodé. Les chunks PNG et les segments JPEG sont réécrits au
 niveau de l'octet, autour des données d'image laissées intactes : repasser le
@@ -52,7 +53,7 @@ TIERS = (
     "made-in-guadeloupe-brown-grunge-round-stamp",
 )
 
-EXTENSIONS = {".png", ".jpg", ".jpeg", ".svg", ".pdf"}
+EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".pdf"}
 
 MARQUE = "Potomitan™"
 PRODUIT = "Klavyé Kréyòl Karukera"
@@ -281,6 +282,105 @@ def marquer_svg(texte: str, chemin: Path) -> str:
 
 
 # ---------------------------------------------------------------------------
+# GIF : blocs d'extension
+# ---------------------------------------------------------------------------
+
+SIGNATURES_GIF = (b"GIF87a", b"GIF89a")
+APP_XMP_GIF = b"XMP DataXMP"      # identifiant + code d'authentification Adobe
+
+# Le paquet XMP d'un GIF s'écrit d'une traite, sans être découpé en sous-blocs
+# comme le veut le format. Ce qui rattrape la spécification est ce « chausse-
+# pied » de 258 octets : un lecteur naïf lit 0x01, saute un octet, lit 0xFF,
+# saute 255 octets, et ainsi de suite en descendant jusqu'à tomber pile sur le
+# 0x00 de fin. Sans lui, le lecteur partirait dans les données d'image.
+FIN_MAGIQUE_XMP = bytes([0x01]) + bytes(range(255, -1, -1)) + b"\x00"
+
+
+def sous_blocs_gif(charge: bytes) -> bytes:
+    """Découpe en sous-blocs de 255 octets, terminés par un bloc vide."""
+    sortie = bytearray()
+    for debut in range(0, len(charge), 255):
+        morceau = charge[debut:debut + 255]
+        sortie.append(len(morceau))
+        sortie += morceau
+    sortie.append(0)
+    return bytes(sortie)
+
+
+def blocs_gif(data: bytes, depart: int):
+    """Parcourt le flux de blocs et rend (debut, fin, genre) pour chacun.
+
+    Le genre vaut « image » pour un descripteur d'image ou son extension de
+    contrôle graphique : c'est devant le premier des deux que nos métadonnées
+    se posent, jamais avant, pour ne pas s'intercaler entre le bloc de bouclage
+    NETSCAPE et la première image.
+    """
+    pos = depart
+    while pos < len(data):
+        marqueur = data[pos]
+        if marqueur == 0x3B:            # fin du fichier
+            return
+        if marqueur == 0x21:            # extension
+            label = data[pos + 1]
+            fin = pos + 2
+            while data[fin]:
+                fin += 1 + data[fin]
+            fin += 1
+            genre = "image" if label == 0xF9 else f"ext{label:02x}"
+            yield pos, fin, genre
+            pos = fin
+        elif marqueur == 0x2C:          # descripteur d'image
+            fin = pos + 10
+            drapeaux = data[pos + 9]
+            if drapeaux & 0x80:         # table de couleurs locale
+                fin += 3 * (2 ** ((drapeaux & 0x07) + 1))
+            fin += 1                    # taille de code LZW
+            while data[fin]:
+                fin += 1 + data[fin]
+            fin += 1
+            yield pos, fin, "image"
+            pos = fin
+        else:
+            return                      # structure inattendue : on n'y touche pas
+
+
+def marquer_gif(data: bytes, chemin: Path) -> bytes:
+    # En-tête, descripteur d'écran, puis l'éventuelle table de couleurs globale.
+    depart = 13
+    drapeaux = data[10]
+    if drapeaux & 0x80:
+        depart += 3 * (2 ** ((drapeaux & 0x07) + 1))
+
+    blocs = list(blocs_gif(data, depart))
+    if not blocs:
+        return data                     # fichier illisible pour nous : intact
+
+    garde, insertion = [], None
+    for debut, fin, genre in blocs:
+        morceau = data[debut:fin]
+        # Un passage précédent : on le retire pour le réécrire.
+        if genre == "extfe" and (SIGNATURE.encode("utf-8") in morceau
+                                 or MARQUE.encode("utf-8") in morceau):
+            continue
+        if genre == "extff" and APP_XMP_GIF in morceau[:16]:
+            continue
+        if insertion is None and genre == "image":
+            insertion = len(garde)
+        garde.append(morceau)
+    if insertion is None:
+        insertion = len(garde)
+
+    credit = f"{titre(chemin)} — {COPYRIGHT} — {SITE}"
+    commentaire = b"\x21\xFE" + sous_blocs_gif(credit.encode("utf-8"))
+    paquet = (b"\x21\xFF" + bytes([len(APP_XMP_GIF)]) + APP_XMP_GIF
+              + xmp(chemin) + FIN_MAGIQUE_XMP)
+
+    garde[insertion:insertion] = [commentaire, paquet]
+    # Le bloc commentaire appartient au GIF89a : un fichier 87a change d'étiquette.
+    return b"GIF89a" + data[6:depart] + b"".join(garde) + b"\x3B"
+
+
+# ---------------------------------------------------------------------------
 # PDF : dictionnaire /Info et paquet XMP
 # ---------------------------------------------------------------------------
 
@@ -372,8 +472,12 @@ def main() -> int:
                 continue
         else:
             data = f.read_bytes()
-            sortie = (marquer_png(data, f) if data.startswith(SIGNATURE_PNG)
-                      else marquer_jpeg(data, f))
+            if data.startswith(SIGNATURE_PNG):
+                sortie = marquer_png(data, f)
+            elif data[:6] in SIGNATURES_GIF:
+                sortie = marquer_gif(data, f)
+            else:
+                sortie = marquer_jpeg(data, f)
             f.write_bytes(sortie)
         marques += 1
 
