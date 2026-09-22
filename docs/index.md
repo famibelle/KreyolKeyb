@@ -73,15 +73,19 @@ Gratuit, open source, zéro pub, 100 % hors ligne.
 | 🤔 **« Mon téléphone corrige mon kréyòl en français »** | Il ne le fait plus. Ce clavier ne remplace jamais un mot par un autre : vos lettres restent exactement les vôtres. |
 | 😬 **« Je ne suis pas sûr d'écrire les mots comme il faut »** | Le clavier vous les propose, tirés des textes de nos auteurs, et devine celui qui vient après. Vous n'inventez rien : vous choisissez. |
 | 😤 **« Je ne sais jamais où mettre les accents »** | Tapez « kreyol » sans y penser : il devient « kréyòl » dès que vous validez le mot. Les accents oubliés reviennent tout seuls. |
-| 🤷 **« De toute façon, personne ne l'écrit »** | <span id="dl-inline">3 356</span> personnes l'écrivent déjà avec ce clavier. |
+| 🤷 **« De toute façon, personne ne l'écrit »** | <span id="dl-inline">Plus de 3 000</span> personnes l'ont déjà téléchargé. |
 
 <script>
-// Le compteur de la preuve sociale se lit dans le même fichier que la jauge
-// des ambassadeurs, qui vit sur sa propre page : un seul chiffre, une seule
-// source, et la valeur écrite en dur ci-dessus ne sert que de repli.
+// Le compteur se lit dans le même fichier que la jauge des ambassadeurs, qui
+// vit sur sa propre page : un seul chiffre, une seule source. Il est arrondi
+// au millier inférieur, donc toujours vrai et toujours rond, et il passera de
+// lui-même à « plus de 4 000 » le jour venu. La valeur écrite en dur ci-dessus
+// n'est qu'un repli si la requête échoue.
 fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
   var el = document.getElementById('dl-inline');
-  if (el && s && s.current) { el.textContent = s.current.toLocaleString('fr-FR'); }
+  if (!el || !s || !s.current) { return; }
+  var arrondi = Math.floor(s.current / 1000) * 1000;
+  if (arrondi >= 1000) { el.textContent = 'Plus de ' + arrondi.toLocaleString('fr-FR'); }
 }).catch(function(){});
 </script>
 
@@ -115,6 +119,13 @@ article. **Canal 10** l'a présenté dans sa chronique Tech.
 en a fait un entretien : « Si le créole guadeloupéen n'existe pas, petit à
 petit, on s'efface ». Les extraits sont dans le [dossier de
 presse](presskit.html).
+
+Et ceux qui l'utilisent, sur Google Play :
+
+> ⭐⭐⭐⭐⭐ « Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les
+> traductions des mots dans les jeux juste parfait ! »
+>
+> <small>Lionel TAURUS, 8 septembre 2026 · <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr">les 52 avis sur Google Play</a></small>
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
