@@ -434,7 +434,7 @@ Deux phrases écrites de bout en bout dans une conversation SMS. La première, �
     <p><small>Une phrase avec ses accents, envoyée par SMS</small></p>
   </div>
   <div style="width: 30%; min-width: 200px;">
-    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" style="width: 100%; border-radius: 8px;">
+    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, chaque touche mise en évidence par un halo bleu au moment où elle est pressée, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" style="width: 100%; border-radius: 8px;">
     <p><small>L'accroche du projet, tapée sans accent : le clavier les rétablit tout seul</small></p>
   </div>
 </div>

@@ -97,7 +97,7 @@ bilingues qui apparaissent pendant que vous tapez.**
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
    <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="22%">
-   <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="22%">
+   <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, chaque touche mise en évidence par un halo bleu au moment où elle est pressée, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="22%">
    <img src="Screenshots/app_clavier_suggestions.png" alt="Le mot « Bon » en cours de saisie dans un SMS : trois suggestions kréyòl (Bon, Bonjou, Bondyé) et une suggestion française (Bonheur)" width="22%" style="aspect-ratio: 9 / 20; object-fit: cover;">
    <img src="Screenshots/app_clavier_accents.png" alt="Le mot « Kré » en cours de saisie, avec les suggestions Kréyòl, Krévé, Kréyol et le choix d'accents o, ò, ô, ó, œ ouvert par un appui long sur la touche o" width="22%" style="aspect-ratio: 9 / 20; object-fit: cover;">
 </div>
