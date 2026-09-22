@@ -426,7 +426,7 @@ Les suggestions s'appuient sur les œuvres de :
 
 ### Le clavier et l'application
 
-Deux phrases écrites de bout en bout dans une conversation SMS. La première, « An kay òwganizé on diné » : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. La seconde, « An kréyòl nou ka palé, an kréyòl nou ka maké », l'accroche du projet : les suggestions touchées pour *kréyòl*, *nou*, *ka* et *maké*, puis l'envoi. Animations de 14 et 19 secondes, réalisées sur l'application 22.0.2 (septembre 2026), numéros de destinataire fictifs.
+Deux phrases écrites de bout en bout dans une conversation SMS. La première, « An kay òwganizé on diné » : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. La seconde, « An kréyòl nou ka palé, an kréyòl nou ka maké », l'accroche du projet : le premier *kréyòl* posé en touchant la suggestion, le second tapé sans accent et rétabli à l'espace, comme *palé* et *maké*. Animations de 14 et 16 secondes, réalisées sur les applications 22.0.2 et 22.3.0 (septembre 2026), numéros de destinataire fictifs.
 
 <div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
   <div style="width: 30%; min-width: 200px;">
@@ -434,8 +434,8 @@ Deux phrases écrites de bout en bout dans une conversation SMS. La première, �
     <p><small>Une phrase avec ses accents, envoyée par SMS</small></p>
   </div>
   <div style="width: 30%; min-width: 200px;">
-    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, un halo bleu glissant d'une touche à l'autre au fil de la frappe, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" style="width: 100%; border-radius: 8px;">
-    <p><small>L'accroche du projet, tapée sans accent : le clavier les rétablit tout seul</small></p>
+    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS, un halo suivant le doigt d'une touche à l'autre. Le premier « kréyòl » est posé en touchant la suggestion kréyòl ; le second est tapé sans accent et le clavier les rétablit à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »" style="width: 100%; border-radius: 8px;">
+    <p><small>L'accroche du projet : une suggestion touchée, puis les accents rétablis tout seuls</small></p>
   </div>
 </div>
 

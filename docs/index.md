@@ -74,7 +74,7 @@ clavier ajoute les accents qui manquent, il ne remplace jamais vos
 lettres par d'autres.
 
 <div align="center">
-  <img src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, chaque touche mise en évidence par un halo qui glisse d'une lettre à l'autre. À l'espace, le mot devient « kréyòl » tout seul" width="260">
+  <img src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, un halo suivant le doigt d'une touche à l'autre pendant que les suggestions kréyòl s'affichent au-dessus du clavier. À l'espace, le mot devient « kréyòl » tout seul" width="340">
 </div>
 
 ## Maké on bèl Kréyòl : vérifiez tout de suite
@@ -95,13 +95,13 @@ apparaître, retrouvez l'exemple ci-dessus avec vos propres mots.
 
 ## Le clavier en action
 
-**En deux animations : un mot créole écrit avec appui long et suggestion
-touchée, puis une phrase entière tapée sans un seul accent, que le
-clavier rétablit tout seul.**
+**En deux animations : un mot créole posé par appui long puis envoyé, et
+une phrase entière où « kréyòl » s'écrit deux fois, une fois en touchant
+la suggestion, une fois tapé sans accent et rétabli tout seul.**
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
    <img loading="lazy" src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="30%">
-   <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, un halo bleu glissant d'une touche à l'autre au fil de la frappe, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="30%">
+   <img loading="lazy" src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS, un halo suivant le doigt d'une touche à l'autre. Le premier « kréyòl » est posé en touchant la suggestion kréyòl ; le second est tapé sans accent et le clavier les rétablit à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »" width="30%">
 </div>
 
 ## Fonctionnalités
