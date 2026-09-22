@@ -57,10 +57,21 @@ lang: fr
 # Klavyé Kréyòl Karukera, le clavier créole guadeloupéen pour Android
 
 **Écrire en kréyòl sur son téléphone, sans galérer.** Klavyé Kréyòl Karukera
-est un clavier Android **gratuit, open source, zéro pub et 100 % hors ligne** qui
-propose des suggestions de mots en **créole guadeloupéen**, construites sur
-les textes des grands défenseurs du kréyòl : Sylviane Telchid, Sonny Rupaire,
-Max Rippon, Robert Fontes, Esnard Boisdur et bien d'autres.
+vous propose vos mots en **créole guadeloupéen** pendant que vous tapez, et
+rétablit tout seul les accents que vous oubliez, construits sur les textes
+des grands défenseurs du kréyòl : Sylviane Telchid, Sonny Rupaire, Max
+Rippon, Robert Fontes, Esnard Boisdur et bien d'autres. Gratuit, open
+source, zéro pub, 100 % hors ligne.
+
+## Pourquoi ce clavier ?
+
+- 🤔 Votre téléphone **refuse tous les mots créoles** et « corrige » votre kréyòl en français ?
+- 😤 Vous **doutez de l'orthographe** à chaque message, et vous laissez tomber les accents faute de trouver la bonne touche ?
+
+**Klavyé Kréyòl Karukera règle les deux.** Tapez « kreyol » sans réfléchir
+aux accents : il devient « kréyòl » dès que vous validez le mot. Le
+clavier ajoute les accents qui manquent, il ne remplace jamais vos
+lettres par d'autres.
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
@@ -80,6 +91,10 @@ les accents par appui long.
 
 ## Le clavier en action
 
+**En quatre captures : les accents qui reviennent tout seuls, une phrase
+créole envoyée depuis l'appui long jusqu'au message, et les suggestions
+bilingues qui apparaissent pendant que vous tapez.**
+
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
    <img src="Screenshots/gif_ownganize_sms.gif" alt="Animation : « An kay òwganizé on diné » écrit au clavier kréyòl dans un SMS, avec le ò en appui long, la suggestion òwganizé, puis l'envoi" width="22%">
    <img src="Screenshots/KlavyéAnAktion.gif" alt="Animation : la phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » tapée touche par touche dans un SMS, sans un seul accent. Le clavier les rétablit tout seul à chaque mot validé : « kreyol » devient « kréyòl », « pale » devient « palé », « make » devient « maké »" width="22%">
@@ -91,24 +106,28 @@ les accents par appui long.
   <a href="simulateur.html" class="btn" style="padding:12px 28px;">🧪 Essayer le clavier dans le navigateur</a>
 </div>
 
-## Pourquoi ce clavier ?
-
-- 🤔 Ton téléphone **refuse tous les mots créoles** et « corrige » ton kréyòl en français ?
-- 😤 Tu **doutes de l'orthographe** à chaque message ?
-- ➡️ Klavyé Kréyòl Karukera est fait pour toi.
-
 ## Fonctionnalités
+
+### Pour écrire
 
 | | |
 |---|---|
-| 💡 **Suggestions intelligentes** | Dictionnaire de 1 800+ mots créoles et modèle de prédiction construit sur un corpus littéraire créole authentique |
-| 🔤 **Accents faciles** | Appui long sur une lettre pour é, è, à, ò et tous les caractères du kréyòl |
-| 🇫🇷 **Bilingue** | Le français prend le relais quand aucun mot créole ne correspond |
-| 🎮 **Jeux de vocabulaire** | Mots Mêlés et Mots Mélangés pour apprendre en s'amusant |
-| 🏆 **Progression culturelle** | 7 niveaux, de Pipirit à Potomitan, au fil de tes mots tapés |
-| 🔒 **Zéro collecte de données** | Fonctionnement 100 % local : rien ne quitte ton téléphone ([politique de confidentialité](privacy/privacy-policy.html)) |
-| 🚫 **Zéro pub** | Aucune publicité, aucun tracker : le clavier reste concentré sur l'essentiel |
+| 💡 **Le mot vous vient avant d'avoir fini de l'écrire** | Suggestions construites sur un corpus littéraire créole authentique, pas un dictionnaire générique |
+| ✍️ **Les accents ne se perdent plus** | Appui long pour les taper, et depuis peu, ils reviennent tout seuls si vous les oubliez : vos lettres ne changent jamais, seuls les accents s'ajoutent |
+| 🇫🇷 **Un seul clavier pour le kréyòl et le français** | Le français prend le relais quand aucun mot créole ne correspond, pas besoin de changer de clavier |
+| 🔢 **Il s'adapte à ce que vous écrivez** | Pavé de chiffres pour un numéro ou une date, arobase pour un e-mail : sans réglage à chercher |
+| 🔒 **Personne ne lit ce que vous tapez** | Fonctionnement 100 % local, et même la sauvegarde automatique du téléphone est fermée : rien ne part sur un serveur ([politique de confidentialité](privacy/privacy-policy.html)) |
+| 🚫 **Zéro publicité, zéro tracker** | Le clavier reste concentré sur l'essentiel |
 | 🆓 **Gratuit et open source** | Code public sur [GitHub](https://github.com/famibelle/KreyolKeyb), licence MIT |
+
+### En prime
+
+| | |
+|---|---|
+| 📔 **Sanblé, le carnet des mots gagnés** | Chaque mot trouvé dans un jeu devient une carte, avec son sens en français et une phrase d'un auteur guadeloupéen |
+| 🔁 **Sonjé, la révision qui vous relance au bon moment** | Si vous avez déjà réécrit le mot au clavier depuis, la carte avance toute seule : le clavier fait office d'examen |
+| 🔡 **Six jeux, dont un jouable sans connaître un mot de créole** | Mo an plas donne les mots tout faits, à vous de les caser dans la grille |
+| 🏆 **Une progression, de Pipirit à Potomitan** | Au fil des mots que vous tapez vraiment |
 
 ## Un projet de préservation linguistique
 
@@ -120,14 +139,11 @@ chaque jour. Le dictionnaire et les suggestions s'appuient sur les œuvres
 d'écrivains, de linguistes et d'artistes qui ont donné au créole
 guadeloupéen ses lettres de noblesse.
 
-## Un écosystème créole plus large
-
-Klavyé Kréyòl Karukera fait partie de l'écosystème **Potomitan™**, qui
-développe aussi [POTOMITAN](https://potomitan.io), un traducteur
-français ↔ créole guadeloupéen pensé pour les urgences et les démarches
-administratives (soutenu par la Préfecture de Guadeloupe via Lab'An Nou,
-présenté par Orange Antilles-Guyane). Deux outils, une même mission :
-faire vivre le kréyòl dans le numérique, à l'écrit comme à l'oral.
+Il fait partie de l'écosystème **Potomitan™**, qui développe aussi
+[POTOMITAN](https://potomitan.io), un traducteur français ↔ créole
+guadeloupéen pensé pour les urgences et les démarches administratives
+(soutenu par la Préfecture de Guadeloupe via Lab'An Nou, présenté par
+Orange Antilles-Guyane).
 
 ## À découvrir en exclusivité 🎁
 
