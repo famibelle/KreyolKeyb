@@ -56,18 +56,23 @@ lang: fr
 
 # Dossier de presse : Klavyé Kréyòl Karukera
 
-*Dernière mise à jour : 19 septembre 2026*
+*Dernière mise à jour : 22 septembre 2026*
 
 ## En une phrase
 
-**Klavyé Kréyòl Karukera est un clavier mobile intelligent dédié au créole
-guadeloupéen** : il suggère les mots en kréyòl pendant la frappe, à
-partir d'un corpus littéraire créole authentique. Gratuit, open source, et
-sans aucune collecte de données.
+**Klavyé Kréyòl Karukera est un clavier mobile dédié au créole guadeloupéen,
+qui aide à écrire en bon kréyòl.** Il **propose les mots** pendant la frappe,
+puis ceux qui viennent habituellement après, à partir d'un corpus littéraire
+créole ; et il **rétablit les accents** oubliés, sans jamais remplacer un mot
+par un autre. Gratuit, open source, sans aucune collecte de données.
 
-L'ambition du projet va au-delà d'Android : que le kréyòl s'écrive bien sur
-tous les claviers, y compris celui de l'iPhone. Aujourd'hui, seule la version
-Android est publiée ; la version iOS est en préparation.
+Le projet se résume à deux phrases : **« Osez le Kréyòl »**, adressée à celles
+et ceux qui n'osent pas l'écrire de peur de mal l'écrire, et **« An kréyòl nou
+ka palé, an kréyòl nou ka maké »**, ce que le clavier rend enfin possible.
+
+L'ambition va au-delà d'Android : que le kréyòl s'écrive bien sur tous les
+claviers, y compris celui de l'iPhone. Aujourd'hui, seule la version Android
+est publiée ; la version iOS est en préparation.
 
 ## L'éditeur
 
@@ -137,6 +142,32 @@ claviers standards.
 | Guadeloupe la 1ère (France Télévisions) | 28/07/2026 | Télévision, *Guadeloupe Soir 19h30* | [« Karukéra : on jan pou maké kréyòl-la »](https://la1ere.franceinfo.fr/guadeloupe/programme-video/la1ere_guadeloupe_guadeloupe-soir-19h30/diffusion/8682591-emission-du-mardi-28-juillet-2026.html) |
 | la1ere.franceinfo.fr | 30/07/2026 | Article web | [« Klavyé Kréyòl Karukera, l'appli. pour smartphone qui facilite la rédaction de messages en créole guadeloupéen »](https://la1ere.franceinfo.fr/guadeloupe/klavye-kreyol-karukera-l-appli-pour-smartphone-qui-facilite-la-redaction-de-messages-en-creole-guadeloupeen-1723969.html) |
 | France-Antilles Guadeloupe | 04/08/2026 | Presse écrite, entretien | [« Si le créole guadeloupéen n'existe pas, petit à petit, on s'efface »](https://www.guadeloupe.franceantilles.fr/actualite/economie/si-le-creole-guadeloupeen-nexiste-pas-petit-a-petit-on-sefface-1088477.php) |
+
+## Ce qu'en disent les utilisateurs
+
+Sur Google Play, l'application est notée **4,35 sur 5** pour **52 avis**, et
+compte <span id="pk-users-2">3 356</span> installations. Trois avis récents,
+cités sans leurs auteurs :
+
+<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:18px 0;">
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les traductions des mots dans les jeux juste parfait ! »</p>
+  </div>
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« Très instructif et permet d'accéder à de nombreux mots. Bravo ! »</p>
+  </div>
+  <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
+    <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
+    <p style="margin:0;">« C'est très bien pour aprendre le kréyòl »</p>
+  </div>
+</div>
+
+<small>Avis publiés sur la
+[fiche Google Play](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr),
+où les 52 sont consultables. Note et nombre d'avis relevés le 22 septembre
+2026.</small>
 
 ## Angles possibles
 
@@ -210,13 +241,23 @@ construire.
 
 ## La réponse
 
-Un clavier qui **travaille pour le kréyòl au lieu de le combattre** :
+Un clavier qui **travaille pour le kréyòl au lieu de le combattre**. Deux
+aides portent la promesse d'écrire en bon kréyòl, dans cet ordre :
 
-- **Suggestions intelligentes** à partir d'un dictionnaire de plus de
-  **5 200 mots** kréyòl et d'un modèle de prédiction contextuelle (n-grams,
-  4 600 mots-pivots) construit sur des textes littéraires créoles
-  authentiques
-- **Accents du kréyòl** (é, è, à, ò...) par simple appui long
+1. **La proposition et la prédiction des mots.** Un dictionnaire de plus de
+   **5 200 mots** kréyòl et un modèle de prédiction contextuelle (n-grams,
+   4 600 mots-pivots) construits sur des textes littéraires créoles
+   authentiques : trois lettres suffisent à voir arriver le mot juste,
+   accents compris, puis ceux qui viennent habituellement après. L'utilisateur
+   n'a rien à inventer, il choisit.
+2. **Le rétablissement des accents.** Un mot tapé sans accent (é, è, à, ò...)
+   les retrouve à la validation, depuis la version 22.1.0 ; l'appui long reste
+   disponible pour les poser soi-même. Cette correction **ne remplace jamais
+   un mot par un autre** : les lettres tapées sont conservées à l'identique,
+   seuls les accents s'ajoutent, et un retour arrière annule la correction.
+
+S'y ajoutent :
+
 - **Bilingue** : le français prend le relais quand aucun mot créole ne correspond
 - **Six jeux de vocabulaire** intégrés et un **carnet de cartes à
   collectionner** (voir *Apprendre en jouant*, plus bas), plus une
@@ -371,6 +412,7 @@ Les suggestions s'appuient sur les œuvres de :
 
 | | |
 |---|---|
+| Accroches du projet | « Osez le Kréyòl » et « An kréyòl nou ka palé, an kréyòl nou ka maké » |
 | Plateforme | Android 5.0+ aujourd'hui. L'ambition est de couvrir tous les claviers, iPhone compris : la version iOS est en préparation |
 | Prix | Gratuit, sans pub, sans achat intégré |
 | Données personnelles | Aucune collecte, fonctionnement 100 % hors ligne |
@@ -386,6 +428,7 @@ Les suggestions s'appuient sur les œuvres de :
 | Comparatif | [Quel clavier pour écrire en kréyòl ?](comparatif.html), en étoiles, et le [détail ligne par ligne](comparatif_d%C3%A9taill%C3%A9s.html) avec ses sources |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
 | Utilisateurs | <span id="pk-users">3 356</span> installations au <span id="pk-date">19 septembre 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
+| Note des utilisateurs | 4,35 sur 5 pour 52 avis sur Google Play (relevé le 22 septembre 2026) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
 | Partenariats | [Partenariats institutionnels](partenaires.html) |
 
@@ -425,6 +468,20 @@ Les suggestions s'appuient sur les œuvres de :
 </div>
 
 ### Le clavier et l'application
+
+Les deux aides à l'écriture, prises séparément et en gros plan : la
+proposition des mots d'abord, le rétablissement des accents ensuite.
+
+<div align="center" style="display: flex; justify-content: center; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 1.5em 0;">
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_suggestion.gif" alt="Animation : « An kre » tapé au clavier, un halo suivant le doigt, puis la pastille « kréyòl » touchée dans la barre de suggestions. Le mot s'écrit en entier avec ses accents, et le clavier propose aussitôt les mots qui viennent après" style="width: 100%; border-radius: 8px;">
+    <p><small>Trois lettres, et le mot juste est proposé</small></p>
+  </div>
+  <div style="width: 30%; min-width: 200px;">
+    <img src="Screenshots/gif_accent_auto.gif" alt="Animation : « kreyol » tapé lettre par lettre sans accent, un halo suivant le doigt d'une touche à l'autre pendant que les suggestions kréyòl s'affichent au-dessus du clavier. À l'espace, le mot devient « kréyòl » tout seul" style="width: 100%; border-radius: 8px;">
+    <p><small>Tapé sans accent, le mot les retrouve à l'espace</small></p>
+  </div>
+</div>
 
 Deux phrases écrites de bout en bout dans une conversation SMS. La première, « An kay òwganizé on diné » : le `ò` par appui long sur la touche `o`, la suggestion `òwganizé` touchée dans la barre, les touches `é` et `è` de la rangée du bas, puis l'envoi. La seconde, « An kréyòl nou ka palé, an kréyòl nou ka maké », l'accroche du projet : le premier *kréyòl* posé en touchant la suggestion, le second tapé sans accent et rétabli à l'espace, comme *palé* et *maké*. Animations de 14 et 16 secondes, réalisées sur les applications 22.0.2 et 22.3.0 (septembre 2026), numéros de destinataire fictifs.
 
@@ -480,13 +537,14 @@ Captures d'écran de chaque section de l'application, version 22.0.2 (septembre 
   </div>
 </div>
 
-**[Télécharger le kit presse (ZIP, 5,8 Mo)](presse/kit-presse.zip)** :
-les quinze captures ci-dessus en pleine résolution, les quatre animations et
+**[Télécharger le kit presse (ZIP, 6,0 Mo)](presse/kit-presse.zip)** :
+les quinze captures ci-dessus en pleine résolution, les six animations et
 le logo, avec leurs conditions d'utilisation.
 
+- [Animation : le mot proposé après trois lettres](Screenshots/gif_suggestion.gif) et [les accents rétablis tout seuls](Screenshots/gif_accent_auto.gif)
 - [Animation : une phrase kréyòl écrite et envoyée par SMS](Screenshots/gif_ownganize_sms.gif)
-- [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)
 - [Animation du clavier en action : l'accroche « An kréyòl nou ka palé, an kréyòl nou ka maké »](Screenshots/KlavyéAnAktion.gif)
+- [Animation : les cartes d'un casier en éventail](Screenshots/gif_eventail_cartes.gif) et [la révision Sonjé](Screenshots/gif_boite_leitner.gif)
 - [Toutes les captures d'écran](https://github.com/famibelle/KreyolKeyb/tree/main/docs/Screenshots) (suggestions, accents, jeux, carnet de cartes, gamification)
 - [Reportage Canal 10](Medias/TV_Canal10.mp4) et [reportage Guadeloupe la 1ère](Medias/TV_Guadeloupe1ère.mp4) (extraits vidéo, voir aussi ci-dessus)
 - [Logo Potomitan™ en haute résolution](assets/potomitan-logo.png)
@@ -526,7 +584,13 @@ voir la page [Partenariats institutionnels](partenaires.html).
 // vieillit à la vue de tous.
 fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
   var d = new Date(s.as_of + 'T00:00:00');
-  document.getElementById('pk-users').textContent = s.current.toLocaleString('fr-FR');
+  var chiffre = s.current.toLocaleString('fr-FR');
+  // Le même chiffre paraît deux fois : dans la preuve sociale et dans les
+  // faits clés. Il se lit une fois et s'écrit aux deux endroits.
+  ['pk-users', 'pk-users-2'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.textContent = chiffre; }
+  });
   document.getElementById('pk-date').textContent =
     d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }).catch(function(){});

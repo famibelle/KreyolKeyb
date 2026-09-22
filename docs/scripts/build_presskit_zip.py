@@ -6,7 +6,7 @@ archive, l'ouvre, et prend ce dont il a besoin. Ce script produit
 docs/presse/kit-presse.zip à partir des visuels déjà présents dans le dépôt,
 sans les dupliquer dans les sources.
 
-Les quatre animations GIF sont incluses (360 px de large, environ 1 Mo au
+Les six animations GIF sont incluses (340 à 380 px de large, environ 1 Mo au
 plus). Les extraits vidéo des reportages restent exclus : ils pèsent à eux
 seuls plus de cinquante mégaoctets, ce qui transformerait l'archive en
 obstacle. Ils restent accessibles par lien direct depuis le dossier de presse.
@@ -41,11 +41,15 @@ VISUELS = {
     "assets/potomitan-logo.png":               "logo/potomitan-logo.png",
 }
 
+# L'ordre suit celui de la promesse : la proposition des mots d'abord, le
+# rétablissement des accents ensuite, puis les phrases entières et le carnet.
 ANIMATIONS = {
-    "Screenshots/gif_ownganize_sms.gif":       "animations/01-phrase-kreyol-envoyee-par-sms.gif",
-    "Screenshots/gif_eventail_cartes.gif":     "animations/02-cartes-en-eventail.gif",
-    "Screenshots/gif_boite_leitner.gif":       "animations/03-revision-sonje.gif",
+    "Screenshots/gif_suggestion.gif":          "animations/01-proposition-du-mot.gif",
+    "Screenshots/gif_accent_auto.gif":         "animations/02-accents-retablis.gif",
+    "Screenshots/gif_ownganize_sms.gif":       "animations/03-phrase-kreyol-envoyee-par-sms.gif",
     "Screenshots/KlavyéAnAktion.gif":          "animations/04-accroche-an-kreyol-nou-ka-pale.gif",
+    "Screenshots/gif_eventail_cartes.gif":     "animations/05-cartes-en-eventail.gif",
+    "Screenshots/gif_boite_leitner.gif":       "animations/06-revision-sonje.gif",
 }
 
 LISEZMOI = """KIT PRESSE - Klavye Kreyol Karukera
@@ -53,9 +57,10 @@ Clavier Android pour le creole guadeloupeen.
 
 CONTENU
   captures/     Captures d'ecran de l'application
-  animations/   Quatre animations GIF (une phrase ecrite et envoyee par SMS,
-                cartes en eventail, revision Sonje, accroche du projet
-                ecrite avec les suggestions)
+  animations/   Six animations GIF, dans l'ordre de la promesse : le mot
+                propose apres trois lettres, les accents retablis tout seuls,
+                une phrase ecrite et envoyee par SMS, l'accroche du projet,
+                les cartes en eventail, la revision Sonje
   logo/         Logo Potomitan(TM)
 
   Toutes les animations montrent la version actuelle de l'application.
