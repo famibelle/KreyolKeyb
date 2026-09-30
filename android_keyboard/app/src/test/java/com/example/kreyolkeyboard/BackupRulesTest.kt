@@ -68,6 +68,8 @@ class BackupRulesTest {
         val exclus = enfants(section, "exclude").map { it.getAttribute("path") }
         assertTrue("creole_dict_with_usage.json" in exclus)
         assertTrue("carnet_vu.json" in exclus)
+        // Le dernier jeu ouvert (accueil de l'onglet Dékolaj) est une trace d'usage
+        assertTrue("kreyol_accueil_prefs.xml" in exclus)
     }
 
     @Test

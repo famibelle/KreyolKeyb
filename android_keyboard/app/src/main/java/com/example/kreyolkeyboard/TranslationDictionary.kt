@@ -395,9 +395,32 @@ object TranslationDictionary {
      * inutilisables : « eau » y ramenait « beaucoup » et « nouveau » avant
      * « Waasser ». Ces résultats ne sont pas écartés, seulement relégués.
      */
+    /**
+     * Requête débarrassée de ce que le clavier ou le doigt ajoutent autour du
+     * mot : espace posé après une suggestion, point, virgule, guillemets.
+     * « kaz . » cherchait « kaz . » et ne trouvait rien. L'intérieur est gardé
+     * tel quel, espaces réduits à un : les gloses françaises en ont (« pomme de
+     * terre »), et le tiret ou l'apostrophe d'un mot (« an-nou », « l'eau »)
+     * restent à leur place.
+     *
+     * Une parenthèse fermante qui referme une ouvrante de la requête reste
+     * aussi : la table a une forme « kalòj (a poul) », qu'un nettoyage aveugle
+     * aurait changée en « kalòj (a poul ».
+     */
+    internal fun nettoyerRequete(requete: String): String {
+        val debut = requete.indexOfFirst { it.isLetterOrDigit() }
+        if (debut < 0) return ""
+        var fin = requete.indexOfLast { it.isLetterOrDigit() } + 1
+        while (fin < requete.length && requete[fin] == ')' &&
+            requete.substring(debut, fin).count { it == '(' } >
+            requete.substring(debut, fin).count { it == ')' }
+        ) fin++
+        return requete.substring(debut, fin).replace(Regex("\\s+"), " ")
+    }
+
     fun rechercher(context: Context, requete: String, maximum: Int = 40): List<Entree> {
         charger(context)
-        val pliee = AccentTolerantMatcher.normalize(requete.trim())
+        val pliee = AccentTolerantMatcher.normalize(nettoyerRequete(requete))
         if (pliee.isEmpty()) return emptyList()
 
         // Repliés une fois par recherche, pas une fois par entrée et par rang.

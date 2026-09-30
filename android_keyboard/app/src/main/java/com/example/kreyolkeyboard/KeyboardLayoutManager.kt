@@ -199,7 +199,7 @@ class KeyboardLayoutManager(private val context: Context) {
          * caractères, négatif vers la gauche (v14.0.0).
          *
          * Corps par défaut vide, pour le seul clavier de démonstration de
-         * l'onglet Démarrage : il pilote un EditText et non un champ distant,
+         * l'onglet Dékolaj : il pilote un EditText et non un champ distant,
          * et le geste n'y a rien à montrer que la frappe ne montre déjà.
          */
         fun onSpaceCursorMove(steps: Int) {}

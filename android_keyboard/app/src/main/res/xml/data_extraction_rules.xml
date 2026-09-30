@@ -9,7 +9,9 @@
    Transfert d'appareil : le carnet suit le joueur quand il change de téléphone,
    par câble ou en Wi-Fi direct, sans passer par un serveur. Le compteur de frappe
    et sa référence (creole_dict_with_usage.json, carnet_vu.json) restent exclus :
-   ce qui a été tapé ne part nulle part. BackupRulesTest vérifie les deux sections.
+   ce qui a été tapé ne part nulle part. Le dernier jeu ouvert, retenu pour
+   l'accueil (kreyol_accueil_prefs.xml), est une trace d'usage : exclu aussi.
+   BackupRulesTest vérifie les deux sections.
 -->
 <data-extraction-rules xmlns:tools="http://schemas.android.com/tools">
     <cloud-backup>
@@ -23,6 +25,7 @@
     <device-transfer>
         <include domain="sharedpref" path="."/>
         <exclude domain="sharedpref" path="device.xml"/>
+        <exclude domain="sharedpref" path="kreyol_accueil_prefs.xml"/>
         <exclude domain="file" path="creole_dict_with_usage.json"
             tools:ignore="FullBackupContent"/>
         <exclude domain="file" path="carnet_vu.json"

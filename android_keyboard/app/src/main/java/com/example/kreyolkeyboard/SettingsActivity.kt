@@ -116,6 +116,17 @@ class SettingsActivity : AppCompatActivity() {
      * pas si la barre affichée est à jour.
      */
     private var levelBadgeDrawn = false
+
+    /**
+     * Demandes faites depuis l'accueil de l'onglet Dékolaj à un autre onglet :
+     * le jeu à ouvrir dans Jé (par son nom), le mot à chercher dans le
+     * Dictionnaire. Consommées par l'onglet visé à son onResume(), qui est
+     * appelé quand il devient l'onglet courant, qu'il existe déjà ou non.
+     */
+    internal var jeuDemande: String? = null
+    /** Avec [jeuDemande] = Sonjé : lancer la séance de révision dès l'ouverture. */
+    internal var revisionDemandee = false
+    internal var rechercheDemandee: String? = null
     
     // 🔧 FIX CRITIQUE: Scope lié au lifecycle de l'activité
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -128,6 +139,14 @@ class SettingsActivity : AppCompatActivity() {
         const val TAB_JEUX = 1
         const val TAB_DICO = 2
         const val TAB_STATS = 3
+
+        // Trace d'usage (le dernier jeu ouvert) : un fichier à part, exclu du
+        // transfert d'appareil comme du cloud (voir data_extraction_rules.xml)
+        private const val ACCUEIL_PREFS = "kreyol_accueil_prefs"
+        private const val PREF_DERNIER_JEU_NOM = "dernier_jeu_nom"
+        private const val PREF_DERNIER_JEU_EMOJI = "dernier_jeu_emoji"
+        /** Nom de la révision dans GamesFragment.jeux : « Réviser maintenant » l'ouvre. */
+        private const val JEU_SONJE = "Sonjé"
 
         /** Code de la demande de permission POST_NOTIFICATIONS (pastille de niveau). */
         private const val REQUEST_NOTIFICATIONS = 4201
@@ -171,7 +190,7 @@ class SettingsActivity : AppCompatActivity() {
             "La touche majuscule a trois états : un appui pour une seule majuscule, deux pour le verrouillage, trois pour revenir au normal.",
             "Une lettre oubliée, en trop ou tapée à côté n'empêche pas les suggestions d'arriver : le clavier tolère les fautes de frappe.",
             "Appui long sur la virgule : point-virgule, deux-points, apostrophe. Appui long sur le point : point d'exclamation, point d'interrogation, points de suspension.",
-            "Activez le correcteur kréyòl (onglet Démarrage, étape 4) pour que vos mots créoles ne soient plus soulignés en rouge dans Messages ou Notes.",
+            "Activez le correcteur kréyòl (onglet Dékolaj, sous « Clavier installé ») pour que vos mots créoles ne soient plus soulignés en rouge dans Messages ou Notes.",
             "Le bouton « 123 » ouvre les chiffres et les symboles, euro compris. Le bouton « ABC » ramène aux lettres.",
             "Après un espace, le clavier vous propose la suite probable de votre phrase, d'après les deux mots que vous venez d'écrire.",
             "La touche emoji, en bas à droite, ouvre un panneau de près de 1900 emojis classés par catégories.",
@@ -190,12 +209,12 @@ class SettingsActivity : AppCompatActivity() {
             "Le classement de vos mots les plus utilisés se trouve dans l'onglet « Kréyòl an mwen ».",
             "Le retour arrière efface un emoji en entier, couleur de peau comprise : plus de caractère cassé à la place.",
             "Sept niveaux jalonnent votre parcours, de Pipirit à Potomitan. Un huitième existe : à vous de le découvrir.",
-            "Les suggestions s'appuient sur les textes de Sylviane Telchid, Sonny Rupaire, Max Rippon et d'autres voix du kréyòl, à retrouver dans « À propos », en bas de l'onglet Démarrage.",
+            "Les suggestions s'appuient sur les textes de Sylviane Telchid, Sonny Rupaire, Max Rippon et d'autres voix du kréyòl, à retrouver dans « À propos », en bas de l'onglet Dékolaj.",
             "La première lettre de chaque phrase prend automatiquement la majuscule, comme sur un clavier classique.",
             "Depuis « Kréyòl an mwen », partagez votre carte de niveau avec votre famille et vos amis.",
             "Le correcteur se choisit dans les réglages Android sous « Clavier », et non sous « Langues ». Le bouton de l'étape 4 vous y mène directement.",
             "Après une mise à jour de l'application, le correcteur peut rester muet jusqu'au redémarrage du téléphone : cela vient d'Android, pas du clavier.",
-            "Le guide, en bas de l'onglet Démarrage, reprend toutes les étapes en images, suivies des questions fréquentes.",
+            "Le guide, en bas de l'onglet Dékolaj, reprend toutes les étapes en images, suivies des questions fréquentes.",
             "« Fraz a twou » vous montre une vraie phrase kréyòl à laquelle il manque un mot : sur les quatre propositions, une seule est celle qu'a écrite l'auteur.",
             "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez « maison ». Les jeux, eux, vous disent maintenant ce que veut dire le mot qu'ils vous font chercher.",
             "Glissez le doigt le long de la barre d'espace pour promener le curseur lettre par lettre : plus besoin de viser entre deux caractères pour corriger un mot.",
@@ -483,10 +502,10 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
-     * Le bandeau d'installation ne paraît que sur Démarrage, et seulement tant
+     * Le bandeau d'installation ne paraît que sur Dékolaj, et seulement tant
      * que le clavier n'a jamais été configuré.
      *
-     * Il était posé une fois pour toutes, ce qui suffisait quand Démarrage
+     * Il était posé une fois pour toutes, ce qui suffisait quand Dékolaj
      * était le seul onglet atteignable avant configuration. Maintenant que les
      * trois le sont, il se superposerait au bas de la grille des Mots Mêlés et
      * de la liste des statistiques — un rappel permanent qui mangerait le
@@ -782,10 +801,13 @@ class SettingsActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
             }
             
-            // Tab Démarrage
-            val startTab = createTab(0, "🚀", "Démarrage")
+            // Tab Dékolaj (« Démarrage » jusqu'en 22.4.0, mot kréyòl donné par le
+            // propriétaire du projet). Tant que le clavier n'est pas actif,
+            // l'onglet mène l'installation ; ensuite il montre la journée :
+            // cartes à revoir, mot du jour, dernier jeu, progression.
+            val startTab = createTab(0, "🏠", "Dékolaj")
             tabContainer.addView(startTab)
-            Log.d("SettingsActivity", "Onglet Démarrage créé et ajouté")
+            Log.d("SettingsActivity", "Onglet Dékolaj créé et ajouté")
 
             // Tab Jé : les trois jeux derrière une seule destination. Ils
             // occupaient trois onglets sur sept, soit 43 % de la barre, pour
@@ -811,7 +833,7 @@ class SettingsActivity : AppCompatActivity() {
             // Guide et À Propos ne sont plus des onglets : ce sont des pages de
             // référence que l'on lit une fois, pas des destinations
             // quotidiennes. Elles s'ouvrent depuis le pied de l'onglet
-            // Démarrage, en plein écran (voir SheetFragment).
+            // Dékolaj, en plein écran (voir SheetFragment).
 
             // Ligne de séparation en bas (fine)
             val separator = View(this@SettingsActivity).apply {
@@ -898,7 +920,7 @@ class SettingsActivity : AppCompatActivity() {
             
             // Pastille de niveau non vu : le franchissement d'un palier n'est
             // célébré qu'au dessin du contenu de l'onglet statistiques. Sans ce
-            // repère, quelqu'un qui ouvre l'application et reste sur Démarrage
+            // repère, quelqu'un qui ouvre l'application et reste sur Dékolaj
             // ne saurait jamais qu'il a quelque chose à y voir.
             if (tabIndex == TAB_STATS && hasPendingLevelBadge()) {
                 levelBadgeDrawn = true
@@ -962,7 +984,7 @@ class SettingsActivity : AppCompatActivity() {
         enfants.forEach { tabBar.addView(it) }
     }
 
-    // Onglet 1 : Démarrage / Onboarding
+    // Onglet 1 : Dékolaj (installation, puis accueil du jour)
     fun createOnboardingContent(): LinearLayout {
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1024,13 +1046,34 @@ class SettingsActivity : AppCompatActivity() {
             mainLayout.addView(createSpacing(16))
         }
 
+        // Accueil du jour (22.5.0, repris de LuxKeyb 29.4.0). Une fois le
+        // clavier installé et l'installation déjà menée à terme une fois,
+        // l'onglet ne s'ouvre plus sur la configuration, faite pour de bon, mais
+        // sur ce qui fait revenir : les cartes à revoir, le mot du jour, le
+        // dernier jeu, la progression. Tout ce qui concerne la configuration
+        // passe dans un volet replié, sous une seule ligne. Tant que le clavier
+        // n'est pas actif, rien ne change.
+        val modeDuJour = AccueilDuJour.mode(hasCompletedBefore, isEnabled, isSelected) == ModeAccueil.DU_JOUR
+        val cible: LinearLayout = if (!modeDuJour) mainLayout else LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            setPadding(0, enDp(12), 0, 0)
+        }
+        if (modeDuJour) {
+            mainLayout.addView(creerAccueilDuJour())
+            mainLayout.addView(createSpacing(8))
+            mainLayout.addView(ligneConfiguration(cible))
+            mainLayout.addView(cible)
+            mainLayout.addView(createSpacing(16))
+        }
+
         // Bandeau de réussite : le clavier est utilisable dès qu'il est
         // activé et sélectionné, avant même que l'utilisateur ait écrit quoi
         // que ce soit. Son texte le dit alors sans prétendre que la
         // configuration est terminée, sinon il contredirait l'anneau 2/3.
         if (isEnabled && isSelected) {
-            mainLayout.addView(createReadyBanner(aEcritUnMot()))
-            mainLayout.addView(createSpacing(12))
+            cible.addView(createReadyBanner(aEcritUnMot()))
+            cible.addView(createSpacing(12))
         }
 
         // Carte de configuration, isolée dans son propre conteneur : déplier
@@ -1045,8 +1088,8 @@ class SettingsActivity : AppCompatActivity() {
             )
         }
         remplirCarteConfig(conteneurConfig, isEnabled, isSelected, hasCompletedBefore, showIncompleteNudge)
-        mainLayout.addView(conteneurConfig)
-        mainLayout.addView(createSpacing(24))
+        cible.addView(conteneurConfig)
+        cible.addView(createSpacing(24))
 
         // Essai du clavier : un vrai clavier interactif avec suggestions
         // bilingues, à essayer sans rien installer. Il ouvrait l'onglet, pour
@@ -1058,8 +1101,8 @@ class SettingsActivity : AppCompatActivity() {
         // l'on rencontre en descendant. Inutile pour un utilisateur qui
         // revient après une désélection : il connaît déjà.
         if ((!isEnabled || !isSelected) && !hasCompletedBefore) {
-            mainLayout.addView(createDemoKeyboardCard())
-            mainLayout.addView(createSpacing(24))
+            cible.addView(createDemoKeyboardCard())
+            cible.addView(createSpacing(24))
         }
 
         // Correcteur orthographique : fonctionnalité indépendante des 3 étapes
@@ -1073,10 +1116,10 @@ class SettingsActivity : AppCompatActivity() {
             setTypeface(null, Typeface.BOLD)
             setPadding(0, 0, 0, 12)
         }
-        mainLayout.addView(extrasTitle)
+        cible.addView(extrasTitle)
 
-        mainLayout.addView(createSpellCheckerCard())
-        mainLayout.addView(createSpacing(24))
+        cible.addView(createSpellCheckerCard())
+        cible.addView(createSpacing(24))
 
         // Bascule d'un clavier à l'autre : l'aller et le retour n'utilisent
         // pas le même geste (chemins vérifiés à l'émulateur), et c'est le
@@ -1166,8 +1209,8 @@ class SettingsActivity : AppCompatActivity() {
             switchCard.addView(switchNote)
             switchCard.addView(switchButton)
 
-            mainLayout.addView(switchCard)
-            mainLayout.addView(createSpacing(16))
+            cible.addView(switchCard)
+            cible.addView(createSpacing(16))
         }
 
         // Section "Astuce" si tout est configuré
@@ -1267,8 +1310,9 @@ class SettingsActivity : AppCompatActivity() {
                 // gauche. On vise la position la plus proche du bon onglet.
                 allerAOnglet(TAB_STATS)
             }
-            
-            mainLayout.addView(statsLinkCard)
+
+            // L'accueil du jour a sa propre carte de progression
+            if (!modeDuJour) mainLayout.addView(statsLinkCard)
         }
 
         // Guide et À Propos ont quitté la barre d'onglets : ce sont des pages
@@ -1291,6 +1335,273 @@ class SettingsActivity : AppCompatActivity() {
         mainLayout.addView(createSpacing(16))
 
         return mainLayout
+    }
+
+    // ===== Accueil du jour (onglet Dékolaj) =====
+
+    private fun accueilPrefs() = getSharedPreferences(ACCUEIL_PREFS, Context.MODE_PRIVATE)
+
+    /**
+     * Retient le dernier jeu ouvert, pour la carte « Rejouer » de l'accueil.
+     * Un fichier de préférences à part, exclu de toute sauvegarde et du
+     * transfert d'appareil : c'est une trace d'usage, elle ne quitte pas le
+     * téléphone.
+     */
+    internal fun retenirDernierJeu(emoji: String, nom: String) {
+        accueilPrefs().edit()
+            .putString(PREF_DERNIER_JEU_NOM, nom)
+            .putString(PREF_DERNIER_JEU_EMOJI, emoji)
+            .apply()
+    }
+
+    /** Ouvre l'onglet Jé, et le jeu [nom] dedans s'il est donné. */
+    private fun ouvrirJeux(nom: String? = null) {
+        jeuDemande = nom
+        revisionDemandee = false
+        allerAOnglet(TAB_JEUX)
+    }
+
+    /** Ouvre Sonjé avec sa séance de révision déjà lancée. */
+    private fun lancerRevisionDepuisAccueil() {
+        jeuDemande = JEU_SONJE
+        revisionDemandee = true
+        allerAOnglet(TAB_JEUX)
+    }
+
+    private fun carteAccueil(fond: Int): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(enDp(18), enDp(16), enDp(18), enDp(16))
+        background = GradientDrawable().apply {
+            cornerRadius = enDp(16).toFloat()
+            setColor(fond)
+        }
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = enDp(12) }
+        isClickable = true
+        isFocusable = true
+    }
+
+    private fun texteAccueil(texte: CharSequence, taille: Float, couleur: Int, gras: Boolean = false) =
+        TextView(this).apply {
+            text = texte
+            textSize = taille
+            setTextColor(couleur)
+            if (gras) setTypeface(null, Typeface.BOLD)
+            setLineSpacing(0f, 1.15f)
+        }
+
+    private fun boutonAccueil(libelle: String, fond: Int, encre: Int, action: () -> Unit) =
+        Button(this).apply {
+            text = libelle
+            textSize = 15f
+            isAllCaps = false
+            setTextColor(encre)
+            background = GradientDrawable().apply {
+                cornerRadius = enDp(22).toFloat()
+                setColor(fond)
+            }
+            setPadding(enDp(20), enDp(8), enDp(20), enDp(8))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = enDp(12) }
+            setOnClickListener { action() }
+        }
+
+    /**
+     * L'accueil d'un utilisateur installé : quatre cartes, de la plus urgente
+     * à la plus lointaine. Les cartes à revoir d'abord, parce que la
+     * répétition espacée ne marche que si l'on revient le jour dit ; le mot du
+     * jour ensuite ; le dernier jeu ; la progression, qui se regarde plutôt
+     * qu'elle ne s'agit.
+     *
+     * Le mot du jour et la progression lisent le fichier d'usage : ils se
+     * remplissent sur un fil à part pour ne pas figer l'onglet à chaque retour,
+     * qui le reconstruit (LuxKeyb y a perdu 8 secondes d'écran vide sur un
+     * émulateur lent). L'esquisse s'affiche tout de suite.
+     */
+    private fun creerAccueilDuJour(): LinearLayout {
+        val colonne = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val encre = Color.parseColor("#1C1C1C")
+        val gris = Color.parseColor("#6B6B6B")
+
+        // La date seule en titre : aucune source du projet ne donne de
+        // salutation kréyòl à mettre ici, et on n'en invente pas.
+        colonne.addView(texteAccueil(
+            SimpleDateFormat("EEEE d MMMM", Locale.FRENCH)
+                .format(Date()).replaceFirstChar { it.uppercase() },
+            24f, encre, gras = true
+        ).apply { setPadding(0, 0, 0, enDp(14)) })
+
+        // 1. Les cartes à revoir. Le nombre est celui de la file du jour,
+        // plafonnée comme dans l'onglet Jé : jamais l'arriéré.
+        val total = Carnet.taille(this)
+        val dues = Carnet.aRevoir(this)
+        val violet = Carnet.COULEUR
+        colonne.addView(carteAccueil(violet).apply {
+            val blanc = Color.WHITE
+            val pale = Color.parseColor("#E8E0FF")
+            when {
+                dues > 0 -> {
+                    addView(texteAccueil(
+                        if (dues == 1) "🔁  1 carte à revoir" else "🔁  $dues cartes à revoir",
+                        20f, blanc, gras = true))
+                    addView(texteAccueil("Quelques minutes suffisent.", 14f, pale))
+                    addView(boutonAccueil("Réviser maintenant", blanc, violet) {
+                        lancerRevisionDepuisAccueil()
+                    })
+                    setOnClickListener { lancerRevisionDepuisAccueil() }
+                }
+                total > 0 -> {
+                    addView(texteAccueil("✅  Rien à revoir aujourd'hui", 20f, blanc, gras = true))
+                    addView(texteAccueil(
+                        if (total == 1) "1 carte dans votre carnet." else "${nombre(total)} cartes dans votre carnet.",
+                        14f, pale))
+                    addView(boutonAccueil("Gagner d'autres cartes", blanc, violet) { ouvrirJeux() })
+                    setOnClickListener { ouvrirJeux() }
+                }
+                else -> {
+                    addView(texteAccueil("📚  Votre carnet est vide", 20f, blanc, gras = true))
+                    addView(texteAccueil(
+                        "Chaque mot trouvé dans un jeu devient une carte à revoir.", 14f, pale))
+                    addView(boutonAccueil("Jouer", blanc, violet) { ouvrirJeux() })
+                    setOnClickListener { ouvrirJeux() }
+                }
+            }
+        })
+
+        // 2. Le mot du jour, rempli en arrière-plan
+        val tvMot = texteAccueil("…", 30f, encre, gras = true)
+        val tvGlose = texteAccueil("", 16f, gris).apply { visibility = View.GONE }
+        val carteMot = carteAccueil(Color.WHITE).apply {
+            addView(texteAccueil("MOT DU JOUR", 12f, Color.parseColor("#FF8C00"), gras = true).apply {
+                letterSpacing = 0.1f
+                setPadding(0, 0, 0, enDp(4))
+            })
+            addView(tvMot)
+            addView(tvGlose)
+            addView(texteAccueil("Voir dans le dictionnaire ›", 14f, Color.parseColor("#1976D2")).apply {
+                setPadding(0, enDp(8), 0, 0)
+            })
+        }
+        colonne.addView(carteMot)
+
+        // 3. Le dernier jeu. « Rejouer » et non « Reprendre » : le jeu repart
+        // d'une partie neuve.
+        val nomJeu = accueilPrefs().getString(PREF_DERNIER_JEU_NOM, null)
+        val emojiJeu = accueilPrefs().getString(PREF_DERNIER_JEU_EMOJI, null)
+        colonne.addView(carteAccueil(Color.WHITE).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(texteAccueil(emojiJeu ?: "🎮", 30f, encre).apply {
+                setPadding(0, 0, enDp(14), 0)
+            })
+            addView(LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                if (nomJeu != null) {
+                    addView(texteAccueil("Rejouer à $nomJeu", 18f, encre, gras = true))
+                    addView(texteAccueil("Votre dernier jeu", 14f, gris))
+                } else {
+                    addView(texteAccueil("Choisir un jeu", 18f, encre, gras = true))
+                    addView(texteAccueil("Six jeux pour apprendre les mots", 14f, gris))
+                }
+            })
+            addView(texteAccueil("›", 26f, gris))
+            setOnClickListener { ouvrirJeux(nomJeu) }
+        })
+
+        // 4. La progression, remplie en arrière-plan
+        val tvNiveau = texteAccueil("…", 18f, encre, gras = true)
+        val tvReste = texteAccueil("", 14f, gris)
+        val zoneBarre = FrameLayout(this)
+        colonne.addView(carteAccueil(Color.WHITE).apply {
+            addView(tvNiveau)
+            addView(zoneBarre)
+            addView(tvReste)
+            setOnClickListener { allerAOnglet(TAB_STATS) }
+        })
+
+        Thread {
+            val (mot, _) = getWordOfTheDay()
+            val glose = TranslationDictionary.traduire(this, mot)
+            val decouverts = loadVocabularyStats().wordsDiscovered
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                tvMot.text = mot
+                if (glose != null) {
+                    tvGlose.text = "en français : $glose"
+                    tvGlose.visibility = View.VISIBLE
+                }
+                carteMot.setOnClickListener {
+                    rechercheDemandee = mot
+                    allerAOnglet(TAB_DICO)
+                }
+
+                val niveau = CreoleLevels.LEVELS[getCurrentLevelIndex(decouverts)]
+                tvNiveau.text = "${niveau.emoji}  ${niveau.name}"
+                creerBarreNiveau(decouverts)?.let { zoneBarre.addView(it) }
+                tvReste.text = phraseProgression(decouverts) + " ›"
+            }
+        }.start()
+
+        return colonne
+    }
+
+    /** « Encore N mots avant X » : voir [AccueilDuJour.phraseProgression]. */
+    private fun phraseProgression(motsDecouverts: Int): String =
+        AccueilDuJour.phraseProgression(motsDecouverts, getTotalDictionaryWords())
+
+    /**
+     * Barre de progression vers le palier suivant, ou `null` au plus haut
+     * niveau. Partagée par l'accueil et « Kréyòl an mwen », qui doivent montrer
+     * la même chose.
+     */
+    private fun creerBarreNiveau(motsDecouverts: Int): View? {
+        val index = getCurrentLevelIndex(motsDecouverts)
+        if (index == CreoleLevels.MAX_INDEX) return null
+        val seuils = calculateGaussianThresholds()
+        val depuis = seuils[index]
+        val etape = (seuils[index + 1] - depuis).coerceAtLeast(1)
+        val fait = (motsDecouverts - depuis).coerceIn(0, etape)
+        return ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = etape
+            progress = fait
+            progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0E6E76"))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#DDE6E7"))
+            layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, enDp(10)).apply {
+                topMargin = enDp(8); bottomMargin = enDp(8)
+            }
+            contentDescription = "${nombre(fait)} mots sur ${nombre(etape)} jusqu'au niveau suivant"
+        }
+    }
+
+    /**
+     * La ligne qui remplace, sur l'accueil du jour, toute la configuration :
+     * elle la déplie et la replie sur place.
+     */
+    private fun ligneConfiguration(volet: LinearLayout): LinearLayout {
+        val fleche = texteAccueil("›", 22f, Color.parseColor("#6B6B6B"))
+        return carteAccueil(Color.WHITE).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(texteAccueil("✅", 20f, Color.BLACK).apply { setPadding(0, 0, enDp(12), 0) })
+            addView(LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                addView(texteAccueil("Clavier installé", 16f, Color.parseColor("#1C1C1C"), gras = true))
+                addView(texteAccueil("Configuration, correcteur, changer de clavier", 13f,
+                    Color.parseColor("#6B6B6B")))
+            })
+            addView(fleche)
+            setOnClickListener {
+                val ouvrir = volet.visibility != View.VISIBLE
+                volet.visibility = if (ouvrir) View.VISIBLE else View.GONE
+                fleche.rotation = if (ouvrir) 90f else 0f
+            }
+        }
     }
 
     /**
@@ -1372,6 +1683,9 @@ class SettingsActivity : AppCompatActivity() {
     /** Conversion en pixels d'une dimension exprimée en dp. */
     private fun enDp(valeur: Int): Int = (valeur * resources.displayMetrics.density).toInt()
 
+    /** Entier avec l'espace des milliers : « 5 296 » et non « 5296 ». */
+    private fun nombre(n: Int): String = AccueilDuJour.nombre(n)
+
     /**
      * Une couleur `#RRGGBB` reprise avec l'opacité demandée.
      *
@@ -1393,7 +1707,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun aEcritUnMot(): Boolean = onboardingPrefs().contains("funnel_first_word")
 
     /**
-     * Carte à coins arrondis, réservée à l'onglet Démarrage. [createCard] reste
+     * Carte à coins arrondis, réservée à l'onglet Dékolaj. [createCard] reste
      * la carte carrée utilisée par tous les autres onglets : les arrondir tous
      * d'un coup dépasserait ce qui a été demandé ici.
      */
@@ -2717,12 +3031,12 @@ class SettingsActivity : AppCompatActivity() {
             mainLayout, "#E3F2FD", "📲 Installation et activation",
             "Le clavier doit être activé puis sélectionné avant de pouvoir l'utiliser, comme " +
                     "n'importe quel clavier tiers sur Android. Ces étapes interactives sont aussi " +
-                    "disponibles dans l'onglet « Démarrage » ; voici à quoi elles ressemblent."
+                    "disponibles dans l'onglet « Dékolaj » ; voici à quoi elles ressemblent."
         )
 
         addGuideSection(
             mainLayout, "#FFFFFF", "1️⃣ Ouvrir les paramètres de clavier",
-            "Depuis l'onglet Démarrage, le bouton « Ouvrir les réglages Android » mène directement " +
+            "Depuis l'onglet Dékolaj, le bouton « Ouvrir les réglages Android » mène directement " +
                     "à l'écran système « Clavier à l'écran », où « Klavyé Kréyòl Karukéra » apparaît " +
                     "à côté des autres claviers installés, interrupteur éteint."
         )
@@ -2748,7 +3062,7 @@ class SettingsActivity : AppCompatActivity() {
         addGuideSection(
             mainLayout, "#F0F8E8", "✅ Configuration terminée",
             "Ces deux étapes faites, le clavier Kréyòl s'affiche partout où vous tapez, y compris " +
-                    "dans le champ d'essai de l'onglet Démarrage. Un appui long sur la barre d'espace " +
+                    "dans le champ d'essai de l'onglet Dékolaj. Un appui long sur la barre d'espace " +
                     "permet de rebasculer vers un autre clavier à tout moment."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_install_done, "Les trois étapes cochées, clavier actif dans le champ d'essai")
@@ -2778,8 +3092,8 @@ class SettingsActivity : AppCompatActivity() {
 
         addGuideSection(
             mainLayout, "#F0F8E8", "✅ Correction orthographique partout",
-            "Activez le correcteur Kréyòl dans les paramètres système : onglet Démarrage, carte " +
-                    "« Corriger l'orthographe partout », sous « Pou ay pli lwen ». Vos mots créoles " +
+            "Activez le correcteur Kréyòl dans les paramètres système : onglet Dékolaj, " +
+                    "« Clavier installé », carte « Corriger l'orthographe partout », sous « Pou ay pli lwen ». Vos mots créoles " +
                     "et français cessent alors d'être soulignés en rouge dans Messages, Notes et " +
                     "les autres applications."
         )
@@ -2818,7 +3132,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         val faqText = TextView(this).apply {
             text = "Le clavier créole n'apparaît pas quand je tape ?\n" +
-                    "→ Vérifiez qu'il est bien sélectionné (pas seulement activé) : onglet Démarrage, " +
+                    "→ Vérifiez qu'il est bien sélectionné (pas seulement activé) : onglet Dékolaj, " +
                     "étape 2, ou touchez l'icône de clavier de la barre de navigation, en bas de " +
                     "l'écran, pendant que vous écrivez.\n\n" +
                     "Comment revenir à un autre clavier ponctuellement ?\n" +
@@ -3205,7 +3519,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /**
-     * Carte « Revenir au clavier kréyòl », en tête de l'onglet Démarrage quand
+     * Carte « Revenir au clavier kréyòl », en tête de l'onglet Dékolaj quand
      * le clavier est installé mais qu'un autre est en service.
      *
      * Elle existe parce qu'Android ne laisse pas un clavier se réactiver
@@ -3363,23 +3677,64 @@ class SettingsActivity : AppCompatActivity() {
             setPadding(24, 24, 24, 40)
         }
         
-        // Message de progression vers le niveau suivant
+        // 22.5.0 (repris de LuxKeyb 29.3.0) : l'écran s'ouvrait sur « 0.0% » en
+        // très gros et « 7 mots découverts sur les 5296 mots » : pour qui
+        // débute, lire qu'il ne sait rien. On montre d'abord le niveau, puis le
+        // chemin jusqu'au palier suivant, seul objectif à portée ; la part du
+        // dictionnaire entier passe en petit, sans pourcentage tant qu'il ne
+        // dépasse pas 1 %.
+        val levelBadge = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(24, 16, 24, 16)
+        }
+
+        val levelEmojiText = TextView(this).apply {
+            text = levelEmoji
+            textSize = 48f
+            setPadding(0, 0, 16, 0)
+        }
+
+        val levelNameText = TextView(this).apply {
+            text = levelName
+            textSize = 28f
+            setTextColor(Color.parseColor("#1C1C1C"))
+            setTypeface(null, Typeface.BOLD)
+        }
+
+        levelBadge.addView(levelEmojiText)
+        levelBadge.addView(levelNameText)
+        levelContainer.addView(levelBadge)
+
+        creerBarreNiveau(stats.wordsDiscovered)?.let { barre ->
+            levelContainer.addView(FrameLayout(this).apply {
+                setPadding(enDp(24), 0, enDp(24), 0)
+                addView(barre)
+            })
+        }
+
         val progressMessage = TextView(this).apply {
-            text = if (wordsRemaining > 0) {
-                "Votre niveau actuel est $levelName, plus que $wordsRemaining mot${if (wordsRemaining > 1) "s" else ""} restant${if (wordsRemaining > 1) "s" else ""} à découvrir pour passer au niveau suivant ($nextLevelName)"
-            } else if (levelName == "Benzo") {
-                "Vous avez atteint le niveau maximum : $levelName ! 👑"
-            } else {
-                "Votre niveau actuel est $levelName"
-            }
-            textSize = 16f
-            setTextColor(Color.parseColor("#666666"))
+            text = phraseProgression(stats.wordsDiscovered)
+            textSize = 17f
+            setTextColor(Color.parseColor("#1C1C1C"))
+            gravity = Gravity.CENTER
+            setPadding(16, 8, 16, 8)
+        }
+        levelContainer.addView(progressMessage)
+
+        val totalWords = stats.totalWords
+        val part = if (totalWords > 0) stats.wordsDiscovered * 100.0 / totalWords else 0.0
+        val percentageLabel = TextView(this).apply {
+            val mots = "${nombre(stats.wordsDiscovered)} mot${if (stats.wordsDiscovered > 1) "s" else ""} " +
+                "découvert${if (stats.wordsDiscovered > 1) "s" else ""} " +
+                "sur les ${nombre(totalWords)} du dictionnaire kréyòl"
+            text = if (part >= 1.0) "$mots (${part.toInt()} %)" else mots
+            textSize = 14f
+            setTextColor(Color.parseColor("#777777"))
             gravity = Gravity.CENTER
             setPadding(16, 0, 16, 24)
-            setLineSpacing(6f, 1f)
         }
-        
-        levelContainer.addView(progressMessage)
+        levelContainer.addView(percentageLabel)
 
         // Partage permanent de la carte de niveau. Jusqu'ici, shareLevelCard()
         // n'était atteignable que par le bouton de la boîte de célébration :
@@ -3397,7 +3752,7 @@ class SettingsActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = 24 }
+            )
             setOnClickListener {
                 try {
                     shareLevelCard(
@@ -3416,48 +3771,6 @@ class SettingsActivity : AppCompatActivity() {
         }
         levelContainer.addView(shareLevelButton)
 
-        val levelBadge = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(24, 16, 24, 16)
-        }
-        
-        val levelEmojiText = TextView(this).apply {
-            text = levelEmoji
-            textSize = 48f
-            setPadding(0, 0, 16, 0)
-        }
-        
-        val levelNameText = TextView(this).apply {
-            text = levelName
-            textSize = 28f
-            setTextColor(Color.parseColor("#1C1C1C"))
-            setTypeface(null, Typeface.BOLD)
-        }
-        
-        levelBadge.addView(levelEmojiText)
-        levelBadge.addView(levelNameText)
-        
-        val percentageText = TextView(this).apply {
-            text = "${String.format("%.1f", stats.coveragePercentage)}%"
-            textSize = 32f
-            setTextColor(Color.parseColor("#1C1C1C"))
-            setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            setPadding(0, 16, 0, 8)
-        }
-        
-        val percentageLabel = TextView(this).apply {
-            text = "${stats.wordsDiscovered} mots découverts sur les ${stats.totalWords} mots du dictionnaire Kréyòl"
-            textSize = 14f
-            setTextColor(Color.parseColor("#999999"))
-            gravity = Gravity.CENTER
-        }
-        
-        levelContainer.addView(levelBadge)
-        levelContainer.addView(percentageText)
-        levelContainer.addView(percentageLabel)
-        
         // === Mot du Jour - Design épuré ===
         val (wordOfDay, usageCount) = getWordOfTheDay()
         
@@ -7649,6 +7962,17 @@ class SettingsActivity : AppCompatActivity() {
         override fun onResume() {
             super.onResume()
             majBanniereCarnet()
+            // Un jeu demandé depuis l'accueil (« Rejouer », « Réviser maintenant »)
+            val activite = activity as? SettingsActivity ?: return
+            activite.jeuDemande?.let { nom ->
+                val revision = activite.revisionDemandee
+                activite.jeuDemande = null
+                activite.revisionDemandee = false
+                jeux.firstOrNull { it.nom == nom }?.let { jeu ->
+                    if (revision && nom == JEU_SONJE) ouvrirLeJeu(jeu, BoiteFragment.pourRevision())
+                    else ouvrirLeJeu(jeu)
+                }
+            }
         }
 
         private fun carteJeu(activity: SettingsActivity, jeu: Jeu, marginDroite: Boolean) =
@@ -7693,10 +8017,13 @@ class SettingsActivity : AppCompatActivity() {
                 setOnClickListener { ouvrirLeJeu(jeu) }
             }
 
-        private fun ouvrirLeJeu(jeu: Jeu) {
+        private fun ouvrirLeJeu(jeu: Jeu, fragment: Fragment = jeu.fabrique()) {
             val conteneur = conteneurJeu ?: return
+            // Sonjé a sa propre carte sur l'accueil : seul un jeu devient
+            // « votre dernier jeu »
+            if (jeu.nom != JEU_SONJE) (activity as? SettingsActivity)?.retenirDernierJeu(jeu.emoji, jeu.nom)
             childFragmentManager.beginTransaction()
-                .replace(conteneur.id, jeu.fabrique())
+                .replace(conteneur.id, fragment)
                 .commit()
             grilleChoix?.visibility = View.GONE
             conteneur.visibility = View.VISIBLE
@@ -8971,8 +9298,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Fragment « Wierderbuch » : un champ de saisie et une liste de résultats.
-    // C'est le seul onglet qui ne joue à rien — on y cherche un mot, dans un
     // Fragment « Dictionnaire » : un champ de saisie et une liste de résultats.
     // C'est le seul onglet qui ne joue à rien — on y cherche un mot, dans un
     // sens ou dans l'autre, et on lit ce qu'il veut dire.
@@ -9099,6 +9424,18 @@ class SettingsActivity : AppCompatActivity() {
             return racine
         }
 
+        override fun onResume() {
+            super.onResume()
+            // Un mot demandé depuis l'accueil (le mot du jour) : le champ le
+            // reçoit, la recherche part comme si on l'avait tapé.
+            val activite = activity as? SettingsActivity ?: return
+            activite.rechercheDemandee?.let { mot ->
+                activite.rechercheDemandee = null
+                champRecherche.setText(mot)
+                champRecherche.setSelection(mot.length)
+            }
+        }
+
         /**
          * Affiche les résultats d'une requête, ou l'invite quand elle est vide.
          *
@@ -9112,15 +9449,18 @@ class SettingsActivity : AppCompatActivity() {
             val activity = activity as? SettingsActivity ?: return
             conteneurResultats.removeAllViews()
 
-            if (requete.trim().length < 2) {
+            // Débarrassée de ce que le clavier ou le doigt ajoutent autour du
+            // mot : « kaz. » cherchait « kaz. » et ne trouvait rien
+            val nettoyee = TranslationDictionary.nettoyerRequete(requete)
+            if (nettoyee.length < 2) {
                 tvEtat.text = "Entrez au moins deux lettres. " +
                         "${TranslationDictionary.taille(activity)} mots traduits."
                 return
             }
 
-            val resultats = TranslationDictionary.rechercher(activity, requete)
+            val resultats = TranslationDictionary.rechercher(activity, nettoyee)
             if (resultats.isEmpty()) {
-                tvEtat.text = "Aucun résultat pour « ${requete.trim()} ».\n" +
+                tvEtat.text = "Aucun résultat pour « $nettoyee ».\n" +
                         "Le dictionnaire est encore jeune : beaucoup de mots " +
                         "kréyòl n'ont pas encore de traduction publiée sous " +
                         "licence libre."
@@ -9175,7 +9515,7 @@ class SettingsActivity : AppCompatActivity() {
                 })
             })
 
-            // Le chevron des liens de référence de l'onglet Démarrage : c'est
+            // Le chevron des liens de référence de l'onglet Dékolaj : c'est
             // déjà, ailleurs dans l'application, ce qui annonce qu'une ligne
             // ouvre quelque chose.
             addView(TextView(activity).apply {

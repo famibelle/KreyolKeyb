@@ -5,6 +5,44 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.5.0] - 2026-09-30
+
+L'application s'ouvre sur la journée, la révision se lance d'un toucher, la progression encourage.
+
+### ✨ Ajouté
+
+- **L'onglet d'accueil s'appelle « Dékolaj ».** Tant que le clavier n'est pas
+  installé, il mène l'installation, comme avant.
+- **Une fois le clavier installé, l'application s'ouvre sur votre journée** :
+  les cartes à revoir, le mot du jour, votre dernier jeu et votre progression,
+  dans cet ordre.
+- **« Réviser maintenant » lance Sonjé tout de suite.** La première carte
+  apparaît sans passer par la boîte ; en fermant la séance, on retrouve la
+  boîte. Quand rien n'est à revoir, la carte le dit, et propose de jouer pour
+  gagner d'autres cartes.
+- **Le mot du jour s'ouvre dans le Dictionnaire** d'un toucher, la recherche
+  déjà faite.
+- **« Rejouer à… »** relance le dernier jeu ouvert, quel qu'il soit.
+- **La configuration se replie sous une seule ligne**, « Clavier installé » :
+  un toucher la déplie, avec le correcteur et la façon de changer de clavier.
+
+### 🔄 Changé
+
+- **« Kréyòl an mwen » encourage au lieu de décourager.** Le niveau vient en
+  premier, avec une barre jusqu'au palier suivant et « Encore 79 mots avant
+  Ti moun », à la place d'un « 0.0% » en très gros. Le huitième niveau garde
+  son secret : il n'est jamais nommé avant d'être atteint.
+
+### 🐛 Corrigé
+
+- **Le Dictionnaire ignore la ponctuation autour du mot cherché** : « kaz. »
+  trouve « kaz ».
+
+### 🔒 Confidentialité
+
+- **Le dernier jeu ouvert reste sur le téléphone.** Il n'est ni sauvegardé
+  dans le cloud, ni emporté lors d'un transfert vers un nouveau téléphone.
+
 ## [22.4.0] - 2026-09-30
 
 Le clavier suit le champ : Entrée montre son action, majuscules dans le navigateur, symboles sur 123.

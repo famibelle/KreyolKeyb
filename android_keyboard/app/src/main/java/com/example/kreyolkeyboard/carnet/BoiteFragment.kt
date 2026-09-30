@@ -112,6 +112,14 @@ class BoiteFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, retour)
         chargerEnFond()
+
+        // Une seule fois : l'argument est consommé, pour qu'un retour sur la
+        // boîte (fin de séance, recréation) ne relance pas une séance de plus.
+        // Rien à revoir, et c'est la boîte seule qui s'affiche.
+        if (savedInstanceState == null && arguments?.getBoolean(ARG_REVISION_DIRECTE) == true) {
+            arguments?.remove(ARG_REVISION_DIRECTE)
+            if (Carnet.aRevoir(requireContext()) > 0) view.post { if (isAdded) lancerRevision() }
+        }
     }
 
     private fun majRetour() {
@@ -366,8 +374,20 @@ class BoiteFragment : Fragment() {
             .withEndAction { racine.removeView(voile) }.start()
     }
 
-    private companion object {
+    companion object {
         /** Le côté d'un recto dans la boîte, en dp : environ une fois et demie la fente. */
-        const val COTE_RECTO = 64f
+        private const val COTE_RECTO = 64f
+        private const val ARG_REVISION_DIRECTE = "revision_directe"
+
+        /**
+         * La boîte, séance de Sonjé lancée dès l'ouverture. C'est ce qu'ouvre
+         * « Réviser maintenant » sur l'accueil : l'utilisateur a déjà dit ce
+         * qu'il voulait, lui refaire toucher le bouton de révision dans la
+         * boîte serait une étape pour rien. La boîte reste derrière la séance
+         * et reprend la main à la fin, comme après une révision lancée d'ici.
+         */
+        fun pourRevision(): BoiteFragment = BoiteFragment().apply {
+            arguments = Bundle().apply { putBoolean(ARG_REVISION_DIRECTE, true) }
+        }
     }
 }
