@@ -40,6 +40,51 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "22.5.0": [
+        {
+            "emoji": "🏠",
+            "title": "L'application s'ouvre sur votre journée",
+            "description": (
+                "Le premier onglet s'appelle désormais « Dékolaj ». Une fois "
+                "le clavier installé, il montre d'un coup d'œil les cartes à "
+                "revoir, le mot du jour, votre dernier jeu et votre "
+                "progression. « Réviser maintenant » lance Sonjé tout de "
+                "suite, le mot du jour s'ouvre dans le Dictionnaire, et "
+                "« Rejouer à… » relance votre dernier jeu. La configuration "
+                "du clavier se replie sous une seule ligne."
+            ),
+            "image": "Screenshots/nouveaute_22.5.0_dekolaj.png",
+            "image_alt": (
+                "L'onglet Dékolaj le mercredi 30 septembre. Une carte violette "
+                "annonce « 5 cartes à revoir » avec le bouton « Réviser "
+                "maintenant ». Le mot du jour est siwvwè, en français : si. "
+                "Suivent « Rejouer à Mokwaré », le niveau Pipirit avec "
+                "« Encore 79 mots avant Ti moun », et la ligne « Clavier "
+                "installé »."
+            ),
+        },
+    ],
+    "22.4.0": [
+        {
+            "emoji": "↩️",
+            "title": "La touche Entrée montre ce qu'elle va faire",
+            "description": (
+                "Une loupe pour chercher, une flèche d'envoi, une flèche pour "
+                "passer au champ suivant, une coche pour terminer. Le clavier "
+                "suit aussi la page que vous remplissez : majuscule à chaque "
+                "mot dans un champ de nom, aucune quand la page n'en veut "
+                "pas. La page 123 gagne des symboles (%, °, $, £, ±, ≠…), et "
+                "dans une adresse, rester appuyé sur le point propose « .com », "
+                "« .fr » et « .gp »."
+            ),
+            "image": "Screenshots/nouveaute_22.4.0_entree_loupe.png",
+            "image_alt": (
+                "Le clavier ouvert sur la recherche des réglages du téléphone : "
+                "la touche Entrée verte, en bas à droite, affiche une loupe "
+                "au lieu de la flèche de retour à la ligne."
+            ),
+        },
+    ],
     "22.2.0": [
         {
             "emoji": "🔒",
