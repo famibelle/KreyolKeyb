@@ -120,7 +120,7 @@ en a fait un entretien : « Si le créole guadeloupéen n'existe pas, petit à
 petit, on s'efface ». Les extraits sont dans le [dossier de
 presse](presskit.html).
 
-Et ceux qui l'utilisent : **4,35 sur 5** sur Google Play, pour 52 avis.
+Et ceux qui l'utilisent : **4,4 sur 5** sur Google Play, pour 55 avis.
 
 <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:18px 0;">
   <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
@@ -137,7 +137,7 @@ Et ceux qui l'utilisent : **4,35 sur 5** sur Google Play, pour 52 avis.
   </div>
 </div>
 
-<small>Avis publiés sur la fiche Google Play, où [les 52 sont
+<small>Avis publiés sur la fiche Google Play, où [les 55 sont
 consultables](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr).
 Cités sans leurs auteurs.</small>
 

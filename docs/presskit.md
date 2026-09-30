@@ -56,7 +56,7 @@ lang: fr
 
 # Dossier de presse : Klavyé Kréyòl Karukera
 
-*Dernière mise à jour : 22 septembre 2026*
+*Dernière mise à jour : 30 septembre 2026*
 
 ## En une phrase
 
@@ -145,7 +145,7 @@ claviers standards.
 
 ## Ce qu'en disent les utilisateurs
 
-Sur Google Play, l'application est notée **4,35 sur 5** pour **52 avis**, et
+Sur Google Play, l'application est notée **4,4 sur 5** pour **55 avis**, et
 compte <span id="pk-users-2">3 356</span> installations. Trois avis récents,
 cités sans leurs auteurs :
 
@@ -166,7 +166,7 @@ cités sans leurs auteurs :
 
 <small>Avis publiés sur la
 [fiche Google Play](https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&hl=fr),
-où les 52 sont consultables. Note et nombre d'avis relevés le 22 septembre
+où les 55 sont consultables. Note et nombre d'avis relevés le 30 septembre
 2026.</small>
 
 ## Angles possibles
@@ -428,7 +428,7 @@ Les suggestions s'appuient sur les œuvres de :
 | Comparatif | [Quel clavier pour écrire en kréyòl ?](comparatif.html), en étoiles, et le [détail ligne par ligne](comparatif_d%C3%A9taill%C3%A9s.html) avec ses sources |
 | Jeux | 6 jeux de vocabulaire, un carnet de 622 cartes à collectionner, révision espacée |
 | Utilisateurs | <span id="pk-users">3 356</span> installations au <span id="pk-date">19 septembre 2026</span> (chiffre exact de la Play Console, [progression publique](jauge.html)) |
-| Note des utilisateurs | 4,35 sur 5 pour 52 avis sur Google Play (relevé le 22 septembre 2026) |
+| Note des utilisateurs | 4,4 sur 5 pour 55 avis sur Google Play (relevé le 30 septembre 2026) |
 | Usage scolaire | Langue vivante régionale, de l'école au lycée ([détail](partenaires.html#lvr)) |
 | Partenariats | [Partenariats institutionnels](partenaires.html) |
 
