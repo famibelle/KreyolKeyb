@@ -5,6 +5,48 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.4.0] - 2026-09-30
+
+Le clavier suit le champ : Entrée montre son action, majuscules dans le navigateur, symboles sur 123.
+
+### ✨ Ajouté
+
+- **La touche Entrée montre ce qu'elle va faire** : une loupe pour chercher,
+  une flèche d'envoi, une flèche pour passer au champ suivant, une coche pour
+  terminer. Ailleurs elle garde sa flèche de retour à la ligne. Le lecteur
+  d'écran l'annonce de la même façon (« Rechercher », « Envoyer »…).
+- **De nouveaux symboles sur la page 123.** « % » a sa touche, à la place de
+  « & », qui passe dessous. En restant appuyé : « _ » sous le tiret,
+  « $ £ ¥ » sous l'euro, « ° » sous le 0 et l'étoile, crochets et accolades
+  sous les parenthèses, « « » » sous les guillemets, « \ | » sous la barre
+  oblique, « ± × ÷ » sous le plus, « ≠ ~ ^ » sous le égal.
+- **Dans une adresse e-mail ou web, rester appuyé sur le point** propose
+  « .com », « .fr », « .gp » et « .org », toujours en minuscules.
+
+### 🐛 Corrigé
+
+- **Dans Chrome et les pages web, le clavier suit la demande de la page** :
+  majuscule en début de phrase, à chaque mot dans un champ de nom, et aucune
+  quand la page n'en veut pas. Il en mettait une partout, même là.
+- **Dans un champ de nom, chaque mot prend sa majuscule** (prénom composé,
+  ville), et un champ qui demande des capitales les met partout.
+- **Le prénom de Google Contacts et les champs du même genre** sont reconnus
+  comme des noms : ils se déclarent d'une façon que le clavier lisait comme du
+  texte quelconque.
+- **La touche Maj s'allume dès l'ouverture d'un champ** qui commence par une
+  majuscule. La première lettre sortait déjà en majuscule, mais le clavier
+  affichait des minuscules jusque-là.
+- **Un champ de chiffres s'ouvre sur les chiffres même après un champ quitté
+  en mode 123**, et la touche « 123 » répond alors du premier coup.
+- **Le tiret, l'apostrophe, la parenthèse fermante et « … » se collent au mot
+  après une suggestion**, comme la virgule et le point : toucher « ba » puis
+  « - » donne « ba-w » et non plus « ba -w ». Les textes kréyòl collent le
+  tiret au mot 7 566 fois contre 11.
+- **Un signe choisi en restant appuyé** (« ? » ou « … » sous le point)
+  n'apparaît plus dans les emojis récents.
+- **Une saisie déclarée non mémorisable** (navigation privée) ne sert plus de
+  contexte aux prédictions du mot suivant.
+
 ## [22.3.0] - 2026-09-20
 
 ### ✨ Ajouté

@@ -57,6 +57,22 @@ object EmojiRecents {
     private const val SEPARATEUR = "\u001F"
 
     /**
+     * Premier point de code d'un emoji tel que la popup d'appui long peut en
+     * proposer : tout ce qu'elle offre en dessous est ponctuation ou symbole
+     * (« ? » sous le point, « ° » sous le 0), et les tons de peau sont tous
+     * au-dessus (☝ U+261D est le plus bas).
+     */
+    private const val PREMIER_POINT_DE_CODE_EMOJI = 0x2600
+
+    /**
+     * Ce choix d'appui long est-il un emoji, qui a sa place dans les récents ?
+     * Jusqu'en 22.3.0 tout ce qui n'était pas une lettre y entrait, si bien
+     * qu'un « ? » choisi sous le point apparaissait parmi les emojis.
+     */
+    fun estUnEmoji(choix: String): Boolean =
+        choix.isNotEmpty() && choix.codePointAt(0) >= PREMIER_POINT_DE_CODE_EMOJI
+
+    /**
      * Faux dans un champ dont le contenu ne doit rien laisser derrière lui.
      *
      * Le service le remet à jour à chaque prise de focus, comme

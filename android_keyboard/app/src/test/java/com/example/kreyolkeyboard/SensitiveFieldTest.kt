@@ -93,4 +93,28 @@ class SensitiveFieldTest {
         val numeroTelephone = InputType.TYPE_CLASS_PHONE
         assertFalse(sensitive(numeroTelephone))
     }
+
+    @Test
+    fun `un mot de passe de page web garde sa protection avec les drapeaux du navigateur`() {
+        // Chrome ajoute à ses champs le drapeau de correction automatique : il
+        // ne doit pas masquer la variation mot de passe
+        val motDePasseWeb = InputType.TYPE_CLASS_TEXT or
+            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD or InputType.TYPE_TEXT_FLAG_AUTO_CORRECT
+        assertTrue(sensitive(motDePasseWeb))
+    }
+
+    @Test
+    fun `un mot de passe ne propose ni ne retient aucun mot`() {
+        // onWordChanged lit proposeDesMots, onWordCompleted lit en plus
+        // isSensitiveField : les deux doivent dire non pour un mot de passe
+        listOf(
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+            InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        ).forEach {
+            assertFalse(FieldKind.de(it).proposeDesMots)
+            assertTrue(sensitive(it))
+        }
+    }
 }

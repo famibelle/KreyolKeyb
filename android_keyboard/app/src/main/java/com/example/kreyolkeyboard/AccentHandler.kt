@@ -75,8 +75,58 @@ class AccentHandler(private val context: Context) {
         // vivaient sous l'appui long de "'" disparaissent avec elle (aucun
         // usage relevé dans les dictionnaires non plus).
         "," to listOf(";", ":", "'"),
-        "." to listOf("!", "?", "…")
+        "." to listOf("!", "?", "…"),
+        // Page 123 (v22.4.0, repris de LuxKeyb 29.3.0). C'est la seule page de
+        // symboles du clavier, et il y manquait de quoi écrire une adresse
+        // (« _ »), une température (« ° »), un prix en dollars ou en livres, des
+        // crochets. Rangés en appui long sous la touche la plus proche par la
+        // forme ou le sens, plutôt que sur une seconde page : l'aperçu en coin
+        // les rend visibles sans rien retirer aux touches existantes. Aucune de
+        // ces touches n'avait d'appui long. Le « - » de la rangée des lettres
+        // partage l'entrée et gagne « _ » au passage.
+        "-" to listOf("_", "–"),
+        "/" to listOf("\\", "|"),
+        "(" to listOf("[", "{", "<"),
+        ")" to listOf("]", "}", ">"),
+        "€" to listOf("$", "£", "¥"),
+        "%" to listOf("&", "‰"),
+        // Le kréyòl s'écrit avec la typographie française : « » d'abord
+        "\"" to listOf("«", "»", "„"),
+        "=" to listOf("≠", "~", "^"),
+        "+" to listOf("±", "×", "÷"),
+        "*" to listOf("°", "•"),
+        "0" to listOf("°")
     )
+
+    /**
+     * Terminaisons proposées en appui long sur « . » dans une adresse
+     * électronique ou web, à la place de « ! ? … » qui n'y ont rien à faire.
+     * `.com` et `.fr` d'abord, de loin les plus tapées en Guadeloupe ; `.gp`
+     * ensuite, le domaine de l'île. Toujours en minuscules, Maj ou pas.
+     */
+    private val TERMINAISONS_ADRESSE = listOf(".com", ".fr", ".gp", ".org")
+
+    /**
+     * Le champ courant est une adresse (courriel ou web) : l'appui long sur
+     * « . » y propose les terminaisons de domaine. Posé par le service à chaque
+     * prise de focus, avant la construction de la vue, pour que l'aperçu en coin
+     * suive.
+     */
+    var champAdresse: Boolean = false
+
+    /** Options d'appui long de [key] dans le champ courant, `null` s'il n'en a pas. */
+    private fun optionsDe(key: String): List<String>? {
+        if (champAdresse && key == ".") return TERMINAISONS_ADRESSE
+        return accentMap[key.lowercase()] ?: emojiSkinTones[key]
+    }
+
+    /**
+     * Une option d'appui long suit la touche Maj, sauf une terminaison
+     * d'adresse : « .COM » serait juste en théorie et faux à l'œil. Les
+     * digraphes (« ch », « dj ») gardent leur passage en capitales.
+     */
+    private fun casse(option: String): String =
+        if (isCapitalMode && !option.startsWith(".")) option.uppercase() else option
 
     // Ordre d'affichage des aperçus en coin, quand il doit différer de l'ordre
     // du popup d'appui long (v8.7.0) : "e" affiche "è" en haut-droit et "é" en
@@ -123,7 +173,7 @@ class AccentHandler(private val context: Context) {
      * V├®rifie si une touche a des accents disponibles
      */
     fun hasAccents(key: String): Boolean {
-        return accentMap.containsKey(key.lowercase()) || emojiSkinTones.containsKey(key)
+        return optionsDe(key) != null
     }
     
     /**
@@ -170,7 +220,7 @@ class AccentHandler(private val context: Context) {
      * Affiche la popup d'accents pour une touche de base
      */
     fun showAccentPopup(baseKey: String, anchorButton: View) {
-        val accents = accentMap[baseKey.lowercase()] ?: emojiSkinTones[baseKey] ?: return
+        val accents = optionsDe(baseKey) ?: return
         
         // Fermer la popup existante si elle existe
         dismissAccentPopup()
@@ -258,8 +308,19 @@ class AccentHandler(private val context: Context) {
     private fun createAccentButton(accent: String, isBase: Boolean): Button {
         return Button(context).apply {
             // Appliquer la majuscule si le mode est actif
-            text = if (isCapitalMode) accent.uppercase() else accent
-            textSize = 18f
+            text = casse(accent)
+            // Une terminaison d'adresse (« .com ») tient sur une ligne dans les
+            // 48 dp de la case : plus petite, et sans la marge interne du bouton
+            // (un emoji à ton de peau fait aussi plusieurs caractères : le
+            // critère est le point initial, pas la longueur)
+            val terminaison = accent.startsWith(".") && accent.length > 1
+            textSize = if (terminaison) 14f else 18f
+            if (terminaison) {
+                setPadding(0, 0, 0, 0)
+                minWidth = 0
+                isAllCaps = false
+                maxLines = 1
+            }
             setTextColor(
                 KeyboardTheme.palette().let { if (isBase) it.popupBaseEncre else it.popupAccentEncre }
             )
@@ -315,7 +376,7 @@ class AccentHandler(private val context: Context) {
     private fun handleAccentSelection(accent: String) {
         val baseChar = currentBaseCharacter ?: ""
         // Appliquer la majuscule si le mode est actif
-        val finalAccent = if (isCapitalMode) accent.uppercase() else accent
+        val finalAccent = casse(accent)
         accentListener?.onAccentSelected(finalAccent, baseChar)
         dismissAccentPopup()
         currentBaseCharacter = null  // Nettoyer après usage
@@ -372,7 +433,7 @@ class AccentHandler(private val context: Context) {
             else -> ""
         }
         
-        val accentCount = accentMap[baseKey]?.size ?: 0
+        val accentCount = optionsDe(baseKey)?.size ?: 0
         val totalButtons = accentCount + 1 // +1 pour la touche de base
         val popupWidth = totalButtons * buttonWidth + dpToPx(16) // +padding
         
@@ -385,7 +446,7 @@ class AccentHandler(private val context: Context) {
      * Obtient tous les accents disponibles pour une touche
      */
     fun getAccentsForKey(key: String): List<String> {
-        return accentMap[key.lowercase()] ?: emojiSkinTones[key] ?: emptyList()
+        return optionsDe(key) ?: emptyList()
     }
 
     /**
@@ -394,6 +455,8 @@ class AccentHandler(private val context: Context) {
      * popup d'appui long, voir cornerHintOverrides)
      */
     fun getCornerHintsForKey(key: String): List<String> {
+        // « .com » dans un coin de touche serait illisible : pas d'aperçu
+        if (champAdresse && key == ".") return emptyList()
         return cornerHintOverrides[key.lowercase()] ?: getAccentsForKey(key)
     }
 

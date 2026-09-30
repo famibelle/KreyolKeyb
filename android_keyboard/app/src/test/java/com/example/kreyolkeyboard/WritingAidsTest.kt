@@ -77,4 +77,18 @@ class WritingAidsTest {
         assertFalse(retire("bonjou, ", "."))
         assertFalse(retire("mot  ", ","))
     }
+
+    @Test
+    fun `ce que le corpus colle au mot retire aussi l'espace`() {
+        // Le tiret de l'élision (« ba-w »), l'apostrophe, la parenthèse
+        // fermante et « … », qui arrive par l'appui long sur le point
+        assertTrue(retire("ba ", "-"))
+        assertTrue(retire("l ", "'"))
+        assertTrue(retire("l ", "’"))
+        assertTrue(retire("bonjou ", ")"))
+        assertTrue(retire("bonjou ", "…"))
+        // Ce qui ouvre quelque chose ne se colle pas
+        assertFalse(retire("bonjou ", "("))
+        assertFalse(retire("bonjou ", "«"))
+    }
 }

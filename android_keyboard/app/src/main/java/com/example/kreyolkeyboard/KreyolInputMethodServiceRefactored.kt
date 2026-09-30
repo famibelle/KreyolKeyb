@@ -819,7 +819,13 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         if (inputConnection != null) {
             val textBefore = inputConnection.getTextBeforeCursor(10, 0)?.toString() ?: ""
             Log.d(TAG, "📝 Texte avant accent: '$textBefore'")
-            
+
+            // Un signe choisi en appui long (« … » sous le point) retire l'espace
+            // qu'une suggestion vient de poser, exactement comme s'il avait été
+            // tapé sur sa propre touche ; dans tous les cas cet espace n'est plus
+            // « en attente » pour la touche suivante
+            inputProcessor.preparerInsertion(accent, inputConnection)
+
             // ✅ BUG FIX CORRECT: Ajouter l'accent directement 
             // Le caractère de base n'a pas été ajouté à cause de l'appui long
             inputConnection.commitText(accent, 1)
@@ -842,12 +848,17 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
                 // "ch"...) n'obtenait jamais de propositions.
                 inputProcessor.setCurrentWord(updatedWord)
                 Log.d(TAG, "✅ Mot mis à jour: '$currentWord' + '$accent' → '$updatedWord'")
-            } else {
+            } else if (EmojiRecents.estUnEmoji(accent)) {
                 // Un emoji, donc un ton de peau choisi en appui long dans le
                 // panneau : il ne passe pas par onEmojiSelected, il faut le
                 // retenir ici sans quoi la variante choisie ne rejoindrait
                 // jamais les récents, seule la variante par défaut le ferait.
                 EmojiRecents.enregistrer(this, accent)
+                inputProcessor.finalizeCurrentWordFromEmoji()
+            } else {
+                // Ponctuation ou symbole (« ? », « & », « ° », « .com »…) : il
+                // clôt le mot comme sur sa propre touche, et n'a rien à faire
+                // dans les emojis récents, où il atterrissait jusqu'ici.
                 inputProcessor.finalizeCurrentWordFromEmoji()
             }
             
@@ -885,6 +896,10 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // Ni suggestion ni historique de mots hors du texte courant : un mot de
         // passe ou une adresse n'ont pas à alimenter la prédiction du mot suivant.
         if (!champCourant.proposeDesMots) return
+        // Même règle que pour le comptage des mots : rien d'un champ sensible
+        // (dont une saisie déclarée non mémorisable, qui peut être du texte
+        // courant) n'entre dans l'historique qui sert de contexte aux prédictions
+        if (isSensitiveField()) return
         Log.d(TAG, "Mot complété: '$word' - Ajout à l'historique")
         suggestionEngine.addWordToHistory(word)
         
@@ -1231,6 +1246,8 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // La rangée du bas dépend du champ : la vue en cache n'est reconstruite que
         // quand l'adresse (courriel, web) change de nature, pas à chaque champ.
         keyboardLayoutManager.setFieldKind(champCourant)
+        // Avant une éventuelle reconstruction : l'aperçu en coin de « . » en dépend
+        accentHandler.champAdresse = champCourant == FieldKind.EMAIL || champCourant == FieldKind.URI
         val dispositionChangee = dispositionDeLaVue != keyboardLayoutManager.fieldKind
 
         if (paletteDeLaVue !== KeyboardTheme.palette() || dispositionChangee) {
@@ -1238,23 +1255,39 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
             setInputView(onCreateInputView())
         }
 
-        // 🅰️ S'ASSURER QUE LE MODE ALPHABÉTIQUE EST ACTIF À CHAQUE FOIS
+        // La touche Entrée dessine ce qu'elle fera dans ce champ : loupe, envoi,
+        // flèche, coche, ou retour à la ligne
+        keyboardLayoutManager.definirActionEntree(
+            InputProcessor.actionEntree(typeDeChamp, info?.imeOptions ?: 0)
+        )
+
+        // 🅰️ Lettres à chaque nouveau champ, sauf un nombre, un numéro de
+        // téléphone ou une date, qui s'ouvrent sur le pavé de chiffres.
         if (!restarting) {
+            // Le processeur et le gestionnaire de disposition sont mis dans le
+            // même état sans passer par un « a-t-il changé ? » : le processeur
+            // pouvait garder le mode chiffres du champ précédent pendant que la
+            // disposition revenait aux lettres (voir definirModeDeDepart).
+            val numerique = champCourant.ouvreLesChiffres
+            inputProcessor.definirModeDeDepart(numerique)
             keyboardLayoutManager.forceAlphabeticMode()
+            if (numerique) keyboardLayoutManager.updateKeyboardStates(true, false, false, false)
             keyboardLayoutManager.updateKeyboardDisplay()
             // Depuis que les panneaux sont préconstruits et seulement masqués,
-            // remettre les drapeaux à l'alpha ne suffit plus : il faut rendre le
-            // bon panneau visible si l'on revient sur un champ en ayant quitté le
+            // remettre les drapeaux ne suffit plus : il faut rendre le bon
+            // panneau visible si l'on revient sur un champ en ayant quitté le
             // précédent en mode 123 ou emoji.
             keyboardLayoutManager.applyMode()
-            Log.d(TAG, "✅ Mode alphabétique garanti lors du démarrage de la saisie")
-
-            // Un nombre, un numéro de téléphone, une date : le pavé de chiffres
-            // d'abord. Aussi pour les autres champs, où cela remet le processeur
-            // d'accord avec le gestionnaire de disposition qui vient d'être ramené
-            // aux lettres.
-            inputProcessor.setNumericMode(champCourant.ouvreLesChiffres)
+            Log.d(TAG, "✅ Mode de départ appliqué (chiffres : $numerique)")
         }
+
+        // Maj allumée d'entrée quand le champ commence par une majuscule (texte
+        // vide, prénom…) : la touche et les lettres le montrent avant la première
+        // frappe, pas après. Hors du bloc ci-dessus : beaucoup d'applications
+        // (Contacts, Chrome) relancent la saisie sur le même champ, et
+        // onStartInput() vient d'éteindre la majuscule dans ce cas aussi. Le
+        // calcul part du texte réel, il ne l'allume qu'à bon escient.
+        if (!keyboardLayoutManager.isNumericMode()) inputProcessor.rafraichirMajuscule()
 
         maybeShowFirstRealUseTip(info)
     }

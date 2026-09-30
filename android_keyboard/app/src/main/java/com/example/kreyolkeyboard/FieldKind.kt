@@ -68,7 +68,7 @@ enum class FieldKind {
          * d'être un nombre : la variation prime sur la classe.
          */
         fun de(inputType: Int): FieldKind {
-            val classe = inputType and InputType.TYPE_MASK_CLASS
+            val classe = classeDe(inputType)
             val variation = inputType and InputType.TYPE_MASK_VARIATION
             return when (classe) {
                 InputType.TYPE_CLASS_NUMBER ->
@@ -86,6 +86,47 @@ enum class FieldKind {
                     else -> TEXT
                 }
                 else -> TEXT
+            }
+        }
+
+        /**
+         * Classe du champ, en lisant comme du texte un champ qui porte des
+         * variations ou des drapeaux de texte sans déclarer de classe. Google
+         * Contacts déclare ainsi son prénom `0x2060` (nom de personne + majuscule
+         * à chaque mot, classe 0) : lu à la lettre, ce ne serait pas un nom et il
+         * perdrait sa majuscule. Seul un champ à 0, sans rien (un terminal),
+         * reste `TYPE_NULL`.
+         */
+        internal fun classeDe(inputType: Int): Int {
+            val classe = inputType and InputType.TYPE_MASK_CLASS
+            return if (classe == InputType.TYPE_NULL && inputType != 0) InputType.TYPE_CLASS_TEXT else classe
+        }
+
+        /**
+         * La majuscule automatique a-t-elle sa place dans ce champ ?
+         *
+         * Non pour tout ce que [interditLaMajusculeAuto] exclut (mot de passe,
+         * nombre, téléphone, date, adresse), ni pour un champ `TYPE_NULL` (un
+         * terminal), un filtre de liste ou une saisie phonétique.
+         *
+         * Les champs web (`TYPE_TEXT_VARIATION_WEB_EDIT_TEXT`) sont ceux de Chrome
+         * et des WebView : le type n'y dit rien, ce sont les drapeaux qui portent
+         * la demande de la page (`autocapitalize`). Relevé sur Chrome : `0xc0a1`
+         * par défaut (phrases), `0xa0a1` pour « words », `0x80a1` pour « off ».
+         * On suit la page, y compris quand elle désactive les majuscules.
+         */
+        fun accepteLaMajusculeAuto(inputType: Int): Boolean {
+            if (inputType == InputType.TYPE_NULL) return false
+            if (de(inputType).interditLaMajusculeAuto) return false
+            if (classeDe(inputType) != InputType.TYPE_CLASS_TEXT) return false
+            return when (inputType and InputType.TYPE_MASK_VARIATION) {
+                InputType.TYPE_TEXT_VARIATION_FILTER,
+                InputType.TYPE_TEXT_VARIATION_PHONETIC -> false
+                InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT ->
+                    inputType and (InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                        InputType.TYPE_TEXT_FLAG_CAP_WORDS or
+                        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0
+                else -> true
             }
         }
 

@@ -2,6 +2,7 @@ package com.example.kreyolkeyboard
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
@@ -65,5 +66,21 @@ class EmojiRecentsTest {
         // c'est bien la variante employée que l'on doit retrouver
         val apres = EmojiRecents.fusionner(listOf("👍🏿"), "👍🏻")
         assertEquals(listOf("👍🏻", "👍🏿"), apres)
+    }
+
+    @Test
+    fun `un signe choisi en appui long n'est pas un emoji`() {
+        // Tout ce que la popup propose sous les touches de ponctuation et de la
+        // page 123 : aucun ne doit atterrir dans les récents
+        listOf("?", "!", "…", "'", ";", "_", "–", "°", "•", "«", "»", "€", "£", "¥", "±", "≠", "‰", ".com")
+            .forEach { assertFalse("« $it » n'est pas un emoji", EmojiRecents.estUnEmoji(it)) }
+        assertFalse(EmojiRecents.estUnEmoji(""))
+    }
+
+    @Test
+    fun `un ton de peau choisi en appui long est un emoji`() {
+        listOf("👍🏻", "👍🏿", "☝🏽", "✌🏾", "🥭").forEach {
+            assertTrue("« $it » est un emoji", EmojiRecents.estUnEmoji(it))
+        }
     }
 }

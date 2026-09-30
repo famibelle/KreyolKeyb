@@ -11,6 +11,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
@@ -419,7 +420,12 @@ class KeyboardLayoutManager(private val context: Context) {
      */
     private fun createNumericLayout(mainLayout: LinearLayout) {
         val row1 = arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
-        val row2 = arrayOf("-", "/", ":", ";", "(", ")", "€", "&", "@", "\"")
+        // v22.4.0 (repris de LuxKeyb 29.3.0) : « % » prend la place de « & »,
+        // qui passe dessous en appui long. « % » n'était atteignable nulle part,
+        // « & » ne sert guère qu'aux sigles. Les autres symboles absents d'une
+        // page unique (« _ », « $ », « ° », crochets, accolades…) sont en appui
+        // long, voir AccentHandler.
+        val row2 = arrayOf("-", "/", ":", ";", "(", ")", "€", "%", "@", "\"")
         // v10.12.15 : "#" ajouté. C'est la seule page de symboles du clavier (il
         // n'y a pas de seconde page comme le "=\<" de Gboard), donc son absence
         // signifiait qu'aucun hashtag ne pouvait être écrit sans changer de
@@ -510,7 +516,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 // Définir l'icône selon la touche
                 setImageResource(when (key) {
                     "⌫" -> R.drawable.ic_backspace
-                    "⏎" -> R.drawable.ic_keyboard_return
+                    "⏎" -> iconeEntree().first
                     "⇧" -> if (isCapsLock) R.drawable.ic_shift_caps
                            else if (isCapitalMode) R.drawable.ic_shift_on
                            else R.drawable.ic_shift_off
@@ -548,13 +554,14 @@ class KeyboardLayoutManager(private val context: Context) {
                 }
                 val iconPadding = (keyHeightPx() * iconPaddingRatio).toInt()
                 setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+                if (key == "⏎") appliquerPaddingEntree(this)
                 scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
                 
                 // Description pour accessibilité
                 contentDescription = when (key) {
                     "⌫" -> "Supprimer"
-                    "⏎" -> "Entrée"
+                    "⏎" -> descriptionEntree()
                     "⇧" -> "Majuscule"
                     else -> key
                 }
@@ -1112,6 +1119,66 @@ class KeyboardLayoutManager(private val context: Context) {
     /**
      * Met à jour les états internes du clavier
      */
+    /**
+     * Action de la touche Entrée dans le champ courant, telle que la calcule
+     * [InputProcessor.actionEntree] ; `null` pour un retour à la ligne.
+     */
+    private var actionEntree: Int? = null
+
+    /**
+     * Icône et paddings horizontal et vertical (en dp, rapportés à la hauteur
+     * nominale) de la touche Entrée. Elle n'a pas la même largeur partout :
+     * étroite sur les lettres (poids 1), large sur la page 123. Sur les lettres
+     * l'icône est bornée par la largeur, et un padding de 10 dp comme celui de
+     * la corbeille réduisait la loupe à un point ; sur la page 123 elle est
+     * bornée par la hauteur, et 5 dp y faisaient une coche énorme (constaté sur
+     * Pixel 9, côté LuxKeyb). D'où deux marges : étroite sur les côtés, large en
+     * haut et en bas. La flèche de retour garde ses 4 dp tout autour.
+     */
+    private fun iconeEntree(): Triple<Int, Float, Float> = when (actionEntree) {
+        EditorInfo.IME_ACTION_SEARCH -> Triple(R.drawable.ic_enter_search, 6f, 12f)
+        EditorInfo.IME_ACTION_SEND -> Triple(R.drawable.ic_enter_send, 5f, 12f)
+        EditorInfo.IME_ACTION_GO,
+        EditorInfo.IME_ACTION_NEXT -> Triple(R.drawable.ic_enter_next, 6f, 12f)
+        EditorInfo.IME_ACTION_DONE -> Triple(R.drawable.ic_enter_done, 5f, 13f)
+        else -> Triple(R.drawable.ic_keyboard_return, 4f, 4f)
+    }
+
+    private fun appliquerPaddingEntree(bouton: View) {
+        val (_, cotes, hautBas) = iconeEntree()
+        val h = (keyHeightPx() * cotes / BUTTON_HEIGHT_DP).toInt()
+        val v = (keyHeightPx() * hautBas / BUTTON_HEIGHT_DP).toInt()
+        bouton.setPadding(h, v, h, v)
+    }
+
+    private fun descriptionEntree(): String = when (actionEntree) {
+        EditorInfo.IME_ACTION_SEARCH -> "Rechercher"
+        EditorInfo.IME_ACTION_SEND -> "Envoyer"
+        EditorInfo.IME_ACTION_GO -> "Aller"
+        EditorInfo.IME_ACTION_NEXT -> "Suivant"
+        EditorInfo.IME_ACTION_DONE -> "Terminé"
+        else -> "Entrée"
+    }
+
+    /**
+     * Change l'icône de la touche Entrée sur les panneaux déjà construits : le
+     * service garde la vue d'une saisie à l'autre, et un champ de recherche peut
+     * succéder à un champ de message sans reconstruction. Les deux panneaux
+     * (lettres et 123) ont chacun leur touche Entrée, toutes deux mises à jour.
+     */
+    fun definirActionEntree(action: Int?) {
+        if (action == actionEntree) return
+        actionEntree = action
+        val icone = iconeEntree().first
+        keyboardButtons.filter { getKeyFromButton(it) == "⏎" }.forEach { bouton ->
+            if (bouton is android.widget.ImageButton) {
+                bouton.setImageResource(icone)
+                appliquerPaddingEntree(bouton)
+                bouton.contentDescription = descriptionEntree()
+            }
+        }
+    }
+
     fun updateKeyboardStates(isNumeric: Boolean, isEmoji: Boolean, isCapital: Boolean, isCapsLock: Boolean) {
         Log.e("SHIFT_REAL_DEBUG", "🚨 UPDATING KEYBOARD STATES! isCapital=$isCapital, isCapsLock=$isCapsLock")
         this.isNumericMode = isNumeric
