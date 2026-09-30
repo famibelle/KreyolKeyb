@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [22.5.1] - 2026-09-30
+
+### ✨ Ajouté
+
+- **La révision Sonjé dit comment faire avancer une carte sans question.** En
+  fin de séance, sous les mots à revoir, le bilan propose de les écrire au
+  clavier d'ici la prochaine révision : un mot du carnet écrit au clavier
+  avance tout seul, sans question. Jusqu'ici, on ne l'apprenait qu'une fois
+  que c'était arrivé.
+
 ## [22.5.0] - 2026-09-30
 
 L'application s'ouvre sur la journée, la révision se lance d'un toucher, la progression encourage.

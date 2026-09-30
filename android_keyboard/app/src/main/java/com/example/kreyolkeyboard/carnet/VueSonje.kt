@@ -402,6 +402,19 @@ class VueSonje(
                     setTextColor(0xFF2E7D32.toInt())
                     setLineSpacing(0f, 1.2f)
                 })
+            } else {
+                // Tant que le clavier n'a fait monter aucune carte, rien ne dit
+                // au joueur que c'est possible : la phrase ci-dessus n'apparaît
+                // qu'après coup. On l'annonce donc ici, là où il vient de voir
+                // ce qu'il a raté et peut encore s'en servir.
+                addView(TextView(ctx).apply {
+                    layoutParams = pleineLargeur().apply { topMargin = dp(18f) }
+                    text = astuceClavier(session.ratees)
+                    textSize = 14f
+                    gravity = Gravity.CENTER
+                    setTextColor(0xFF2E7D32.toInt())
+                    setLineSpacing(0f, 1.2f)
+                })
             }
         }
         scene.addView(feuille, FrameLayout.LayoutParams(

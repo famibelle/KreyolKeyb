@@ -82,3 +82,27 @@ class SessionSonje(file: List<ContenuCarte>) {
         return !repassage
     }
 }
+
+/**
+ * La phrase du bilan qui annonce le lien entre le clavier et les cartes, tant
+ * qu'il n'a encore joué pour aucune d'elles.
+ *
+ * [PreuveDeFrappe] fait monter sans question une carte dont le mot a été écrit
+ * au clavier depuis la révision précédente, mais le bilan ne le disait
+ * qu'après coup : qui ne le savait pas ne pouvait pas le découvrir. Les mots
+ * ratés sont les meilleurs exemples à citer, puisqu'ils reviennent dès le
+ * lendemain, donc dans la prochaine file, là où la frappe compte. Trois au
+ * plus, pour que la phrase tienne sous le bilan.
+ */
+fun astuceClavier(ratees: List<String>): String {
+    val mots = ratees.distinct().take(3).map { "« $it »" }
+    return when (mots.size) {
+        0 -> "Un mot de votre carnet que vous écrivez au clavier avance " +
+            "tout seul quand il revient en révision, sans question."
+        1 -> "Écrivez ${mots[0]} au clavier d'ici la prochaine révision : " +
+            "la carte avancera toute seule, sans question."
+        else -> "Écrivez " + mots.dropLast(1).joinToString(", ") + " ou " +
+            mots.last() + " au clavier d'ici la prochaine révision : " +
+            "chaque carte écrite avancera toute seule, sans question."
+    }
+}

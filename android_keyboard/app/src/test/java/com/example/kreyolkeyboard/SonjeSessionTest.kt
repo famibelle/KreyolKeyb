@@ -6,6 +6,7 @@ import com.example.kreyolkeyboard.carnet.JeuCarte
 import com.example.kreyolkeyboard.carnet.Rarete
 import com.example.kreyolkeyboard.carnet.SessionSonje
 import com.example.kreyolkeyboard.carnet.Sonje
+import com.example.kreyolkeyboard.carnet.astuceClavier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -137,5 +138,19 @@ class SonjeSessionTest {
         )
         val file = Sonje.file(cartes, 100)
         assertEquals(listOf("ancienne", "recente"), file.map { it.forme })
+    }
+
+    @Test
+    fun `le bilan annonce le lien avec le clavier en citant les mots rates`() {
+        assertTrue(astuceClavier(emptyList()).contains("au clavier"))
+        assertEquals(
+            "Écrivez « lanm » au clavier d'ici la prochaine révision : " +
+                "la carte avancera toute seule, sans question.",
+            astuceClavier(listOf("lanm"))
+        )
+        // Trois mots au plus, sans doublon, le dernier introduit par « ou ».
+        val phrase = astuceClavier(listOf("lanm", "souvan", "lanm", "bwak", "bèl"))
+        assertTrue(phrase.startsWith("Écrivez « lanm », « souvan » ou « bwak » au clavier"))
+        assertFalse(phrase.contains("bèl"))
     }
 }
