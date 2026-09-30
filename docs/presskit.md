@@ -160,7 +160,7 @@ cités sans leurs auteurs :
   </div>
   <div class="card" style="flex:1 1 230px;max-width:320px;margin:0;">
     <p style="margin:0 0 8px;color:var(--sun);letter-spacing:3px;">★★★★★</p>
-    <p style="margin:0;">« C'est très bien pour aprendre le kréyòl »</p>
+    <p style="margin:0;">« Très fière, satisfaite… ❤️ ❤️ »</p>
   </div>
 </div>
 
