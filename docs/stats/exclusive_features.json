@@ -17,11 +17,17 @@
       "version": "22.4.0",
       "emoji": "↩️",
       "title": "La touche Entrée montre ce qu'elle va faire",
-      "description": "Une loupe pour chercher, une flèche d'envoi, une flèche pour passer au champ suivant, une coche pour terminer. Le clavier suit aussi la page que vous remplissez : majuscule à chaque mot dans un champ de nom, aucune quand la page n'en veut pas. La page 123 gagne des symboles (%, °, $, £, ±, ≠…), et dans une adresse, rester appuyé sur le point propose « .com », « .fr » et « .gp ».",
+      "description": "Chaque application dit ce que fait la touche Entrée dans le champ où vous tapez, et le clavier le dessine sur la touche. Dans une barre de recherche (celle de Google, celle des réglages…), une loupe : la touche lance la recherche au lieu d'aller à la ligne. Ailleurs, une flèche d'envoi pour envoyer, une flèche vers la droite pour passer au champ suivant d'un formulaire, une coche pour terminer. Là où l'application veut un retour à la ligne, comme dans un SMS, la touche garde sa flèche habituelle. Ce qui est dessiné est toujours ce qui se passe, et le lecteur d'écran l'annonce (« Rechercher », « Envoyer »…). Le clavier suit aussi la page que vous remplissez : majuscule à chaque mot dans un champ de nom, aucune quand la page n'en veut pas. La page 123 gagne des symboles (%, °, $, £, ±, ≠…), et dans une adresse, rester appuyé sur le point propose « .com », « .fr » et « .gp ».",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v22.4.0",
       "curated": true,
       "image": "Screenshots/nouveaute_22.4.0_entree_loupe.png",
-      "image_alt": "Le clavier ouvert sur la recherche des réglages du téléphone : la touche Entrée verte, en bas à droite, affiche une loupe au lieu de la flèche de retour à la ligne."
+      "image_alt": "La recherche des réglages du téléphone, le mot « keyboard » tapé et ses résultats affichés. En bas à droite du clavier, la touche Entrée verte porte une loupe : elle lance la recherche.",
+      "images_suite": [
+        {
+          "image": "Screenshots/nouveaute_22.4.0_entree_coche.png",
+          "image_alt": "Le formulaire « Create contact », curseur dans le champ du prénom. Le clavier s'ouvre en majuscules, et la touche Entrée verte porte une coche : elle termine la saisie."
+        }
+      ]
     }
   ]
 }
