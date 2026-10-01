@@ -810,7 +810,7 @@
    "caracteres": 42906
   },
   {
-   "source": "POTOMITAN/potomitan-gcf-fr-translation (cours Assimil, traduction FR)",
+   "source": "POTOMITAN/potomitan-gcf-fr-translation (traduction FR)",
    "court": "POTOMITAN/potomitan-gcf-fr-translation…",
    "mots": 5587,
    "lignes": 1605,
@@ -1136,8 +1136,8 @@
  "dataset": "POTOMITAN/PawolKreyol-gfc",
  "dataset_url": "https://huggingface.co/datasets/POTOMITAN/PawolKreyol-gfc",
  "source_donnees": "huggingface",
- "parquet_octets": 139636,
- "dataset_revision": "49a2d5136e26acb6f54aa85275521f48cf23348c",
- "dataset_revision_parquet": "0b31d94bc34322233050552eedf90aa8a1e810c5",
- "dataset_derniere_modification": "2026-08-26T20:33:17.000Z"
+ "parquet_octets": 139578,
+ "dataset_revision": "bcdf1d4ec2ba6e54cc7a70b90a2bb836c924c6d6",
+ "dataset_revision_parquet": "e9ac8f8e9ad766cfc4f9306bb33b23ab54dd5098",
+ "dataset_derniere_modification": "2026-10-01T09:43:50.000Z"
 }

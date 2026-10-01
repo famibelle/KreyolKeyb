@@ -2,7 +2,7 @@
 
 ## Métadonnées du Corpus
 
-- **Date de génération** : 27 August 2026 à 17:34
+- **Date de génération** : 01 October 2026 à 20:34
 - **Version du pipeline** : 3.0 - Pipeline Unique
 - **Source des données** : Dataset POTOMITAN/PawolKreyol-gfc (Hugging Face)
 - **Nombre de textes** : 2531
