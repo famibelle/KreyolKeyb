@@ -40,6 +40,28 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "22.5.1": [
+        {
+            "emoji": "✍️",
+            "title": "Sonjé dit comment faire avancer une carte sans question",
+            "description": (
+                "En fin de séance, sous les mots à revoir, le bilan propose "
+                "de les écrire au clavier d'ici la prochaine révision : un "
+                "mot du carnet écrit au clavier avance tout seul, sans "
+                "question. Jusqu'ici, on ne l'apprenait qu'une fois que "
+                "c'était arrivé."
+            ),
+            "image": "Screenshots/nouveaute_22.5.1_bilan_sonje.png",
+            "image_alt": (
+                "Le bilan de la révision Sonjé : « Session terminée », "
+                "« 4 sur 6 retrouvés », « À revoir demain : lanm, souvan ». "
+                "En vert dessous : « Écrivez « lanm » ou « souvan » au "
+                "clavier d'ici la prochaine révision : chaque carte écrite "
+                "avancera toute seule, sans question. » Le bouton Fermer "
+                "est en bas."
+            ),
+        },
+    ],
     "22.5.0": [
         {
             "emoji": "🏠",
