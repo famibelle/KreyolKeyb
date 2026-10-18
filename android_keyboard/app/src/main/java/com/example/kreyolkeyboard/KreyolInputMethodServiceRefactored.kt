@@ -213,6 +213,13 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
      * pas à l'autre.
      */
     private var dispositionDeLaVue: FieldKind? = null
+
+    /**
+     * Réglage « Propositions en français » avec lequel la vue courante a été
+     * construite. Il décide du nombre de rangées de suggestions, donc de la
+     * hauteur du clavier : le changer impose une reconstruction, comme la palette.
+     */
+    private var francaisDeLaVue: Boolean? = null
     
     // État du service
     private var isInitialized = false
@@ -457,6 +464,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         // gardée en cache par InputMethodService est encore à la bonne couleur.
         KeyboardTheme.refresh(this)
         paletteDeLaVue = KeyboardTheme.palette()
+        francaisDeLaVue = KeyboardPreferences.propositionsFrancais(this)
         
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -567,7 +575,7 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         frenchRow = null
         frenchRowScroll = null
 
-        if (!isLandscape()) {
+        if (suggestionRowCount() > 1) {
             val frScroll = HorizontalScrollView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -607,8 +615,15 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
     private fun suggestionRowHeightDp(): Int =
         if (isLandscape()) SUGGESTION_ROW_HEIGHT_LANDSCAPE_DP else SUGGESTION_ROW_HEIGHT_DP
 
-    /** Nombre de rangées de suggestions réellement empilées : une seule en paysage. */
-    private fun suggestionRowCount(): Int = if (isLandscape()) 1 else 2
+    /**
+     * Nombre de rangées de suggestions réellement empilées : une seule en paysage,
+     * et une seule quand l'utilisateur a coupé les propositions en français. Dans
+     * ce dernier cas la rangée française n'est pas réservée vide, elle n'est pas
+     * construite : le clavier raccourcit d'une rangée et rend la place à
+     * l'application, au lieu de garder une bande qui ne servirait jamais.
+     */
+    private fun suggestionRowCount(): Int =
+        if (isLandscape() || francaisDeLaVue == false) 1 else 2
 
     /**
      * Réserve verticale du côté intérieur d'une rangée : la moitié de l'écart qui
@@ -1251,8 +1266,14 @@ class KreyolInputMethodServiceRefactored : InputMethodService(),
         accentHandler.champAdresse = champCourant == FieldKind.EMAIL || champCourant == FieldKind.URI
         val dispositionChangee = dispositionDeLaVue != keyboardLayoutManager.fieldKind
 
-        if (paletteDeLaVue !== KeyboardTheme.palette() || dispositionChangee) {
-            Log.d(TAG, "Thème ou disposition changés : reconstruction de la vue d'entrée")
+        // Les propositions en français : le moteur les coupe à la source, et la
+        // vue perd ou retrouve sa seconde rangée, d'où la reconstruction.
+        val francais = KeyboardPreferences.propositionsFrancais(this)
+        suggestionEngine.setFrenchSupport(francais)
+        val francaisChange = francaisDeLaVue != null && francaisDeLaVue != francais
+
+        if (paletteDeLaVue !== KeyboardTheme.palette() || dispositionChangee || francaisChange) {
+            Log.d(TAG, "Thème, disposition ou français changés : reconstruction de la vue d'entrée")
             setInputView(onCreateInputView())
         }
 

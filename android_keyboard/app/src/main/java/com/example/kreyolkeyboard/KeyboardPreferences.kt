@@ -39,6 +39,7 @@ object KeyboardPreferences {
     private const val KEY_DOUBLE_SPACE_PERIOD = "double_space_period"
     private const val KEY_DROP_AUTO_SPACE = "drop_auto_space"
     private const val KEY_LONG_PRESS_DELAY = "long_press_delay_ms"
+    private const val KEY_FRENCH_SUGGESTIONS = "french_suggestions_enabled"
 
     /** Les deux retours sont actifs par défaut, comme sur les autres claviers. */
     private const val DEFAULT_ENABLED = true
@@ -143,5 +144,22 @@ object KeyboardPreferences {
 
     fun setDelaiAppuiLong(context: Context, delai: DelaiAppuiLong) {
         prefs(context).edit().putLong(KEY_LONG_PRESS_DELAY, delai.ms).apply()
+    }
+
+    /**
+     * Rangée bleue des propositions en français (v23.0.0, repris de LuxKeyb 30.1.0). Active par défaut :
+     * un utilisateur l'a trouvée inutile, d'autres s'en servent pour glisser un
+     * mot français dans une phrase kréyòl.
+     *
+     * Ce réglage ne cache que les propositions. La reconnaissance du français
+     * reste entière : le correcteur orthographique remplace celui du téléphone
+     * pour le français, et sans elle il soulignerait tout le français écrit
+     * dans les autres applications.
+     */
+    fun propositionsFrancais(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_FRENCH_SUGGESTIONS, DEFAULT_ENABLED)
+
+    fun setPropositionsFrancais(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_FRENCH_SUGGESTIONS, enabled).apply()
     }
 }

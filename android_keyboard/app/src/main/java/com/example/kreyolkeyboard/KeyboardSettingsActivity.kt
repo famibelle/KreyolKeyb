@@ -125,6 +125,27 @@ class KeyboardSettingsActivity : AppCompatActivity() {
         addView(espacement())
 
         addView(carte().apply {
+            addView(titreSection("Suggestions"))
+            addView(explication(
+                "Les mots kréyòl sont proposés en vert. À partir de trois " +
+                        "lettres, une seconde rangée en bleu propose aussi des mots français."
+            ))
+            addView(interrupteur(
+                "Propositions en français",
+                KeyboardPreferences.propositionsFrancais(this@KeyboardSettingsActivity)
+            ) { actif ->
+                KeyboardPreferences.setPropositionsFrancais(this@KeyboardSettingsActivity, actif)
+                Log.d(TAG, "Propositions en français : $actif")
+            })
+            addView(explication(
+                "Sans elles, le clavier garde une seule rangée de suggestions et " +
+                        "laisse un peu plus de place à l'écran. Le correcteur " +
+                        "orthographique continue de reconnaître le français."
+            ))
+        })
+        addView(espacement())
+
+        addView(carte().apply {
             addView(titreSection("Retour de frappe"))
             addView(explication(
                 "Ce que le clavier fait à chaque appui. Le choix s'applique dès le " +
