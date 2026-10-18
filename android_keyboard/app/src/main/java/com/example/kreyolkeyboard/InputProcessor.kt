@@ -646,9 +646,14 @@ class InputProcessor(private val inputMethodService: InputMethodService) {
         espaceAutoEnAttente = true
         instantDernierEspace = SystemClock.uptimeMillis()
         
-        // Finaliser le mot (le tracking se fera dans finalizeCurrentWord)
-        currentWord = suggestion
-        finalizeCurrentWord()
+        // Finaliser le mot (le tracking se fera dans finalizeCurrentWord).
+        // Une suggestion peut porter deux mots, quand elle recolle une espace
+        // oubliée : chacun est finalisé à part, sans quoi le contexte du mot
+        // suivant serait les deux mots d'un bloc, qu'aucun n-gramme ne connaît.
+        for (mot in suggestion.split(' ').filter { it.isNotEmpty() }) {
+            currentWord = mot
+            finalizeCurrentWord()
+        }
         
         // Gérer la capitalisation automatique après l'espace
         handleAutoCapitalization()

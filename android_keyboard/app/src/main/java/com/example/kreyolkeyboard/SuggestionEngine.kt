@@ -46,6 +46,41 @@ class SuggestionEngine(private val context: Context) {
         // trop étroite écarterait un mot rare dans le corpus mais très utilisé par
         // l'utilisateur avant même que son bonus d'usage puisse jouer.
         private const val CANDIDATE_POOL_SIZE = 40
+
+        /**
+         * Poids d'une édition en moins dans le score d'une correction : une
+         * correction à une faute passe toujours avant une à deux.
+         */
+        internal const val EDIT_DISTANCE_WEIGHT = 100_000.0
+
+        /**
+         * Multiplicateur de fréquence d'une correction qui ne fait que
+         * remplacer des lettres par leurs voisines sur le clavier
+         * ([VoisinsClavier]) : le doigt tombé à côté, première faute de frappe
+         * sur téléphone (v23.0.0, repris de LuxKeyb 37.2.0).
+         *
+         * Multiplicateur et non bonus fixe, mesuré côté luxembourgeois : un
+         * bonus fixe supérieur à toute fréquence faisait bien passer la touche
+         * voisine devant, mais aussi devant une lettre oubliée, faute tout
+         * aussi courante, sur un mot vingt fois plus fréquent.
+         *
+         * La fréquence maximale multipliée doit rester sous
+         * [EDIT_DISTANCE_WEIGHT] : `VoisinsClavierTest` le vérifie sur le
+         * dictionnaire livré (« ka », 1 800 × 5 = 9 000).
+         */
+        internal const val VOISINAGE_FACTEUR = 5
+
+        /**
+         * Pas de correction pour un mot que le français reconnaît en entier
+         * (v23.0.0, repris de LuxKeyb) : la rangée bleue le propose déjà, et
+         * trois mots kréyòl sans rapport n'ont rien à faire au-dessus. Le
+         * contrôle porte sur le mot entier : tant qu'on tape « maiso », le
+         * français ne le reconnaît pas encore et le repli garde sa place.
+         */
+        internal fun devraitCorriger(input: String, estFrancaisConnu: Boolean): Boolean {
+            if (input.length < 3) return false
+            return !estFrancaisConnu
+        }
         
         /**
          * Applique le pattern de casse (majuscules/minuscules) de l'input à un mot suggéré
@@ -109,7 +144,8 @@ class SuggestionEngine(private val context: Context) {
             input: String,
             frequency: Int,
             levenshteinDistance: Int = 0,
-            usageCount: Int = 0
+            usageCount: Int = 0,
+            parVoisines: Boolean = false
         ): Double {
             var score = frequency.toDouble()
 
@@ -125,7 +161,8 @@ class SuggestionEngine(private val context: Context) {
             // une correction à 1 édition bat toujours une correction à 2 éditions,
             // quelle que soit leur fréquence ("mesli" → "mèsi" avant "mésyé")
             if (levenshteinDistance > 0) {
-                score += (3 - levenshteinDistance) * 100_000.0
+                score += (3 - levenshteinDistance) * EDIT_DISTANCE_WEIGHT
+                if (parVoisines) score += frequency.toDouble() * (VOISINAGE_FACTEUR - 1)
             }
 
             // Bonus si le mot commence par l'input, comparaison insensible aux accents :
@@ -189,6 +226,18 @@ class SuggestionEngine(private val context: Context) {
     // restauration des accents (AccentRestoration). Construit une fois au
     // chargement : la consulter à la validation d'un mot ne parcourt rien.
     private var accentGroups: Map<String, List<Pair<String, Int>>> = emptyMap()
+    // Vrai si le repli des accents allonge une forme du dictionnaire (« ß »,
+    // « œ » → deux lettres) : seul cas où le second passage de la correction
+    // orthographique peut servir. Aucune aujourd'hui.
+    private var dictionnaireQuiSAllonge = false
+    // Forme repliée → graphie du dictionnaire la plus fréquente et sa
+    // fréquence, pour recoller deux mots tapés sans espace ([coupure]).
+    private var parForme: Map<String, Pair<String, Int>> = emptyMap()
+    // Incrémenté à chaque nouvelle demande de suggestions : une recherche
+    // lancée sous un numéro plus ancien sait qu'elle ne sera pas affichée.
+    @Volatile private var generationFrappe = 0
+    // Touches voisines de l'AZERTY créole, pour classer les corrections.
+    private val voisins = VoisinsClavier.AZERTY
     private var ngramModel: Map<String, List<Map<String, Any>>> = emptyMap()
     private val wordHistory = mutableListOf<String>()
 
@@ -273,6 +322,30 @@ class SuggestionEngine(private val context: Context) {
     /**
      * Initialise le moteur de suggestions (kreyòl + français)
      */
+    /**
+     * Lecture des actifs. Remplaçable pour faire tourner le moteur hors
+     * d'Android : le banc de correction (`BancCorrectionTest`) lit les mêmes
+     * fichiers depuis `src/main/assets`.
+     */
+    internal var ouvrirActif: (String) -> java.io.InputStream = { context.assets.open(it) }
+
+    /** Dictionnaire et n-grammes seuls, sans le français : pour le banc. */
+    internal suspend fun chargerKreyol() {
+        loadDictionary()
+        loadNgramModel()
+    }
+
+    /**
+     * Ce que la rangée kréyòl afficherait pour [input], calculé sur le fil
+     * appelant. Même chemin que [generateBilingualSuggestions], sans les
+     * coroutines ni le français : c'est ce que mesure le banc.
+     */
+    internal fun rangeeKreyol(input: String): List<String> {
+        if (input.length < MIN_WORD_LENGTH) return emptyList()
+        generationFrappe++
+        return getKreyolSuggestions(input).map { it.word }
+    }
+
     suspend fun initialize() = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "🚀 Initialisation du moteur bilingue...")
@@ -324,6 +397,7 @@ class SuggestionEngine(private val context: Context) {
         }
         
         suggestionJob?.cancel()
+        generationFrappe++
         suggestionJob = suggestionScope.launch {
             val suggestions = withContext(Dispatchers.Default) {
                 val dictionarySuggestions = getDictionarySuggestions(input)
@@ -362,6 +436,7 @@ class SuggestionEngine(private val context: Context) {
         }
         
         suggestionJob?.cancel()
+        generationFrappe++
         suggestionJob = suggestionScope.launch {
             val suggestions = withContext(Dispatchers.Default) {
                 createBilingualSuggestions(input)
@@ -413,7 +488,7 @@ class SuggestionEngine(private val context: Context) {
         
         // Ajouter suggestions dictionnaire
         dictionaryMatches.forEach { (word, frequency, distance) ->
-            val score = calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word))
+            val score = calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word), parVoisines(input, word, distance))
             allKreyol[word] = score.toFloat()
         }
         
@@ -522,6 +597,7 @@ class SuggestionEngine(private val context: Context) {
         }
         
         suggestionJob?.cancel()
+        generationFrappe++
         suggestionJob = suggestionScope.launch {
             val suggestions = withContext(Dispatchers.Default) {
                 val dictionaryMatches = getDictionarySuggestions(input)
@@ -529,7 +605,7 @@ class SuggestionEngine(private val context: Context) {
                 // Trier uniquement par score de dictionnaire (fréquence + proximité + distance)
                 dictionaryMatches
                     .map { (word, frequency, distance) ->
-                        Pair(word, calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word)))
+                        Pair(word, calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word), parVoisines(input, word, distance)))
                     }
                     .sortedByDescending { it.second }
                     .take(MAX_SUGGESTIONS)
@@ -547,6 +623,7 @@ class SuggestionEngine(private val context: Context) {
      */
     fun generateContextualSuggestions() {
         suggestionJob?.cancel()
+        generationFrappe++
         suggestionJob = suggestionScope.launch {
             val predictions = withContext(Dispatchers.Default) {
                 if (wordHistory.isEmpty() || ngramModel.isEmpty()) {
@@ -647,7 +724,7 @@ class SuggestionEngine(private val context: Context) {
      */
     private suspend fun loadDictionary() = withContext(Dispatchers.IO) {
         try {
-            val jsonString = context.assets.open("creole_dict.json").bufferedReader().use { it.readText() }
+            val jsonString = ouvrirActif("creole_dict.json").bufferedReader().use { it.readText() }
             val wordsArray = JSONArray(jsonString)
             
             val loadedDictionary = mutableListOf<Pair<String, Int>>()
@@ -663,8 +740,14 @@ class SuggestionEngine(private val context: Context) {
             dictionary = loadedDictionary.sortedByDescending { it.second }
             normalizedWords = dictionary.map { AccentTolerantMatcher.normalize(it.first) }
             accentGroups = dictionary.indices.groupBy({ normalizedWords[it] }, { dictionary[it] })
+            dictionnaireQuiSAllonge = dictionary.indices.any { normalizedWords[it].length != dictionary[it].first.length }
+            parForme = HashMap<String, Pair<String, Int>>().also { table ->
+                // `dictionary` est trié par fréquence décroissante : la première
+                // graphie vue pour une forme est la plus fréquente.
+                dictionary.forEachIndexed { i, entree -> table.putIfAbsent(normalizedWords[i], entree) }
+            }
 
-            withContext(Dispatchers.Main) {
+            if (suggestionListener != null) withContext(Dispatchers.Main) {
                 suggestionListener?.onDictionaryLoaded(dictionary.size)
             }
             
@@ -685,7 +768,7 @@ class SuggestionEngine(private val context: Context) {
     private suspend fun loadNgramModel() = withContext(Dispatchers.IO) {
         Log.d(TAG, "Chargement du modèle N-grams...")
         try {
-            val inputStream = context.assets.open("creole_ngrams.json")
+            val inputStream = ouvrirActif("creole_ngrams.json")
             val jsonString = inputStream.bufferedReader().use { it.readText() }
             inputStream.close()
 
@@ -717,7 +800,7 @@ class SuggestionEngine(private val context: Context) {
             
             Log.d(TAG, "Modèle N-grams chargé avec ${ngramModel.size} entrées")
             
-            withContext(Dispatchers.Main) {
+            if (suggestionListener != null) withContext(Dispatchers.Main) {
                 suggestionListener?.onNgramModelLoaded()
             }
             
@@ -749,12 +832,162 @@ class SuggestionEngine(private val context: Context) {
             }
         }
 
-        // ✨ Si aucune correspondance par préfixe, essayer la correction orthographique
-        if (matches.isEmpty() && input.length >= 3) {
-            return getSpellCorrectionSuggestions(input)
+        // ✨ Si aucune correspondance par préfixe, essayer la correction
+        // orthographique, sauf si le mot tapé est du français reconnu.
+        // La recherche s'abandonne dès qu'une frappe plus récente l'a rendue
+        // inutile : `cancel()` sur la coroutine ne l'interromprait pas, la
+        // boucle ne suspend jamais, et en tapant vite les balayages périmés
+        // s'empilaient sur le processeur derrière celui qui compte.
+        if (matches.isEmpty() && devraitCorriger(input, isFrenchWord(input))) {
+            val frappe = generationFrappe
+            val corrections = getSpellCorrectionSuggestions(input) { generationFrappe != frappe }
+            val coupe = coupure(input) ?: return corrections
+            return listOf(coupe) + corrections
+        }
+
+        // Une faute peut aussi être le début d'un autre mot : « rout » pour
+        // « tout » commence « routyé ». Sur le banc de correction, c'était le
+        // cas de 13 % des fautes de touche voisine et de 20 % sur les mots de
+        // 3 ou 4 lettres, toutes ratées, parce que la correction ne se
+        // cherchait que faute de complétion. Quand ce qui est tapé n'est pas
+        // un mot connu, on cherche donc aussi le mot à une faute près, et il
+        // passe en tête s'il pèse assez face à la meilleure complétion. Une
+        // seule faute, pas deux : c'est le cas courant, et la recherche reste
+        // deux fois moins chère.
+        if (input.length >= longueurCorrectionSurPrefixe && devraitCorriger(input, isFrenchWord(input)) && !isKnownWord(input)) {
+            val frappe = generationFrappe
+            correctionSurPrefixe(input, normalizedInput, matches) { generationFrappe != frappe }
+                ?.let { matches.add(0, it) }
         }
 
         return matches
+    }
+
+    private fun isFrenchWord(word: String): Boolean =
+        ::frenchDictionary.isInitialized && frenchDictionary.containsWord(word)
+
+    private fun parVoisines(input: String, word: String, distance: Int): Boolean =
+        distance > 0 && voisins.parVoisines(input, word)
+
+    /**
+     * Deux mots tapés sans l'espace entre eux (v23.0.0, repris de LuxKeyb
+     * 37.2.0).
+     *
+     * On essaie chaque coupure de ce qui est tapé et on ne retient que celles
+     * que **le modèle de mots suivants atteste** : le second morceau doit
+     * figurer parmi les mots qui suivent le premier dans le corpus. Second
+     * cas, pour les suites que le modèle n'a pas retenues : l'un des deux
+     * morceaux est un **mot-outil** (forme d'au moins [frequenceMotOutil]
+     * occurrences : ka, an, sé, pou, nou…) et l'autre un mot connu. Le banc
+     * de correction mesure à part combien de mots justes absents du
+     * dictionnaire se feraient couper à tort.
+     *
+     * Les listes de terminaisons et de particules verbales de LuxKeyb ne sont
+     * pas reprises : elles répondent aux composés soudés et aux verbes
+     * séparables du luxembourgeois, que le kréyòl n'a pas.
+     *
+     * Le poids rendu estime le nombre de fois où la paire apparaît dans le
+     * corpus, pour se comparer aux fréquences des corrections : probabilité
+     * du second mot après le premier fois la fréquence du premier, ou, sans
+     * n-gramme, le produit des fréquences rapporté au corpus. La coupure se
+     * classe comme une correction à une faute, l'espace manquante. Les
+     * morceaux d'une lettre sont exclus, et une paire que le dictionnaire
+     * écrit avec un trait d'union n'est pas coupée.
+     */
+    private fun coupure(input: String): Triple<String, Int, Int>? {
+        if (input.length < 4 || ngramModel.isEmpty()) return null
+        val bas = input.lowercase()
+        var meilleure: String? = null
+        var meilleurPoids = 0.0
+        for (i in 2..bas.length - 2) {
+            val gauche = bas.substring(0, i)
+            val droite = bas.substring(i)
+            // L'orthographe GEREC lie au trait d'union ce que le dictionnaire
+            // connaît ainsi (« kay-la ») : la correction le propose déjà, une
+            // espace à la place serait une faute.
+            if (AccentTolerantMatcher.normalize("$gauche-$droite") in parForme) continue
+            val suite = ngramModel[gauche]?.firstOrNull { (it["word"] as? String)?.lowercase() == droite }
+            val probabilite = (suite?.get("probability") as? Number)?.toDouble()
+            val (poids, mot) = if (suite != null && probabilite != null) {
+                probabilite * frequenceCorpus(gauche) to suite["word"] as String
+            } else {
+                val g = parForme[AccentTolerantMatcher.normalize(gauche)] ?: continue
+                val d = parForme[AccentTolerantMatcher.normalize(droite)] ?: continue
+                if (g.second < frequenceMotOutil && d.second < frequenceMotOutil) continue
+                g.second.toDouble() * d.second / occurrencesCorpus to d.first
+            }
+            if (poids > meilleurPoids) {
+                meilleurPoids = poids
+                meilleure = input.substring(0, i) + " " + mot
+            }
+        }
+        return meilleure?.let { Triple(it, meilleurPoids.toInt().coerceAtLeast(1), 1) }
+    }
+
+    /** Somme des fréquences du dictionnaire, pour estimer celle d'une paire. */
+    private val occurrencesCorpus: Double by lazy { dictionary.sumOf { it.second.toDouble() }.coerceAtLeast(1.0) }
+
+    /** Fréquence corpus d'une forme, 0 si absente. */
+    private fun frequenceCorpus(motBas: String): Int =
+        parForme[AccentTolerantMatcher.normalize(motBas)]?.second ?: 0
+
+    /**
+     * Seuil d'un mot-outil pour [coupure]. Réglé sur le banc de correction le
+     * 2026-10-19 (mots collés recollés en tête / mots justes inconnus coupés
+     * à tort) : 100 donne 67,3 / 1,3 %, 50 donne 71,5 / 1,7 %, 25 donne
+     * 74,1 / 2,0 %, 10 donne 75,9 / 2,7 %. Le dictionnaire kréyòl compte
+     * 36 502 occurrences, cent fois moins que le luxembourgeois : son seuil
+     * de 1 000 ne se transpose pas.
+     */
+    internal var frequenceMotOutil = 50
+
+    /**
+     * Seuil de [correctionSurPrefixe] : la correction passe en tête quand sa
+     * fréquence (multipliée pour une touche voisine) vaut au moins tant de
+     * fois celle de la meilleure complétion.
+     *
+     * Réglé sur le banc de correction (`BancCorrectionTest`) le 2026-10-19,
+     * 1re place / dans les 3 :
+     *
+     * ```
+     * seuil   touche voisine   voisine, 3-4 lettres   mot juste en cours de frappe
+     * jamais  78,4 / 85,7      67,0 / 77,2            72,3 / 89,9
+     *  16     80,9 / 88,2      71,2 / 81,3            63,0 / 89,0
+     *  64     80,2 / 87,5      70,2 / 80,4            69,2 / 89,6
+     * 128     79,5 / 86,8      69,6 / 79,8            71,2 / 89,7   ← retenu
+     * 256     79,3 / 86,6      69,0 / 79,2            71,9 / 89,8
+     * ```
+     *
+     * LuxKeyb a retenu 64. Ici le mot en cours de frappe, qui revient à chaque
+     * touche, y perdait trois points en tête pour un gain de moins de deux sur
+     * les fautes : à 128, il n'en perd qu'un.
+     */
+    internal var ratioCorrectionSurPrefixe = 128.0
+
+    /** Longueur minimale de ce qui est tapé pour [correctionSurPrefixe]. */
+    internal var longueurCorrectionSurPrefixe = 3
+
+    private fun correctionSurPrefixe(
+        input: String,
+        normalizedInput: String,
+        completions: List<Triple<String, Int, Int>>,
+        estAnnule: () -> Boolean
+    ): Triple<String, Int, Int>? {
+        val meilleureCompletion = completions.maxOf { it.second }
+        val multiplicateur = { mot: String -> if (voisins.parVoisines(input, mot)) VOISINAGE_FACTEUR else 1 }
+        val correction = LevenshteinDistance.findClosestMatchesNormalized(
+            input = input,
+            dictionary = dictionary,
+            normalizedWords = normalizedWords,
+            normalizer = { str -> AccentTolerantMatcher.normalize(str) },
+            maxDistance = 1,
+            maxResults = 10,
+            estAnnule = estAnnule,
+            multiplicateur = multiplicateur
+        ).firstOrNull { !AccentTolerantMatcher.normalize(it.first).startsWith(normalizedInput) }
+            ?: return null
+        val poids = correction.second.toDouble() * multiplicateur(correction.first)
+        return if (poids >= ratioCorrectionSurPrefixe * meilleureCompletion) correction else null
     }
     
     /**
@@ -770,16 +1003,23 @@ class SuggestionEngine(private val context: Context) {
      * @param input Le mot saisi par l'utilisateur (potentiellement mal orthographié)
      * @return Liste de (mot, fréquence, distance) triée par pertinence (distance + fréquence)
      */
-    private fun getSpellCorrectionSuggestions(input: String): List<Triple<String, Int, Int>> {
+    private fun getSpellCorrectionSuggestions(
+        input: String,
+        estAnnule: () -> Boolean = { false }
+    ): List<Triple<String, Int, Int>> {
         if (input.length < 3) return emptyList()
+        val multiplicateur = { mot: String -> if (voisins.parVoisines(input, mot)) VOISINAGE_FACTEUR else 1 }
         
         // Essayer d'abord avec la normalisation des accents (combinaison puissante)
         val normalizedMatches = LevenshteinDistance.findClosestMatchesNormalized(
             input = input,
             dictionary = dictionary,
+            normalizedWords = normalizedWords,
             normalizer = { str -> AccentTolerantMatcher.normalize(str) },
             maxDistance = 2,
-            maxResults = MAX_SUGGESTIONS
+            maxResults = MAX_SUGGESTIONS,
+            estAnnule = estAnnule,
+            multiplicateur = multiplicateur
         )
         
         // Si on trouve des correspondances normalisées, les retourner
@@ -788,12 +1028,24 @@ class SuggestionEngine(private val context: Context) {
             return normalizedMatches
         }
         
-        // Sinon, essayer sans normalisation (peut détecter d'autres types d'erreurs)
+        // Le passage sans normalisation ne peut rien trouver de plus. La
+        // normalisation remplace chaque caractère par un seul autre (é → e) :
+        // elle ne peut que rapprocher deux mots, jamais les éloigner, donc
+        // rien n'est à distance 2 en brut qui ne le soit aussi une fois replié.
+        // Seuls « ß » et « œ », qui deviennent deux lettres, échappent à ce
+        // raisonnement, et le dictionnaire n'en contient aucun. Ce second
+        // balayage complet doublait le temps de toutes les frappes sans
+        // correction possible : un nom propre, un mot étranger, un mot en cours.
+        val saisieQuiSAllonge = AccentTolerantMatcher.normalize(input).length != input.length
+        if (!saisieQuiSAllonge && !dictionnaireQuiSAllonge) return emptyList()
+
         val directMatches = LevenshteinDistance.findClosestMatches(
             input = input,
             dictionary = dictionary,
             maxDistance = 2,
-            maxResults = MAX_SUGGESTIONS
+            maxResults = MAX_SUGGESTIONS,
+            estAnnule = estAnnule,
+            multiplicateur = multiplicateur
         )
         
         if (directMatches.isNotEmpty()) {
@@ -855,7 +1107,7 @@ class SuggestionEngine(private val context: Context) {
         // Ajouter les suggestions du dictionnaire avec score basé sur la fréquence et la position
         dictionarySuggestions.forEach { (word, frequency, distance) ->
             val casedWord = applyCasingPattern(input, word)
-            val score = calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word))
+            val score = calculateDictionaryScore(word, input, frequency, distance, usageCountOf(word), parVoisines(input, word, distance))
             allSuggestions[casedWord] = score
         }
         

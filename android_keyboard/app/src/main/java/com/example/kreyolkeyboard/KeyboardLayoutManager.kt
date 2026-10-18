@@ -28,6 +28,26 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 class KeyboardLayoutManager(private val context: Context) {
     
     companion object {
+        /**
+         * Les trois rangées de lettres de la page alphabétique. Elles sont ici et
+         * non dans [createAlphabeticLayout] pour que [VoisinsClavier] calcule les
+         * touches voisines sur la géométrie réellement affichée.
+         */
+        internal val RANGEE_1 = arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
+        internal val RANGEE_2 = arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+        internal val RANGEE_3 = arrayOf("⇧", "w", "x", "c", "v", "b", "n", "'", "⌫")
+
+        /** Largeur relative d'une touche dans sa rangée. */
+        internal fun poidsTouche(key: String): Float = when (key) {
+            " " -> 4.0f      // Barre d'espace plus large
+            // v10.11.4 : 1,5 → 1,25 pour financer l'apostrophe ajoutée en rangée 3
+            // sans rétrécir les lettres sous la largeur des rangées 1 et 2. Ces deux
+            // touches restent les plus larges de leur rangée, ce qui compte : elles
+            // sont aux deux extrémités, là où la visée du pouce est la plus mauvaise.
+            "⇧", "⌫" -> 1.25f
+            else -> 1.0f     // Touches normales
+        }
+
         private const val BUTTON_HEIGHT_DP = 48
         // Sous cette hauteur les touches deviennent difficiles à viser : mieux vaut
         // alors rogner ailleurs que continuer à réduire.
@@ -382,8 +402,8 @@ class KeyboardLayoutManager(private val context: Context) {
         // l'indice de coin de la touche), l'échange se fait contre un appui long sur
         // un caractère rare. Même raisonnement que é et è, dédiés en rangée 4 où ils
         // ne coûtent aucune largeur aux lettres.
-        val row1 = arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
-        val row2 = arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+        val row1 = RANGEE_1
+        val row2 = RANGEE_2
         // v10.11.4 : l'apostrophe redevient une touche visible, ici et non en
         // rangée 4. Cette rangée est celle qui peut le mieux se le permettre : ses
         // touches sont les plus larges du clavier (37,0 dp mesurés, contre 32,4 en
@@ -404,7 +424,7 @@ class KeyboardLayoutManager(private val context: Context) {
         //
         // Elle reste sous l'appui long de "," (AccentHandler), comme é et è restent
         // sous celui de "e" malgré leur touche dédiée.
-        val row3 = arrayOf("⇧", "w", "x", "c", "v", "b", "n", "'", "⌫")
+        val row3 = RANGEE_3
         // v8.6.0 : "-" ajouté en touche dédiée (21,7% des mots créoles en
         // contiennent un, fréquence cumulée supérieure à celle de "ò")
         // v9.1.0 : "'" retiré (0 occurrence dans creole_dict.json, contre 1088
@@ -1478,21 +1498,12 @@ class KeyboardLayoutManager(private val context: Context) {
         }
     }
     
-    private fun getKeyWeight(key: String): Float {
-        return when (key) {
-            " " -> 4.0f      // Barre d'espace plus large
-            // v10.11.4 : 1,5 → 1,25 pour financer l'apostrophe ajoutée en rangée 3
-            // sans rétrécir les lettres sous la largeur des rangées 1 et 2. Ces deux
-            // touches restent les plus larges de leur rangée, ce qui compte : elles
-            // sont aux deux extrémités, là où la visée du pouce est la plus mauvaise.
-            "⇧", "⌫" -> 1.25f
-            else -> 1.0f     // Touches normales
-        }
-    }
-    
+    private fun getKeyWeight(key: String): Float = poidsTouche(key)
+
     private fun calculateRowWeight(keys: Array<String>): Float {
         return keys.sumOf { getKeyWeight(it).toDouble() }.toFloat()
     }
+
     
     /**
      * Touche brute portée par une vue. Le tag fait foi : le libellé affiché ne

@@ -39,8 +39,8 @@ class LevenshteinDistanceTest {
     fun testKreyolCommonTypos() {
         // Fautes de frappe courantes en créole
         
-        // Lettres mélangées
-        assertEquals(2, LevenshteinDistance.calculate("bonoju", "bonjou"))  // j et o inversés
+        // Lettres voisines inversées : une seule faute de frappe
+        assertEquals(1, LevenshteinDistance.calculate("bonoju", "bonjou"))  // j et o inversés
         
         // Accents manquants (distance > 0 car caractères différents)
         assertTrue(LevenshteinDistance.calculate("kreyol", "kréyòl") > 0)
@@ -193,6 +193,7 @@ class LevenshteinDistanceTest {
         val matches = LevenshteinDistance.findClosestMatchesNormalized(
             input = "kreyol",
             dictionary = dictionary,
+            normalizedWords = dictionary.map { normalizer(it.first) },
             normalizer = normalizer,
             maxDistance = 1,
             maxResults = 3
