@@ -157,6 +157,7 @@ class SettingsActivity : AppCompatActivity() {
         // transfert d'appareil comme du cloud (voir data_extraction_rules.xml)
         private const val ACCUEIL_PREFS = "kreyol_accueil_prefs"
         private const val PREF_DERNIER_JEU_NOM = "dernier_jeu_nom"
+        private const val PREF_CORRECTEUR_ACCUEIL_MASQUE = "correcteur_accueil_masque"
         private const val PREF_DERNIER_JEU_EMOJI = "dernier_jeu_emoji"
         /** Nom de la révision dans GamesFragment.jeux : « Réviser maintenant » l'ouvre. */
         private const val JEU_SONJE = "Sonjé"
@@ -1091,6 +1092,15 @@ class SettingsActivity : AppCompatActivity() {
         }
         if (modeDuJour) {
             mainLayout.addView(creerAccueilDuJour())
+            // Le correcteur était rangé dans le volet replié ci-dessous, que
+            // personne ne rouvre une fois le clavier installé : un utilisateur
+            // configuré ne le découvrait jamais. Android interdit de le choisir
+            // à sa place, donc on le lui propose ici, jusqu'à ce qu'il le fasse
+            // ou qu'il dise « plus tard ».
+            if (!isSpellCheckerSelected() &&
+                !onboardingPrefs().getBoolean(PREF_CORRECTEUR_ACCUEIL_MASQUE, false)) {
+                mainLayout.addView(carteCorrecteurAccueil())
+            }
             mainLayout.addView(createSpacing(8))
             mainLayout.addView(ligneConfiguration(cible))
             mainLayout.addView(cible)
@@ -1605,6 +1615,52 @@ class SettingsActivity : AppCompatActivity() {
                 topMargin = enDp(8); bottomMargin = enDp(8)
             }
             contentDescription = "${nombre(fait)} mots sur ${nombre(etape)} jusqu'au niveau suivant"
+        }
+    }
+
+    /**
+     * Invitation au correcteur sur l'accueil, pour qui a installé le clavier
+     * sans jamais ouvrir le volet de configuration. Un toucher ouvre
+     * directement le bon écran d'Android ; « Plus tard » la retire de
+     * l'accueil, la carte complète restant dans le volet.
+     */
+    private fun carteCorrecteurAccueil(): LinearLayout {
+        val encre = Color.parseColor("#1C1C1C")
+        val gris = Color.parseColor("#6B6B6B")
+        val bleu = Color.parseColor("#0080FF")
+        val coupe = isSpellCheckerChosenButOff()
+        val carte = carteAccueil(Color.WHITE)
+        return carte.apply {
+            addView(texteAccueil("🔤  Fini le trait rouge sous vos mots", 18f, encre, gras = true))
+            addView(texteAccueil(
+                if (coupe) "La correction orthographique est coupée dans Android. " +
+                    "Rallumez-la pour que vos mots kréyòl soient reconnus partout."
+                else "Android souligne vos mots kréyòl dans Messages, Notes et " +
+                    "ailleurs. Choisissez notre correcteur pour qu'il les reconnaisse.",
+                14f, gris).apply { setPadding(0, enDp(4), 0, 0) })
+            // L'avertissement d'Android parle de mots de passe et de cartes
+            // bancaires : dit d'avance, il fait moins peur.
+            if (!coupe) addView(texteAccueil(
+                "Android affichera un avertissement, comme pour tout correcteur. " +
+                    "Le nôtre ne conserve rien et n'envoie rien.",
+                12f, Color.parseColor("#9E9E9E")).apply { setPadding(0, enDp(6), 0, 0) })
+            addView(LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, enDp(12), 0, 0)
+                addView(boutonAccueil(if (coupe) "Rallumer" else "Activer", bleu, Color.WHITE) {
+                    openSpellCheckerSettings()
+                }.apply { (layoutParams as LinearLayout.LayoutParams).topMargin = 0 })
+                addView(texteAccueil("Plus tard", 15f, gris).apply {
+                    setPadding(enDp(20), enDp(12), enDp(20), enDp(12))
+                    setOnClickListener {
+                        onboardingPrefs().edit()
+                            .putBoolean(PREF_CORRECTEUR_ACCUEIL_MASQUE, true).apply()
+                        (carte.parent as? ViewGroup)?.removeView(carte)
+                    }
+                })
+            })
+            setOnClickListener { openSpellCheckerSettings() }
         }
     }
 
@@ -2312,6 +2368,7 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun createSpellCheckerCard(): LinearLayout {
         val estActif = isSpellCheckerSelected()
+        val coupe = isSpellCheckerChosenButOff()
         val card = createRoundedCard("#FFFFFF")
 
         val header = LinearLayout(this).apply {
@@ -2367,6 +2424,9 @@ class SettingsActivity : AppCompatActivity() {
             text = if (estActif) {
                 "Vos mots kréyòl sont reconnus dans Messages, Notes et ailleurs, " +
                     "sans trait rouge dessous."
+            } else if (coupe) {
+                "Le correcteur kréyòl est bien choisi, mais la correction " +
+                    "orthographique est coupée dans Android. Touchez ici pour la rallumer."
             } else {
                 "Faites reconnaître vos mots kréyòl dans Messages, Notes et " +
                     "ailleurs, sans trait rouge dessous."
@@ -2391,13 +2451,16 @@ class SettingsActivity : AppCompatActivity() {
             setLineSpacing(0f, 1.3f)
             setPadding(0, 0, 0, 12)
         }
-        card.addView(avertissement)
+        // Déjà choisi et seulement coupé : Android ne repose pas la question.
+        if (!coupe) card.addView(avertissement)
 
         val details = TextView(this).apply {
-            text = "Dans l'écran qui s'ouvre :\n" +
-                "1. touchez « Correcteur par défaut »\n" +
-                "2. choisissez « Correcteur Kréyòl Karukéra »\n" +
-                "3. confirmez l'avertissement d'Android"
+            text = if (coupe) "Dans l'écran qui s'ouvre, allumez l'interrupteur " +
+                "« Utiliser le correcteur orthographique »." else "Dans l'écran qui s'ouvre :\n" +
+                "1. allumez « Utiliser le correcteur orthographique » s'il est éteint\n" +
+                "2. touchez « Correcteur par défaut »\n" +
+                "3. choisissez « Correcteur Kréyòl Karukéra »\n" +
+                "4. confirmez l'avertissement d'Android"
             textSize = 14f
             setTextColor(Color.parseColor("#666666"))
             setLineSpacing(0f, 1.35f)
@@ -3367,8 +3430,12 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
-    // Fonction pour vérifier si notre correcteur orthographique est sélectionné
-    fun isSpellCheckerSelected(): Boolean {
+    // Notre correcteur travaille-t-il vraiment ? Il faut qu'il soit choisi ET
+    // que l'interrupteur général « Utiliser le correcteur » soit allumé : choisi
+    // mais coupé, il ne souligne rien, et la carte annonçait pourtant « actif ».
+    fun isSpellCheckerSelected(): Boolean = isSpellCheckerChosen() && isSpellCheckingOn()
+
+    private fun isSpellCheckerChosen(): Boolean {
         return try {
             val current = Settings.Secure.getString(contentResolver, "selected_spell_checker")
             current?.contains(packageName) == true
@@ -3377,6 +3444,16 @@ class SettingsActivity : AppCompatActivity() {
             false
         }
     }
+
+    // Absent sur une installation neuve : Android le considère alors allumé.
+    private fun isSpellCheckingOn(): Boolean = try {
+        Settings.Secure.getString(contentResolver, "spell_checker_enabled") != "0"
+    } catch (e: Exception) {
+        true
+    }
+
+    /** Choisi, mais l'interrupteur général l'empêche de travailler. */
+    fun isSpellCheckerChosenButOff(): Boolean = isSpellCheckerChosen() && !isSpellCheckingOn()
 
     // Fonction pour ouvrir les paramètres où choisir le correcteur orthographique
     private fun openSpellCheckerSettings() {
@@ -4510,6 +4587,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (changed) {
                     refreshContent()
                     chainNextStep(wasEnabled, wasSelected)
+                    confirmerCorrecteurSiActive()
                 }
             }
         }
@@ -4537,6 +4615,7 @@ class SettingsActivity : AppCompatActivity() {
             val wasSelected = lastKnownSelected
             refreshContent()
             chainNextStep(wasEnabled, wasSelected)
+            confirmerCorrecteurSiActive()
 
             val resolver = requireContext().contentResolver
             resolver.registerContentObserver(
@@ -4545,6 +4624,8 @@ class SettingsActivity : AppCompatActivity() {
                 Settings.Secure.getUriFor(Settings.Secure.ENABLED_INPUT_METHODS), false, settingsObserver)
             resolver.registerContentObserver(
                 Settings.Secure.getUriFor("selected_spell_checker"), false, settingsObserver)
+            resolver.registerContentObserver(
+                Settings.Secure.getUriFor("spell_checker_enabled"), false, settingsObserver)
         }
 
         override fun onPause() {
@@ -4555,6 +4636,26 @@ class SettingsActivity : AppCompatActivity() {
         private var lastKnownEnabled = false
         private var lastKnownSelected = false
         private var lastKnownSpellCheckerOn = false
+
+        // État du correcteur au dernier passage, null avant le premier : sans
+        // cela, ouvrir l'application avec un correcteur déjà actif afficherait
+        // la confirmation à chaque fois.
+        private var correcteurConnu: Boolean? = null
+
+        /**
+         * Dit « c'est bon » quand le correcteur vient de passer actif, en
+         * général au retour de l'écran système où l'utilisateur l'a choisi.
+         * Sans ce mot, il revient sans savoir si sa manipulation a marché.
+         */
+        private fun confirmerCorrecteurSiActive() {
+            val avant = correcteurConnu
+            correcteurConnu = lastKnownSpellCheckerOn
+            if (avant == false && lastKnownSpellCheckerOn) {
+                Toast.makeText(requireContext(),
+                    "✓ Correcteur activé : vos mots kréyòl sont reconnus partout.",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
 
         private fun shouldRefresh(currentEnabled: Boolean, currentSelected: Boolean, currentSpellCheckerOn: Boolean): Boolean {
             val hasChanged = currentEnabled != lastKnownEnabled || currentSelected != lastKnownSelected || currentSpellCheckerOn != lastKnownSpellCheckerOn
@@ -8471,7 +8572,7 @@ class SettingsActivity : AppCompatActivity() {
                 tvProgres.text = ""
                 annoncer(
                     "Aucune grille disponible : l'actif " +
-                        "luxemburgish_chassecroise.json manque à l'application.",
+                        "creole_chassecroise.json manque à l'application.",
                     couleurFausse
                 )
                 return
