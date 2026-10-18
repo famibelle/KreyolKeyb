@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.kreyolkeyboard.gamification.CreoleLevels
 import com.example.kreyolkeyboard.gamification.LevelUpNotifier
 import android.content.Intent
+import android.content.SharedPreferences
 import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
@@ -149,6 +150,14 @@ class SettingsActivity : AppCompatActivity() {
 
         /** Onglet à ouvrir au démarrage, quand l'activité est lancée depuis le clavier. */
         const val EXTRA_OPEN_TAB = "open_tab"
+
+        /**
+         * Pause dans la frappe avant d'ouvrir la fenêtre « Klavyé Kréyòl
+         * aktivé ! » (v23.0.0, repris de LuxKeyb 34.4.0). Côté luxembourgeois,
+         * à 2,5 s le temps de chercher la lettre suivante suffisait à l'ouvrir,
+         * et les touches visées tombaient sur la fenêtre.
+         */
+        private const val DELAI_FELICITATIONS_MS = 4000L
         const val TAB_JEUX = 1
         const val TAB_DICO = 2
         const val TAB_STATS = 3
@@ -521,6 +530,7 @@ class SettingsActivity : AppCompatActivity() {
      * l'application, alors que la condition d'accès est déjà remplie.
      */
     fun revelerNavigationSiClavierActive() {
+        majBandeauInstallation()
         if (tabBar.visibility == View.VISIBLE) return
         if (!aDejaActiveLeClavier()) return
         tabBar.visibility = View.VISIBLE
@@ -541,7 +551,11 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun majBandeauInstallation() {
         if (!::bottomInstallBanner.isInitialized) return
-        val aConfigurer = !onboardingPrefs().getBoolean("onboarding_completed", false)
+        // Une fois le clavier activé, l'étape 2 s'ouvre d'elle-même (sélecteur
+        // ouvert au retour des réglages) et sa carte porte son propre bouton :
+        // le bandeau ne ferait que doubler l'appel, par-dessus le clavier d'essai.
+        val aConfigurer = !onboardingPrefs().getBoolean("onboarding_completed", false) &&
+            !isKeyboardEnabled()
         if (aConfigurer && currentTab == 0) {
             bottomInstallBanner.alpha = 1f
             bottomInstallBanner.visibility = View.VISIBLE
@@ -577,11 +591,35 @@ class SettingsActivity : AppCompatActivity() {
         demoEngine = null
         demoEngineReady = false
 
-        maybeShowActivationSuccessCard()
+        // Les félicitations attendent le premier mot. Ouvertes à la sélection du
+        // clavier, elles tombaient par-dessus le sélecteur système, puis au
+        // moment où l'on touchait le champ d'essai, et l'étape 3 se faisait
+        // derrière elles. Si le mot a déjà été écrit (ailleurs, ou avant ce
+        // rafraîchissement), elles s'ouvrent tout de suite ; sinon c'est
+        // [planifierFelicitations] qui les ouvre, une fois la frappe arrêtée.
+        if (aEcritUnMot()) maybeShowActivationSuccessCard()
+    }
+
+    /** Écoute du jalon `funnel_first_word`, tenue ici : l'abonnement est faible. */
+    private var ecoutePremierMot: SharedPreferences.OnSharedPreferenceChangeListener? = null
+    private val minuterieFelicitations = Handler(Looper.getMainLooper())
+    private val felicitationsApresPause = Runnable {
+        if (!isFinishing && !isDestroyed && aEcritUnMot()) maybeShowActivationSuccessCard()
+    }
+
+    /**
+     * Ouvre les félicitations après une pause dans la frappe, jamais au
+     * milieu : l'étape 3 propose d'écrire « Bonjou tout moun », et une fenêtre
+     * ouverte après le premier mot baisserait le clavier avant le second.
+     */
+    private fun planifierFelicitations() {
+        if (onboardingPrefs().getBoolean("activation_success_card_shown", false)) return
+        minuterieFelicitations.removeCallbacks(felicitationsApresPause)
+        minuterieFelicitations.postDelayed(felicitationsApresPause, DELAI_FELICITATIONS_MS)
     }
 
     // Récompense l'utilisateur juste après un parcours d'activation identifié
-    // comme un point de friction (interstitiel + réglages système) : un seul
+    // comme un point de friction (réglages système, sélecteur) : un seul
     // affichage, jamais reposé même si l'onboarding se rejoue. Le message
     // proposé au partage est fixe, écrit avant que l'utilisateur ait tapé
     // quoi que ce soit avec le clavier — aucun contenu personnel n'est lu.
@@ -693,6 +731,9 @@ class SettingsActivity : AppCompatActivity() {
     override fun onDestroy() {
         // 🔧 FIX CRITIQUE: Annuler toutes les coroutines de l'activité
         activityScope.cancel()
+        ecoutePremierMot?.let { onboardingPrefs().unregisterOnSharedPreferenceChangeListener(it) }
+        ecoutePremierMot = null
+        minuterieFelicitations.removeCallbacks(felicitationsApresPause)
 
         try {
             updateManager.unregisterListener(updateListener)
@@ -728,7 +769,7 @@ class SettingsActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#0080FF"))
             elevation = 12f
             setPadding(32, 28, 32, 28)
-            setOnClickListener { showPreSettingsWarningDialog() }
+            setOnClickListener { poursuivreInstallation() }
 
             val label = TextView(this@SettingsActivity).apply {
                 text = "Ça vous plaît ? Installez-le →"
@@ -1877,6 +1918,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val titre = TextView(this).apply {
+            tag = "bandeau_pret_titre"
             text = if (aDejaEcrit) "Tout est prêt !" else "Clavier en place !"
             textSize = 17f
             setTextColor(Color.WHITE)
@@ -1884,6 +1926,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val sousTitre = TextView(this).apply {
+            tag = "bandeau_pret_sous_titre"
             text = if (aDejaEcrit) "Vous pouvez taper en kréyòl partout."
                    else "Écrivez un mot pour terminer la configuration."
             textSize = 13f
@@ -2078,8 +2121,9 @@ class SettingsActivity : AppCompatActivity() {
                     "💡 Presque ! Validez bien les 2 avertissements Android l'un après " +
                     "l'autre : s'arrêter au premier annule l'activation."))
                 !isEnabled -> addView(encart("#FFF8E1", "#5D4037",
-                    "ℹ️ Android affiche un avertissement de sécurité standard, montré pour " +
-                    "tous les claviers tiers. Klavyé Kréyòl ne collecte aucune donnée."))
+                    "ℹ️ Android affiche un avertissement de sécurité, le même pour tous les " +
+                    "claviers tiers : appuyez sur OK (deux fois si un second message suit), " +
+                    "puis sur Retour. Klavyé Kréyòl ne collecte aucune donnée."))
             }
             if (!isEnabled) {
                 addView(TextView(this@SettingsActivity).apply {
@@ -2096,7 +2140,7 @@ class SettingsActivity : AppCompatActivity() {
             addView(createSpacing(12))
             addView(bouton(
                 if (isEnabled) "Rouvrir les réglages Android ↗" else "Ouvrir les réglages Android ↗"
-            ) { showPreSettingsWarningDialog() })
+            ) { openKeyboardSettings() })
         }
 
         val ligne1 = createSetupRow(
@@ -2113,7 +2157,8 @@ class SettingsActivity : AppCompatActivity() {
         // === Étape 2 : sélectionner le clavier ===
         val corps2 = corps().apply {
             addView(texte("Choisissez « Klavyé Kréyòl Karukéra » dans la liste des claviers " +
-                    "qui s'affiche. Vos autres claviers restent installés."))
+                    "qui s'affiche. Si vous ne le voyez pas, faites défiler : il est souvent " +
+                    "tout en bas. Vos autres claviers restent installés."))
             addView(bouton("Ouvrir le sélecteur de claviers ↗") { openInputMethodPicker() })
         }
 
@@ -2136,6 +2181,15 @@ class SettingsActivity : AppCompatActivity() {
         val champTest = EditText(this).apply {
             tag = "onboarding_test_field"
             hint = "Koumansé maké on bèl kréyòl isit..."
+            // Sans correcteur système : celui de Gboard, encore choisi à ce
+            // stade, soulignait en rouge les mots kréyòl que l'étape demande
+            // d'écrire. Notre clavier ignore ce drapeau et propose ses
+            // suggestions comme ailleurs. Multiligne : sans ce drapeau,
+            // l'indication tiendrait sur une ligne coupée et Entrée deviendrait
+            // « Terminé ».
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
+                    android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
             textSize = 16f
             setPadding(enDp(14), enDp(14), enDp(14), enDp(14))
             minHeight = enDp(56)
@@ -2183,15 +2237,38 @@ class SettingsActivity : AppCompatActivity() {
         // au premier mot écrit. Le jalon lu est celui du service de saisie, donc
         // la pastille ne s'allume pas sur un texte collé ou tapé avec un autre
         // clavier — et ne se rallume pas à faux au rafraîchissement suivant.
+        //
+        // Le texte du champ change avant que le service n'ait posé son jalon :
+        // relire le jalon à chaque frappe laissait l'étape à 2/3 après le
+        // premier mot, et ne la cochait qu'au deuxième. On écoute donc le jalon
+        // lui-même ; le service tourne dans le même processus, l'écoute est
+        // prévenue dès son écriture. Les frappes, elles, repoussent les
+        // félicitations.
         if (!etape3Faite) {
+            fun cocher() {
+                if (anneau.done >= 3) return
+                marquerEtapeFaite(ligne3)
+                anneau.done = 3
+                sousTitre.text = "Les 3 étapes sont faites."
+                window.decorView.findViewWithTag<TextView>("bandeau_pret_titre")
+                    ?.text = "Tout est prêt !"
+                window.decorView.findViewWithTag<TextView>("bandeau_pret_sous_titre")
+                    ?.text = "Vous pouvez taper en kréyòl partout."
+            }
+            ecoutePremierMot?.let { onboardingPrefs().unregisterOnSharedPreferenceChangeListener(it) }
+            ecoutePremierMot = SharedPreferences.OnSharedPreferenceChangeListener { _, cle ->
+                if (cle == "funnel_first_word" && aEcritUnMot()) {
+                    cocher()
+                    planifierFelicitations()
+                }
+            }.also { onboardingPrefs().registerOnSharedPreferenceChangeListener(it) }
             champTest.addTextChangedListener(object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(s: android.text.Editable?) {
                     if (s.isNullOrEmpty() || !aEcritUnMot()) return
-                    marquerEtapeFaite(ligne3)
-                    anneau.done = 3
-                    sousTitre.text = "Les 3 étapes sont faites."
+                    cocher()
+                    planifierFelicitations()
                 }
             })
         }
@@ -2886,7 +2963,7 @@ class SettingsActivity : AppCompatActivity() {
             // réglages système en pleine frappe)
             visibility = View.INVISIBLE
             alpha = 0f
-            setOnClickListener { showPreSettingsWarningDialog() }
+            setOnClickListener { poursuivreInstallation() }
         }
 
         fun revealInstallCta() {
@@ -3464,15 +3541,13 @@ class SettingsActivity : AppCompatActivity() {
         try {
             val intent = Intent().apply {
                 setClassName("com.android.settings", "com.android.settings.Settings\$SpellCheckersSettingsActivity")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                // Sans FLAG_ACTIVITY_NEW_TASK : voir openKeyboardSettings().
             }
             startActivity(intent)
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture écran correcteur, repli sur les paramètres clavier: ${e.message}")
             try {
-                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
+                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
                 // Seul cas où un Toast d'instruction reste utile : l'écran de
                 // repli n'est pas celui attendu, la carte de l'étape 4 ne
                 // décrit donc pas ce que l'utilisateur a sous les yeux
@@ -3490,67 +3565,24 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Interstitiel montrant l'avertissement Android réel (capturé sur
-    // l'émulateur) avant d'y envoyer l'utilisateur : le voir à l'avance,
-    // annoté, le désamorce mieux qu'une description abstraite dans une
-    // carte qu'il a pu ne pas lire. Un seul bouton d'action ; pas de bouton
-    // d'annulation explicite, le retour matériel suffit à fermer sans
-    // naviguer ailleurs.
-    private fun showPreSettingsWarningDialog() {
-        val dialogLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 8)
-        }
-
-        val warningImage = ImageView(this).apply {
-            setImageResource(R.drawable.onboarding_ime_warning_preview)
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-
-        val annotationText = TextView(this).apply {
-            text = "👆 Appuyez sur OK : c'est normal pour tous les claviers tiers"
-            textSize = 16f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#333333"))
-            setPadding(0, 24, 0, 12)
-            setLineSpacing(0f, 1.2f)
-        }
-
-        val reassuranceText = TextView(this).apply {
-            text = "Klavyé Kréyòl n'a pas accès à Internet : rien ne quitte votre téléphone."
-            textSize = 16f
-            setTextColor(Color.parseColor("#666666"))
-            setPadding(0, 0, 0, 12)
-            setLineSpacing(0f, 1.2f)
-        }
-
-        val returnHintText = TextView(this).apply {
-            text = "◀ Ensuite, appuyez sur Retour : vous revenez ici automatiquement"
-            textSize = 16f
-            setTextColor(Color.parseColor("#666666"))
-            setLineSpacing(0f, 1.2f)
-        }
-
-        dialogLayout.addView(warningImage)
-        dialogLayout.addView(annotationText)
-        dialogLayout.addView(reassuranceText)
-        dialogLayout.addView(returnHintText)
-
-        val scrollView = ScrollView(this).apply { addView(dialogLayout) }
-
-        AlertDialog.Builder(this)
-            .setTitle("Avant de continuer")
-            .setView(scrollView)
-            .setCancelable(true)
-            .setPositiveButton("J'ai compris, on y va") { _, _ -> openKeyboardSettings() }
-            .show()
+    /**
+     * Ce qui reste à faire pour installer le clavier, depuis les boutons qui ne
+     * savent pas où en est l'utilisateur (bandeau du bas, bouton du clavier
+     * d'essai) : ils renvoyaient tous à l'étape 1, y compris quand elle était
+     * faite.
+     */
+    private fun poursuivreInstallation() {
+        if (isKeyboardEnabled()) openInputMethodPicker() else openKeyboardSettings()
     }
 
-    // Ouvre les paramètres de clavier système. Pas de Toast d'instruction :
-    // la carte de l'étape 1 dit déjà quoi faire, avant le saut vers les
-    // réglages (le Toast s'affichait par-dessus l'écran système, en bas,
-    // sans garantie de position ni de durée suffisante)
+    // Ouvre les paramètres de clavier système, directement. Il y avait avant un
+    // écran « Avant de continuer » montrant une capture de l'avertissement
+    // d'Android : retiré en 23.0.0 (comme LuxKeyb en 34.4.0), parce que la
+    // capture, nette, ressemblait plus à une vraie fenêtre que la vraie, grisée
+    // par le thème sombre, et qu'on touchait le « OK » de l'image sans que rien
+    // ne se passe. La carte de l'étape 1 dit la même chose avant le départ. Pas
+    // de Toast non plus : il s'affichait par-dessus l'écran système, sans
+    // garantie de durée.
     private fun openKeyboardSettings() {
         try {
             // Horodater le départ vers les réglages : si l'utilisateur
@@ -3559,8 +3591,12 @@ class SettingsActivity : AppCompatActivity() {
             // affiche une carte d'encouragement ciblée
             onboardingPrefs().edit()
                 .putLong("settings_visit_at", System.currentTimeMillis()).apply()
+            // Pas de FLAG_ACTIVITY_NEW_TASK : l'écran des réglages doit
+            // s'empiler sur l'appli, pour que Retour y ramène. Avec ce
+            // drapeau, Samsung le posait dans la tâche Réglages déjà ouverte,
+            // par-dessus ce qu'on y avait laissé, et Retour menait à un ancien
+            // écran (« Correction orthographique ») au lieu de l'étape 2.
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             // Tentative de surlignage de la ligne IME dans l'écran système :
             // extra non documenté, respecté par les Settings AOSP/Pixel,
             // ignoré silencieusement ailleurs (pas d'effet de bord).
