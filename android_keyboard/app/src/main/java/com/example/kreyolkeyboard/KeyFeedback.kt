@@ -375,6 +375,22 @@ object KeyFeedback {
     }
 
     /**
+     * Retour de l'ouverture d'une popup d'accents par appui long (v23.0.0, repris de LuxKeyb 29.5.0) :
+     * vibration seule, l'effet système des appuis longs.
+     *
+     * Le long-clic natif la jouait de lui-même, en suivant le réglage du
+     * téléphone. Les touches à accents mesurant désormais leur propre délai,
+     * elle passe ici, sous l'interrupteur de vibration de l'application comme
+     * les autres retours.
+     */
+    fun onLongPress(view: View) {
+        val context = view.context
+        if (hapticEnabled ?: KeyboardPreferences.hapticEnabled(context).also { hapticEnabled = it }) {
+            vibrate(view, HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
+
+    /**
      * Retour d'un cran de déplacement du curseur, quand le doigt glisse sur la
      * barre d'espace (v14.0.0) : vibration seule, et jamais de son.
      *

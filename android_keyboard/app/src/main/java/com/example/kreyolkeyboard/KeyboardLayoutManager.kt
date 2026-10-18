@@ -18,6 +18,8 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 
 /**
  * Gestionnaire responsable de la création et du stylisme des layouts de clavier
@@ -175,6 +177,17 @@ class KeyboardLayoutManager(private val context: Context) {
     private val spaceLongPressHandler = Handler(Looper.getMainLooper())
     private var spaceLongPressRunnable: Runnable? = null
     private var isSpaceLongPressTriggered = false
+
+    // Appui long des touches à accents (v23.0.0, repris de LuxKeyb 29.5.0). Un seul délai, compté depuis
+    // l'instant où le doigt se pose et réglable (KeyboardPreferences), au lieu
+    // du long-clic natif d'Android suivi des 500 ms d'AccentHandler : près
+    // d'une seconde avant de voir « ò », jugé trop long par les utilisateurs.
+    // Un seul appui long à la fois : une autre touche posée entre-temps (frappe
+    // roulée) annule celui qui était en attente.
+    private val appuiLongHandler = Handler(Looper.getMainLooper())
+    private var appuiLongEnAttente: Runnable? = null
+    private var appuiLongVue: View? = null
+    private var appuiLongDeclenche = false
 
     // Glissement horizontal sur la barre d'espace (v14.0.0). L'ancre n'est pas
     // le point de départ du geste mais le dernier cran franchi : elle avance
@@ -940,6 +953,24 @@ class KeyboardLayoutManager(private val context: Context) {
             // le clic natif se déclenchait aussi) → double espace inséré à chaque frappe.
             button.setOnLongClickListener(null) // Désactiver le listener par défaut
             setupSpaceLongPress(button, key)
+        } else if (accentHandler?.hasAccents(key) == true) {
+            button.setOnClickListener {
+                interactionListener?.onKeyPress(key)
+            }
+            // Pas de long-clic natif : son délai, fixé par le système, s'ajoutait
+            // au nôtre. Le minuteur vit dans addAccentKeyTouch.
+            button.isLongClickable = false
+            addAccentKeyTouch(button, key)
+            // Sans long-clic natif, TalkBack perdrait son action « appui long »
+            // sur ces touches : elle est redéclarée ici, et ouvre la popup.
+            ViewCompat.replaceAccessibilityAction(
+                button,
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
+                "Autres caractères"
+            ) { vue, _ ->
+                interactionListener?.onLongPress(key, vue)
+                true
+            }
         } else {
             button.setOnClickListener {
                 interactionListener?.onKeyPress(key)
@@ -976,6 +1007,7 @@ class KeyboardLayoutManager(private val context: Context) {
         button.setOnTouchListener { view, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
                     isSpaceLongPressTriggered = false
                     isSpaceCursorMode = false
                     spaceCursorAnchorX = event.x
@@ -1084,6 +1116,8 @@ class KeyboardLayoutManager(private val context: Context) {
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
+
                     // Animation d'appui (100ms comme l'original)
                     v.animate()
                         .scaleX(0.95f)
@@ -1112,6 +1146,93 @@ class KeyboardLayoutManager(private val context: Context) {
         }
     }
     
+    /**
+     * Gestes d'une touche à accents : appui court, ou appui long qui ouvre la
+     * popup d'accents (v23.0.0, repris de LuxKeyb 29.5.0).
+     *
+     * Le minuteur part sur ACTION_DOWN, avec le délai choisi dans les réglages
+     * (0,3 s par défaut). Il est abandonné si le doigt se lève avant, s'il sort
+     * de la touche, ou si une autre touche est posée entre-temps.
+     *
+     * Quand la popup s'est ouverte, le relâchement ne doit pas écrire en plus
+     * la lettre de base. Le long-clic natif s'en chargeait en consommant le
+     * geste ; ici, le relâchement est converti en ACTION_CANCEL pour la touche,
+     * qui perd son état enfoncé sans déclencher son clic.
+     */
+    private fun addAccentKeyTouch(view: View, key: String) {
+        val slopPx = android.view.ViewConfiguration.get(context).scaledTouchSlop
+
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
+
+                    v.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(100)
+                        .start()
+
+                    KeyFeedback.onKeyPress(v, key)
+
+                    appuiLongVue = v
+                    appuiLongDeclenche = false
+                    val tache = Runnable {
+                        appuiLongEnAttente = null
+                        appuiLongDeclenche = true
+                        KeyFeedback.onLongPress(v)
+                        interactionListener?.onLongPress(key, v)
+                    }
+                    appuiLongEnAttente = tache
+                    appuiLongHandler.postDelayed(
+                        tache, KeyboardPreferences.delaiAppuiLong(context).ms
+                    )
+                    false
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    // Même tolérance que le long-clic natif : la touche, plus la
+                    // marge sous laquelle Android tient un doigt pour immobile.
+                    val horsDeLaTouche = event.x < -slopPx || event.y < -slopPx ||
+                            event.x > v.width + slopPx || event.y > v.height + slopPx
+                    if (appuiLongVue === v && horsDeLaTouche) {
+                        annulerAppuiLongEnAttente()
+                    }
+                    false
+                }
+                android.view.MotionEvent.ACTION_UP,
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    releaseKeyScale(v)
+
+                    val popupOuverte = appuiLongVue === v && appuiLongDeclenche
+                    if (appuiLongVue === v) {
+                        annulerAppuiLongEnAttente()
+                        appuiLongVue = null
+                        appuiLongDeclenche = false
+                    }
+                    interactionListener?.onKeyRelease()
+
+                    if (popupOuverte && event.action == android.view.MotionEvent.ACTION_UP) {
+                        val annulation = android.view.MotionEvent.obtain(event).apply {
+                            action = android.view.MotionEvent.ACTION_CANCEL
+                        }
+                        v.onTouchEvent(annulation)
+                        annulation.recycle()
+                        true
+                    } else {
+                        false
+                    }
+                }
+                else -> false
+            }
+        }
+    }
+
+    /** Abandonne l'appui long en attente, sans toucher à une popup déjà ouverte. */
+    private fun annulerAppuiLongEnAttente() {
+        appuiLongEnAttente?.let { appuiLongHandler.removeCallbacks(it) }
+        appuiLongEnAttente = null
+    }
+
     /**
      * Met à jour l'affichage du clavier selon l'état actuel
      */
@@ -1322,6 +1443,8 @@ class KeyboardLayoutManager(private val context: Context) {
      * Nettoie les ressources
      */
     fun cleanup() {
+        annulerAppuiLongEnAttente()
+        appuiLongVue = null
         keyboardButtons.forEach { button ->
             cleanupView(button)
         }

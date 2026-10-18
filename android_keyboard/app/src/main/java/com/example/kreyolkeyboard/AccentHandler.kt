@@ -2,8 +2,6 @@ package com.example.kreyolkeyboard
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -21,7 +19,6 @@ class AccentHandler(private val context: Context) {
     
     companion object {
         private const val TAG = "AccentHandler"
-        private const val LONG_PRESS_DELAY = 500L
         private const val POPUP_ELEVATION_DP = 8f
         private const val ACCENT_BUTTON_SIZE_DP = 48
         private const val ACCENT_BUTTON_MARGIN_DP = 4
@@ -151,8 +148,6 @@ class AccentHandler(private val context: Context) {
 
     // ├ëtat actuel
     private var currentAccentPopup: PopupWindow? = null
-    private val longPressHandler = Handler(Looper.getMainLooper())
-    private var longPressRunnable: Runnable? = null
     private var isLongPressTriggered = false
     private var currentBaseCharacter: String? = null
     
@@ -177,32 +172,29 @@ class AccentHandler(private val context: Context) {
     }
     
     /**
-     * Démarre le timer de pression longue pour une touche
+     * Ouvre tout de suite la popup d'accents d'une touche maintenue.
+     *
+     * Le délai d'appui long est mesuré par l'appelant, une seule fois, depuis
+     * l'instant où le doigt se pose ([KeyboardLayoutManager] pour les touches,
+     * le long-clic natif pour la grille d'emojis). Jusqu'à la 22.5.1 cette
+     * classe ajoutait ses propres 500 ms au long-clic d'Android, et « ò »
+     * demandait près d'une seconde de pression.
      */
-    fun startLongPressTimer(key: String, anchorButton: View) {
+    fun ouvrirPopupAppuiLong(key: String, anchorButton: View) {
         if (!hasAccents(key)) return
-        
+
         cancelLongPress()
         currentBaseCharacter = key  // Stocker le caractère de base
-        
-        longPressRunnable = Runnable {
-            isLongPressTriggered = true
-            showAccentPopup(key, anchorButton)
-            accentListener?.onLongPressStarted(key)
-        }
-        
-        longPressHandler.postDelayed(longPressRunnable!!, LONG_PRESS_DELAY)
+        isLongPressTriggered = true
+        showAccentPopup(key, anchorButton)
+        accentListener?.onLongPressStarted(key)
     }
-    
+
     /**
-     * Annule la pression longue en cours
+     * Clôt l'appui long en cours, au relâchement du doigt. La popup, si elle
+     * est ouverte, reste affichée : c'est là que l'on choisit l'accent.
      */
     fun cancelLongPress() {
-        longPressRunnable?.let {
-            longPressHandler.removeCallbacks(it)
-            longPressRunnable = null
-        }
-        
         if (isLongPressTriggered) {
             accentListener?.onLongPressCancelled()
             isLongPressTriggered = false

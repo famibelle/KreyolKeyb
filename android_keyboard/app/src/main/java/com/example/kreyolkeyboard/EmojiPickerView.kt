@@ -204,12 +204,14 @@ class EmojiPickerView(
                 onEmojiSelected?.invoke(emoji)
             }
 
-            // Même double-délai (timeout natif Android + LONG_PRESS_DELAY
-            // d'AccentHandler) que les autres touches à appui long du
-            // clavier : cohérence de timing avec le reste de l'app.
+            // Le long-clic natif reste ici, contrairement aux touches du
+            // clavier : la grille défile, et c'est lui qui distingue un doigt
+            // qui fait défiler d'un doigt qui maintient. Les tons de peau
+            // s'ouvrent dès qu'il se déclenche, sans les 500 ms qu'AccentHandler
+            // y ajoutait jusqu'à la 22.5.1.
             holder.label.setOnLongClickListener {
                 if (accentHandler?.hasAccents(emoji) == true) {
-                    accentHandler.startLongPressTimer(emoji, holder.label)
+                    accentHandler.ouvrirPopupAppuiLong(emoji, holder.label)
                 }
                 true
             }

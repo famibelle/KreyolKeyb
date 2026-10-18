@@ -232,21 +232,31 @@ explicitement, pas un bug.
 **Vérification.** Sur émulateur, les 18 appareils de la campagne multi-appareils
 du 16/08/2026, en portrait et en paysage.
 
-## 4. Délai d'appui long réglable
+## 4. Délai d'appui long réglable : FAIT en 23.0.0
 
-**Constat.** `AccentHandler.LONG_PRESS_DELAY = 500` et
-`KeyboardLayoutManager.SPACE_LONG_PRESS_DELAY = 1000` sont fixes. 500 ms est
-court quand le relâchement est lent : la popup d'accents s'ouvre alors sans que
-ce soit voulu. L'invariant de la lettre de base (voir plus haut) rend l'erreur
-récupérable, mais au prix d'un appui supplémentaire à chaque fois, ce qui va
-contre tout l'objectif.
+**Constat de départ.** `AccentHandler.LONG_PRESS_DELAY = 500` était fixe, mais
+ce n'était pas le seul délai : le minuteur ne partait qu'au long-clic natif
+d'Android (400 ms par défaut, jusqu'à 1,5 s selon le réglage « délai de
+l'appui prolongé » du téléphone). La popup d'accents demandait donc près d'une
+seconde de pression. Le besoin s'est révélé dans les deux sens, sur le clavier
+luxembourgeois issu de celui-ci (LuxKeyb 29.5.0, d'où vient ce correctif) : des
+utilisateurs l'ont trouvée trop lente, alors que ce document la jugeait trop
+rapide pour qui relâche lentement.
 
-**Où.** les deux constantes ci-dessus.
+**Ce qui a été fait.** Un seul délai, compté depuis l'instant où le doigt se
+pose (`KeyboardLayoutManager.addAccentKeyTouch`), et un réglage à quatre crans
+dans « Réglages du clavier » : 300 ms (défaut), 500, 800 et 1200 ms
+(`KeyboardPreferences.DelaiAppuiLong`). Les deux crans longs reprennent ceux
+que proposait ce point. L'action « appui long » de TalkBack est conservée.
 
-**Quoi.** Un réglage à trois crans (500, 800, 1200 ms) appliqué aux deux.
+**Pas fait.** `KeyboardLayoutManager.SPACE_LONG_PRESS_DELAY = 1000` (sélecteur
+de claviers sur la barre d'espace) reste fixe : il ne pose pas de problème de
+popup involontaire, la barre d'espace étant déjà la touche la plus large.
 
-**Vérification.** Maintenir une touche à accents environ une seconde et constater
-qu'aucune popup ne s'ouvre au cran le plus long.
+**Vérification.** Au cran « Très long », maintenir une touche à accents environ
+une seconde et constater qu'aucune popup ne s'ouvre. Au cran « Court », la
+popup s'ouvre en moins d'une demi-seconde, et une frappe rapide n'en ouvre
+aucune.
 
 ## 5. Nombre de propositions affichées
 

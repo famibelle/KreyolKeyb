@@ -38,6 +38,7 @@ object KeyboardPreferences {
     private const val KEY_RESTORE_ACCENTS = "restore_accents"
     private const val KEY_DOUBLE_SPACE_PERIOD = "double_space_period"
     private const val KEY_DROP_AUTO_SPACE = "drop_auto_space"
+    private const val KEY_LONG_PRESS_DELAY = "long_press_delay_ms"
 
     /** Les deux retours sont actifs par défaut, comme sur les autres claviers. */
     private const val DEFAULT_ENABLED = true
@@ -106,5 +107,41 @@ object KeyboardPreferences {
     fun setThemeMode(context: Context, mode: KeyboardTheme.Mode) {
         prefs(context).edit().putString(KEY_THEME_MODE, mode.cle).apply()
         KeyboardTheme.refresh(context)
+    }
+
+    /**
+     * Délai avant que l'appui long n'ouvre la popup d'accents d'une touche.
+     *
+     * Jusqu'à la 22.5.1, ce délai était fixe et s'ajoutait à celui du système :
+     * le long-clic natif d'Android (400 ms par défaut, jusqu'à 1,5 s selon le
+     * réglage d'accessibilité du téléphone) puis 500 ms d'AccentHandler, soit
+     * près d'une seconde avant de voir « ò ». Des utilisateurs de LuxKeyb l'ont trouvé trop
+     * long, et Gboard tourne autour de 300 ms. Le délai part désormais du
+     * moment où le doigt se pose, et un seul.
+     *
+     * Les crans longs restent pour qui relâche lentement (ACCESSIBILITE.md,
+     * point 4) : une popup ouverte sans le vouloir coûte un appui de plus.
+     */
+    enum class DelaiAppuiLong(val ms: Long, val libelle: String) {
+        COURT(300L, "Court (0,3 s)"),
+        MOYEN(500L, "Moyen (0,5 s)"),
+        LONG(800L, "Long (0,8 s)"),
+        TRES_LONG(1200L, "Très long (1,2 s)");
+
+        companion object {
+            val DEFAUT = COURT
+
+            /** Tolérante, comme [KeyboardTheme.Mode.depuisCle] : une valeur
+             *  inconnue retombe sur le défaut plutôt que de jeter. */
+            fun depuisMs(ms: Long?): DelaiAppuiLong =
+                entries.firstOrNull { it.ms == ms } ?: DEFAUT
+        }
+    }
+
+    fun delaiAppuiLong(context: Context): DelaiAppuiLong =
+        DelaiAppuiLong.depuisMs(prefs(context).getLong(KEY_LONG_PRESS_DELAY, DelaiAppuiLong.DEFAUT.ms))
+
+    fun setDelaiAppuiLong(context: Context, delai: DelaiAppuiLong) {
+        prefs(context).edit().putLong(KEY_LONG_PRESS_DELAY, delai.ms).apply()
     }
 }
