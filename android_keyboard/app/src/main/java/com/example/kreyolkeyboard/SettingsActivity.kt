@@ -151,6 +151,25 @@ class SettingsActivity : AppCompatActivity() {
         /** Onglet à ouvrir au démarrage, quand l'activité est lancée depuis le clavier. */
         const val EXTRA_OPEN_TAB = "open_tab"
 
+        /** Largeur du rail d'onglets d'une tablette couchée. */
+        const val RAIL_LARGEUR_DP = 104
+
+        /**
+         * Les écrans de texte, ramenés à une colonne centrée sur tablette (voir
+         * [LargeurLecture]). Les jeux à grille n'y sont pas : ils ont leurs deux
+         * colonnes ([DeuxColonnes]). Le Dictionnaire non plus : il montre sa
+         * liste et sa fiche côte à côte.
+         */
+        private val ECRANS_DE_LECTURE = setOf(
+            OnboardingFragment::class.java,
+            StatsFragment::class.java,
+            AboutFragment::class.java,
+            GuideFragment::class.java,
+            WordScrambleFragment::class.java,
+            MoKarenajFragment::class.java,
+            ClozeFragment::class.java,
+        )
+
         /**
          * Pause dans la frappe avant d'ouvrir la fenêtre « Klavyé Kréyòl
          * aktivé ! » (v23.0.0, repris de LuxKeyb 34.4.0). Côté luxembourgeois,
@@ -248,6 +267,23 @@ class SettingsActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Sur tablette, les écrans de texte sont ramenés à une colonne de
+        // lecture centrée. Une seule surveillance plutôt qu'un appel dans
+        // chaque écran : elle couvre aussi le guide, ouvert dans une feuille.
+        supportFragmentManager.registerFragmentLifecycleCallbacks(
+            object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                override fun onFragmentViewCreated(
+                    fm: androidx.fragment.app.FragmentManager,
+                    f: Fragment,
+                    v: View,
+                    savedInstanceState: Bundle?
+                ) {
+                    if (f.javaClass in ECRANS_DE_LECTURE) LargeurLecture.borner(v)
+                }
+            },
+            true
+        )
         
         // Restaurer l'onglet actif si l'activité a été recréée, ou honorer
         // l'onglet demandé par l'intent (puce de niveau tapée depuis le clavier).
@@ -302,13 +338,34 @@ class SettingsActivity : AppCompatActivity() {
             
             // 🔄 Démarrer au milieu de la plage virtuelle pour permettre le swipe dans les deux sens
             post {
+                // Après une rotation, ViewPager2 a déjà rétabli sa page et les
+                // fragments qu'elle portait : y sauter à nouveau en créerait
+                // une neuve, et le jeu en cours serait perdu.
+                if (savedInstanceState != null &&
+                    currentItem % SettingsPagerAdapter.REAL_COUNT == requestedTab
+                ) return@post
                 val startPosition = SettingsPagerAdapter.START_POSITION - (SettingsPagerAdapter.START_POSITION % SettingsPagerAdapter.REAL_COUNT) + requestedTab
                 setCurrentItem(startPosition, false)
             }
         }
         
-        mainLayout.addView(tabBar)
-        mainLayout.addView(viewPager)
+        if (navigationLaterale()) {
+            mainLayout.addView(createAppHeader())
+            mainLayout.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                )
+                addView(tabBar)
+                viewPager.layoutParams = LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                )
+                addView(viewPager)
+            })
+        } else {
+            mainLayout.addView(tabBar)
+            mainLayout.addView(viewPager)
+        }
 
         // FrameLayout racine : mainLayout en plein écran + bandeau d'installation
         // superposé, ancré en bas, visible dès l'onboarding (indépendant du scroll
@@ -788,88 +845,117 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun createTabBar(): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+    /**
+     * Sur une tablette couchée, les onglets passent dans un rail à gauche
+     * (v23.0.0, repris de LuxKeyb 34.2.0).
+     *
+     * En haut, ils prenaient 70 dp sur les 800 de hauteur, et c'est la hauteur
+     * qui manque aux jeux à grille ; la largeur, elle, est en trop. Le bandeau
+     * bleu reste en haut, sur toute la largeur.
+     */
+    private fun navigationLaterale(): Boolean = DeuxColonnes.actives(this)
+
+    /** Le bandeau bleu : titre et engrenage des réglages du clavier. */
+    private fun createAppHeader(): LinearLayout {
+        val appHeader = LinearLayout(this@SettingsActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(Color.WHITE)
-            elevation = 4f // Ombre légère pour séparer du contenu
-            
-            // Bandeau bleu en haut
-            val appHeader = LinearLayout(this@SettingsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
+            setBackgroundColor(Color.parseColor("#0080FF"))
+            gravity = Gravity.CENTER
+            setPadding(16, 16, 16, 16)
+        }
+        
+        val appTitle = TextView(this@SettingsActivity).apply {
+            text = "Klavyé Kréyòl"
+            textSize = 22f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            // Poids 1 : le titre occupe la place laissée par l'engrenage et reste
+            // centré sur le bandeau entier.
+            layoutParams = LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            )
+        }
+
+        // Les réglages du clavier vivent derrière cet engrenage, dans leur propre
+        // écran : c'est la convention Android, et la barre porte déjà sept onglets.
+        // Icône vectorielle blanche, et non l'emoji ⚙️ : la police emoji du
+        // système le dessine en gris bleuté, une teinte que le bandeau bleu
+        // avale. Le tracé blanc ne dépend plus de la police du téléphone et
+        // ressort de la même façon sur tous les appareils.
+        val densite = resources.displayMetrics.density
+        val settingsButton = ImageView(this@SettingsActivity).apply {
+            setImageResource(R.drawable.ic_settings_gear)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = "Réglages du clavier"
+            // 48 dp de zone tactile, icône dessinée à 26 dp au centre : c'est
+            // l'encombrement qu'avait déjà le TextView, la hauteur du bandeau
+            // ne bouge donc pas.
+            val zone = (48 * densite).toInt()
+            layoutParams = LinearLayout.LayoutParams(zone, zone)
+            val marge = (11 * densite).toInt()
+            setPadding(marge, marge, marge, marge)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, KeyboardSettingsActivity::class.java))
+            }
+        }
+
+        // Cale de la largeur de l'engrenage, à gauche : sans elle le titre,
+        // centré dans la place restante, se décale visiblement vers la gauche.
+        appHeader.addView(View(this@SettingsActivity).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                (48 * densite).toInt(), 1
+            )
+        })
+        appHeader.addView(appTitle)
+        appHeader.addView(settingsButton)
+        return appHeader
+    }
+
+    private fun createTabBar(): LinearLayout {
+        val rail = navigationLaterale()
+        return LinearLayout(this).apply {
+            orientation = if (rail) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+            layoutParams = if (rail) {
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            } else {
+                LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
-                setBackgroundColor(Color.parseColor("#0080FF"))
-                gravity = Gravity.CENTER
-                setPadding(16, 16, 16, 16)
             }
-            
-            val appTitle = TextView(this@SettingsActivity).apply {
-                text = "Klavyé Kréyòl"
-                textSize = 22f
-                setTextColor(Color.WHITE)
-                setTypeface(null, Typeface.BOLD)
-                gravity = Gravity.CENTER
-                // Poids 1 : le titre occupe la place laissée par l'engrenage et reste
-                // centré sur le bandeau entier.
-                layoutParams = LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                )
-            }
-
-            // Les réglages du clavier vivent derrière cet engrenage, dans leur propre
-            // écran : c'est la convention Android, et la barre porte déjà sept onglets.
-            // Icône vectorielle blanche, et non l'emoji ⚙️ : la police emoji du
-            // système le dessine en gris bleuté, une teinte que le bandeau bleu
-            // avale. Le tracé blanc ne dépend plus de la police du téléphone et
-            // ressort de la même façon sur tous les appareils.
-            val densite = resources.displayMetrics.density
-            val settingsButton = ImageView(this@SettingsActivity).apply {
-                setImageResource(R.drawable.ic_settings_gear)
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                contentDescription = "Réglages du clavier"
-                // 48 dp de zone tactile, icône dessinée à 26 dp au centre : c'est
-                // l'encombrement qu'avait déjà le TextView, la hauteur du bandeau
-                // ne bouge donc pas.
-                val zone = (48 * densite).toInt()
-                layoutParams = LinearLayout.LayoutParams(zone, zone)
-                val marge = (11 * densite).toInt()
-                setPadding(marge, marge, marge, marge)
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
-                    startActivity(Intent(this@SettingsActivity, KeyboardSettingsActivity::class.java))
-                }
-            }
-
-            // Cale de la largeur de l'engrenage, à gauche : sans elle le titre,
-            // centré dans la place restante, se décale visiblement vers la gauche.
-            appHeader.addView(View(this@SettingsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    (48 * densite).toInt(), 1
-                )
-            })
-            appHeader.addView(appTitle)
-            appHeader.addView(settingsButton)
+            setBackgroundColor(Color.WHITE)
+            elevation = 4f // Ombre légère pour séparer du contenu
             
             // Container pour les onglets
             val tabContainer = LinearLayout(this@SettingsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = if (rail) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
                 // Hauteur suivant le contenu, et non 140 px figés : l'emoji seul en
                 // réclamait 165 (60 dp), donc le libellé de chaque onglet était rogné
                 // hors de la vue et la barre n'identifiait sept destinations que par
                 // des emojis nus.
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                gravity = Gravity.CENTER
+                layoutParams = if (rail) {
+                    LinearLayout.LayoutParams(
+                        (RAIL_LARGEUR_DP * resources.displayMetrics.density).toInt(),
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                } else {
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                gravity = if (rail) Gravity.CENTER_HORIZONTAL or Gravity.TOP else Gravity.CENTER
+                if (rail) setPadding(0, (8 * resources.displayMetrics.density).toInt(), 0, 0)
             }
             
             // Tab Dékolaj (« Démarrage » jusqu'en 22.4.0, mot kréyòl donné par le
@@ -906,16 +992,17 @@ class SettingsActivity : AppCompatActivity() {
             // quotidiennes. Elles s'ouvrent depuis le pied de l'onglet
             // Dékolaj, en plein écran (voir SheetFragment).
 
-            // Ligne de séparation en bas (fine)
+            // Ligne de séparation fine : en bas de la barre, à droite du rail
             val separator = View(this@SettingsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    2
-                )
+                layoutParams = if (rail) {
+                    LinearLayout.LayoutParams(2, LinearLayout.LayoutParams.MATCH_PARENT)
+                } else {
+                    LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
+                }
                 setBackgroundColor(Color.parseColor("#E0E0E0"))
             }
             
-            addView(appHeader)
+            if (!rail) addView(createAppHeader())
             addView(tabContainer)
             addView(separator)
         }
@@ -935,11 +1022,19 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(8, 10, 8, 8)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1f
-            )
+            layoutParams = if (navigationLaterale()) {
+                // Dans le rail : empilés en haut, chacun à sa hauteur.
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = (4 * resources.displayMetrics.density).toInt() }
+            } else {
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f
+                )
+            }
             // Background légèrement coloré si onglet actif
             setBackgroundColor(
                 if (tabIndex == currentTab) 
@@ -1628,6 +1723,10 @@ class SettingsActivity : AppCompatActivity() {
                 tvReste.text = phraseProgression(decouverts) + " ›"
             }
         }.start()
+
+        // Sur une tablette couchée, les quatre cartes tiennent en deux rangées
+        // sous la date (v23.0.0, repris de LuxKeyb 34.2.0).
+        if (DeuxColonnes.actives(this)) DeuxColonnes.parPaires(colonne, 1)
 
         return colonne
     }
@@ -4178,7 +4277,9 @@ class SettingsActivity : AppCompatActivity() {
                 
                 var currentRowWidth = 0
                 // Calculer la largeur disponible: largeur écran - padding container (24) - padding statsContainer (48) - marges (24)
-                val screenWidth = resources.displayMetrics.widthPixels - 96
+                // La largeur du contenu, et non celle de l'écran : sur tablette
+                // l'onglet est ramené à une colonne (voir LargeurLecture).
+                val screenWidth = LargeurLecture.largeur(this@SettingsActivity) - 96
                 
                 words.forEach { word ->
                     // Créer le chip du mot
@@ -5121,20 +5222,39 @@ class SettingsActivity : AppCompatActivity() {
                     // Grille de mots mêlés
                     gridView = GridView(activity).apply {
                         // Calculer la taille disponible pour la grille
-                        val screenWidth = resources.displayMetrics.widthPixels
-                        val availableWidth = screenWidth - 48
+                        val screenWidth = LargeurLecture.largeurEcran(activity)
+                        val deuxColonnes = DeuxColonnes.actives(activity)
+                        val availableWidth = ((screenWidth - 48) *
+                            (if (deuxColonnes) DeuxColonnes.PART_GRILLE else 1f)).toInt()
                         
                         // La grille est toujours 8x8
                         val gridSize = 8
                         // Calculer la taille d'une cellule en fonction de la largeur
-                        val cellSize = availableWidth / gridSize
+                        var cellSize = availableWidth / gridSize
+                        // Sur tablette, la largeur seule donnait des cases de
+                        // trois centimètres et une grille plus haute que
+                        // l'écran : la hauteur borne aussi. Un téléphone
+                        // couché avait le même défaut, en pire : une seule
+                        // rangée visible. Debout, il garde sa grille.
+                        val configuration = resources.configuration
+                        if (configuration.smallestScreenWidthDp >= 600 ||
+                            configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                            val budgetHauteur = (resources.displayMetrics.heightPixels *
+                                (if (deuxColonnes) DeuxColonnes.PART_HAUTEUR else 0.5f)).toInt()
+                            cellSize = minOf(cellSize, budgetHauteur / gridSize)
+                        }
                         // Hauteur de la grille = 8 cellules + espacements + padding
                         val gridHeight = (cellSize * gridSize) + (4 * (gridSize - 1)) + 24
                         
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            gridHeight
-                        )
+                        layoutParams = if (cellSize * gridSize < availableWidth) {
+                            LinearLayout.LayoutParams(gridHeight, gridHeight)
+                                .apply { gravity = Gravity.CENTER_HORIZONTAL }
+                        } else {
+                            LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                gridHeight
+                            )
+                        }
                         setPadding(12, 12, 12, 12)
                         stretchMode = GridView.STRETCH_COLUMN_WIDTH
                         setBackgroundColor(Color.parseColor("#F5F5F5")) // Fond gris très clair
@@ -5201,6 +5321,16 @@ class SettingsActivity : AppCompatActivity() {
                         setBackgroundColor(Color.parseColor("#FFFFFF"))
                     }
                     addView(wordsListContainer)
+
+                    // Tablette couchée : la grille à gauche, le reste à droite
+                    // (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(headerLayout),
+                            aGauche = listOf(gridView)
+                        )
+                    }
                 }
                 
                 addView(mainLayout)
@@ -7449,6 +7579,17 @@ class SettingsActivity : AppCompatActivity() {
                         })
                     }
                     addView(carteRegles)
+
+                    // Tablette couchée : la définition et la grille à gauche,
+                    // les listes et les boutons à droite ; le pavé reste
+                    // épinglé dessous (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(entete, ligneDifficulte),
+                            aGauche = listOf(carteDefinition, conteneurGrille)
+                        )
+                    }
                 }
 
                 addView(colonne)
@@ -7685,7 +7826,8 @@ class SettingsActivity : AppCompatActivity() {
             lettresCase.clear()
 
             val densite = resources.displayMetrics.density
-            val disponible = resources.displayMetrics.widthPixels - (48 * 2)
+            val disponible = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (DeuxColonnes.actives(activity)) DeuxColonnes.PART_GRILLE else 1f)).toInt()
             val cote = minOf(disponible / grille.width, (44 * densite).toInt())
 
             for (r in 0 until grille.height) {
@@ -8173,8 +8315,11 @@ class SettingsActivity : AppCompatActivity() {
             // aurait poussé les derniers jeux hors de l'écran, là où on ne les
             // découvre plus. Une ligne incomplète (le nombre de jeux est
             // impair) reçoit une cale de même poids, faute de quoi sa carte
-            // s'étirerait sur toute la largeur.
-            jeux.chunked(2).forEach { paire ->
+            // s'étirerait sur toute la largeur. Quatre par ligne sur une
+            // tablette couchée : les sept jeux y tiennent alors sur un écran,
+            // au lieu de cartes de 50 cm de large qu'il fallait faire défiler.
+            val parLigne = if (DeuxColonnes.actives(activity)) 4 else 2
+            jeux.chunked(parLigne).forEach { paire ->
                 colonne.addView(LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(
@@ -8182,9 +8327,9 @@ class SettingsActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply { bottomMargin = 16 }
                     paire.forEachIndexed { rang, jeu ->
-                        addView(carteJeu(activity, jeu, marginDroite = rang == 0))
+                        addView(carteJeu(activity, jeu, marginDroite = rang < parLigne - 1))
                     }
-                    if (paire.size == 1) {
+                    repeat(parLigne - paire.size) {
                         addView(View(activity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
@@ -8815,6 +8960,16 @@ class SettingsActivity : AppCompatActivity() {
                         })
                     }
                     addView(carteRegles)
+
+                    // Tablette couchée : la grille à gauche, la liste des mots
+                    // et les boutons à droite (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(entete, ligneDifficulte),
+                            aGauche = listOf(tvRetour, conteneurGrille)
+                        )
+                    }
                 }
 
                 addView(colonne)
@@ -8915,8 +9070,13 @@ class SettingsActivity : AppCompatActivity() {
             conteneurGrille.clipToPadding = false
 
             val densite = resources.displayMetrics.density
-            val disponible = resources.displayMetrics.widthPixels - (48 * 2)
-            val budgetHauteur = (resources.displayMetrics.heightPixels * 0.38f).toInt()
+            val deuxColonnes = DeuxColonnes.actives(activity)
+            val disponible = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (deuxColonnes) DeuxColonnes.PART_GRILLE else 1f)).toInt()
+            // En deux colonnes, la liste n'est plus sous la grille : elle
+            // reprend la hauteur qu'elle occupait.
+            val budgetHauteur = (resources.displayMetrics.heightPixels *
+                (if (deuxColonnes) DeuxColonnes.PART_HAUTEUR else 0.38f)).toInt()
             val cote = minOf(
                 disponible / grille.width,
                 budgetHauteur / grille.height,
@@ -8990,7 +9150,9 @@ class SettingsActivity : AppCompatActivity() {
 
             val grille = partie.grid
             val densite = resources.displayMetrics.density
-            val largeurDispo = resources.displayMetrics.widthPixels - (48 * 2)
+            // En deux colonnes, la liste n'a que la colonne de droite.
+            val largeurDispo = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (DeuxColonnes.actives(activity)) 1f - DeuxColonnes.PART_GRILLE else 1f)).toInt()
             val ecart = (8 * densite).toInt()
 
             partie.liste
@@ -9734,6 +9896,26 @@ class SettingsActivity : AppCompatActivity() {
 
         private var rootView: ScrollView? = null
         private lateinit var champRecherche: EditText
+
+        /**
+         * Le panneau de droite où s'ouvre la fiche, sur tablette en paysage
+         * seulement ; ailleurs elle reste une fenêtre ancrée en bas (v23.0.0,
+         * repris de LuxKeyb 34.1.0).
+         *
+         * Côte à côte, on parcourt les résultats sans ouvrir et fermer une
+         * fenêtre à chaque mot : c'est ce que le grand écran apporte à un
+         * dictionnaire.
+         */
+        private var panneauFiche: FrameLayout? = null
+
+        /** La fiche ouverte dans le panneau, pour la retrouver après une rotation. */
+        class FicheOuverte : androidx.lifecycle.ViewModel() {
+            var entree: TranslationDictionary.Entree? = null
+        }
+
+        private val ficheOuverte by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[FicheOuverte::class.java]
+        }
         private lateinit var conteneurResultats: LinearLayout
         private lateinit var tvEtat: TextView
 
@@ -9850,7 +10032,57 @@ class SettingsActivity : AppCompatActivity() {
             rootView = racine
 
             afficherResultats("")
-            return racine
+            if (!DeuxColonnes.actives(activity)) {
+                panneauFiche = null
+                return racine
+            }
+
+            // Tablette en paysage : la liste à gauche, la fiche à droite.
+            val panneau = FrameLayout(activity).apply {
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                )
+            }
+            panneauFiche = panneau
+            val choisie = ficheOuverte.entree
+            if (choisie != null) montrerDansLePanneau(activity, choisie) else inviterAuChoix(activity)
+
+            return LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+                addView(racine, LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                ))
+                addView(panneau)
+            }
+        }
+
+        /** Le panneau vide : il dit à quoi il sert plutôt que de rester blanc. */
+        private fun inviterAuChoix(activity: SettingsActivity) {
+            val panneau = panneauFiche ?: return
+            panneau.removeAllViews()
+            panneau.addView(TextView(activity).apply {
+                text = "Touchez un mot de la liste pour ouvrir sa fiche ici."
+                textSize = 16f
+                gravity = Gravity.CENTER
+                setTextColor(Color.parseColor("#999999"))
+                setLineSpacing(0f, 1.25f)
+                setPadding(48, 48, 48, 48)
+            }, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            ))
+        }
+
+        private fun montrerDansLePanneau(
+            activity: SettingsActivity,
+            entree: TranslationDictionary.Entree
+        ) {
+            val panneau = panneauFiche ?: return
+            ficheOuverte.entree = entree
+            panneau.removeAllViews()
+            panneau.addView(contenuFiche(activity, entree, null))
         }
 
         override fun onResume() {
@@ -9966,6 +10198,10 @@ class SettingsActivity : AppCompatActivity() {
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree
         ) {
+            if (panneauFiche != null) {
+                montrerDansLePanneau(activity, entree)
+                return
+            }
             // Une Dialog ordinaire ancrée en bas, et non un BottomSheetDialog :
             // Material y appelle Window.setStatusBarColor et
             // setNavigationBarColor, obsolètes depuis Android 15, et la Play
@@ -9989,7 +10225,8 @@ class SettingsActivity : AppCompatActivity() {
         private fun contenuFiche(
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree,
-            dialogue: Dialog
+            /** `null` quand la fiche est dans le panneau d'une tablette : rien à fermer. */
+            dialogue: Dialog?
         ): View {
             val colonne = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -10098,7 +10335,7 @@ class SettingsActivity : AppCompatActivity() {
                     Color.parseColor("#FF8C00"), Color.WHITE, null
                 ) {
                     copierMot(activity, entree.mot)
-                    dialogue.dismiss()
+                    dialogue?.dismiss()
                 }.apply {
                     (layoutParams as LinearLayout.LayoutParams).bottomMargin = 20
                 })
@@ -10116,7 +10353,7 @@ class SettingsActivity : AppCompatActivity() {
                         Color.parseColor("#B9D6DD")
                     ) {
                         ouvrirLien(activity, url)
-                        dialogue.dismiss()
+                        dialogue?.dismiss()
                     })
                 }
             })
@@ -10205,6 +10442,7 @@ class SettingsActivity : AppCompatActivity() {
             super.onDestroyView()
             rechercheEnAttente?.let { delaiRecherche.removeCallbacks(it) }
             rootView = null
+            panneauFiche = null
         }
     }
 
