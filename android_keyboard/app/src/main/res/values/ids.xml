@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Le cadre où s'ouvre un jeu, sous l'onglet Jé : un identifiant fixe,
+         pour que le jeu restauré après une rotation retrouve son cadre et
+         garde sa partie. Un identifiant tiré au hasard le perdait. -->
+    <item name="conteneur_jeu" type="id" />
+
+    <!-- Les quatre onglets : sans identifiant, ViewPager2 n'enregistre pas
+         les pages qu'il porte, et une rotation les recréait toutes à neuf,
+         jeu en cours compris. -->
+    <item name="onglets" type="id" />
+</resources>

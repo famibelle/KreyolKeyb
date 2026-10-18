@@ -59,6 +59,51 @@ class KeyboardLayoutManager(private val context: Context) {
         // étant la seule ressource qui manque dans cette orientation, où la largeur
         // laisse au contraire chaque touche deux fois plus large qu'en portrait.
         private const val BUTTON_HEIGHT_LANDSCAPE_DP = BUTTON_MIN_HEIGHT_DP
+        // Sur tablette, la hauteur ne manque dans aucune orientation, et un
+        // doigt y vise des touches nettement plus larges qu'au téléphone : 48 dp
+        // les laissaient deux fois et demie plus larges que hautes en paysage.
+        // Les libellés et les aperçus des coins suivent, étant proportionnels.
+        private const val BUTTON_HEIGHT_TABLET_DP = 56
+        /**
+         * Part de la largeur laissée vide au milieu d'un clavier scindé (v23.0.0,
+         * repris de LuxKeyb 34.2.0) : sur une tablette de 10 pouces couchée,
+         * chaque moitié garde des touches de la largeur de celles d'un
+         * téléphone, et le centre, que les pouces n'atteignent pas, reste libre.
+         */
+        internal const val PART_VIDE_SCINDE = 0.3f
+
+        /**
+         * Une rangée coupée en deux : les touches et la place du vide central, en
+         * poids. La coupure tombe au milieu de la largeur de la rangée ; la touche
+         * qui la chevauche passe à gauche, sauf la barre d'espace, dédoublée pour
+         * qu'il y en ait une sous chaque pouce.
+         */
+        internal fun scinder(keys: Array<String>, poids: (String) -> Float): List<Pair<String?, Float>> {
+            val total = keys.sumOf { poids(it).toDouble() }.toFloat()
+            val vide = total * PART_VIDE_SCINDE / (1f - PART_VIDE_SCINDE)
+            val resultat = mutableListOf<Pair<String?, Float>>()
+            var cumul = 0f
+            var coupe = false
+            for (key in keys) {
+                val w = poids(key)
+                if (!coupe && cumul + w >= total / 2f) {
+                    coupe = true
+                    if (key == " " && cumul < total / 2f) {
+                        val gauche = total / 2f - cumul
+                        resultat += key to gauche
+                        resultat += null to vide
+                        resultat += key to (w - gauche)
+                    } else {
+                        resultat += key to w
+                        resultat += null to vide
+                    }
+                } else {
+                    resultat += key to w
+                }
+                cumul += w
+            }
+            return resultat
+        }
         private const val KEYBOARD_ROW_COUNT = 4
         // Padding vertical du bloc de touches, resserré en paysage pour la même
         // raison. Le service s'en sert pour calculer la place laissée aux rangées,
@@ -144,8 +189,20 @@ class KeyboardLayoutManager(private val context: Context) {
         internal fun cursorStepsFor(deltaPx: Float, stepPx: Float): Int =
             if (stepPx <= 0f) 0 else (deltaPx / stepPx).toInt()
 
+        /**
+         * Vrai en paysage **sur un téléphone** : c'est la hauteur qui y manque,
+         * et tout ce qui s'en sert (touches à 32 dp, une seule rangée de
+         * suggestions, marges resserrées) répond à ce manque. Une tablette
+         * couchée garde 800 dp de haut ; lui appliquer ces économies lui donnait
+         * des touches plates et des aperçus de coin illisibles.
+         */
         fun isLandscape(context: Context): Boolean =
-            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                !isTablet(context)
+
+        /** Tablette : plus petit côté d'au moins 600 dp, la convention d'Android. */
+        fun isTablet(context: Context): Boolean =
+            context.resources.configuration.smallestScreenWidthDp >= 600
 
         fun verticalPaddingDp(context: Context): Int =
             if (isLandscape(context)) VERTICAL_PADDING_LANDSCAPE_DP else VERTICAL_PADDING_DP
@@ -261,7 +318,11 @@ class KeyboardLayoutManager(private val context: Context) {
      */
     private fun keyHeightPx(): Int {
         val nominal = dpToPx(
-            if (isLandscape(context)) BUTTON_HEIGHT_LANDSCAPE_DP else BUTTON_HEIGHT_DP
+            when {
+                isLandscape(context) -> BUTTON_HEIGHT_LANDSCAPE_DP
+                isTablet(context) -> BUTTON_HEIGHT_TABLET_DP
+                else -> BUTTON_HEIGHT_DP
+            }
         )
         if (availableRowsHeightPx <= 0) return nominal
         val verticalMargins = dpToPx(BUTTON_MARGIN_DP) * 2
@@ -523,13 +584,23 @@ class KeyboardLayoutManager(private val context: Context) {
             }
         }
         
-        val totalWeight = calculateRowWeight(keys)
-        
-        for (key in keys) {
+        // Sur une tablette couchée, réglage allumé : un vide au milieu, sans
+        // touche, qui renvoie chaque moitié contre son bord.
+        val touches: List<Pair<String?, Float>> =
+            if (rangeesScindees()) scinder(keys, ::poidsTouche) else keys.map { it to getKeyWeight(it) }
+        val totalWeight = touches.sumOf { it.second.toDouble() }.toFloat()
+
+        for ((key, weight) in touches) {
+            if (key == null) {
+                rowLayout.addView(View(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, 1, weight)
+                })
+                continue
+            }
             // createKeyButton() alimente déjà keyboardButtons avec la touche
             // interactive brute (avant l'éventuel enrobage des indices de coin) ;
             // un second ajout ici dupliquait chaque touche dans la liste.
-            val button = createKeyButton(key, totalWeight)
+            val button = createKeyButton(key, totalWeight, weight)
             rowLayout.addView(button)
         }
         
@@ -539,7 +610,7 @@ class KeyboardLayoutManager(private val context: Context) {
     /**
      * Crée un bouton de touche individuel (Button ou ImageButton selon le type)
      */
-    private fun createKeyButton(key: String, totalWeight: Float): View {
+    private fun createKeyButton(key: String, totalWeight: Float, poids: Float = getKeyWeight(key)): View {
         // Déterminer si on utilise une icône Material Design
         val useIcon = key in listOf("⌫", "⏎", "⇧")
         
@@ -603,7 +674,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 tag = key
                 
                 // Calcul du poids selon le type de touche
-                val weight = getKeyWeight(key)
+                val weight = poids
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     keyHeightPx(),
@@ -654,7 +725,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 val widthRatio = if (key == "EMOJI") EMOJI_WIDTH_RATIO else LABEL_WIDTH_RATIO
                 val taillePx = minOf(
                     keyHeightPx() * labelRatio,
-                    keyWidthPx(getKeyWeight(key), totalWeight) * widthRatio
+                    keyWidthPx(poids, totalWeight) * widthRatio
                 )
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, taillePx)
                 // Même raison que pour les puces de suggestion : la réserve de
@@ -680,7 +751,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 minWidth = 0
                 
                 // Calcul du poids selon le type de touche
-                val weight = getKeyWeight(key)
+                val weight = poids
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     keyHeightPx(),
@@ -1499,6 +1570,21 @@ class KeyboardLayoutManager(private val context: Context) {
     }
     
     private fun getKeyWeight(key: String): Float = poidsTouche(key)
+
+    /** Le réglage « clavier scindé », tel que lu dans les préférences. */
+    private var scinde = false
+
+    /** Retient le réglage ; `true` quand il change, la vue est alors à refaire. */
+    fun definirScinde(nouveau: Boolean): Boolean {
+        if (nouveau == scinde) return false
+        scinde = nouveau
+        return true
+    }
+
+    /** Coupé en deux pour de vrai : réglage allumé, tablette, tenue couchée. */
+    private fun rangeesScindees(): Boolean =
+        scinde && isTablet(context) &&
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     private fun calculateRowWeight(keys: Array<String>): Float {
         return keys.sumOf { getKeyWeight(it).toDouble() }.toFloat()

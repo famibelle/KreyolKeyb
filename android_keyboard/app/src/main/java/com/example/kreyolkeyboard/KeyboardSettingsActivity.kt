@@ -124,6 +124,25 @@ class KeyboardSettingsActivity : AppCompatActivity() {
         })
         addView(espacement())
 
+        // Sur tablette seulement : un téléphone couché n'a pas la largeur d'un
+        // clavier coupé en deux.
+        if (KeyboardLayoutManager.isTablet(this@KeyboardSettingsActivity)) {
+            addView(carte().apply {
+                addView(titreSection("Disposition"))
+                addView(interrupteur(
+                    "Clavier scindé en paysage",
+                    KeyboardPreferences.clavierScinde(this@KeyboardSettingsActivity)
+                ) { actif ->
+                    KeyboardPreferences.setClavierScinde(this@KeyboardSettingsActivity, actif)
+                })
+                addView(explication(
+                    "Sur une tablette tenue à deux mains, les touches se partagent entre " +
+                            "les deux bords, à portée des pouces. Tablettes seulement, tenues couchées."
+                ))
+            })
+            addView(espacement())
+        }
+
         addView(carte().apply {
             addView(titreSection("Suggestions"))
             addView(explication(
