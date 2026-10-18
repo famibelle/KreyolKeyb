@@ -6,6 +6,11 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.app.Dialog
+import android.graphics.drawable.ColorDrawable
+import android.view.Window
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.kreyolkeyboard.gamification.CreoleLevels
 import com.example.kreyolkeyboard.gamification.LevelUpNotifier
 import android.content.Intent
@@ -56,9 +61,6 @@ import com.example.kreyolkeyboard.crossword.CrosswordDifficulty
 import com.example.kreyolkeyboard.crossword.CrosswordGrid
 import com.example.kreyolkeyboard.crossword.CrosswordSession
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.snackbar.Snackbar
 import com.example.kreyolkeyboard.wordsearch.WordSearchPuzzle
 import com.example.kreyolkeyboard.wordsearch.WordSearchWord
 import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
@@ -93,6 +95,17 @@ import com.example.kreyolkeyboard.carnet.JeuCarte
 import com.example.kreyolkeyboard.carnet.Pochette
 
 class SettingsActivity : AppCompatActivity() {
+    /**
+     * Le jeu ouvert dans l'onglet Jé (rang dans `GamesFragment.jeux`), ou -1.
+     *
+     * Tenu par l'activité et non par le fragment : c'est elle qui sauvegarde
+     * son état à la rotation, et le fragment de l'onglet est recréé à neuf par
+     * le pager. Sans cela, tourner le téléphone ramenait au choix des jeux. La
+     * partie elle-même repart de zéro : chaque jeu calcule sa grille d'après
+     * l'écran à l'ouverture, et une grille de portrait ne tient pas en paysage.
+     */
+    internal var jeuOuvert = -1
+
     private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = worldle, 5 = guide, 6 = à propos
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
@@ -237,6 +250,7 @@ class SettingsActivity : AppCompatActivity() {
             ?: intent?.getIntExtra(EXTRA_OPEN_TAB, 0)
             ?: 0
         currentTab = requestedTab
+        jeuOuvert = savedInstanceState?.getInt("jeuOuvert", -1) ?: -1
         
         // Masquer la barre d'action (bandeau noir)
         supportActionBar?.hide()
@@ -290,6 +304,9 @@ class SettingsActivity : AppCompatActivity() {
         // du contenu en dessous)
         bottomInstallBanner = createBottomInstallBanner()
         val rootLayout = FrameLayout(this).apply {
+            // Visible sous la barre de navigation en bord à bord (Android 15+) :
+            // sans fond, c'est celui du thème AppCompat, sombre, qui s'y montre.
+            setBackgroundColor(Color.parseColor("#F5F5F5"))
             addView(mainLayout, FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -301,6 +318,17 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         setContentView(rootLayout)
+        // Bord à bord (Android 15+, imposé par targetSdk 35 et plus) : la bande
+        // sous la barre d'état est peinte du bleu du bandeau. La marge va sur
+        // mainLayout, pas sur le bandeau lui-même : updateTabBar() reconstruit
+        // ce dernier à chaque changement d'onglet, et la barre d'onglets est
+        // masquée au premier lancement. Le bas, bandeau d'installation compris,
+        // s'écarte de la navigation et du clavier. En paysage, le bandeau et les
+        // onglets s'étendent sous l'encoche et seul leur contenu s'en écarte.
+        BordABord.appliquer(
+            rootLayout, haut = mainLayout, couleurHaut = Color.parseColor("#0080FF"),
+            lateraux = { (0 until tabBar.childCount).map { tabBar.getChildAt(it) } + viewPager }
+        )
 
         recordFunnelStep("funnel_first_open")
         applyFirstRunMode()
@@ -391,17 +419,16 @@ class SettingsActivity : AppCompatActivity() {
     /**
      * Invite à redémarrer l'application une fois la mise à jour téléchargée.
      *
-     * Une Snackbar et non une boîte de dialogue : le téléchargement se termine
+     * Un bandeau et non une boîte de dialogue : le téléchargement se termine
      * à un moment que la personne n'a pas choisi, souvent au milieu d'autre
-     * chose. Elle reste affichée jusqu'à ce qu'on la touche ou qu'on la
-     * balaie, parce qu'un message de quelques secondes se rate.
+     * chose. Il reste affiché jusqu'à ce qu'on le touche, parce qu'un message
+     * de quelques secondes se rate.
      */
     private fun proposerInstallation() {
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            "Mise à jour téléchargée",
-            Snackbar.LENGTH_INDEFINITE
-        ).setAction("Installer") { updateManager.completeUpdate() }.show()
+        bandeauEnHaut(
+            findViewById(android.R.id.content), "Mise à jour téléchargée", longue = true,
+            action = "Installer"
+        ) { updateManager.completeUpdate() }
     }
 
     /**
@@ -643,7 +670,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Une mise à jour peut avoir fini de se télécharger pendant que
         // l'application était en arrière-plan : l'écouteur a bien reçu
-        // l'événement, mais la Snackbar est partie avec la vue. Sans cette
+        // l'événement, mais le bandeau est parti avec la vue. Sans cette
         // relance, la mise à jour reste téléchargée et jamais installée.
         try {
             updateManager.appUpdateInfo.addOnSuccessListener { info ->
@@ -658,6 +685,7 @@ class SettingsActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         // Sauvegarder l'onglet actif avant que l'activité soit recréée
         outState.putInt("currentTab", currentTab)
+        outState.putInt("jeuOuvert", jeuOuvert)
         Log.d("SettingsActivity", "💾 Sauvegarde de l'onglet actif: $currentTab")
     }
     
@@ -982,6 +1010,8 @@ class SettingsActivity : AppCompatActivity() {
         val enfants = (0 until fraiche.childCount).map { fraiche.getChildAt(it) }
         fraiche.removeAllViews() // une vue ne peut pas avoir deux parents
         enfants.forEach { tabBar.addView(it) }
+        // Les enfants neufs n'ont pas encore l'écart de l'encoche (paysage).
+        BordABord.ecarterLateralement(enfants)
     }
 
     // Onglet 1 : Dékolaj (installation, puis accueil du jour)
@@ -5124,20 +5154,14 @@ class SettingsActivity : AppCompatActivity() {
             
             // Vérifier si tous les mots sont trouvés
             // Toast.setGravity() est ignoré par le système depuis Android 11 : on utilise
-            // une Snackbar (vue applicative, pas une fenêtre système) pour l'ancrer en haut
-            // et éviter qu'elle ne recouvre le mot qui vient de passer en vert dans la liste.
+            // un bandeau (vue applicative, pas une fenêtre système) pour l'ancrer en haut
+            // et éviter qu'il ne recouvre le mot qui vient de passer en vert dans la liste.
             val message = if (wordsFound == currentPuzzle?.words?.size) {
                 "🎉 Félicitations ! Tous les mots trouvés !"
             } else {
                 "✅ Mot trouvé : $word (+$points pts)"
             }
-            val duration = if (wordsFound == currentPuzzle?.words?.size) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT
-            Snackbar.make(requireView(), message, duration).apply {
-                (view.layoutParams as? FrameLayout.LayoutParams)?.let {
-                    it.gravity = Gravity.TOP
-                    view.layoutParams = it
-                }
-            }.show()
+            bandeauEnHaut(requireView(), message, longue = wordsFound == currentPuzzle?.words?.size)
 
             if (wordsFound == currentPuzzle?.words?.size) ouvrirPochette()
         }
@@ -6052,15 +6076,11 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Toast.setGravity() est ignoré depuis Android 11 : ancré en haut via Snackbar
-        // pour ne pas se faire masquer par le clavier virtuel (même piste que WordSearchFragment).
+        // Toast.setGravity() est ignoré depuis Android 11 : ancré en haut par un
+        // bandeau pour ne pas se faire masquer par le clavier virtuel (même piste
+        // que WordSearchFragment).
         private fun showTopMessage(message: String) {
-            Snackbar.make(requireView(), message, Snackbar.LENGTH_SHORT).apply {
-                (view.layoutParams as? FrameLayout.LayoutParams)?.let {
-                    it.gravity = Gravity.TOP
-                    view.layoutParams = it
-                }
-            }.show()
+            bandeauEnHaut(requireView(), message, longue = false)
         }
 
         private fun updateLegend(guess: String, states: List<LetterState>) {
@@ -7714,6 +7734,8 @@ class SettingsActivity : AppCompatActivity() {
             prechargerLesGloses(activity)
 
             rootView = colonne
+            // Après une rotation, on rouvre le jeu qui était ouvert.
+            activity.jeuOuvert.takeIf { it in jeux.indices }?.let { ouvrirLeJeu(jeux[it]) }
             return colonne
         }
 
@@ -8022,9 +8044,13 @@ class SettingsActivity : AppCompatActivity() {
             // Sonjé a sa propre carte sur l'accueil : seul un jeu devient
             // « votre dernier jeu »
             if (jeu.nom != JEU_SONJE) (activity as? SettingsActivity)?.retenirDernierJeu(jeu.emoji, jeu.nom)
-            childFragmentManager.beginTransaction()
-                .replace(conteneur.id, fragment)
-                .commit()
+            (activity as? SettingsActivity)?.jeuOuvert = jeux.indexOf(jeu)
+            childFragmentManager.beginTransaction().apply {
+                // Un jeu restauré par le système après une rotation visait
+                // l'ancien conteneur : on repart d'un seul jeu, neuf.
+                childFragmentManager.fragments.forEach { remove(it) }
+                add(conteneur.id, fragment)
+            }.commit()
             grilleChoix?.visibility = View.GONE
             conteneur.visibility = View.VISIBLE
             barreRetour?.visibility = View.VISIBLE
@@ -8033,6 +8059,7 @@ class SettingsActivity : AppCompatActivity() {
 
         private fun fermerLeJeu() {
             val conteneur = conteneurJeu ?: return
+            (activity as? SettingsActivity)?.jeuOuvert = -1
             childFragmentManager.findFragmentById(conteneur.id)?.let {
                 childFragmentManager.beginTransaction().remove(it).commit()
             }
@@ -9529,27 +9556,38 @@ class SettingsActivity : AppCompatActivity() {
         /**
          * Fiche d'un mot : son sens, sa prononciation, ses exemples, sa source.
          *
-         * Déployée d'emblée et sans position repliée. Une feuille inférieure
-         * s'ouvre par défaut à une hauteur calculée sur l'écran : tant que la
-         * fiche tient dedans on ne voit rien, mais sur un petit écran — ou avec
-         * une police système agrandie, ce qui revient au même — elle s'ouvre en
-         * cachant les boutons, sans que rien n'indique qu'il faut la tirer.
+         * Déployée d'emblée et sans position repliée : une feuille inférieure
+         * repliée cachait les boutons sur un petit écran ou avec une police
+         * système agrandie, sans que rien n'indique qu'il fallait la tirer.
          */
         private fun ouvrirFiche(
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree
         ) {
-            val dialogue = BottomSheetDialog(activity)
+            // Une Dialog ordinaire ancrée en bas, et non un BottomSheetDialog :
+            // Material y appelle Window.setStatusBarColor et
+            // setNavigationBarColor, obsolètes depuis Android 15, et la Play
+            // Console le signale. Le contenu défile déjà dans un ScrollView, qui
+            // prend la hauteur de l'écran s'il la dépasse : plus de position
+            // repliée à gérer.
+            val dialogue = Dialog(activity)
+            dialogue.requestWindowFeature(Window.FEATURE_NO_TITLE)
             dialogue.setContentView(contenuFiche(activity, entree, dialogue))
-            dialogue.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            dialogue.behavior.skipCollapsed = true
+            dialogue.window?.apply {
+                setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                setGravity(Gravity.BOTTOM)
+                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
             dialogue.show()
         }
 
         private fun contenuFiche(
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree,
-            dialogue: BottomSheetDialog
+            dialogue: Dialog
         ): View {
             val colonne = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -9681,7 +9719,17 @@ class SettingsActivity : AppCompatActivity() {
                 }
             })
 
-            return ScrollView(activity).apply { addView(colonne) }
+            return ScrollView(activity).apply {
+                addView(colonne)
+                // Affichage bord à bord (Android 15) : la fenêtre passe sous la
+                // barre de navigation, le bas de la fiche doit la contourner.
+                clipToPadding = false
+                ViewCompat.setOnApplyWindowInsetsListener(this) { vue, insets ->
+                    val barres = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    vue.setPadding(0, 0, 0, barres.bottom)
+                    insets
+                }
+            }
         }
 
         /**
@@ -9735,7 +9783,10 @@ class SettingsActivity : AppCompatActivity() {
             val presse = activity.getSystemService(Context.CLIPBOARD_SERVICE)
                     as android.content.ClipboardManager
             presse.setPrimaryClip(ClipData.newPlainText("Dictionnaire", mot))
-            Snackbar.make(requireView(), "« $mot » copié", Snackbar.LENGTH_SHORT).show()
+            // Android 13+ confirme lui-même la copie : un second message ferait doublon.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                Toast.makeText(activity, "« $mot » copié", Toast.LENGTH_SHORT).show()
+            }
         }
 
         private fun ouvrirLien(activity: SettingsActivity, url: String) {
@@ -9820,12 +9871,20 @@ class SettingsActivity : AppCompatActivity() {
 
             val hote = FrameLayout(activity).apply {
                 id = View.generateViewId()
+                // Le fond des deux pages : en paysage, la bande de l'encoche
+                // est ce fond-là, et une bande blanche longeait le gris.
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.MATCH_PARENT
                 )
             }
             colonne.addView(hote)
+            // Fenêtre plein écran : bord à bord comme l'activité sous Android 15.
+            BordABord.appliquer(
+                colonne, haut = colonne.getChildAt(0),
+                lateraux = { listOf(colonne.getChildAt(0), colonne.getChildAt(1)) }
+            )
 
             if (savedInstanceState == null) {
                 childFragmentManager.beginTransaction()
@@ -9849,5 +9908,74 @@ class SettingsActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
+    }
+}
+
+/**
+ * Message bref ancré en haut de l'écran, à la place de la Snackbar de Material.
+ *
+ * La bibliothèque Material a été retirée (portage de LuxKeyb 27.0.0) : même
+ * inutilisés, ses composants restaient dans le dex (R8 garde
+ * `MaterialDatePicker` par un layout interne) et y laissaient
+ * `Window.setStatusBarColor` / `setNavigationBarColor`, obsolètes depuis
+ * Android 15, que la Play Console signale. Ce bandeau est une simple vue posée
+ * dans le contenu de l'activité, comme l'était la Snackbar.
+ *
+ * Avec [action], il reste affiché jusqu'à ce qu'on le touche, et le toucher
+ * déclenche [surAction] : c'est l'invitation à installer une mise à jour, qui
+ * ne doit pas s'effacer d'elle-même.
+ */
+internal fun bandeauEnHaut(
+    ancre: View,
+    message: String,
+    longue: Boolean,
+    action: String? = null,
+    surAction: (() -> Unit)? = null
+) {
+    val racine = ancre.rootView.findViewById<ViewGroup>(android.R.id.content) as? FrameLayout ?: return
+    val densite = ancre.resources.displayMetrics.density
+    val marge = (8 * densite).toInt()
+    val bandeau = TextView(ancre.context).apply {
+        text = if (action == null) message else "$message   ·   ${action.uppercase()}"
+        textSize = 14f
+        setTextColor(Color.WHITE)
+        setPadding((16 * densite).toInt(), (14 * densite).toInt(), (16 * densite).toInt(), (14 * densite).toInt())
+        background = GradientDrawable().apply {
+            setColor(Color.parseColor("#323232"))
+            cornerRadius = 4 * densite
+        }
+        elevation = 6 * densite
+        alpha = 0f
+    }
+    // Bord à bord (Android 15+) : le contenu commence sous la barre d'état, le
+    // bandeau doit s'en écarter pour ne pas recouvrir l'heure. Les encarts de la
+    // fenêtre comptent la barre d'état même quand le système a déjà écarté le
+    // contenu (avant Android 15), d'où la soustraction de sa position réelle.
+    val barres = ViewCompat.getRootWindowInsets(ancre)?.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+    )
+    val position = IntArray(2).also { racine.getLocationInWindow(it) }
+    racine.addView(bandeau, FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        Gravity.TOP
+    ).apply {
+        setMargins(
+            marge + maxOf(0, (barres?.left ?: 0) - position[0]),
+            marge + maxOf(0, (barres?.top ?: 0) - position[1]),
+            marge + maxOf(0, (barres?.right ?: 0) - (racine.rootView.width - position[0] - racine.width)),
+            marge
+        )
+    })
+    bandeau.animate().alpha(1f).setDuration(150).start()
+    val retirer = {
+        bandeau.animate().alpha(0f).setDuration(150).withEndAction {
+            racine.removeView(bandeau)
+        }.start()
+    }
+    if (action != null) {
+        bandeau.setOnClickListener { retirer(); surAction?.invoke() }
+    } else {
+        bandeau.postDelayed({ retirer() }, if (longue) 2750L else 1500L)
     }
 }
