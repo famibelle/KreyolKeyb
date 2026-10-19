@@ -96,7 +96,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 volants == null -> betes
                 else -> Ensemble(betes, volants)
             }
-            val temps = when (souvenir?.fete) {
+            val fete = when (souvenir?.fete) {
                 // Jamais de feu d'artifice : une nuit calme et ses lucioles.
                 Fete.NOUVEL_AN -> Lucioles(zone, graine)
                 Fete.CARNAVAL -> Tournoyants(zone, graine, Tournoyants.CONFETTIS)
@@ -104,7 +104,15 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 Fete.VINGT_SEPT_MAI -> Braises(zone, graine)
                 Fete.TOUSSAINT -> Lumieres(zone, graine)
                 Fete.CHANTE_NWEL -> Lumieres(zone, graine)
-                null -> when (souvenir?.saison) {
+                null -> null
+            }
+            // Un jour de fête de l'hivernage, la carte ouverte reste à plat
+            // mais il y pleut quand même : l'averse tombe ici, devant les
+            // lumières, au lieu d'être peinte (voir Habillage.dessus).
+            val temps = when {
+                fete != null && oiseaux && souvenir?.saison == Saison.HIVERNAGE -> Ensemble(Pluie(zone, graine), fete)
+                fete != null -> fete
+                else -> when (souvenir?.saison) {
                     Saison.HIVERNAGE -> Pluie(zone, graine)
                     Saison.CAREME -> {
                         val air = if (nuit) Lucioles(zone, graine) else Tournoyants(zone, graine, Tournoyants.AIGRETTES)
@@ -117,10 +125,15 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     null -> null
                 }
             }
-            return when {
-                temps == null -> faune
-                faune == null -> temps
-                else -> Ensemble(faune, temps)
+            // La nuit, les étoiles de la carte ouverte scintillent, fête ou
+            // non : le ciel peint pour elle n'en porte pas (Paysages.rendu).
+            val ciel = if (oiseaux && heure?.nuit == true) Etoiles(zone, graine) else null
+            return listOfNotNull(ciel, faune, temps).let {
+                when (it.size) {
+                    0 -> null
+                    1 -> it[0]
+                    else -> Ensemble(*it.toTypedArray())
+                }
             }
         }
     }
@@ -790,6 +803,54 @@ private class Oiseaux(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /** Plusieurs ambiances l'une sur l'autre, la première dessous. */
+/**
+ * Les étoiles d'une nuit de carte, qui scintillent : chacune à sa place dans
+ * le ciel peint ([Paysages.ETOILES]), chacune à son rythme, et la lumière
+ * qui vacille plus qu'elle ne s'éteint, comme à travers l'air chaud des
+ * tropiques. Elles glissent avec le plan du fond quand la carte penche.
+ */
+private class Etoiles(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = Paysages.ETOILES.size / 4
+    private val cadence = FloatArray(n) { 0.6f + hasard() * 1.6f }
+    private val phase = FloatArray(n) { hasard() * 2f * PI.toFloat() }
+    // Quelques-unes seulement vacillent fort ; les autres respirent à peine.
+    private val ampleur = FloatArray(n) { if (hasard() < 0.3f) 0.75f else 0.35f }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        val e0 = Paysages.ETOILES
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[0] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[0] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        p.shader = null
+        for (i in 0 until n) {
+            // Deux sinus de cadences différentes : un scintillement, pas un battement régulier.
+            val s = 0.5f + 0.32f * sin(temps * cadence[i] * 2f * PI.toFloat() + phase[i]) +
+                0.18f * sin(temps * cadence[i] * 5.3f + phase[i] * 1.7f)
+            val eclat = e0[i * 4 + 3] * (1f - ampleur[i] * (1f - s))
+            p.color = Paysages.COULEUR_ETOILE
+            p.alpha = (eclat.coerceIn(0f, 1f) * 255f).toInt()
+            c.drawCircle(e0[i * 4], e0[i * 4 + 1], e0[i * 4 + 2], p)
+        }
+        c.restore()
+    }
+}
+
 private class Ensemble(private vararg val parts: Ambiance) : Ambiance(RectF(), 0) {
     override fun orienter(basX: Float, basY: Float) = parts.forEach { it.orienter(basX, basY) }
     override fun secouer(force: Float) = parts.forEach { it.secouer(force) }

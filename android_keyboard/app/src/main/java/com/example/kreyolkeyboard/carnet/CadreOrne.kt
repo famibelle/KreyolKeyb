@@ -4361,7 +4361,7 @@ class Motif(
         val l = (visible.width() * echelle).toInt()
         val h = (visible.height() * echelle).toInt()
         return try {
-            Paysages.image(lieu, heure, teinteChamp, l, h, souvenir)
+            Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)
         } catch (e: OutOfMemoryError) {
             null
         }
@@ -4369,8 +4369,8 @@ class Motif(
 
     /** Le lieu rendu à [l] × [h], ou `null` s'il est en route vers une vignette. */
     private fun lieuAPeindre(l: Int, h: Int): Bitmap? {
-        val signal = surPaysage ?: return Paysages.image(lieu, heure, teinteChamp, l, h, souvenir)
-        Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir)?.let { return it }
+        val signal = surPaysage ?: return Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)
+        Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)?.let { return it }
         val taille = "${l}x$h"
         if (demande == taille) return null
         demande = taille

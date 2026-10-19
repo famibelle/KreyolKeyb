@@ -267,22 +267,24 @@ object Paysages {
      * fois, et deux cartes gagnées le même carême partagent toujours leur rendu.
      */
     fun image(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
-              souvenir: Souvenir? = null): Bitmap? {
+              souvenir: Souvenir? = null, ouverte: Boolean = false): Bitmap? {
         if (largeurPx <= 0 || hauteurPx <= 0) return null
-        val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir)
+        val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, ouverte)
         CACHE.get(cle)?.let { if (!it.isRecycled) return it }
-        val bitmap = rendu(lieu, heure, largeurPx, hauteurPx, souvenir) ?: return null
+        val bitmap = rendu(lieu, heure, largeurPx, hauteurPx, souvenir, ouverte) ?: return null
         CACHE.put(cle, bitmap)
         return bitmap
     }
 
-    private fun cle(lieu: Lieu, heure: Heure, teinte: Float?, l: Int, h: Int, souvenir: Souvenir?) =
-        "${lieu.ordinal}_${heure.rang}_${teinte}_${souvenir?.saison}_${souvenir?.fete}_${l}x$h"
+    private fun cle(lieu: Lieu, heure: Heure, teinte: Float?, l: Int, h: Int, souvenir: Souvenir?,
+                    ouverte: Boolean = false) =
+        "${lieu.ordinal}_${heure.rang}_${teinte}_${souvenir?.saison}_${souvenir?.fete}_${l}x$h" +
+            if (ouverte) "_ouverte" else ""
 
     /** Le rendu s'il est déjà en cache, sans rien calculer. */
     fun enCache(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
-                souvenir: Souvenir? = null): Bitmap? =
-        CACHE.get(cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir))?.takeIf { !it.isRecycled }
+                souvenir: Souvenir? = null, ouverte: Boolean = false): Bitmap? =
+        CACHE.get(cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, ouverte))?.takeIf { !it.isRecycled }
 
     /**
      * Rend le lieu hors du fil principal, puis appelle [pret] sur le fil
@@ -369,8 +371,15 @@ object Paysages {
         }
     }
 
-    /** Un rendu hors cache, que l'appelant garde pour lui. */
-    fun rendu(lieu: Lieu, heure: Heure, largeurPx: Int, hauteurPx: Int, souvenir: Souvenir? = null): Bitmap? {
+    /**
+     * Un rendu hors cache, que l'appelant garde pour lui.
+     *
+     * [ouverte] : pour la carte ouverte restée à plat (un jour de fête). Ce
+     * qui y bouge n'est pas peint, l'averse et les étoiles : [Ambiance] les
+     * anime, peints ils resteraient figés (propriétaire, 2026-10-19).
+     */
+    fun rendu(lieu: Lieu, heure: Heure, largeurPx: Int, hauteurPx: Int, souvenir: Souvenir? = null,
+              ouverte: Boolean = false): Bitmap? {
         if (largeurPx <= 0 || hauteurPx <= 0) return null
         val bitmap = Bitmap.createBitmap(largeurPx, hauteurPx, Bitmap.Config.ARGB_8888)
         val c = Canvas(bitmap)
@@ -379,14 +388,14 @@ object Paysages {
         c.translate(k[1], k[2])
         c.scale(k[0], k[0])
         if (souvenir == null) {
-            dessiner(c, lieu, heure)
+            dessiner(c, lieu, heure, etoiles = !ouverte)
             c.restore()
             return bitmap
         }
         // Avec une saison, le lieu est peint à part sur un calque transparent,
         // puis posé sur le ciel : ce calque est aussi le masque dont
         // [Habillage] a besoin, et le lieu n'est peint qu'une fois.
-        dessiner(c, lieu, heure, ciel = true, lieuAussi = false)
+        dessiner(c, lieu, heure, ciel = true, lieuAussi = false, etoiles = !ouverte)
         c.restore()
         val calque = Bitmap.createBitmap(largeurPx, hauteurPx, Bitmap.Config.ARGB_8888)
         val cc = Canvas(calque)
@@ -394,7 +403,7 @@ object Paysages {
         cc.scale(k[0], k[0])
         dessiner(cc, lieu, heure, ciel = false)
         c.drawBitmap(calque, 0f, 0f, null)
-        Habillage.appliquer(bitmap, calque, lieu, heure, souvenir, k)
+        Habillage.appliquer(bitmap, calque, lieu, heure, souvenir, k, averse = !ouverte)
         calque.recycle()
         return bitmap
     }
@@ -451,12 +460,13 @@ object Paysages {
         val ks = Array(GLISSEMENT.size) { i ->
             cadrage(tailles[i][0].toFloat(), tailles[i][1].toFloat())
         }
+        // Les étoiles n'y sont pas : elles scintillent dans l'ambiance.
         fun calque(i: Int, ciel: Boolean, lieuAussi: Boolean): Bitmap {
             val b = Bitmap.createBitmap(tailles[i][0], tailles[i][1], Bitmap.Config.ARGB_8888)
             val c = Canvas(b)
             c.translate(ks[i][1], ks[i][2])
             c.scale(ks[i][0], ks[i][0])
-            dessiner(c, lieu, heure, ciel = ciel, lieuAussi = lieuAussi, seul = i, faune = false)
+            dessiner(c, lieu, heure, ciel = ciel, lieuAussi = lieuAussi, seul = i, faune = false, etoiles = false)
             return b
         }
         // Le lointain : le ciel, puis la crête, floutée seule pour que la lune
@@ -565,6 +575,24 @@ object Paysages {
      * avec les mêmes tracés et la même palette que le paysage : une bête qui
      * bouge ne change pas de couleur en quittant la vignette.
      */
+    /**
+     * Les étoiles d'un ciel de nuit, quatre nombres par étoile : x, y, rayon
+     * et éclat, en unités de la boîte. Le ciel peint et [Ambiance], qui les
+     * fait scintiller sur la carte ouverte, lisent le même tirage.
+     */
+    internal val ETOILES: FloatArray = run {
+        val r = Alea(41)
+        val e = FloatArray(46 * 4)
+        for (k in 0 until 46) {
+            e[k * 4] = r() * 100f
+            e[k * 4 + 1] = r() * 38f
+            e[k * 4 + 2] = 0.18f + r() * 0.38f
+            e[k * 4 + 3] = if (k % 5 == 0) 1f else 0.35f + r() * 0.6f
+        }
+        e
+    }
+    internal const val COULEUR_ETOILE = 0xFFFFF8E0.toInt()
+
     internal class Atelier(heure: Heure) {
         private val peintre = Peintre(Canvas(), heure)
 
@@ -582,9 +610,9 @@ object Paysages {
     internal const val LIEUX_DESSINES = true
 
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
-                 seul: Int = -1, faune: Boolean = true) {
+                 seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true) {
         val p = Peintre(c, heure, seul)
-        if (ciel) p.ciel()
+        if (ciel) p.ciel(etoiles)
         if (!lieuAussi || !LIEUX_DESSINES) return
         when (lieu) {
             Lieu.GRANDE_ANSE -> p.grandeAnse()
@@ -763,7 +791,7 @@ object Paysages {
 
         // ------------------------------------------------------ les plans
 
-        fun ciel() {
+        fun ciel(etoiles: Boolean = true) {
             val couleurs = P.cielMilieu?.let { intArrayOf(P.cielHaut, it, P.cielBas) }
                 ?: intArrayOf(P.cielHaut, P.cielBas)
             val positions = if (P.cielMilieu != null) floatArrayOf(0f, 0.58f, 1f) else null
@@ -786,13 +814,12 @@ object Paysages {
                 p.shader = null
             }
             if (P.nuit) {
-                val r = Alea(41)
-                for (k in 0 until 46) {
-                    val x = r() * 100f
-                    val y = r() * 38f
-                    val t = 0.18f + r() * 0.38f
-                    val o = if (k % 5 == 0) 1f else 0.35f + r() * 0.6f
-                    rond(x, y, t, 0xFFFFF8E0.toInt(), o)
+                if (etoiles) {
+                    var k = 0
+                    while (k < ETOILES.size) {
+                        rond(ETOILES[k], ETOILES[k + 1], ETOILES[k + 2], COULEUR_ETOILE, ETOILES[k + 3])
+                        k += 4
+                    }
                 }
                 halo(P.astreR * 3.2f, 0.55f)
                 rond(P.astreX, P.astreY, P.astreR, P.astre)
@@ -969,21 +996,52 @@ object Paysages {
             trait("M${x + 0.6f} ${y - 5.1f}L${x + 2.6f} ${y - 3.4f}", duJour(0xFFC9A24A.toInt()), 0.4f)
         }
 
-        /** Une tombe en damier, comme au cimetière de Morne-à-l'Eau. */
-        fun tombe(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int) {
-            rect(x, y - h, w, h, blanc)
-            val s = w / 4f
-            var yy = y - h
+        /** Un damier de [n] cases de côté [s], depuis le coin ([x], [y]), dans [w] × [h]. */
+        fun damier(x: Float, y: Float, w: Float, h: Float, s: Float, noir: Int) {
+            var yy = y
             var rangee = 0
-            while (yy < y - 0.01f) {
-                val hh = min(s, y - yy)
-                for (k in 0 until 4) if ((k + rangee) % 2 == 0) rect(x + k * s, yy, s, hh, noir)
+            while (yy < y + h - 0.01f) {
+                val hh = min(s, y + h - yy)
+                var xx = x
+                var k = rangee
+                while (xx < x + w - 0.01f) {
+                    if (k % 2 == 0) rect(xx, yy, min(s, x + w - xx), hh, noir)
+                    xx += s
+                    k++
+                }
                 yy += s
                 rangee++
             }
-            triangle(x - 0.2f, y - h, x + w / 2f, y - h - w * 0.45f, x + w + 0.2f, y - h, noir)
-            rect(x + w / 2f - w * 0.05f, y - h - w * 0.85f, w * 0.1f, w * 0.42f, blanc)
-            rect(x + w / 2f - w * 0.2f, y - h - w * 0.72f, w * 0.4f, w * 0.1f, blanc)
+        }
+
+        /**
+         * Un caveau de Morne-à-l'Eau : une petite maison blanche à pignon,
+         * carrelée de damier noir et blanc, sa croix au faîte. [motif] choisit
+         * la façade : damier entier, soubassement en damier, ou mur blanc à
+         * porte noire, comme les tombeaux mêlés de la photo de référence.
+         */
+        fun caveau(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int, motif: Int, bougie: Boolean = false) {
+            val ombre = mix(blanc, noir, 0.22f)
+            rect(x, y - h, w, h, blanc)
+            val s = w / 5f
+            when (motif) {
+                0 -> damier(x, y - h, w, h, s, noir)
+                1 -> damier(x, y - h * 0.45f, w, h * 0.45f, s, noir)
+                else -> rect(x + w * 0.3f, y - h * 0.62f, w * 0.4f, h * 0.62f, noir)
+            }
+            // Le pan à l'ombre donne le volume.
+            rect(x + w * 0.82f, y - h, w * 0.18f, h, ombre, 0.6f)
+            val th = w * 0.42f
+            triangle(x - 0.15f, y - h, x + w / 2f, y - h - th, x + w + 0.15f, y - h, if (motif == 2) noir else blanc)
+            ligne(x - 0.15f, y - h, x + w / 2f, y - h - th, noir, w * 0.06f)
+            ligne(x + w / 2f, y - h - th, x + w + 0.15f, y - h, noir, w * 0.06f)
+            rect(x + w / 2f - w * 0.04f, y - h - th - w * 0.36f, w * 0.08f, w * 0.38f, blanc)
+            rect(x + w / 2f - w * 0.16f, y - h - th - w * 0.26f, w * 0.32f, w * 0.08f, blanc)
+            if (bougie && P.allume) {
+                val bx = x + w * 0.5f
+                rond(bx, y - h * 0.2f, w * 0.5f, P.fenetre, 0.25f)
+                rect(bx - w * 0.04f, y - h * 0.2f, w * 0.08f, h * 0.14f, P.fenetre)
+            }
         }
 
         // ------------------------------------------------------ les lieux
@@ -1235,27 +1293,62 @@ object Paysages {
             vapeur(46f, 52.5f, 8f)
         }
 
-        /** Le cimetière de Morne-à-l'Eau : les tombes en damier noir et blanc, en terrasses. */
+        /** Le cimetière de Morne-à-l'Eau : le morne couvert de caveaux en damier noir et blanc, gradin après gradin, une dalle en damier devant. */
         fun morneALEau() {
             val r = Alea(201)
-            crete(30f, 1.4f, 202, P.loin)
-            plan(1)
-            forme("M0 66L0 33C30 29 60 29 100 35L100 66Z", P.milieu)
-            plan(2)
+            crete(26f, 1.4f, 202, P.loin)
             val noir = mix(0xFF1C1C1E.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
             val blanc = duJour(0xFFF4F1EA.toInt())
-            val rangs = floatArrayOf(40f, 3f, 49f, 4.2f, 60f, 5.8f)
+            // Le morne couvert de caveaux, gradin après gradin : l'amphithéâtre
+            // blanc et noir vu depuis l'entrée. Les rangs du fond se fondent
+            // un peu dans le lointain.
+            plan(1)
+            forme("M0 66L0 34C24 27 56 23 100 25L100 66Z", mix(P.milieu, P.pierre, 0.35f))
+            val gradins = floatArrayOf(30f, 2.2f, 34f, 2.7f, 38.6f, 3.2f, 43.6f, 3.8f)
             var i = 0
-            while (i < rangs.size) {
-                val y = rangs[i]
-                val w = rangs[i + 1]
-                rect(0f, y, 100f, BAS - y, mix(P.milieu, P.pres, 0.3f + i * 0.08f))
+            while (i < gradins.size) {
+                val y = gradins[i]
+                val w = gradins[i + 1]
+                val brume = 0.42f - i * 0.07f
+                val n = mix(noir, P.loin, brume)
+                val b = mix(blanc, P.loin, brume * 0.7f)
+                rect(0f, y - 0.2f, 100f, 0.6f, mix(P.pierre, P.pres, 0.3f))
                 var x = -w * r()
                 while (x < 100f) {
-                    tombe(x, y, w, w * (1f + r() * 0.5f), noir, blanc)
-                    x += w * (2.2f + r() * 0.9f)
+                    val h = w * (0.9f + r() * 0.5f)
+                    caveau(x, y, w, h, n, b, (r() * 3f).toInt(), bougie = r() < 0.25f)
+                    x += w * (1.08f + r() * 0.22f)
                 }
                 i += 2
+            }
+            plan(2)
+            rect(0f, 52f, 100f, BAS - 52f, mix(P.sol, P.pres, 0.5f))
+            // Au premier plan, les grands caveaux et une dalle en damier vue de dessus.
+            caveau(2f, 55f, 9f, 9.5f, noir, blanc, 0, bougie = true)
+            caveau(76f, 56f, 10f, 11f, noir, blanc, 1, bougie = true)
+            caveau(89f, 54f, 8f, 8f, noir, blanc, 2)
+            val dx = 4f
+            val haut = 54f
+            val prof = 4f
+            val gauche = 26f
+            val large = 40f
+            val face = mix(blanc, noir, 0.08f)
+            rect(gauche, haut, large, 5f, face)
+            damier(gauche, haut, large, 5f, 2.5f, noir)
+            // Le dessus de la dalle, en perspective : chaque case est un
+            // parallélogramme, le damier fuit vers le morne.
+            val cols = 12
+            val rangs = 4
+            for (ry in 0 until rangs) for (cx in 0 until cols) {
+                val t0 = ry / rangs.toFloat(); val t1 = (ry + 1) / rangs.toFloat()
+                fun px(c: Int, t: Float) = gauche + dx * t + c * (large - 2f * dx * t) / cols
+                val y0 = haut - prof * t0; val y1 = haut - prof * t1
+                val col = if ((cx + ry) % 2 == 0) noir else blanc
+                forme("M${px(cx, t0)} ${y0}L${px(cx + 1, t0)} ${y0}L${px(cx + 1, t1)} ${y1}L${px(cx, t1)} ${y1}Z", col)
+            }
+            if (P.allume) for (bx in floatArrayOf(31f, 46f, 60f)) {
+                rond(bx, haut - 1.6f, 1.6f, P.fenetre, 0.3f)
+                rect(bx - 0.25f, haut - 2.2f, 0.5f, 1.2f, P.fenetre)
             }
         }
 

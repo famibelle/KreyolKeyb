@@ -66,7 +66,8 @@ internal object Habillage {
      * colline, un toit, une berge, et c'est ce qui pose la neige sur les
      * crêtes sans fleurir le ciel.
      */
-    fun appliquer(b: Bitmap, calque: Bitmap, lieu: Lieu, heure: Heure, s: Souvenir, k: FloatArray) {
+    fun appliquer(b: Bitmap, calque: Bitmap, lieu: Lieu, heure: Heure, s: Souvenir, k: FloatArray,
+                  averse: Boolean = true) {
         val w = b.width
         val h = b.height
         val u = k[0] / PIXELS_MAQUETTE_PAR_UNITE
@@ -79,7 +80,7 @@ internal object Habillage {
         val fleurs = fond(px, mk, w, h, u, heure, s.saison, alea)
         b.setPixels(px, 0, w, 0, 0, w, h)
         val c = Canvas(b)
-        dessus(c, w.toFloat(), h.toFloat(), u, heure, s.saison, alea, fleurs)
+        dessus(c, w.toFloat(), h.toFloat(), u, heure, s.saison, alea, fleurs, averse = averse)
         s.fete?.let { fete(c, w, h, u, heure, it, mk, alea) }
     }
 
@@ -216,7 +217,7 @@ internal object Habillage {
 
     private fun dessus(
         c: Canvas, W: Float, H: Float, u: Float, P: Heure, saison: Saison,
-        alea: Paysages.Alea, fleurs: FloatArray, oiseaux: Boolean = true
+        alea: Paysages.Alea, fleurs: FloatArray, oiseaux: Boolean = true, averse: Boolean = oiseaux
     ) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         when (saison) {
@@ -251,8 +252,9 @@ internal object Habillage {
                     val cx = alea() * W; val cy = H * (0.02f + alea() * 0.14f)
                     ellipse(c, p, cx, cy, (18f + alea() * 22f) * u, (5f + alea() * 4f) * u, 0f)
                 }
-                // Sur la carte en plans, l'averse tombe vraiment (voir Ambiance).
-                if (oiseaux) {
+                // Sur la carte ouverte, en plans ou un jour de fête, l'averse
+                // tombe vraiment (voir Ambiance) : peinte, elle resterait figée.
+                if (averse) {
                     p.style = Paint.Style.STROKE
                     p.strokeWidth = 0.7f * u
                     p.strokeCap = Paint.Cap.ROUND
