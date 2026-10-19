@@ -5,6 +5,76 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.0.0] - 2026-10-19
+
+Le clavier rattrape les fautes de frappe, l'application passe à Android 15 et aux tablettes, et le carnet devient un album qu'on complète, qu'on partage et qu'on échange.
+
+### ✨ Ajouté
+
+- **Le doigt tombé sur la touche d'à côté est reconnu** : « poun » propose
+  « moun » avant « pou », parce que le p touche le m.
+- **Deux lettres inversées comptent comme une seule faute** : « tojuou »
+  donne « toujou ».
+- **Une faute qui ressemble au début d'un autre mot est corrigée quand
+  même** : « rout » propose « tout ».
+- **Deux mots tapés sans espace se séparent** : « pouka » propose
+  « pou ka ». Une paire que le dictionnaire écrit avec un trait d'union
+  (« kay-la ») n'est pas coupée.
+- **Les accents s'ouvrent en 0,3 seconde**, et le délai d'appui long se
+  règle dans Réglages du clavier › Appui long : court, moyen, long ou très
+  long.
+- **Les propositions en français se coupent** dans Réglages du clavier ›
+  Suggestions. Sans elles, le clavier perd une rangée et laisse plus de
+  place à l'écran. Elles restent activées par défaut.
+- **Le correcteur se propose sur l'accueil** tant qu'il n'est pas choisi :
+  « Fini le trait rouge sous vos mots » ouvre directement le bon écran
+  d'Android. Une correction coupée dans Android est reconnue.
+- **Sur tablette** : touches plus hautes, onglets dans un rail à gauche en
+  paysage, jeux à grille et Dictionnaire en deux colonnes, textes dans une
+  colonne de lecture, clavier scindé au choix.
+- **Avec un clavier Bluetooth ou un étui-clavier**, seule la barre de
+  suggestions reste à l'écran ; un bouton fait revenir les touches. Mokwaré
+  s'écrit au clavier physique, et Entrée valide un essai de Mo an Karénaj.
+- **Le carnet devient un album** : des séries à compléter, un cachet
+  « APPRIS » sur les mots acquis, une plume sur les mots que vous avez
+  écrits au clavier, la rareté écrite en toutes lettres.
+- **Partager une carte** en image, avec le lien pour installer le clavier.
+- **Céder une carte** de téléphone à téléphone, par deux codes QR : elle
+  quitte votre carnet et arrive dans l'autre. Rien ne passe par Internet.
+- **La première carte rare et la première très rare ont leur cérémonie**,
+  et les cartes gagnées font vibrer le téléphone selon leur rareté.
+- **Une carte de bienvenue** est offerte après votre premier mot écrit avec
+  le clavier.
+
+### 🔄 Changé
+
+- **Installer le clavier demande une étape de moins** : le bouton ouvre
+  directement les réglages d'Android, l'étape 3 se coche dès votre premier
+  mot, et la fenêtre de bienvenue attend une pause dans la frappe.
+- **Sur téléphone, l'application s'affiche toujours en hauteur.** Les
+  tablettes gardent les deux sens.
+- **L'application demande Android 7.0 ou plus récent** (elle acceptait
+  Android 5.0), pour la protection automatique de Google Play.
+
+### 🐛 Corrigé
+
+- **Sous Android 15 et plus, le haut de l'écran ne passe plus sous l'heure**,
+  ni le bas sous la barre de navigation.
+- **Tourner une tablette ne fait plus perdre la partie** : les six jeux
+  gardent leur grille, leurs réponses et leur score.
+- **Après avoir activé le clavier, Retour ramène dans l'application**, y
+  compris sur Samsung.
+- **La correction d'une faute est plusieurs fois plus rapide**, et taper
+  vite ne ralentit plus le clavier.
+
+### 🔒 Confidentialité
+
+- **Nouvelle autorisation : l'appareil photo**, demandée au premier scan,
+  seulement pour lire le code d'une carte offerte. Aucune image n'est
+  gardée ni envoyée. Politique de confidentialité 2.2.
+- **Les codes d'échange de cartes restent sur le téléphone** qui les a
+  tirés : ils ne suivent pas un transfert vers un nouveau téléphone.
+
 ## [22.5.1] - 2026-09-30
 
 ### ✨ Ajouté
