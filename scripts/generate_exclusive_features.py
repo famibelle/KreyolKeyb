@@ -40,6 +40,139 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.0.0": [
+        {
+            "emoji": "⌨️",
+            "title": "Le clavier rattrape vos fautes de frappe",
+            "description": (
+                "Deux mots tapés sans espace se séparent : « pouka » propose "
+                "« pou ka ». Le doigt tombé sur la touche d'à côté est "
+                "reconnu (« poun » propose « moun »), deux lettres inversées "
+                "ne comptent que pour une faute (« tojuou » donne « toujou »), "
+                "et une faute qui commence un autre mot est corrigée quand "
+                "même."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_mots_colles.png",
+            "image_alt": (
+                "Dans le champ de recherche du Dictionnaire, « Pouka » est "
+                "tapé. La barre de suggestions propose en vert « Pou ka », "
+                "« Pousa » et « Pouki », au-dessus du clavier kréyòl."
+            ),
+        },
+        {
+            "emoji": "⏱️",
+            "title": "Les accents s'ouvrent en 0,3 seconde",
+            "description": (
+                "Il suffit de rester appuyé un tiers de seconde pour voir "
+                "« à » sous « a » ou « ò » sous « o ». Le délai se règle dans "
+                "Réglages du clavier › Appui long : court, moyen, long ou "
+                "très long, pour qui relâche la touche plus lentement."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_appui_long.png",
+            "image_alt": (
+                "La carte « Appui long » des Réglages du clavier : quatre "
+                "choix, Court (0,3 s) coché, Moyen (0,5 s), Long (0,8 s) et "
+                "Très long (1,2 s)."
+            ),
+        },
+        {
+            "emoji": "🔵",
+            "title": "Les propositions en français, si vous les voulez",
+            "description": (
+                "Un interrupteur dans Réglages du clavier › Suggestions : "
+                "sans la rangée bleue des mots français, le clavier perd une "
+                "rangée et laisse plus de place à l'écran. Les propositions "
+                "restent activées par défaut."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_propositions_francais.png",
+            "image_alt": (
+                "La carte « Suggestions » des Réglages du clavier, avec "
+                "l'interrupteur « Propositions en français » allumé et "
+                "l'explication de ce qu'il change."
+            ),
+        },
+        {
+            "emoji": "🔤",
+            "title": "Le correcteur se propose dès l'accueil",
+            "description": (
+                "Tant que le correcteur kréyòl n'est pas choisi, une carte "
+                "« Fini le trait rouge sous vos mots » ouvre directement le "
+                "bon écran d'Android, et prévient de l'avertissement qu'il "
+                "affiche."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_correcteur_accueil.png",
+            "image_alt": (
+                "Sur l'accueil Dékolaj, la carte « Fini le trait rouge sous "
+                "vos mots » avec les boutons « Activer » et « Plus tard »."
+            ),
+        },
+        {
+            "emoji": "📔",
+            "title": "Le carnet Sanblé devient un album",
+            "description": (
+                "La rareté de vos cartes s'écrit en toutes lettres en tête "
+                "du carnet, chaque palier a son ciel (matin, après-midi, "
+                "soir, nuit étoilée), et un cachet « APPRIS » se pose sur "
+                "les cartes qui ont passé toutes leurs révisions."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_carnet_album.png",
+            "image_alt": (
+                "Le carnet Sanblé : « 9 mots », « 1 très rare, 2 rares, 2 peu "
+                "communs, 4 communs ». Les cartes kaz, lanmè, mèsi (avec un "
+                "cachet rouge), katchimen, fenfon sous un ciel du soir et zèl "
+                "sous une nuit étoilée."
+            ),
+        },
+        {
+            "emoji": "🧩",
+            "title": "Des séries à compléter",
+            "description": (
+                "« Séries » ouvre les pages de l'album : une carte de "
+                "chacun des six jeux à réunir. La fin de partie vous dit "
+                "quand une série est complète, et le carnet fête ses étapes : "
+                "la 10ᵉ carte, la 25ᵉ, la 50ᵉ…"
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_series.png",
+            "image_alt": (
+                "La série « Les six jeux », marquée « Complète » : lanmè, "
+                "katchimen, fenfon, mèsi, granbwa et kawo, une carte par jeu."
+            ),
+        },
+        {
+            "emoji": "🤝",
+            "title": "Partager ou céder une carte",
+            "description": (
+                "Sous une carte ouverte, « Partager » l'envoie en image avec "
+                "le lien du clavier. « Céder » la donne à quelqu'un, de "
+                "téléphone à téléphone, par deux codes QR : elle quitte votre "
+                "carnet et arrive dans le sien. Rien ne passe par Internet."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_partager_ceder.png",
+            "image_alt": (
+                "La carte fenfon ouverte, « abime, abysse », marquée « Rare · "
+                "2030ᵉ » et « Gagné à Mo an Karénaj », avec les boutons "
+                "« Partager » et « Céder » dessous."
+            ),
+        },
+        {
+            "emoji": "📱",
+            "title": "Klavyé Kréyòl sur tablette",
+            "description": (
+                "Sur une tablette couchée, les onglets passent dans une "
+                "colonne à gauche, les jeux à grille et le Dictionnaire "
+                "s'affichent en deux colonnes, et le clavier peut se scinder "
+                "entre les deux bords. Avec un clavier Bluetooth, seule la "
+                "barre de suggestions reste à l'écran."
+            ),
+            "image": "Screenshots/nouveaute_23.0.0_tablette.png",
+            "image_alt": (
+                "Mokwaré sur une tablette couchée : les onglets à gauche, la "
+                "grille de mots croisés à gauche de l'écran, les définitions "
+                "horizontales et verticales à droite, le pavé de lettres "
+                "épinglé en bas."
+            ),
+        },
+    ],
     "22.5.1": [
         {
             "emoji": "✍️",

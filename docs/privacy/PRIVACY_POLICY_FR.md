@@ -2,7 +2,7 @@
 
 **Date d'entrée en vigueur :** 19 septembre 2025  
 **Dernière mise à jour :** 19 octobre 2026  
-**Version :** 2.2  
+**Version :** 2.3  
 **Application :** Klavyé Kréyòl Karukera • Potomitan™  
 **Nom du package :** com.potomitan.kreyolkeyboard
 
@@ -171,7 +171,7 @@ Les données suivantes existent **uniquement sur votre appareil** et ne sont **j
    - Personnalisations de la disposition
    - Paramètres de gamification
    - Stockés localement dans Android SharedPreferences (stockage Android standard)
-   - Ne quittent jamais votre appareil
+   - Jamais envoyés au cloud ; le transfert direct vers un nouveau téléphone (câble ou Wi-Fi direct) peut les emporter
 
 3. **Progression de Gamification :**
    - Nombre de mots appris (combien de mots du dictionnaire vous avez tapés)
@@ -181,7 +181,13 @@ Les données suivantes existent **uniquement sur votre appareil** et ne sont **j
    - Non synchronisés avec le cloud (le transfert direct vers un nouveau téléphone peut les emporter)
    - Utilisés uniquement pour les fonctionnalités motivationnelles
 
-4. **Utilisation de l'App (Local Uniquement) :**
+4. **Carnet de cartes (Sanblé) et révision (Sonjé) :**
+   - Pour chaque carte : le mot, la date où il a été gagné, le jeu qui l'a donné, le nombre de rencontres et l'avancement de sa révision
+   - Seuls entrent au carnet des mots du dictionnaire livré avec l'app, gagnés dans un jeu : jamais un texte que vous avez tapé
+   - La plume d'une carte (« vous avez écrit ce mot au clavier ») se calcule à l'écran à partir des compteurs d'usage ci-dessus, sur l'appareil
+   - Jamais envoyé au cloud ; le transfert direct vers un nouveau téléphone peut emporter le carnet, mais ni les compteurs d'usage ni les codes d'échange de cartes
+
+5. **Utilisation de l'App (Local Uniquement) :**
    - Dernière fois que vous avez ouvert les paramètres de l'app
    - Si vous avez terminé le tutoriel d'intégration
    - Statistiques locales pour affichage dans l'app (ex: "Vous avez appris 250 mots !")
@@ -553,7 +559,8 @@ Notre app inclut des fonctionnalités de gamification optionnelles pour rendre l
 - ❌ **Pas de classements** (pas de partage de données avec d'autres utilisateurs)
 - ❌ **Pas de compétition en ligne** (pas de fonctionnalités multijoueur)
 - ❌ **Pas de fonctionnalités sociales** nécessitant un téléchargement de données
-- ❌ **Pas de partage automatique** : une carte du carnet ne part que si vous touchez « Partager », en image, par le menu de partage d'Android, vers l'application que vous choisissez
+- ✅ **Partager une carte, seulement si vous le décidez :** le bouton « Partager » d'une carte du carnet en fait une image et ouvre le menu de partage d'Android. C'est vous qui choisissez l'application et la personne ; l'image ne contient que la carte (le mot, son sens, une phrase d'auteur et son crédit, son numéro) et le lien pour installer le clavier, et elle ne passe jamais par nous
+- ✅ **Céder une carte, de la main à la main :** les deux téléphones échangent deux codes carrés à l'écran, sans Internet, sans Bluetooth et sans compte. Celui de la personne qui reçoit ne contient qu'un numéro tiré au hasard ; celui du donneur, ce même numéro et le mot de la carte. Ni votre nom, ni votre progression, ni ce que vous avez tapé n'y figurent : la carte arrive neuve chez l'autre personne, et elle quitte définitivement le carnet du donneur
 - ✅ **Suivi de progression 100% local**
 - ✅ **Aucun compte requis**
 - ✅ **La progression se réinitialise si vous effacez les données de l'app** (pas de sauvegarde cloud)
@@ -616,7 +623,7 @@ Nous pouvons mettre à jour cette politique pour refléter :
 
 ### Contrôle de Version :
 
-1. **Numéro de Version :** Chaque mise à jour incrémente la version (Actuelle : **2.2**)
+1. **Numéro de Version :** Chaque mise à jour incrémente la version (Actuelle : **2.3**)
 2. **Date d'Entrée en Vigueur :** Mise à jour en haut de ce document
 3. **Historique des Changements :** Disponible sur notre dépôt GitHub
 4. **Changements Importants :** Seront mis en évidence dans les annonces de mise à jour
@@ -635,6 +642,11 @@ Nous pouvons mettre à jour cette politique pour refléter :
 - Option de réviser les changements avant d'accepter
 
 ### Historique des Changements :
+
+**Version 2.3 (19 octobre 2026) :**
+- Le carnet de cartes et sa révision décrits parmi les données qui restent sur l'appareil : ce qu'ils contiennent, et ce que le transfert vers un nouveau téléphone emporte ou non
+- Partager et céder une carte : ce que contiennent l'image et les deux codes d'échange
+- Les réglages ne partent jamais vers le cloud, mais peuvent suivre un transfert direct vers un nouveau téléphone : la phrase « ne quittent jamais votre appareil » le taisait
 
 **Version 2.2 (19 octobre 2026) :**
 - Nouvelle autorisation documentée : CAMERA, demandée au premier scan, seulement pour lire le code d'une carte offerte
@@ -782,7 +794,7 @@ Nous nous engageons aux plus hauts standards de confidentialité :
 ### Ce Qui Arrive à Vos Données :
 - ✅ **Ce que vous tapez :** Reste sur votre appareil, jamais envoyé
 - ✅ **Vos paramètres :** Stockés localement, jamais synchronisés
-- ✅ **Votre progression :** Suivie localement pour la gamification, jamais partagée
+- ✅ **Votre progression :** Suivie localement pour la gamification, jamais partagée ; seule une carte que vous choisissez de partager ou de céder quitte le carnet
 
 ### Vos Droits :
 - ✅ **Contrôle total :** Gérez les autorisations, supprimez les données à tout moment
