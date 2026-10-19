@@ -1,8 +1,8 @@
 # Politique de Confidentialité - Klavyé Kréyòl Karukera • Potomitan™
 
 **Date d'entrée en vigueur :** 19 septembre 2025  
-**Dernière mise à jour :** 26 août 2026  
-**Version :** 2.1  
+**Dernière mise à jour :** 19 octobre 2026  
+**Version :** 2.2  
 **Application :** Klavyé Kréyòl Karukera • Potomitan™  
 **Nom du package :** com.potomitan.kreyolkeyboard
 
@@ -53,7 +53,7 @@
 | **Informations financières** | ❌ Non | ❌ Non | S.O. | Aucune information de paiement |
 | **Santé et Fitness** | ❌ Non | ❌ Non | S.O. | Aucune donnée de santé |
 | **Messages** | ❌ Non | ❌ Non | S.O. | Le clavier ne stocke ni ne transmet le contenu tapé |
-| **Photos et Vidéos** | ❌ Non | ❌ Non | S.O. | Aucun accès aux médias |
+| **Photos et Vidéos** | ❌ Non | ❌ Non | S.O. | L'appareil photo ne sert qu'à lire le code d'une carte offerte, sur le téléphone même : aucune image n'est gardée ni envoyée |
 | **Fichiers audio** | ❌ Non | ❌ Non | S.O. | Aucun enregistrement audio |
 | **Fichiers et Documents** | ❌ Non | ❌ Non | S.O. | Aucun accès aux fichiers |
 | **Calendrier** | ❌ Non | ❌ Non | S.O. | Aucun accès au calendrier |
@@ -265,6 +265,24 @@ Notre app demande les autorisations Android suivantes. Voici exactement pourquoi
 **Contrôle utilisateur :** Peut être refusée à l'invite ou révoquée dans Infos app > Notifications ; l'app fonctionne à l'identique sans elle  
 **Emplacement des données :** Aucune donnée stockée
 
+### 3️⃣ VIBRATE (Automatique, sans invite)
+
+**Ce qu'elle fait :** Permet de faire vibrer le téléphone  
+**Pourquoi nous en avons besoin :** Pour la vibration des touches et pour faire sentir le relief d'une carte du carnet sous le doigt, ou l'arrivée d'une carte rare  
+**Impact sur la vie privée :** Aucun - elle ne lit ni ne transmet rien  
+**Ce qu'elle NE PEUT PAS faire :** Donner accès à une donnée quelconque  
+**Contrôle utilisateur :** L'interrupteur « Vibration à la frappe » des Réglages du clavier coupe toutes ces vibrations  
+**Emplacement des données :** Aucune donnée stockée
+
+### 4️⃣ CAMERA (Demandée au premier scan d'une carte)
+
+**Ce qu'elle fait :** Permet de lire le code carré (code QR) affiché par un autre téléphone, quand on donne ou reçoit une carte du carnet  
+**Pourquoi nous en avons besoin :** Uniquement pour offrir ou recevoir une carte. Le clavier et les jeux ne s'en servent pas  
+**Impact sur la vie privée :** L'appareil photo ne s'ouvre qu'après un appui sur « Scanner son code » ou « Scanner la carte » dans le carnet, après une phrase qui explique à quoi il sert, et se referme dès que le code est lu. Les images sont analysées sur le téléphone même, image par image, et aucune n'est enregistrée ni envoyée. Les deux téléphones restent côte à côte : rien ne passe par Internet  
+**Ce qu'elle NE PEUT PAS faire :** Prendre des photos, filmer, ou s'ouvrir en arrière-plan  
+**Contrôle utilisateur :** Refusez-la à l'invite, ou retirez-la dans Infos app > Autorisations ; tout fonctionne alors comme avant, sauf l'échange de cartes  
+**Emplacement des données :** Aucune - rien n'est stocké ni transmis
+
 ### 🧹 Autorisations Retirées en Version 10.14.3
 
 **WRITE_USER_DICTIONARY** et **READ_EXTERNAL_STORAGE** figuraient au manifeste des versions antérieures sans qu'aucune ligne de code ne les appelle. La première avait été ajoutée pour le dictionnaire personnel de la 10.5.0, fonction supprimée dès la 10.6.0. Elles ne sont plus demandées : une autorisation affichée sur la fiche Play doit correspondre à un usage réel.
@@ -275,7 +293,6 @@ Nous ne demandons **intentionnellement pas** les autorisations courantes suivant
 
 - **INTERNET :** Pas nécessaire (l'app fonctionne hors ligne)
 - **ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION :** Pas de suivi de localisation
-- **CAMERA :** Pas de capture photo/vidéo
 - **RECORD_AUDIO / MICROPHONE :** Pas d'enregistrement vocal
 - **READ_CONTACTS / WRITE_CONTACTS :** Pas d'accès aux contacts
 - **READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE :** Pas d'accès aux fichiers
@@ -536,7 +553,7 @@ Notre app inclut des fonctionnalités de gamification optionnelles pour rendre l
 - ❌ **Pas de classements** (pas de partage de données avec d'autres utilisateurs)
 - ❌ **Pas de compétition en ligne** (pas de fonctionnalités multijoueur)
 - ❌ **Pas de fonctionnalités sociales** nécessitant un téléchargement de données
-- ❌ **Pas de partage sur les réseaux sociaux**
+- ❌ **Pas de partage automatique** : une carte du carnet ne part que si vous touchez « Partager », en image, par le menu de partage d'Android, vers l'application que vous choisissez
 - ✅ **Suivi de progression 100% local**
 - ✅ **Aucun compte requis**
 - ✅ **La progression se réinitialise si vous effacez les données de l'app** (pas de sauvegarde cloud)
@@ -599,7 +616,7 @@ Nous pouvons mettre à jour cette politique pour refléter :
 
 ### Contrôle de Version :
 
-1. **Numéro de Version :** Chaque mise à jour incrémente la version (Actuelle : **2.1**)
+1. **Numéro de Version :** Chaque mise à jour incrémente la version (Actuelle : **2.2**)
 2. **Date d'Entrée en Vigueur :** Mise à jour en haut de ce document
 3. **Historique des Changements :** Disponible sur notre dépôt GitHub
 4. **Changements Importants :** Seront mis en évidence dans les annonces de mise à jour
@@ -618,6 +635,11 @@ Nous pouvons mettre à jour cette politique pour refléter :
 - Option de réviser les changements avant d'accepter
 
 ### Historique des Changements :
+
+**Version 2.2 (19 octobre 2026) :**
+- Nouvelle autorisation documentée : CAMERA, demandée au premier scan, seulement pour lire le code d'une carte offerte
+- VIBRATE documentée : déclarée depuis la version 21.0.0 pour le relief des cartes, elle manquait à ce document
+- Partage d'une carte en image et échange de cartes entre deux téléphones : ce qui part, et ce qui ne part pas
 
 **Version 2.0 (10 novembre 2025) :**
 - Réécriture complète pour la conformité Data Safety de Google Play

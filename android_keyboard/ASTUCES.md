@@ -45,7 +45,7 @@ une par semaine dans cet ordre.
 
 | # | Astuce | Source |
 |---|--------|--------|
-| 1 | Appui long sur une lettre pour les accents et caractères spéciaux (é, è, à, ò). Glisser vers celui voulu, puis relâcher. | `accentMap` (`AccentHandler.kt:63`), appui long à 500 ms (`AccentHandler.kt:25`) |
+| 1 | Appui long sur une lettre pour les accents et caractères spéciaux (é, è, à, ò). Glisser vers celui voulu, puis relâcher. | `accentMap` (`AccentHandler.kt:63`), délai réglable, 300 ms par défaut (`KeyboardPreferences.DelaiAppuiLong`, `KeyboardLayoutManager.addAccentKeyTouch()`) |
 | 5 | Les accents affichés dans le coin d'une touche annoncent ce que cache l'appui long. | `getCornerHintsForKey()` (`AccentHandler.kt:399`), `cornerHintOverrides` (`AccentHandler.kt:86`) |
 | 7 | « é » et « è » ont leur touche dédiée en bas, « ò » la sienne entre « o » et « p ». | `row4` (`KeyboardLayoutManager.kt:118`), `row1` (`KeyboardLayoutManager.kt:110`) |
 | 21 | Digraphes en appui long : ch sous c, dj sous d, tj sous t, ng et ny sous n. | `accentMap` (`AccentHandler.kt:63`), digraphes GEREC documentés juste au-dessus |

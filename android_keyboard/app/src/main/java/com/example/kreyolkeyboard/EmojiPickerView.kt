@@ -37,7 +37,15 @@ class EmojiPickerView(
 ) : LinearLayout(context) {
 
     companion object {
+        /** Colonnes sur un téléphone, et minimum partout. */
         private const val GRID_COLUMNS = 10
+        /**
+         * Largeur visée d'une case au-delà (v23.0.0, repris de LuxKeyb 34.2.0) :
+         * à 10 colonnes, une tablette couchée donnait des cases de 128 dp de
+         * large pour 44 de haut, et trois fois plus de défilement pour trouver
+         * un emoji.
+         */
+        private const val CELL_WIDTH_DP = 48
         private const val CELL_HEIGHT_DP = 44
         private const val VISIBLE_ROWS = 3
         private const val TAB_HEIGHT_DP = 40
@@ -45,6 +53,9 @@ class EmojiPickerView(
     }
 
     var onEmojiSelected: ((String) -> Unit)? = null
+
+    private fun colonnes(): Int =
+        (resources.configuration.screenWidthDp / CELL_WIDTH_DP).coerceAtLeast(GRID_COLUMNS)
 
     private val emojiData = EmojiData.load(context)
     private val tabViews = mutableListOf<TextView>()
@@ -150,7 +161,7 @@ class EmojiPickerView(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
-                layoutManager = GridLayoutManager(parent.context, GRID_COLUMNS)
+                layoutManager = GridLayoutManager(parent.context, colonnes())
                 setHasFixedSize(true)
             }
             return PageHolder(recyclerView)
@@ -204,12 +215,14 @@ class EmojiPickerView(
                 onEmojiSelected?.invoke(emoji)
             }
 
-            // Même double-délai (timeout natif Android + LONG_PRESS_DELAY
-            // d'AccentHandler) que les autres touches à appui long du
-            // clavier : cohérence de timing avec le reste de l'app.
+            // Le long-clic natif reste ici, contrairement aux touches du
+            // clavier : la grille défile, et c'est lui qui distingue un doigt
+            // qui fait défiler d'un doigt qui maintient. Les tons de peau
+            // s'ouvrent dès qu'il se déclenche, sans les 500 ms qu'AccentHandler
+            // y ajoutait jusqu'à la 22.5.1.
             holder.label.setOnLongClickListener {
                 if (accentHandler?.hasAccents(emoji) == true) {
-                    accentHandler.startLongPressTimer(emoji, holder.label)
+                    accentHandler.ouvrirPopupAppuiLong(emoji, holder.label)
                 }
                 true
             }

@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.carnet
 
+import com.example.kreyolkeyboard.R
 import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -29,6 +30,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.TextView
 import com.example.kreyolkeyboard.KeyFeedback
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.max
@@ -419,7 +421,36 @@ object Ornement {
      * 4,4:1 sur l'or et 4,0:1 sur l'argent, contre 2,4:1 et 2,2:1 au clair.
      */
     val SERIE_G = RectF(22f, 428f, 176f, 437.5f)
-    val SERIE_D = RectF(176f, 428f, 278f, 437.5f)
+    // Large depuis 37.4.8 : elle porte le palier avant le rang (« ✦ Très rare ·
+    // 9769ᵉ »). Elle commence après le numéro et le poinçon (x = 64 à 74).
+    val SERIE_D = RectF(96f, 428f, 278f, 437.5f)
+
+    /**
+     * Le milieu de la bordure basse visible : entre le bas de la face
+     * (`haut - bord`) et le bord intérieur du filet de contour (`haut - 2,45`).
+     *
+     * La bordure s'épaissit avec le palier, de 12 à 18 unités, et la bande
+     * ci-dessus, calée une fois pour toutes, tombait au milieu de celle d'une
+     * commune seulement : sur une très rare, la ligne de série était trois
+     * unités trop bas (propriétaire, 2026-10-10). La ligne et la plume se
+     * centrent donc sur la bordure de leur propre palier.
+     */
+    fun milieuBordureBasse(rarete: Rarete, vignette: Boolean): Float {
+        val haut = if (vignette) HAUTEUR_VIGNETTE else HAUTEUR
+        val bord = 12f + rarete.ordinal * 2f
+        return haut - (bord + 2.45f) / 2f
+    }
+
+    /** [SERIE_G], recentrée verticalement sur la bordure du palier. */
+    fun serieG(rarete: Rarete): RectF = recentree(SERIE_G, milieuBordureBasse(rarete, false))
+
+    /** [SERIE_D], recentrée verticalement sur la bordure du palier. */
+    fun serieD(rarete: Rarete): RectF = recentree(SERIE_D, milieuBordureBasse(rarete, false))
+
+    private fun recentree(r: RectF, milieu: Float): RectF {
+        val demi = r.height() / 2f
+        return RectF(r.left, milieu - demi, r.right, milieu + demi)
+    }
     /**
      * L'énoncé d'une question, sur le dos de révision.
      *
@@ -1048,15 +1079,56 @@ object Ornement {
      *
      * La clef ne contient **pas le mot** : c'est tout l'intérêt. Le métal ne
      * dépend que du palier et de la taille, donc trente cartes très rares
-     * partagent un seul bitmap. Deux mégaoctets suffisent largement pour les
-     * huit combinaisons que l'application demande réellement.
+     * partagent un seul bitmap.
+     *
+     * Il faisait deux mégaoctets, et la carte ouverte n'y entrait pas : 940 px
+     * de large font un cadre de 5 Mo, que `LruCache` évince aussitôt posé. Le
+     * métal se redessinait donc à chaque trame de l'inclinaison, sans que rien
+     * ne le montre. Depuis que la moulure se calcule au pixel, ce n'est plus
+     * tenable.
+     *
+     * Un huitième du tas, entre 4 et 32 Mo : le métal des quatre paliers de
+     * vignettes, la carte ouverte et ses deux voisines préparées d'avance
+     * (voir `LecteurCartes.preparerVoisines`), avec leurs rayons. Au seizième,
+     * 12 Mo sur un Galaxy A21s, les voisines auraient évincé le métal des
+     * vignettes, recalculé ensuite sur le fil principal au retour à la grille.
      */
-    private val CACHE = object : LruCache<String, Bitmap>(2 * 1024 * 1024) {
+    private val CACHE = object : LruCache<String, Bitmap>(
+        (Runtime.getRuntime().maxMemory() / 8).coerceIn(4L * 1024 * 1024, 32L * 1024 * 1024).toInt()
+    ) {
         override fun sizeOf(cle: String, valeur: Bitmap): Int = valeur.byteCount
     }
 
-    fun metal(rarete: Rarete, largeurPx: Int, vignette: Boolean): Bitmap? =
-        couche("m", rarete, largeurPx, vignette) { c -> dessinerMetal(c, rarete, vignette) }
+    /**
+     * Les deux écus portent un libellé (« VUES », « NIVEAU ») : il entre dans
+     * la clef du cache, sinon un changement de langue garderait l'ancien.
+     */
+    fun metal(context: Context, rarete: Rarete, largeurPx: Int, vignette: Boolean): Bitmap? {
+        val vues = context.getString(R.string.carte_ecu_vues)
+        val niveau = context.getString(R.string.carte_ecu_niveau)
+        return couche("m$vues$niveau", rarete, largeurPx, vignette) { c ->
+            dessinerMetal(c, rarete, vignette, vues, niveau)
+        }
+    }
+
+    /**
+     * Calcule d'avance le métal et les rayons des vignettes, les quatre
+     * paliers, à la largeur [largeurPx]. Fait pour un fil de fond.
+     *
+     * Le métal d'une vignette se calcule au pixel ([moulure]) : mesuré sur le
+     * Galaxy A21s (2026-10-12), 1,1 s pour les quatre paliers, dont la
+     * moitié pour le premier calculé, payés d'un bloc par la première image
+     * de la grille, qui figeait l'écran autant. Le carnet
+     * met plusieurs secondes à charger ses cartes : c'est là que ce calcul se
+     * fait désormais, sur un autre cœur. Le dessin du métal n'écrit dans
+     * aucun état partagé, et le cache est sûr d'un fil à l'autre.
+     */
+    fun prechauffer(context: Context, largeurPx: Int) {
+        for (r in Rarete.values()) {
+            metal(context, r, largeurPx, vignette = true)
+            rayons(r, largeurPx, vignette = true)
+        }
+    }
 
     /**
      * Les rayons en éventail, à partir de *Rare*.
@@ -1098,13 +1170,342 @@ object Ornement {
     }
 
     /**
+     * Le plateau du cadre, en volume : une moulure de métal et non un aplat.
+     *
+     * Il était peint d'un seul dégradé en diagonale, cerné d'un filet : à la
+     * taille de la carte, une bande de couleur (propriétaire, 2026-10-11,
+     * « donner du volume »). Le modèle retenu est le bronze de la maquette
+     * des matières, que j'avais proposée et dont la bordure a plu ; chaque
+     * palier y a sa façon de travailler le métal. Quatre choses le font :
+     *
+     * - **le poli** : le dégradé alterne sombre et clair, avec une bande
+     *   d'éclat presque blanche, comme un métal qui renvoie la pièce ;
+     * - **la moulure bombée**, calculée au pixel : chaque bord du plateau
+     *   descend en pente douce, l'extérieur vers la tranche et l'intérieur
+     *   vers la face, et la pente prend la lumière d'en haut à gauche. Le
+     *   haut et la gauche s'allument dehors, la face paraît posée en creux ;
+     * - **la façon du métal**, une par palier, comme dans la maquette :
+     *   l'étain **brossé** en stries, le bronze **martelé** en taches
+     *   larges, l'argent **ciselé** d'une tresse gravée sur les flancs,
+     *   l'or **poli**, sans grain, aux reflets plus francs ;
+     * - **les rivets du cadre**, de *Peu commun* à *Rare*, sur l'axe des
+     *   flancs. La très rare y porte déjà ses feuilles d'acanthe.
+     *
+     * Le grènetis, à partir de *Rare*, borde le pied de la moulure, contre
+     * la face, sous la ligne de série et le poinçon.
+     *
+     * Tout tient dans le bitmap mis en cache par palier et par taille : le
+     * calcul au pixel est payé une fois, pas à chaque trame.
+     */
+    private fun reliefDuPlateau(
+        c: Canvas, p: Paint, plateau: Path, bord: Float, haut: Float,
+        m: Metal, palier: Int, vignette: Boolean
+    ) {
+        val poli = palier == 3
+        val eclat = melange(m.hi, Color.WHITE, if (poli) 0.7f else 0.35f)
+        val fond = melange(m.lo, m.trait, 0.35f)
+        p.style = Paint.Style.FILL
+        p.color = Color.BLACK
+        // L'or poli renvoie la pièce en bandes plus nombreuses et plus nettes :
+        // c'est ce qui sépare un miroir d'un métal brossé.
+        p.shader = if (poli) LinearGradient(
+            0f, 0f, LARGEUR, haut,
+            intArrayOf(fond, eclat, m.mid, m.lo, m.hi, eclat, m.mid, m.lo, eclat, m.mid),
+            floatArrayOf(0f, 0.1f, 0.2f, 0.32f, 0.45f, 0.52f, 0.62f, 0.75f, 0.86f, 1f),
+            Shader.TileMode.CLAMP
+        ) else LinearGradient(
+            0f, 0f, LARGEUR, haut,
+            intArrayOf(fond, m.hi, m.mid, eclat, m.lo, melange(m.mid, m.hi, 0.5f)),
+            floatArrayOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f),
+            Shader.TileMode.CLAMP
+        )
+        c.drawPath(plateau, p)
+        p.shader = null
+
+        val u = c.width / LARGEUR
+        if (u > 0f) {
+            val moulure = moulure(c.width, c.height, u, bord, haut, palier)
+            c.save()
+            c.scale(1f / u, 1f / u)
+            c.drawBitmap(moulure, 0f, 0f, null)
+            c.restore()
+            moulure.recycle()
+        }
+
+        if (vignette) {
+            p.style = Paint.Style.FILL
+            return
+        }
+
+        if (palier == 2) ciselure(c, p, bord, haut, m)
+
+        // Les rivets du cadre, sur l'axe de la bande visible des flancs.
+        if (palier in 1..2) {
+            val x = (2.45f + bord) / 2f
+            var y = 70f
+            while (y < haut - 60f) {
+                rivetDeCadre(c, p, x, y, m)
+                rivetDeCadre(c, p, LARGEUR - x, y, m)
+                y += 60f
+            }
+        }
+
+        if (palier < 2) {
+            p.style = Paint.Style.FILL
+            return
+        }
+
+        // Le grènetis : une perle toutes les 3,2 unités, posée au pied de la
+        // moulure, ombrée puis éclairée comme les rivets.
+        val r = 0.75f + (palier - 2) * 0.1f
+        val rang = Path()
+        val e = bord - 1.1f
+        rang.addRoundRect(
+            RectF(e, e, LARGEUR - e, haut - e), 11f + 1.1f, 11f + 1.1f, Path.Direction.CW
+        )
+        fun perles(rayon: Float, dx: Float, dy: Float, couleur: Int) {
+            val perle = Path().apply { addCircle(0f, 0f, rayon, Path.Direction.CW) }
+            p.pathEffect = android.graphics.PathDashPathEffect(
+                perle, 3.2f, 0f, android.graphics.PathDashPathEffect.Style.TRANSLATE
+            )
+            p.style = Paint.Style.FILL
+            p.color = couleur
+            c.save()
+            c.translate(dx, dy)
+            c.drawPath(rang, p)
+            c.restore()
+        }
+        perles(r, 0.35f, 0.45f, 0x73000000)
+        perles(r, 0f, 0f, m.mid)
+        perles(r * 0.55f, -r * 0.25f, -r * 0.3f, eclat)
+        p.pathEffect = null
+        p.style = Paint.Style.FILL
+    }
+
+    /** Un rivet bombé, de la matière du cadre, avec son ombre portée. */
+    private fun rivetDeCadre(c: Canvas, p: Paint, x: Float, y: Float, m: Metal) {
+        p.style = Paint.Style.FILL
+        p.shader = null
+        p.color = 0x59000000
+        c.drawCircle(x + 0.5f, y + 0.8f, 2.7f, p)
+        p.color = Color.BLACK
+        p.shader = RadialGradient(
+            x - 0.9f, y - 1f, 3.4f,
+            intArrayOf(melange(m.hi, Color.WHITE, 0.7f), m.mid, m.lo),
+            floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP
+        )
+        c.drawCircle(x, y, 2.6f, p)
+        p.shader = null
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.5f
+        p.color = avecAlpha(m.trait, 0xB3)
+        c.drawCircle(x, y, 2.6f, p)
+        p.style = Paint.Style.FILL
+    }
+
+    /** La lumière, d'en haut à gauche, dans le repère de l'écran. */
+    private const val LUMIERE_X = -0.61f
+    private const val LUMIERE_Y = -0.79f
+
+    /** Sur combien d'unités une pente de la moulure s'éteint. */
+    private const val PENTE = 2.4f
+
+    /**
+     * La moulure du plateau, au pixel : un calque d'ombres et de lumières,
+     * blanc ou noir selon le signe, à poser sur le dégradé du métal.
+     *
+     * Chaque bord du plateau est un rectangle arrondi dont on connaît la
+     * distance signée et sa normale. La pente d'un bord s'éteint en
+     * exponentielle sur [PENTE] unités ; elle penche vers l'extérieur pour le
+     * bord de la tranche, vers la face pour le bord intérieur, et le produit
+     * scalaire de cette pente avec la lumière dit si elle s'allume ou
+     * s'assombrit. Le grain s'ajoute au même signe : des stries pour un
+     * métal brossé, des taches pour un métal martelé.
+     */
+    private fun moulure(
+        largeurPx: Int, hauteurPx: Int, u: Float, bord: Float, haut: Float, palier: Int
+    ): Bitmap {
+        val px = IntArray(largeurPx * hauteurPx)
+        val n = FloatArray(2)
+        val clair = if (palier == 3) 0.65f else 0.5f
+        val plafond = if (palier == 3) 0.6f else 0.45f
+        // Le bord extérieur s'arrête où commence le filet de contour.
+        val dehors = 2.45f
+        val ocx = LARGEUR / 2f
+        val ocy = haut / 2f
+        val ohx = LARGEUR / 2f - dehors
+        val ohy = haut / 2f - dehors
+        val orr = RAYON - dehors
+        val ihx = LARGEUR / 2f - bord
+        val ihy = haut / 2f - bord
+        // Seul l'anneau du cadre compte. Entre les arrondis, une rangée n'a
+        // que ses deux flancs à calculer : le reste tombe dans la face, quatre
+        // pixels sur cinq qu'il est inutile de mesurer.
+        val flanc = ceil(bord * u).toInt() + 1
+        val hautFlancs = bord + 11f
+        val basFlancs = haut - bord - 11f
+        for (j in 0 until hauteurPx) {
+            val y = (j + 0.5f) / u
+            val flancsSeuls = y > hautFlancs && y < basFlancs
+            for (i in 0 until largeurPx) {
+                if (flancsSeuls && i >= flanc && i < largeurPx - flanc) continue
+                val x = (i + 0.5f) / u
+                val dIn = distanceArrondie(x, y, ocx, ocy, ihx, ihy, 11f, n)
+                if (dIn <= 0f) continue
+                val gix = n[0]
+                val giy = n[1]
+                val dOut = distanceArrondie(x, y, ocx, ocy, ohx, ohy, orr, n)
+                if (dOut > 0.6f) continue
+                val a = -dOut
+                val pOut = if (a > 0f) exp(-a / PENTE) else 1f
+                val pIn = exp(-dIn / PENTE)
+                var s = pOut * (n[0] * LUMIERE_X + n[1] * LUMIERE_Y) -
+                    pIn * (gix * LUMIERE_X + giy * LUMIERE_Y)
+                // Le brillant : la crête d'une pente bien tournée vers la lumière.
+                if (s > 0.45f) s += (s - 0.45f) * 1.2f
+                s += grain(x, y, palier)
+                // La lumière n'éclaircit qu'à moitié : un métal blanchi se lit
+                // comme du plâtre, c'est l'ombre qui donne le volume. L'or
+                // poli a droit à un peu plus : c'est un miroir.
+                val alpha = (if (s > 0f) (s * clair).coerceAtMost(plafond)
+                else (-s).coerceAtMost(0.8f)).let { (it * 255f).toInt() }
+                if (alpha < 3) continue
+                px[j * largeurPx + i] = (alpha shl 24) or (if (s > 0f) 0xFFFFFF else 0)
+            }
+        }
+        return Bitmap.createBitmap(px, largeurPx, hauteurPx, Bitmap.Config.ARGB_8888)
+    }
+
+    /**
+     * La distance signée d'un point à un rectangle arrondi de centre
+     * ([cx], [cy]) et de demi-côtés ([hx], [hy]), négative dedans. La
+     * normale sortante est écrite dans [n].
+     */
+    private fun distanceArrondie(
+        x: Float, y: Float, cx: Float, cy: Float, hx: Float, hy: Float, r: Float, n: FloatArray
+    ): Float {
+        val dx = x - cx
+        val dy = y - cy
+        val sx = if (dx < 0f) -1f else 1f
+        val sy = if (dy < 0f) -1f else 1f
+        val qx = abs(dx) - hx + r
+        val qy = abs(dy) - hy + r
+        if (qx > 0f && qy > 0f) {
+            val l = sqrt(qx * qx + qy * qy)
+            n[0] = sx * qx / l
+            n[1] = sy * qy / l
+            return l - r
+        }
+        if (qx > qy) {
+            n[0] = sx; n[1] = 0f
+        } else {
+            n[0] = 0f; n[1] = sy
+        }
+        return max(qx, qy) - r
+    }
+
+    /**
+     * Le grain du métal, centré sur zéro, selon la façon du palier.
+     *
+     * - Étain, **brossé** : des stries fines en travers, longues dans
+     *   l'autre sens.
+     * - Bronze, **martelé** : un bruit de valeur lissé à deux octaves, en
+     *   taches d'une dizaine d'unités, les coups du marteau.
+     * - Argent, **ciselé** : un brossé plus doux, pour que la tresse gravée
+     *   de [ciselure] se lise par-dessus.
+     * - Or, **poli** : aucun grain. Un miroir n'a pas de texture, il n'a que
+     *   des reflets.
+     */
+    private fun grain(x: Float, y: Float, palier: Int): Float = when (palier) {
+        0 -> (bruit(x / 1.1f, y / 60f, 5) * 0.7f + bruit(x / 0.5f, y / 25f, 11) * 0.3f - 0.5f) * 0.26f
+        1 -> (bruit(x / 11f, y / 11f, 3) * 0.65f + bruit(x / 4.5f, y / 4.5f, 9) * 0.35f - 0.5f) * 0.42f
+        2 -> (bruit(x / 1.1f, y / 60f, 7) * 0.7f + bruit(x / 0.5f, y / 25f, 13) * 0.3f - 0.5f) * 0.12f
+        else -> 0f
+    }
+
+    /**
+     * La ciselure de l'argent : une tresse gravée sur l'axe des deux flancs,
+     * deux ondes en opposition qui se croisent toutes les huit unités.
+     *
+     * Gravée et non peinte : un sillon sombre, et le liseré clair de sa lèvre
+     * basse, qui reçoit la lumière d'en haut à gauche. Les rivets du cadre se
+     * posent par-dessus, comme dans la maquette.
+     */
+    private fun ciselure(c: Canvas, p: Paint, bord: Float, haut: Float, m: Metal) {
+        val tresse = Path()
+        val debut = 40f
+        val fin = haut - 40f
+        for (x in floatArrayOf((2.45f + bord) / 2f, LARGEUR - (2.45f + bord) / 2f)) {
+            for (sens in floatArrayOf(1f, -1f)) {
+                tresse.moveTo(x, debut)
+                var y = debut
+                var s = sens
+                while (y < fin) {
+                    tresse.quadTo(x + 4f * s, y + 8f, x, y + 16f)
+                    s = -s
+                    y += 16f
+                }
+            }
+        }
+        p.shader = null
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        p.strokeWidth = 0.6f
+        c.save()
+        c.translate(0.3f, 0.4f)
+        p.color = 0x80FFFFFF.toInt()
+        c.drawPath(tresse, p)
+        c.restore()
+        p.color = avecAlpha(m.trait, 0x99)
+        c.drawPath(tresse, p)
+        p.strokeCap = Paint.Cap.BUTT
+        p.style = Paint.Style.FILL
+    }
+
+    private fun bruit(x: Float, y: Float, graine: Int): Float {
+        val x0 = kotlin.math.floor(x)
+        val y0 = kotlin.math.floor(y)
+        val ix = x0.toInt()
+        val iy = y0.toInt()
+        var fx = x - x0
+        var fy = y - y0
+        fx = fx * fx * (3f - 2f * fx)
+        fy = fy * fy * (3f - 2f * fy)
+        val a = hache(ix, iy, graine)
+        val b = hache(ix + 1, iy, graine)
+        val c = hache(ix, iy + 1, graine)
+        val d = hache(ix + 1, iy + 1, graine)
+        val haut = a + (b - a) * fx
+        val bas = c + (d - c) * fx
+        return haut + (bas - haut) * fy
+    }
+
+    private fun hache(x: Int, y: Int, graine: Int): Float {
+        var h = x * 374761393 + y * 668265263 + graine * 144269504
+        h = (h xor (h ushr 13)) * 1274126177
+        h = h xor (h ushr 16)
+        return (h and 0xFFFF) / 65535f
+    }
+
+    private fun melange(a: Int, b: Int, t: Float): Int {
+        fun canal(decalage: Int): Int {
+            val x = (a shr decalage) and 0xFF
+            val y = (b shr decalage) and 0xFF
+            return (x + (y - x) * t).toInt().coerceIn(0, 255)
+        }
+        return (0xFF shl 24) or (canal(16) shl 16) or (canal(8) shl 8) or canal(0)
+    }
+
+    private fun avecAlpha(couleur: Int, alpha: Int): Int = (couleur and 0x00FFFFFF) or (alpha shl 24)
+
+    /**
      * Tout ce qui ne dépend que du palier : le plateau, la sertissure de
      * l'ouverture, les volutes, la plaque, les pastilles, les écus.
      *
      * Le centre reste transparent — la face teintée et l'illustration sont
      * peintes dessous, en direct, par [CarteOrnee].
      */
-    private fun dessinerMetal(c: Canvas, rarete: Rarete, vignette: Boolean) {
+    private fun dessinerMetal(c: Canvas, rarete: Rarete, vignette: Boolean, vues: String, niveau: String) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         val palier = rarete.ordinal
         val m = metal(rarete)
@@ -1119,13 +1520,7 @@ object Ornement {
         val creux = Path()
         creux.addRoundRect(RectF(bord, bord, LARGEUR - bord, haut - bord), 11f, 11f, Path.Direction.CW)
         plateau.op(creux, Path.Op.DIFFERENCE)
-        p.style = Paint.Style.FILL
-        p.shader = LinearGradient(
-            0f, 0f, LARGEUR * 0.6f, haut,
-            intArrayOf(m.hi, m.mid, m.lo, m.mid),
-            floatArrayOf(0f, 0.28f, 0.62f, 1f), Shader.TileMode.CLAMP
-        )
-        c.drawPath(plateau, p)
+        reliefDuPlateau(c, p, plateau, bord, haut, m, palier, vignette)
         p.shader = null
         p.style = Paint.Style.STROKE
         p.strokeWidth = 2.5f
@@ -1280,8 +1675,8 @@ object Ornement {
         p.typeface = android.graphics.Typeface.create(
             android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD
         )
-        c.drawText("VUES", ECU_G.centerX(), ECU_G.top + 9f, p)
-        c.drawText("NIVEAU", ECU_D.centerX(), ECU_D.top + 9f, p)
+        c.drawText(vues, ECU_G.centerX(), ECU_G.top + 9f, p)
+        c.drawText(niveau, ECU_D.centerX(), ECU_D.top + 9f, p)
         p.alpha = 255
 
         // 12. Le disque du médaillon de provenance, par-dessus le panneau
@@ -1336,7 +1731,7 @@ object Ornement {
      * aux gemmes ; l'émail prend celle du **jeu**, pour que les deux ne se
      * confondent pas.
      */
-    fun dessinerMedaillon(c: Canvas, p: Paint, jeu: JeuCarte, m: Metal) {
+    fun dessinerMedaillon(context: Context, c: Canvas, p: Paint, jeu: JeuCarte, m: Metal) {
         val cx = PROVENANCE.centerX()
         val cy = PROVENANCE.centerY()
         val hsv = FloatArray(3)
@@ -1365,8 +1760,10 @@ object Ornement {
         p.typeface = android.graphics.Typeface.create(
             android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD
         )
-        texteSurArc(c, p, "GAGNÉ À", cx, cy, R_EMAIL + 2.2f, true)
-        texteSurArc(c, p, jeu.nom.uppercase(), cx, cy, R_MEDAILLON - 3.6f, false)
+        // Une carte cédée n'a pas été gagnée : elle a été reçue.
+        val dessus = if (jeu == JeuCarte.CADEAU) R.string.carte_recue_medaillon else R.string.carte_gagne_a_medaillon
+        texteSurArc(c, p, context.getString(dessus), cx, cy, R_EMAIL + 2.2f, true)
+        texteSurArc(c, p, jeu.libelle(context).uppercase(), cx, cy, R_MEDAILLON - 3.6f, false)
         p.typeface = android.graphics.Typeface.DEFAULT
         p.strokeCap = Paint.Cap.BUTT
         p.strokeJoin = Paint.Join.MITER
@@ -1487,6 +1884,22 @@ object Ornement {
                 carre(-1.9f, -1.9f - 4.2f, 3.8f, false)
                 carre(-1.9f, -1.9f + 4.2f, 3.8f, false)
             }
+            // Une bulle de parole : on dit bonjour.
+            JeuCarte.ACCUEIL -> {
+                p.strokeWidth = 1.3f
+                c.drawRoundRect(cx - 6.5f, cy - 5.5f, cx + 6.5f, cy + 3.5f, 3f, 3f, p)
+                trait(-2.5f, 3.5f, -4.5f, 7f)
+                trait(-4.5f, 7f, 0.5f, 3.5f)
+            }
+            // Un paquet-cadeau : la boîte, son ruban, le nœud.
+            JeuCarte.CADEAU -> {
+                p.strokeWidth = 1.2f
+                c.drawRect(cx - 6f, cy - 2f, cx + 6f, cy + 6.5f, p)
+                c.drawRect(cx - 7f, cy - 4.5f, cx + 7f, cy - 2f, p)
+                trait(0f, -4.5f, 0f, 6.5f)
+                c.drawOval(cx - 5f, cy - 8f, cx - 0.3f, cy - 4.5f, p)
+                c.drawOval(cx + 0.3f, cy - 8f, cx + 5f, cy - 4.5f, p)
+            }
         }
         p.style = Paint.Style.FILL
     }
@@ -1501,8 +1914,9 @@ object Ornement {
      * couleurs sans rapport : le carnet cachait activement qu'il s'agit d'un
      * seul mot à trois états, alors que c'est exactement ce qu'un carnet de
      * vocabulaire devrait montrer. Le préfixe suffit à les réunir, et il ne
-     * demande de consulter aucun lemme — donc il vaut aussi pour les 647
-     * formes que `luxemburgish_familles.json` ne rattache à rien.
+     * demande de consulter aucun lemme, et le kréyòl n'a de toute façon pas de
+     * table de familles (côté LuxKeyb, `luxemburgish_familles.json` laisse 647
+     * formes sans rattachement).
      *
      * Le prix est l'homonymie de préfixe : `Stad` et `Statist` tomberont sur
      * la même teinte. C'est sans conséquence, parce qu'une teinte n'identifie
@@ -2146,7 +2560,388 @@ object Ornement {
         c.drawRoundRect(RectF(0f, 0f, LARGEUR, haut), RAYON, RAYON, p)
         p.shader = null
     }
+    /**
+     * Le poinçon de la saison où la carte a été gagnée : l'emblème de la
+     * saison (flocon, fleur, soleil, feuille) dans un petit cartouche, **gravé
+     * dans le métal de la marge basse**, juste après le numéro de série, sur
+     * la carte ouverte comme sur la vignette.
+     *
+     * C'est la marque d'un orfèvre et non un objet posé : un premier essai en
+     * médaille sur l'illustration se lisait comme une verrue (propriétaire,
+     * 2026-10-11), et la plume avait déjà suivi le même chemin. La gravure est
+     * la sienne : une lèvre claire décalée vers le bas, puis le sillon dans le
+     * ton sombre du métal.
+     *
+     * **Jamais la date** : elle reste une donnée technique du carnet, ce qui
+     * compte est la saison. La fête du jour, elle, ne se voit que dans le
+     * paysage. Voir [Souvenir].
+     */
+    fun dessinerSaison(c: Canvas, p: Paint, s: Souvenir, rarete: Rarete, vignette: Boolean) {
+        val metal = metal(rarete)
+        val cx = POINCON_X
+        val cy = milieuBordureBasse(rarete, vignette)
+        val e = if (vignette) POINCON_VIGNETTE_ECHELLE else 1f
+        p.shader = null
+        for (passe in 0..1) {
+            c.save()
+            c.translate(cx, cy)
+            c.scale(e, e)
+            if (passe == 0) c.translate(0.3f, 0.42f)
+            val encre = if (passe == 0) 0x99FFFFFF.toInt() else metal.trait
+            p.color = encre
+            p.style = Paint.Style.STROKE
+            p.strokeWidth = POINCON_TRAIT
+            p.strokeJoin = Paint.Join.ROUND
+            c.drawRoundRect(RectF(-POINCON_L / 2f, -POINCON_H / 2f, POINCON_L / 2f, POINCON_H / 2f), 2f, 2f, p)
+            c.scale(POINCON_EMBLEME, POINCON_EMBLEME)
+            // Le cœur de la fleur et la nervure de la feuille sont des
+            // réserves : elles prennent le ton du métal autour.
+            emblemeDeSaison(c, p, s.saison, encre, if (passe == 0) encre else metal.mid)
+            c.restore()
+        }
+        p.strokeCap = Paint.Cap.BUTT
+        p.strokeJoin = Paint.Join.MITER
+        p.style = Paint.Style.FILL
+    }
 
+    /**
+     * Le poinçon, après le numéro de série : « n° 036 », « Nr. 036 » et
+     * « n.º 036 » s'arrêtent avant 54 au corps de 7,5. La plume garde le
+     * centre de la marge, le rang la droite.
+     *
+     * Il tient **dans** la bordure basse, comme la plume : celle d'une commune
+     * n'a que 9,55 unités entre la face et le filet de contour, et un premier
+     * cartouche de 10,5 la débordait des deux côtés (propriétaire,
+     * 2026-10-11). 7 de haut, plus le trait et la lèvre, laissent 0,7 de
+     * métal au-dessus et au-dessous ; l'emblème suit, à 2,7 de rayon.
+     */
+    private const val POINCON_X = 64f
+    private const val POINCON_L = 10f
+    private const val POINCON_H = 7f
+    private const val POINCON_TRAIT = 0.7f
+    private const val POINCON_EMBLEME = 0.36f
+    private const val POINCON_VIGNETTE_ECHELLE = 0.85f
+
+    /** La zone du poinçon sur la carte ouverte, pour les lecteurs d'écran. */
+    fun saison(rarete: Rarete): RectF {
+        val cy = milieuBordureBasse(rarete, false)
+        return RectF(POINCON_X - POINCON_L / 2f, cy - POINCON_H / 2f, POINCON_X + POINCON_L / 2f, cy + POINCON_H / 2f)
+    }
+
+    /** L'emblème d'une saison, dans un rayon de 7,5 unités, repris de la maquette. */
+    private fun emblemeDeSaison(c: Canvas, p: Paint, saison: Saison, encre: Int, clair: Int) {
+        p.color = encre
+        when (saison) {
+            Saison.WANTER -> {
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 1.3f
+                p.strokeCap = Paint.Cap.ROUND
+                p.strokeJoin = Paint.Join.ROUND
+                for (a in floatArrayOf(0f, 60f, 120f)) {
+                    c.save()
+                    c.rotate(a)
+                    c.drawLine(0f, -7f, 0f, 7f, p)
+                    val pointes = Path()
+                    pointes.moveTo(-2f, -5f); pointes.lineTo(0f, -3f); pointes.lineTo(2f, -5f)
+                    pointes.moveTo(-2f, 5f); pointes.lineTo(0f, 3f); pointes.lineTo(2f, 5f)
+                    c.drawPath(pointes, p)
+                    c.restore()
+                }
+            }
+            Saison.FREIJOER -> {
+                p.style = Paint.Style.FILL
+                for (k in 0 until 5) {
+                    c.save()
+                    c.rotate(k * 72f)
+                    c.drawOval(RectF(-2.3f, -3.6f - 3.2f, 2.3f, -3.6f + 3.2f), p)
+                    c.restore()
+                }
+                p.color = clair
+                c.drawCircle(0f, 0f, 1.8f, p)
+            }
+            Saison.SUMMER -> {
+                p.style = Paint.Style.FILL
+                c.drawCircle(0f, 0f, 3.4f, p)
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 1.2f
+                p.strokeCap = Paint.Cap.ROUND
+                for (k in 0 until 8) {
+                    c.save()
+                    c.rotate(k * 45f)
+                    c.drawLine(0f, -5f, 0f, -7.2f, p)
+                    c.restore()
+                }
+            }
+            Saison.HIERSCHT -> {
+                p.style = Paint.Style.FILL
+                c.drawPath(FEUILLE, p)
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 0.7f
+                p.color = clair
+                c.drawLine(0f, -5f, 0f, 7.6f, p)
+            }
+        }
+        p.style = Paint.Style.FILL
+    }
+
+    private val FEUILLE: Path = Path().apply {
+        moveTo(0f, -7.5f)
+        cubicTo(4.5f, -5f, 6f, -1f, 4.4f, 2.6f)
+        cubicTo(3.2f, 5.2f, 1f, 6f, 0f, 7f)
+        cubicTo(-1f, 6f, -3.2f, 5.2f, -4.4f, 2.6f)
+        cubicTo(-6f, -1f, -4.5f, -5f, 0f, -7.5f)
+        close()
+    }
+
+
+    /**
+     * Le sceau de cire d'une carte apprise : posé sur l'angle bas droit de
+     * l'illustration, il mord sur la fenêtre comme un cachet sur un document.
+     *
+     * Dessiné d'après la maquette du propriétaire (2026-10-10) : cire rouge,
+     * le mot en arc dans le haut, une coche frappée au centre. Côté
+     * luxembourgeois le mot est « GELÉIERT » ; ici « APPRIS », en français
+     * comme le reste de l'interface (décision du propriétaire, 2026-10-19),
+     * aucun mot kréyòl validé n'étant disponible pour ce cachet.
+     *
+     * C'est un **second axe**, et il ne touche à rien du premier : la rareté
+     * reste lue sur la fréquence, dans le métal du cadre. Le sceau est le même
+     * à tous les paliers ; une commune apprise et une très rare apprise portent
+     * le même cachet sur deux cadres différents. Voir `GAMIFICATION-CARNET.md` dans le dépôt LuxKeyb.
+     *
+     * La cire n'est pas un disque : son bord coule, d'où le rayon modulé par
+     * deux sinus de fréquences premières entre elles. Un anneau en biseau (une
+     * lèvre sombre, une lèvre éclairée) dit que la cire a été pressée, et la
+     * lumière vient d'en haut à gauche comme dans tout le carnet.
+     *
+     * La vignette n'a que la cire et la coche : à 110 dp, deux lignes de
+     * légende seraient une bouillie rouge.
+     */
+    fun dessinerSceau(c: Canvas, p: Paint, vignette: Boolean) =
+        cachet(c, p, vignette, CIRE_ROUGE, "APPRIS") { cv, pi, ombre ->
+            pi.style = Paint.Style.STROKE
+            pi.strokeCap = Paint.Cap.ROUND
+            pi.strokeJoin = Paint.Join.ROUND
+            pi.strokeWidth = if (ombre) 0.15f else 0.12f
+            cv.drawPath(COCHE, pi)
+        }
+
+    /**
+     * La plume d'une carte que le joueur a **écrite lui-même** dans un vrai
+     * message : le clavier l'a fait monter d'une boîte sans poser de question
+     * (voir [PreuveDeFrappe]). Accordée par le propriétaire le 2026-10-10.
+     *
+     * Elle a d'abord été un second cachet de cire, bleu, en miroir du sceau ;
+     * deux cachets sur l'illustration surchargeaient la carte (propriétaire,
+     * même jour). Elle est donc **gravée dans le métal du cadre**, petite, au
+     * centre de la marge basse, sur la carte ouverte comme sur la vignette :
+     * une mention d'inventaire, comme le numéro, et non une
+     * décoration de plus.
+     *
+     * La gravure est celle du reste de la carte : un sillon dans le ton sombre
+     * du métal, une lèvre claire décalée vers le bas qui le fait lire en creux.
+     */
+    fun dessinerPlume(c: Canvas, p: Paint, vignette: Boolean, rarete: Rarete) {
+        val metal = metal(rarete)
+        val cx = if (vignette) PLUME_VIGNETTE_X else PLUME_X
+        val cy = milieuBordureBasse(rarete, vignette)
+        val taille = if (vignette) PLUME_VIGNETTE_TAILLE else PLUME_TAILLE
+        c.save()
+        c.translate(cx, cy)
+        c.scale(taille, taille)
+        p.shader = null
+        for (passe in 0..1) {
+            c.save()
+            if (passe == 0) {
+                c.translate(0.05f, 0.07f)
+                p.color = 0xB3FFFFFF.toInt()
+            } else {
+                p.color = metal.trait
+            }
+            p.style = Paint.Style.FILL
+            c.drawPath(PLUME, p)
+            p.style = Paint.Style.STROKE
+            p.strokeCap = Paint.Cap.ROUND
+            p.strokeWidth = 0.07f
+            c.drawLine(-0.40f, 0.44f, -0.22f, 0.24f, p)
+            c.restore()
+        }
+        p.strokeCap = Paint.Cap.BUTT
+        p.style = Paint.Style.FILL
+        c.restore()
+    }
+
+    /**
+     * La plume, au centre de la marge basse : sur l'axe de la carte, comme la
+     * clef de voûte, la plaque, l'agrafe et le médaillon. Posée devant le
+     * numéro de série, elle touchait l'arrondi du coin et mordait sur le
+     * « n° » ; ici, la ligne de série et le rang la laissent libre des deux
+     * côtés (propriétaire, 2026-10-10).
+     */
+    private const val PLUME_X = LARGEUR / 2f
+    private const val PLUME_TAILLE = 9f
+    private const val PLUME_VIGNETTE_X = LARGEUR / 2f
+    private const val PLUME_VIGNETTE_TAILLE = 7.5f
+
+    /**
+     * Un cachet de cire : l'ombre, la cire coulée, le biseau, un motif frappé
+     * au centre et une légende en arc au-dessus.
+     *
+     * [motif] est tracé deux fois sur le cercle unité, d'abord dans l'ombre
+     * (`ombre` vrai, décalé vers le bas à droite) puis en blanc : c'est ce
+     * décalage qui le fait lire comme frappé dans la cire.
+     */
+    private fun cachet(
+        c: Canvas, p: Paint, vignette: Boolean, cire: Cire, legende: String,
+        motif: (Canvas, Paint, Boolean) -> Unit
+    ) {
+        val cx = if (vignette) SCEAU_VIGNETTE_X else SCEAU_X
+        val cy = if (vignette) SCEAU_VIGNETTE_Y else SCEAU_Y
+        val r = if (vignette) SCEAU_VIGNETTE_R else SCEAU_R
+        c.save()
+        c.translate(cx, cy)
+
+        // La cire et ses reliefs sont tracés sur le cercle unité.
+        c.save()
+        c.scale(r, r)
+        p.style = Paint.Style.FILL
+        p.shader = null
+        p.color = 0x59000000
+        c.save()
+        c.translate(0.07f, 0.11f)
+        c.drawPath(BORD_CIRE, p)
+        c.restore()
+        // Pinceau opaque avant le dégradé : l'alpha de l'ombre, resté sur le
+        // pinceau, multiplierait la cire et la rendrait translucide.
+        p.color = Color.BLACK
+        p.shader = cire.modele
+        c.drawPath(BORD_CIRE, p)
+        p.shader = null
+
+        // Le biseau : la lèvre basse dans l'ombre, la haute dans la lumière.
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.075f
+        p.color = cire.ombre
+        c.drawCircle(0.02f, 0.03f, 0.88f, p)
+        p.color = 0x55FFFFFF
+        p.strokeWidth = 0.04f
+        c.drawArc(RectF(-0.88f, -0.88f, 0.88f, 0.88f), 160f, 140f, false, p)
+
+        // Le motif descend sous la légende ; sur la vignette, sans légende, il
+        // grandit et se centre.
+        val echelle = if (vignette) 1.25f else 1.0f
+        c.save()
+        if (!vignette) c.translate(0f, 0.12f)
+        c.scale(echelle, echelle)
+        p.color = cire.ombre
+        c.save()
+        c.translate(0.025f, 0.04f)
+        motif(c, p, true)
+        c.restore()
+        p.color = Color.WHITE
+        motif(c, p, false)
+        c.restore()
+        p.strokeCap = Paint.Cap.BUTT
+        p.strokeJoin = Paint.Join.MITER
+        p.style = Paint.Style.FILL
+        c.restore()
+
+        // La légende, en unités de carte et non sur le cercle unité : un corps
+        // de 0,2 pixel mis à l'échelle ensuite se rend mal.
+        if (!vignette) legendeEnArc(c, p, legende, r * 0.50f, r, cire.ombre)
+        c.restore()
+    }
+
+    /**
+     * Une ligne de légende courbée sur le pourtour du sceau.
+     *
+     * Le chemin tourne dans le sens horaire, le pied des lettres au rayon
+     * donné. Le corps rétrécit si la légende ne tient pas dans son arc.
+     */
+    private fun legendeEnArc(c: Canvas, p: Paint, texte: String, rayon: Float, r: Float, ombre: Int) {
+        p.shader = null
+        p.style = Paint.Style.FILL
+        p.textAlign = Paint.Align.LEFT
+        p.typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.BOLD)
+        p.letterSpacing = 0.06f
+        val arc = 170f
+        val longueur = (Math.PI * rayon * arc / 180f).toFloat()
+        p.textSize = r * 0.29f
+        val large = p.measureText(texte)
+        if (large > longueur) p.textSize *= longueur / large
+        val chemin = Path().apply {
+            val boite = RectF(-rayon, -rayon, rayon, rayon)
+            addArc(boite, 270f - arc / 2f, arc)
+        }
+        val decalage = (longueur - p.measureText(texte)) / 2f
+        p.color = ombre
+        c.save()
+        c.translate(r * 0.02f, r * 0.03f)
+        c.drawTextOnPath(texte, chemin, decalage, 0f, p)
+        c.restore()
+        p.color = LEGENDE
+        c.drawTextOnPath(texte, chemin, decalage, 0f, p)
+        p.letterSpacing = 0f
+        p.typeface = null
+    }
+
+    /**
+     * Le sceau de la carte ouverte, à cheval sur l'angle bas droit de la
+     * fenêtre.
+     */
+    private const val SCEAU_X = 239f
+    private const val SCEAU_Y = 151f
+    private const val SCEAU_R = 31f
+    /** Sur la vignette, plus gros en proportion : il doit se lire à 110 dp. */
+    private const val SCEAU_VIGNETTE_X = 240f
+    private const val SCEAU_VIGNETTE_Y = 172f
+    private const val SCEAU_VIGNETTE_R = 34f
+
+    /**
+     * Une cire : son modelé sur le cercle unité, fabriqué une fois (le cachet
+     * se dessine à chaque trame d'une carte qu'on incline), et son ton
+     * d'ombre, qui sert au biseau, au motif et à la légende.
+     */
+    private class Cire(claire: String, base: String, ombre: String) {
+        val ombre: Int = Color.parseColor(ombre)
+        val modele = RadialGradient(
+            -0.30f, -0.38f, 1.4f,
+            intArrayOf(Color.parseColor(claire), Color.parseColor(base), this.ombre),
+            floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP
+        )
+    }
+
+    /** Le sceau, pris sur le rouge du drapeau. */
+    private val CIRE_ROUGE by lazy { Cire("#FF6B6B", "#D7141F", "#7A0B12") }
+    private val LEGENDE = Color.parseColor("#F6E3B4")
+
+    /** Le bord coulé de la cire, sur un cercle unité. */
+    private val BORD_CIRE: Path = Path().apply {
+        val pas = 72
+        for (i in 0..pas) {
+            val t = (2 * Math.PI * i / pas)
+            val r = 1f + 0.055f * sin(7 * t).toFloat() + 0.035f * sin(11 * t + 1.3).toFloat()
+            val x = r * cos(t).toFloat()
+            val y = r * sin(t).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
+
+    /** La coche frappée dans le sceau. */
+    private val COCHE: Path = Path().apply {
+        moveTo(-0.30f, 0.0f)
+        lineTo(-0.08f, 0.22f)
+        lineTo(0.32f, -0.22f)
+    }
+
+    /** La plume : une barbe en fuseau, la pointe en bas à gauche, sur le cercle unité. */
+    private val PLUME: Path = Path().apply {
+        moveTo(-0.26f, 0.28f)
+        cubicTo(-0.36f, -0.04f, 0.04f, -0.40f, 0.38f, -0.48f)
+        cubicTo(0.32f, -0.14f, 0.06f, 0.20f, -0.26f, 0.28f)
+        close()
+    }
     /** Les six paliers de Leitner, en pastilles, pour la vignette. */
     fun dessinerBoite(c: Canvas, p: Paint, boite: Int) {
         val r = BOITE_VIGNETTE
@@ -2351,8 +3146,32 @@ abstract class Carton(context: Context) : ViewGroup(context), SensorEventListene
     /** Le roulis de l'appareil depuis le repos, dans [-1, 1], tel que dessiné. */
     private var pesanteur = 0f
 
+    /** Le tangage de l'appareil depuis le repos, dans [-1, 1], tel que dessiné. */
+    private var tangage = 0f
+
+    /**
+     * D'où l'œil regarde la carte, dans [-1, 1] sur chaque axe : x vers la
+     * droite, y vers le bas. C'est ce que lit la profondeur de la fenêtre
+     * ([Motif.peindreLieu]). La pesanteur seule, sans le doigt : comme la
+     * tranche, c'est l'orientation réelle du carton et non la lumière.
+     *
+     * Le signe suit [Posture] : bord droit qui descend, le roulis est négatif
+     * et le bord droit de la carte vient vers le joueur, qui la voit donc
+     * de sa droite.
+     *
+     * Amplifié de [GAIN_REGARD] : un roulis de 1, c'est le téléphone sur la
+     * tranche, et le poignet n'en donne jamais qu'un quart ou un tiers. Sans
+     * gain, les plans ne glissaient que d'un pour cent.
+     */
+    protected val regardX: Float get() = (-pesanteur * GAIN_REGARD).coerceIn(-1f, 1f)
+    protected val regardY: Float get() = (tangage * GAIN_REGARD).coerceIn(-1f, 1f)
+
     /** La même posture que celle qui fait pivoter la carte, voir [Posture]. */
     private val posture = Posture(this, LISSAGE)
+
+    /** Le vrai bas dans le plan de l'écran, en unités de pesanteur : voir [Posture.basX]. */
+    protected val basX: Float get() = posture.basX
+    protected val basY: Float get() = posture.basY
 
     /** Le roulis que dicte le doigt, dans [-1, 1]. */
     private var doigt = 0f
@@ -2465,6 +3284,7 @@ abstract class Carton(context: Context) : ViewGroup(context), SensorEventListene
         capteurs = null
         posture.oublier()
         pesanteur = 0f
+        tangage = 0f
         // Un carton qui reviendrait à l'écran encore enfoncé se lirait comme
         // un bogue : l'appui appartient au geste, pas à la vue. Le test évite
         // au passage de fabriquer un état pour chacune des vignettes d'une
@@ -2510,8 +3330,9 @@ abstract class Carton(context: Context) : ViewGroup(context), SensorEventListene
      */
     override fun onSensorChanged(evenement: SensorEvent) {
         posture.echantillon(evenement.values)
-        if (abs(posture.roulis - pesanteur) < SEUIL) return
+        if (abs(posture.roulis - pesanteur) < SEUIL && abs(posture.tangage - tangage) < SEUIL) return
         pesanteur = posture.roulis
+        tangage = posture.tangage
         invalidate()
     }
 
@@ -2744,6 +3565,9 @@ abstract class Carton(context: Context) : ViewGroup(context), SensorEventListene
         // échantillon : 0,04 sur la cible d'avant vaut 0,008 ici.
         const val SEUIL = 0.008f
 
+        /** Voir [regardX] : pleine course vers vingt degrés de poignet. */
+        const val GAIN_REGARD = 3f
+
         /** L'enfoncement maximum, en degrés, au bord du carton. */
         const val APPUI = 2.6f
 
@@ -2776,7 +3600,9 @@ class CarteOrnee(
     private val blason: Blasonnement = Blasonnement.AUCUN,
     private val jeu: JeuCarte? = null,
     /** De 0 (mot fréquent) à 1 (mot rare) : voir [Rarete.intensitePourRang]. */
-    private val intensite: Float = 0.5f
+    private val intensite: Float = 0.5f,
+    /** Le jour où la carte a été gagnée, réduit à sa saison : voir [Souvenir]. */
+    private val souvenir: Souvenir? = null
 ) : Carton(context) {
 
     override val hauteurUnites: Float =
@@ -2814,6 +3640,13 @@ class CarteOrnee(
     private val degradeAgrafe: android.graphics.RadialGradient
     private val motif: Motif
 
+    /**
+     * Prévenu quand le paysage d'une vignette, rendu en arrière-plan, arrive.
+     * Pour qui dessine la vignette ailleurs qu'à l'écran : l'éventail de la
+     * boîte en garde une photo, qui sans cela resterait au ciel seul.
+     */
+    var quandLieuArrive: (() -> Unit)? = null
+
     init {
         // La face, la gemme et la fenêtre prennent la teinte du champ quand le
         // mot en a un : c'est ce qui fait qu'un tiroir du carnet se lit comme
@@ -2824,7 +3657,8 @@ class CarteOrnee(
         degradeAgrafe = Ornement.degradeGemme(
             teinte, Ornement.GEMME_CENTRE, Ornement.CREUX_AGRAFE, intensite
         )
-        motif = Motif(mot, rarete, fenetre, blason)
+        val redessiner: (() -> Unit)? = if (vignette) fun() { invalidate(); quandLieuArrive?.invoke() } else null
+        motif = Motif(mot, rarete, fenetre, blason, souvenir, redessiner)
         setWillNotDraw(false)
         clipChildren = false
     }
@@ -2998,7 +3832,78 @@ class CarteOrnee(
 
     fun avecBoite(valeur: Int): CarteOrnee {
         boite = valeur
+        oublierLesCouches()
+        invalidate()
         return this
+    }
+
+    /** La carte a été écrite au clavier : voir [Ornement.dessinerPlume]. */
+    private var plume = false
+
+    fun avecPlume(valeur: Boolean): CarteOrnee {
+        plume = valeur
+        oublierLesCouches()
+        invalidate()
+        return this
+    }
+
+    /**
+     * Faux tant que le paysage et le métal se préparent hors du fil principal :
+     * voir [attendreSaMatiere]. La carte ne se dessine pas d'ici là.
+     */
+    private var matierePrete = true
+    private var quandPrete: (() -> Unit)? = null
+    private var largeurPreparee = 0
+
+    /**
+     * Pour le lecteur de cartes : le paysage et le métal de la carte ouverte
+     * se calculent sur deux fils de fond dès qu'elle connaît sa taille, et
+     * [pret] est appelé sur le fil principal quand elle peut se dessiner.
+     *
+     * Sur un Galaxy A21s (2026-10-12), les deux se calculaient l'un après
+     * l'autre à la première image de la carte, 240 ms et 230 ms : l'écran se
+     * figeait une demi-seconde au toucher, et le retournement démarrait en
+     * retard. Menés de front, ils laissent le voile apparaître tout de suite
+     * et la carte se retourner sans à-coup.
+     *
+     * Le lecteur, la révision et la pochette s'en servent (la révision et la
+     * pochette posent la face cachée pendant que le dos est montré, 37.0.1) ;
+     * le partage dessine la carte tout de suite et garde le rendu direct.
+     */
+    fun attendreSaMatiere(pret: () -> Unit): CarteOrnee {
+        matierePrete = false
+        quandPrete = pret
+        return this
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, ancienneL: Int, ancienneH: Int) {
+        super.onSizeChanged(w, h, ancienneL, ancienneH)
+        if (matierePrete || w <= 0 || w == largeurPreparee) return
+        largeurPreparee = w
+        val principal = android.os.Handler(android.os.Looper.getMainLooper())
+        var restants = 2
+        val fini: () -> Unit = {
+            restants--
+            if (restants == 0 && largeurPreparee == w) {
+                matierePrete = true
+                oublierLesCouches()
+                invalidate()
+                quandPrete?.invoke()
+                quandPrete = null
+            }
+        }
+        val ctx = context
+        Thread({
+            // Un échec ne bloque pas la carte : elle retombe sur le rendu direct.
+            try {
+                Ornement.metal(ctx, rarete, w, vignette)
+                Ornement.rayons(rarete, w, vignette)
+            } catch (e: Throwable) {
+                android.util.Log.w("CarteOrnee", "Métal non préparé : ${e.message}")
+            }
+            principal.post(fini)
+        }, "metal").start()
+        motif.preparer(w / Ornement.LARGEUR, principal, fini)
     }
 
     /**
@@ -3009,11 +3914,137 @@ class CarteOrnee(
      * partagés par toutes les cartes du même palier et de la même taille. Ce
      * qui reste à tracer réellement à chaque trame, c'est un rectangle
      * dégradé, le motif du mot, et une poignée de joyaux.
+     *
+     * Sur la carte ouverte, ce qui ne bouge pas passe par [couches].
      */
     override fun onDraw(canvas: Canvas) {
+        if (!matierePrete) return
         val u = width / Ornement.LARGEUR
         if (u <= 0f) return
+        if (couches(canvas, u)) {
+            vivant(canvas, u)
+            return
+        }
 
+        // La neige passe derrière le dessin du mot : c'est le sujet de la
+        // carte, quelques flocons dessus en brouillaient la lecture.
+        val anime = ambiance != null && canvas.isHardwareAccelerated
+        dessous(canvas, u, avecIris = !anime, avecSujet = !anime, regard = canvas.isHardwareAccelerated)
+        if (anime) {
+            animer(canvas, u)
+            canvas.save()
+            canvas.scale(u, u)
+            motif.dessusDuLieu(canvas, pinceau, roulis, decoupe, avecSujet = true, avecIris = true)
+            canvas.restore()
+        }
+        dessus(canvas, u)
+        vivant(canvas, u)
+    }
+
+    /** Ce qui bouge dans la fenêtre : voir [Ambiance]. Réservé au lecteur et à la pochette. */
+    private var ambiance: Ambiance? = null
+    private var instantPrecedent = 0L
+
+    /**
+     * Pour le lecteur de cartes et la pochette : la fenêtre vit au temps de sa
+     * saison, et son lieu prend de la profondeur en trois plans qui glissent
+     * avec l'inclinaison ([Motif.profondeur]). Rien sur une vignette, rien si
+     * le téléphone demande des animations réduites.
+     */
+    fun avecAmbiance(): CarteOrnee {
+        if (vignette || Pochette.animationsReduites(context)) return this
+        motif.profondeur = true
+        val zone = RectF(fenetre.left, fenetre.top, fenetre.right, min(fenetre.bottom, Ornement.PLAQUE.top + 4f))
+        // L'été, l'heure de la carte choisit : aigrettes le jour, lucioles
+        // le soir et la nuit, les heures des deux paliers hauts.
+        ambiance = Ambiance.pour(
+            souvenir, zone, mot.hashCode(), nuit = rarete.ordinal >= Rarete.RARE.ordinal,
+            oiseaux = motif.profondeur
+        )
+        oublierLesCouches()
+        if (isAttachedToWindow) armerSecousse()
+        return this
+    }
+
+    private var secousses: android.hardware.SensorManager? = null
+    private var derniereSecousse = 0L
+
+    /**
+     * Le geste de la boule à neige : un coup sec soulève les flocons.
+     *
+     * L'accélération linéaire, sans la pesanteur : celle que la neige suit
+     * déjà ne doit pas se lire comme une secousse. Un appareil qui ne l'a pas
+     * garde sa neige, sans le tourbillon.
+     */
+    private val ecouteSecousse = object : android.hardware.SensorEventListener {
+        override fun onSensorChanged(e: android.hardware.SensorEvent) {
+            val a = ambiance ?: return
+            val v = e.values
+            val m = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+            if (m < SEUIL_SECOUSSE) return
+            val maintenant = android.os.SystemClock.uptimeMillis()
+            if (maintenant - derniereSecousse < 120L) return
+            derniereSecousse = maintenant
+            a.secouer(((m - SEUIL_SECOUSSE) / 20f).coerceIn(0.3f, 1f))
+            invalidate()
+        }
+
+        override fun onAccuracyChanged(capteur: android.hardware.Sensor?, precision: Int) = Unit
+    }
+
+    private fun armerSecousse() {
+        if (ambiance == null || secousses != null) return
+        val m = context.getSystemService(Context.SENSOR_SERVICE) as? android.hardware.SensorManager ?: return
+        val capteur = m.getDefaultSensor(android.hardware.Sensor.TYPE_LINEAR_ACCELERATION) ?: return
+        m.registerListener(ecouteSecousse, capteur, android.hardware.SensorManager.SENSOR_DELAY_GAME)
+        secousses = m
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        armerSecousse()
+    }
+
+    /**
+     * Avance l'ambiance du temps écoulé et la dessine dans la fenêtre, puis
+     * redemande une image. La boucle s'arrête d'elle-même quand la carte
+     * n'est plus dessinée : cachée, fermée ou détachée.
+     */
+    private fun animer(canvas: Canvas, u: Float) {
+        val a = ambiance ?: return
+        // Le partage dessine la carte dans un bitmap : une image figée n'a
+        // pas à garder des flocons au hasard de l'instant.
+        if (!canvas.isHardwareAccelerated) return
+        val maintenant = System.nanoTime()
+        val dt = if (instantPrecedent == 0L) 0f
+        else ((maintenant - instantPrecedent) / 1e9f).coerceAtMost(0.05f)
+        instantPrecedent = maintenant
+        a.orienter(basX, basY)
+        a.avancer(dt)
+        canvas.save()
+        canvas.scale(u, u)
+        canvas.clipPath(decoupe)
+        a.dessiner(canvas, pinceau)
+        canvas.restore()
+        // Une image sur deux : trente par seconde suffisent à des flocons
+        // lents, et la batterie tient deux fois mieux qu'à soixante.
+        if (!relancePrevue) {
+            relancePrevue = true
+            postOnAnimationDelayed(relance, 1000L / IMAGES_PAR_SECONDE - 8)
+        }
+    }
+
+    private var relancePrevue = false
+    private val relance = Runnable {
+        relancePrevue = false
+        invalidate()
+    }
+
+    /** La face, les rayons et le motif : tout ce que le métal recouvre. */
+    private fun dessous(
+        canvas: Canvas, u: Float, avecIris: Boolean, avecSujet: Boolean = true,
+        avecLieu: Boolean = true, regard: Boolean = false
+    ) {
         canvas.save()
         canvas.scale(u, u)
         Ornement.dessinerFace(canvas, pinceau, degradeFace, rarete, vignette)
@@ -3023,10 +4054,18 @@ class CarteOrnee(
 
         canvas.save()
         canvas.scale(u, u)
-        motif.peindre(canvas, pinceau, roulis, decoupe)
+        // Le partage dessine la carte au repos : une image figée n'a pas à
+        // garder l'angle de l'instant.
+        motif.peindre(
+            canvas, pinceau, roulis, decoupe, u, avecIris, avecSujet, avecLieu,
+            if (regard) regardX else 0f, if (regard) regardY else 0f
+        )
         canvas.restore()
+    }
 
-        Ornement.metal(rarete, width, vignette)?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+    /** Le métal et ce qui s'y pose : joyaux, médaillon, sceau, plume, saison, semis. */
+    private fun dessus(canvas: Canvas, u: Float) {
+        Ornement.metal(context, rarete, width, vignette)?.let { canvas.drawBitmap(it, 0f, 0f, null) }
 
         canvas.save()
         canvas.scale(u, u)
@@ -3044,16 +4083,155 @@ class CarteOrnee(
                 canvas, pinceau, degradeAgrafe, agrafe, Ornement.CREUX_AGRAFE,
                 intensite, dirX, dirY
             )
-            jeu?.let { Ornement.dessinerMedaillon(canvas, pinceau, it, Ornement.metal(rarete)) }
+            jeu?.let { Ornement.dessinerMedaillon(context, canvas, pinceau, it, Ornement.metal(rarete)) }
             pivoterLesBosses(canvas, pinceau)
         }
+        if (boite >= Sonje.BOITE_ACQUISE) Ornement.dessinerSceau(canvas, pinceau, vignette)
+        if (plume) Ornement.dessinerPlume(canvas, pinceau, vignette, rarete)
+        souvenir?.let { Ornement.dessinerSaison(canvas, pinceau, it, rarete, vignette) }
         Ornement.dessinerSemis(canvas, pinceau, mot, rarete, vignette)
+        canvas.restore()
+    }
+
+    /** Ce qui suit la main ou le doigt, et se trace donc à chaque trame. */
+    private fun vivant(canvas: Canvas, u: Float) {
+        canvas.save()
+        canvas.scale(u, u)
         if (!vignette) ombreDeContact(canvas, pinceau)
         // La tranche par-dessus le métal : c'est le bord du carton, et le
         // cadre s'arrête dessus comme l'impression s'arrête sur la coupe.
         Ornement.dessinerTranche(canvas, pinceau, assiette, hauteurUnites)
+        // Le reflet balaie le métal et la face, pas le paysage : sur un ciel
+        // de nuit, une bande blanche se lit comme un brouillard. La fenêtre a
+        // sa propre brillance, plus discrète (voir [Motif]).
+        canvas.save()
+        if (android.os.Build.VERSION.SDK_INT >= 26) canvas.clipOutPath(decoupe)
+        else @Suppress("DEPRECATION") canvas.clipPath(decoupe, android.graphics.Region.Op.DIFFERENCE)
         Ornement.dessinerReflet(canvas, pinceau, rarete, roulis, vignette)
         canvas.restore()
+        canvas.restore()
+    }
+
+    /**
+     * Les deux couches fixes de la carte ouverte, et l'irisation entre elles.
+     *
+     * Posée immobile, la carte ouverte se redessinait environ vingt fois par
+     * seconde sur un Galaxy A21s (2026-10-12) : le capteur d'inclinaison ne se
+     * tait jamais tout à fait, et chaque écart, même invisible, faisait
+     * rejouer les quelques centaines d'ordres de tracé du cadre, du motif et
+     * des joyaux. 53 ms par image, dont 2 ms de carte graphique : le reste
+     * était le processeur qui renvoyait les mêmes tracés. La carte tenue en
+     * main tournait donc vers 18 images par seconde.
+     *
+     * Ce qui ne dépend ni de la main ni du doigt est enregistré une fois dans
+     * deux couches, que la carte graphique garde prêtes : le dessous du métal,
+     * puis le métal et ce qu'il porte. L'ambiance et l'irisation d'une très
+     * rare passent entre les deux, à leur place ; la tranche, le reflet et l'ombre du
+     * doigt se tracent par-dessus, comme avant.
+     *
+     * Rend faux quand il faut tout tracer en direct : canevas logiciel (le
+     * partage dessine la carte dans un bitmap), vignette, Android avant 10,
+     * ou doigt posé, puisque les joyaux et les rivets tournent alors vers lui.
+     * Les couches enregistrées doigt levé restent bonnes, et resservent dès
+     * qu'il repart.
+     */
+    private fun couches(canvas: Canvas, u: Float): Boolean {
+        if (vignette || android.os.Build.VERSION.SDK_INT < 29 || !canvas.isHardwareAccelerated) return false
+        if (emprise >= 0.01f) return false
+        if (!motif.aSonLieu || Ornement.metal(context, rarete, width, vignette) == null) return false
+        val anime = ambiance != null
+        // Le lieu en plans glisse à chaque trame : il sort de la couche fixe,
+        // et le dessin du mot avec lui, qui doit passer devant.
+        val profond = motif.enPlans
+        val vivantDessous = anime || profond
+        var bas = coucheDessous
+        var haut = coucheDessus
+        var sujet = coucheSujet
+        // Une couche qu'Android n'a pas affichée pendant quelques images est
+        // vidée de son contenu : c'est le cas après un appui du doigt, où la
+        // carte se trace en direct. Sur la 36.3.4, la carte revenait alors
+        // sans son corps, texte et reflets seuls sur la grille (Galaxy A21s,
+        // 2026-10-12). Elle se réenregistre donc dès qu'une couche est vide.
+        if (bas == null || haut == null || (vivantDessous && sujet == null) ||
+            !bas.hasDisplayList() || !haut.hasDisplayList() || (vivantDessous && sujet?.hasDisplayList() != true) ||
+            largeurDesCouches != width || hauteurDesCouches != height || profondDesCouches != profond
+        ) {
+            bas = (bas ?: android.graphics.RenderNode("carte-dessous")).also {
+                it.setPosition(0, 0, width, height)
+                it.setUseCompositingLayer(true, null)
+                val c = it.beginRecording(width, height)
+                try { dessous(c, u, avecIris = false, avecSujet = !vivantDessous, avecLieu = !profond) } finally { it.endRecording() }
+            }
+            // Avec une ambiance, le dessin du mot a sa propre couche, posée
+            // par-dessus la neige.
+            if (vivantDessous) sujet = (sujet ?: android.graphics.RenderNode("carte-sujet")).also {
+                it.setPosition(0, 0, width, height)
+                it.setUseCompositingLayer(true, null)
+                val c = it.beginRecording(width, height)
+                try {
+                    c.scale(u, u)
+                    motif.dessusDuLieu(c, pinceau, roulis, decoupe, avecSujet = true, avecIris = false)
+                } finally { it.endRecording() }
+            }
+            haut = (haut ?: android.graphics.RenderNode("carte-dessus")).also {
+                it.setPosition(0, 0, width, height)
+                it.setUseCompositingLayer(true, null)
+                val c = it.beginRecording(width, height)
+                try { dessus(c, u) } finally { it.endRecording() }
+            }
+            coucheDessous = bas
+            coucheDessus = haut
+            coucheSujet = sujet
+            largeurDesCouches = width
+            hauteurDesCouches = height
+            profondDesCouches = profond
+        }
+        canvas.drawRenderNode(bas)
+        if (profond) {
+            canvas.save()
+            canvas.scale(u, u)
+            motif.peindreLieu(canvas, decoupe, u, regardX, regardY)
+            canvas.restore()
+        }
+        if (anime) animer(canvas, u)
+        if (vivantDessous) sujet?.let { canvas.drawRenderNode(it) }
+        if (motif.irise) {
+            canvas.save()
+            canvas.scale(u, u)
+            motif.dessusDuLieu(canvas, pinceau, roulis, decoupe, avecSujet = false, avecIris = true)
+            canvas.restore()
+        }
+        canvas.drawRenderNode(haut)
+        return true
+    }
+
+    private var coucheDessous: android.graphics.RenderNode? = null
+    private var coucheDessus: android.graphics.RenderNode? = null
+    private var coucheSujet: android.graphics.RenderNode? = null
+    private var largeurDesCouches = 0
+    private var hauteurDesCouches = 0
+    private var profondDesCouches = false
+
+    /** À appeler quand une partie fixe change : les couches se réenregistrent. */
+    private fun oublierLesCouches() {
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            coucheDessous?.discardDisplayList()
+            coucheDessus?.discardDisplayList()
+            coucheSujet?.discardDisplayList()
+        }
+        coucheDessous = null
+        coucheDessus = null
+        coucheSujet = null
+    }
+
+    override fun onDetachedFromWindow() {
+        oublierLesCouches()
+        instantPrecedent = 0L
+        removeCallbacks(relance)
+        relancePrevue = false
+        secousses?.unregisterListener(ecouteSecousse)
+        secousses = null
+        super.onDetachedFromWindow()
     }
 
     /*
@@ -3061,6 +4239,16 @@ class CarteOrnee(
      * été vérifié ailleurs qu'à l'œil sur le papier.
      */
     private companion object {
+        /** La cadence de l'ambiance : voir [animer]. */
+        const val IMAGES_PAR_SECONDE = 30
+
+        /**
+         * L'accélération, sans la pesanteur, au-delà de laquelle on secoue,
+         * en m/s² : nettement au-dessus d'une marche ou d'un téléphone qu'on
+         * repose (3 à 6), atteinte par tout coup de poignet volontaire.
+         */
+        const val SEUIL_SECOUSSE = 12f
+
         /** Le rayon de l'ombre sous la pulpe, en unités de carte (~5 mm). */
         const val RAYON_OMBRE = 26f
 
@@ -3077,447 +4265,536 @@ class CarteOrnee(
 }
 
 /**
- * L'illustration d'une carte : la matière de son palier, le sujet de son mot.
+ * L'illustration d'une carte : un lieu du pays à l'heure de sa rareté, et le
+ * sujet du mot posé devant.
  *
- * ## Pourquoi deux objets là où il n'y en avait qu'un
+ * ## Ce qui a remplacé la matière et la partition
  *
- * L'ancien `Motif` peignait tout dans une seule méthode : le grain du bronze
- * et l'initiale du mot s'y suivaient à quelques lignes d'écart, et l'on ne
- * pouvait toucher à l'un sans relire l'autre. Or la fenêtre dit **deux**
- * choses, qui n'ont ni la même source ni la même durée de vie :
+ * La fenêtre portait une matière teintée par le champ, divisée selon la nature
+ * du mot (coupé, tranché, chevron), puis le sujet. Elle porte maintenant un
+ * **lieu** par champ ([Lieu]) et une **heure** par rareté ([Heure]) :
  *
- * - **ce que vaut la carte** — le palier, d'où viennent le grain, le halo et
- *   l'irisation, mesurés et défendus de longue date ;
- * - **quel mot elle porte** — le sujet, qui est la partie qu'on cherche encore.
+ * - le lieu dit le champ par une forme et plus seulement par une teinte, ce
+ *   qui était justement le service que la partition rendait ; la nature, elle,
+ *   reste écrite en toutes lettres dans la pastille sous la plaque ;
+ * - l'heure dit la rareté d'un coup d'œil : matin, après-midi, soir, nuit ;
+ * - la saison dit le jour où la carte a été gagnée ([Souvenir], [Habillage]) :
+ *   neige, fleurs, chaleur ou feuilles, et la fête du jour s'il y en avait une.
  *
- * Elles sont désormais [Matiere] et [Sujet], et [Motif] n'est plus que leur
- * assemblage dans l'ordre d'une carte imprimée : la matière dessous, le sujet
- * au milieu, ce que la matière pose par-dessus. Essayer un autre sujet — un
- * meuble héraldique, un poinçon — ne demande donc plus d'ouvrir le grain.
- *
- * ## Ce que le sujet est devenu
- *
- * Il était un anneau par lettre, plus l'initiale en filigrane. Les anneaux
- * tiraient leur position du code des caractères : c'était un bruit stable et
- * unique par mot, mais un bruit — rien n'y disait le mot, et deux formes d'un
- * même lemme n'y avaient aucun air de famille. Le sujet est maintenant le
- * **tracé** du mot, lettre à lettre : voir [Trace].
- *
- * L'initiale disparaît sans être remplacée. Elle se justifiait par « la carte
- * dit son mot même en vignette » — mais [Ornement.PLAQUE] le porte déjà en
- * toutes lettres, à la vignette comme à la carte ouverte, et une lettre géante
- * derrière un mot lisible n'ajoutait qu'un doublon.
+ * Le lieu est un bitmap partagé ([Paysages.image]) : il ne dépend pas du mot,
+ * trente vignettes d'un même tiroir n'en paient qu'un. Le sujet, lui, se trace
+ * à chaque trame, dans la boîte 100 × 66 du paysage, et l'irisation d'une très
+ * rare passe par-dessus le tout quand l'appareil tourne.
  */
 class Motif(
     mot: String,
     rarete: Rarete,
-    zone: RectF,
-    blason: Blasonnement = Blasonnement.AUCUN
+    private val zone: RectF,
+    blason: Blasonnement = Blasonnement.AUCUN,
+    private val souvenir: Souvenir? = null,
+    /**
+     * Pour une vignette : de quoi se redessiner quand son paysage, rendu en
+     * arrière-plan, arrive (voir [Paysages.demander]). Sans lui, le rendu est
+     * synchrone, comme sur la carte ouverte.
+     */
+    private val surPaysage: (() -> Unit)? = null
 ) {
 
-    private val teinte = Ornement.teinteDe(mot, blason.champ)
-    private val matiere = Matiere(rarete, zone, teinte)
-    private val partition = Partition(blason.nature, zone)
+    private val teinteChamp: Float? = blason.champ?.hue
+    private val lieu = Lieu.de(blason.champ)
+    private val heure = Heure.de(rarete, teinteChamp)
+    /**
+     * La part de la fenêtre qu'on voit vraiment. Sur la carte ouverte, la
+     * plaque du nom recouvre le bas de l'ouverture : le lieu se cadre sur ce
+     * qui reste, sinon la cascade et le dessin passeraient sous la plaque.
+     */
+    private val visible = if (zone == Ornement.FENETRE)
+        RectF(zone.left, zone.top, zone.right, min(zone.bottom, Ornement.PLAQUE.top + 4f)) else RectF(zone)
+    private val cadrage = Paysages.cadrage(visible.width(), visible.height())
+    private val iris = Irisation.pour(rarete, zone, Ornement.teinteDe(mot, blason.champ))
+    private val peinture = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private var rendu: Bitmap? = null
+    private var demande = ""
+
+    /**
+     * Vrai pour la carte ouverte qui vit (lecteur, pochette) : le lieu se
+     * rend alors en trois plans qui glissent avec l'inclinaison, voir
+     * [Paysages.plans]. À poser avant [preparer].
+     */
+    var profondeur = false
+    private var plans: Array<Bitmap>? = null
+    private var plansManques = false
+    private val ouPlan = RectF()
+
+    /** Vrai quand le lieu est en plans, et donc à peindre à chaque trame. */
+    val enPlans: Boolean get() = profondeur && plans != null
+    private val ciel: LinearGradient by lazy {
+        LinearGradient(
+            0f, visible.top, 0f, visible.bottom,
+            intArrayOf(heure.cielHaut, heure.cielMilieu ?: heure.cielBas, heure.cielBas),
+            null, Shader.TileMode.CLAMP
+        )
+    }
+
+    /**
+     * Rend le lieu à l'échelle [echelle] sur un fil de fond, puis appelle
+     * [pret] par [principal]. Voir [CarteOrnee.attendreSaMatiere].
+     */
+    fun preparer(echelle: Float, principal: android.os.Handler, pret: () -> Unit) {
+        Thread({
+            val etages = if (profondeur) rendrePlans(echelle) else null
+            val image = if (etages == null) rendreLieu(echelle) else null
+            principal.post {
+                if (etages != null) plans = etages
+                if (image != null) rendu = image
+                pret()
+            }
+        }, "paysage").start()
+    }
+
+    private fun rendrePlans(echelle: Float): Array<Bitmap>? {
+        val l = (visible.width() * echelle).toInt()
+        val h = (visible.height() * echelle).toInt()
+        return try {
+            Paysages.plans(lieu, heure, teinteChamp, l, h, souvenir)
+        } catch (e: OutOfMemoryError) {
+            null
+        }
+    }
+
+    /**
+     * Demande le lieu à l'échelle [echelle] aux fils de fond de [Paysages],
+     * depuis n'importe quel fil, et appelle [pret] quand il est en cache.
+     * Une vignette qui se dessine ensuite le trouve, ou rejoint la demande en
+     * vol au lieu d'en lancer une seconde.
+     */
+    fun demanderLieu(echelle: Float, pret: () -> Unit) {
+        val l = (visible.width() * echelle).toInt()
+        val h = (visible.height() * echelle).toInt()
+        if (Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir) != null) {
+            pret()
+            return
+        }
+        Paysages.demander(lieu, heure, teinteChamp, l, h, souvenir) { pret() }
+    }
+
+    /**
+     * Rend le lieu à l'échelle [echelle] sur le fil appelant, et le met dans
+     * le cache de [Paysages]. `null` si la mémoire manque.
+     */
+    fun rendreLieu(echelle: Float): Bitmap? {
+        val l = (visible.width() * echelle).toInt()
+        val h = (visible.height() * echelle).toInt()
+        return try {
+            Paysages.image(lieu, heure, teinteChamp, l, h, souvenir)
+        } catch (e: OutOfMemoryError) {
+            null
+        }
+    }
+
+    /** Le lieu rendu à [l] × [h], ou `null` s'il est en route vers une vignette. */
+    private fun lieuAPeindre(l: Int, h: Int): Bitmap? {
+        val signal = surPaysage ?: return Paysages.image(lieu, heure, teinteChamp, l, h, souvenir)
+        Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir)?.let { return it }
+        val taille = "${l}x$h"
+        if (demande == taille) return null
+        demande = taille
+        Paysages.demander(lieu, heure, teinteChamp, l, h, souvenir) { bitmap ->
+            if (bitmap.width == l && bitmap.height == h) rendu = bitmap
+            signal()
+        }
+        return null
+    }
 
     /**
      * Le meuble s'il y en a un, le tracé sinon — et jamais les deux.
      *
-     * Le repli n'est pas un pis-aller : le tracé porte 97 % du carnet, et
-     * c'est le meuble qui est l'exception. Un nom de meuble que
-     * [Meubles] ne connaît pas retombe ici sans bruit, ce qui permet à
-     * l'actif et à la bibliothèque d'avancer chacun à son rythme.
+     * Un nom de meuble que [Meubles] ne connaît pas retombe sur le tracé sans
+     * bruit, ce qui permet à l'actif et à la bibliothèque d'avancer chacun à
+     * son rythme.
      */
     private val sujet: Sujet =
-        blason.meuble?.let { Enluminure.pour(it, zone, rarete) } ?: Trace(mot, zone, teinte)
+        blason.meuble?.let { Enluminure.pour(it, heure) } ?: Trace.pour(mot, heure)
 
     /**
-     * Peint le motif dans son ouverture.
-     *
-     * L'ordre dit d'où vient chaque chose : le palier pose sa matière, le sens
-     * la divise, le mot s'inscrit dedans, et le palier reprend la main pour ce
-     * qui doit briller par-dessus.
-     *
-     * `roulis` est l'inclinaison de l'appareil ramenée dans [-1, 1] : elle ne
-     * fait tourner que deux matrices, ce qui rend le suivi du capteur
-     * pratiquement gratuit. Sans découpe, le tracé et la brillance
-     * déborderaient sur le cadre — et l'arche cesserait d'être une arche.
+     * Peint le motif dans son ouverture. [echelle] est le nombre de pixels par
+     * unité de carte : le lieu est rendu à la taille réelle de la fenêtre,
+     * sinon il serait flou sur un grand écran.
      */
-    fun peindre(c: Canvas, p: Paint, roulis: Float, decoupe: Path) {
+    fun peindre(
+        c: Canvas, p: Paint, roulis: Float, decoupe: Path, echelle: Float,
+        avecIris: Boolean = true, avecSujet: Boolean = true,
+        avecLieu: Boolean = true, regardX: Float = 0f, regardY: Float = 0f
+    ) {
         c.save()
         c.clipPath(decoupe)
-        matiere.dessous(c, p)
-        partition.peindre(c, p)
+        val l = (visible.width() * echelle).toInt()
+        val h = (visible.height() * echelle).toInt()
+        // Sous la plaque, le sol du lieu : rien ne doit percer entre ses bords.
+        peinture.color = heure.pres
+        c.drawRect(zone, peinture)
+        val etages = if (profondeur && avecLieu) plansAPeindre(l, h) else null
+        // La carte garde son paysage : le cache peut l'évincer pendant qu'une
+        // grille défile, la carte ne le redessine pas pour autant.
+        val image = if (!avecLieu || etages != null) null
+            else rendu?.takeIf { it.width == l && it.height == h && !it.isRecycled }
+            ?: lieuAPeindre(l, h)?.also { rendu = it }
+        if (!avecLieu) {
+            // Le lieu viendra par [peindreLieu], à chaque trame.
+        } else if (etages != null) {
+            peindrePlans(c, etages, l, h, regardX, regardY)
+        } else if (image != null) {
+            c.drawBitmap(image, null, visible, peinture)
+        } else {
+            // Le ciel de l'heure, le temps que le lieu arrive.
+            peinture.shader = ciel
+            c.drawRect(visible, peinture)
+            peinture.shader = null
+        }
+        if (avecSujet) peindreSujet(c)
+        if (avecIris) iris?.dessus(c, p, roulis)
+        c.restore()
+    }
+
+    /** Les plans à la bonne taille, rendus sur place s'il le faut, ou `null` s'ils n'existent pas (fête). */
+    private fun plansAPeindre(l: Int, h: Int): Array<Bitmap>? {
+        plans?.takeIf {
+            it[0].width == l + 2 * Paysages.marge(0, l) && it[0].height == h + 2 * Paysages.marge(0, h) &&
+                it.none { b -> b.isRecycled }
+        }?.let { return it }
+        if (plansManques) return null
+        return try {
+            Paysages.plans(lieu, heure, teinteChamp, l, h, souvenir)?.also { plans = it }
+        } catch (e: OutOfMemoryError) {
+            // La carte retombe sur son lieu à plat, sans réessayer à chaque trame.
+            plansManques = true
+            null
+        }
+    }
+
+    /**
+     * Chaque calque déborde de la fenêtre ([Paysages.marge]) : on le peint
+     * centré sur elle, à l'échelle de la fenêtre, puis décalé selon le regard.
+     */
+    private fun peindrePlans(c: Canvas, etages: Array<Bitmap>, l: Int, h: Int, regardX: Float, regardY: Float) {
+        val sx = visible.width() / l
+        val sy = visible.height() / h
+        for (i in etages.indices) {
+            val dx = Paysages.GLISSEMENT[i] * visible.width() * regardX
+            val dy = Paysages.GLISSEMENT[i] * visible.height() * regardY
+            val mx = Paysages.marge(i, l) * sx
+            val my = Paysages.marge(i, h) * sy
+            ouPlan.set(
+                visible.left - mx + dx, visible.top - my + dy,
+                visible.right + mx + dx, visible.bottom + my + dy
+            )
+            c.drawBitmap(etages[i], null, ouPlan, peinture)
+        }
+    }
+
+    /**
+     * Le lieu seul, en plans décalés selon le regard : ce que [peindre] tait
+     * quand `avecLieu` est faux. Rien si le lieu n'est pas en plans.
+     */
+    fun peindreLieu(c: Canvas, decoupe: Path, echelle: Float, regardX: Float, regardY: Float) {
+        val l = (visible.width() * echelle).toInt()
+        val h = (visible.height() * echelle).toInt()
+        val etages = plansAPeindre(l, h) ?: return
+        c.save()
+        c.clipPath(decoupe)
+        peindrePlans(c, etages, l, h, regardX, regardY)
+        c.restore()
+    }
+
+    private fun peindreSujet(c: Canvas) {
+        c.save()
+        c.translate(visible.left + cadrage[1], visible.top + cadrage[2])
+        c.scale(cadrage[0], cadrage[0])
         sujet.peindre(c)
-        matiere.dessus(c, p, roulis)
+        c.restore()
+    }
+
+    /** Vrai pour une très rare : son irisation suit l'inclinaison, le reste du motif non. */
+    val irise: Boolean get() = iris != null
+
+    /** Vrai quand le lieu est là : sans lui, le motif n'est qu'un ciel d'attente. */
+    val aSonLieu: Boolean get() = rendu != null || plans != null
+
+    /**
+     * Ce que [peindre] tait quand `avecSujet` ou `avecIris` est faux : le
+     * sujet, puis l'irisation, dans l'ouverture et à leur ordre d'origine.
+     */
+    fun dessusDuLieu(c: Canvas, p: Paint, roulis: Float, decoupe: Path, avecSujet: Boolean, avecIris: Boolean) {
+        if (!avecSujet && (!avecIris || iris == null)) return
+        c.save()
+        c.clipPath(decoupe)
+        if (avecSujet) peindreSujet(c)
+        if (avecIris) iris?.dessus(c, p, roulis)
         c.restore()
     }
 }
 
 /**
- * La partition : la division du champ, avant qu'on y pose quoi que ce soit.
+ * Ce que la **très rare** pose par-dessus la nuit : une irisation et une
+ * brillance qui suivent l'inclinaison de l'appareil.
  *
- * L'héraldique divise l'écu — plein, coupé, tranché — et c'est ici la seule
- * information de la fenêtre qui **ne coûte ni donnée ni dessin** : elle se lit
- * sur la forme du mot. En kréyòl elle vaut toujours « plein » : voir [Nature],
- * la forme ne porte aucun signal de nature.
- *
- * Elle rend un service qu'on n'attendait pas d'elle. Huit teintes sur une face
- * désaturée, ça se confond : deux verts voisins ne se distinguent pas à 160 dp,
- * et encore moins en deutéranopie. Une forme qui double la couleur rétablit la
- * lecture — c'est le raisonnement des insignes de rareté, qui comptent des
- * symboles au lieu de se fier au vert et au bleu-gris.
- *
- * Deux couches, et il faut les deux : un aplat à 26 % ne se voit pas sur une
- * face déjà claire, et c'est le filet qui donne la ligne de partage. Sans lui,
- * la partition ne servirait justement plus la lisibilité qui la justifie.
+ * C'est ce qui reste de l'ancienne matière : le grain de la peu commune et le
+ * halo de la rare sont devenus l'après-midi et le soir du paysage.
  */
-private class Partition(nature: Nature, zone: RectF) {
+private class Irisation private constructor(private val zone: RectF, private val teinte: Float) {
 
-    private val aplat = Path()
-    private val ligne = Path()
-
-    init {
-        val h = zone.height()
-        when (nature) {
-            // Coupé : une bande en chef, la forme la plus franche, pour la
-            // nature la plus nombreuse après les noms.
-            Nature.VERBE -> {
-                val y = zone.top + h * 0.40f
-                aplat.addRect(zone.left, zone.top, zone.right, y, Path.Direction.CW)
-                ligne.moveTo(zone.left, y)
-                ligne.lineTo(zone.right, y)
-            }
-            // Tranché : une diagonale. Ce qui n'est ni nom ni verbe est
-            // hétéroclite, et la diagonale est la division qui ne prétend rien.
-            Nature.AUTRE -> {
-                aplat.moveTo(zone.left, zone.bottom)
-                aplat.lineTo(zone.right, zone.top)
-                aplat.lineTo(zone.right, zone.bottom)
-                aplat.close()
-                ligne.moveTo(zone.left, zone.bottom)
-                ligne.lineTo(zone.right, zone.top)
-            }
-            // Chevron : la division la plus stable, pour le substantif, qui
-            // est aussi ce que le carnet porte le plus.
-            Nature.NOM -> {
-                val faite = zone.top + h * 0.14f
-                aplat.moveTo(zone.left, zone.bottom)
-                aplat.lineTo(zone.centerX(), faite)
-                aplat.lineTo(zone.right, zone.bottom)
-                aplat.close()
-                ligne.moveTo(zone.left, zone.bottom)
-                ligne.lineTo(zone.centerX(), faite)
-                ligne.lineTo(zone.right, zone.bottom)
-            }
-        }
-    }
-
-    fun peindre(c: Canvas, p: Paint) {
-        p.style = Paint.Style.FILL
-        p.color = Color.WHITE
-        p.alpha = 66
-        c.drawPath(aplat, p)
-
-        p.style = Paint.Style.STROKE
-        p.strokeWidth = 1.6f
-        p.alpha = 107
-        c.drawPath(ligne, p)
-
-        p.alpha = 255
-        p.style = Paint.Style.FILL
-    }
-}
-
-/**
- * Ce que le **palier** met dans la fenêtre : commune mate, grain oblique,
- * halo, irisation.
- *
- * Le tracé n'a pas bougé d'un trait depuis qu'il a été mesuré ; il a seulement
- * changé de maison. Il se peint en deux temps parce que le sujet s'intercale :
- * [dessous] pose la face et sa texture, [dessus] pose ce qui doit passer
- * par-dessus le sujet — l'irisation d'une très rare et sa brillance.
- *
- * La teinte lui est donnée plutôt que calculée : c'est la même que celle de la
- * face et de la gemme, et une carte dont la fenêtre jurerait avec son carton
- * se lirait comme un défaut d'impression.
- */
-private class Matiere(private val rarete: Rarete, private val zone: RectF, teinte: Float) {
-
-    private val commun = rarete == Rarete.COMMUN
-    private val fond: LinearGradient
-    private val hachures = Path()
-    private val halo: RadialGradient?
-    private val iris: Bitmap?
-    private val brillance: LinearGradient?
+    private val brillance: LinearGradient
     private val matrice = Matrix()
+    private val disque = RectF()
 
     init {
-        fun couleur(s: Float, v: Float) = Color.HSVToColor(floatArrayOf(teinte, s, v))
-        val w = zone.width()
-        val h = zone.height()
-
-        // Une commune reste dans un mouchoir de poche — deux valeurs proches,
-        // peu de saturation ; les autres gardent le dégradé d'origine.
-        fond = LinearGradient(
-            zone.left, zone.top, zone.left + w * 0.35f, zone.bottom,
-            if (commun) couleur(0.16f, 0.93f) else couleur(0.30f, 0.96f),
-            if (commun) couleur(0.24f, 0.85f) else couleur(0.55f, 0.72f),
-            Shader.TileMode.CLAMP
+        brillance = LinearGradient(
+            zone.left, zone.bottom, zone.right, zone.top,
+            intArrayOf(Color.TRANSPARENT, Color.argb(48, 255, 255, 255), Color.TRANSPARENT),
+            floatArrayOf(0.38f, 0.50f, 0.62f), Shader.TileMode.CLAMP
         )
+        val rayon = Math.hypot(zone.width() / 2.0, zone.height() / 2.0).toFloat()
+        disque.set(zone.centerX() - rayon, zone.centerY() - rayon, zone.centerX() + rayon, zone.centerY() + rayon)
+    }
 
-        // Le grain d'une peu commune : des obliques régulières d'un bord à
-        // l'autre, le papier, pas un motif qu'on cherche à lire.
-        if (rarete == Rarete.PEU_COMMUN) {
-            var x = -h
-            while (x < w) {
-                hachures.moveTo(zone.left + x, zone.bottom)
-                hachures.lineTo(zone.left + x + h, zone.top)
-                x += 9f
-            }
-        }
+    fun dessus(c: Canvas, p: Paint, roulis: Float) {
+        c.save()
+        c.clipRect(zone)
+        // La roue commence à la teinte du mot : c'est la roue commune, tournée
+        // d'autant dans l'autre sens.
+        c.rotate(roulis * 55f - teinte, zone.centerX(), zone.centerY())
+        p.shader = null
+        p.style = Paint.Style.FILL
+        // Faible et saturée : sur la nuit, une irisation pâle se lit comme
+        // un brouillard blanc, pas comme un reflet.
+        p.alpha = 22
+        p.isFilterBitmap = true
+        c.drawBitmap(IRIS, null, disque, p)
+        p.isFilterBitmap = false
+        p.alpha = 255
+        c.restore()
+        matrice.setTranslate(roulis * zone.width() * 0.45f, 0f)
+        brillance.setLocalMatrix(matrice)
+        p.shader = brillance
+        c.drawRect(zone, p)
+        p.shader = null
+    }
 
-        halo = if (rarete == Rarete.RARE) RadialGradient(
-            zone.centerX(), zone.centerY(), h * 0.72f,
-            intArrayOf(
-                Color.argb(120, 255, 255, 255),
-                Color.argb(40, 255, 255, 255),
-                Color.TRANSPARENT
-            ),
-            floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP
-        ) else null
-
-        if (rarete == Rarete.TRES_RARE) {
-            // Un tour complet du cercle depuis la teinte du mot, saturation
-            // basse, sinon l'arc-en-ciel mange le mot. Calculé pixel par pixel
-            // et non en SweepGradient : sa couture laissait une rangée de
-            // pixels corrompus, un trait jaune du centre vers le bord.
+    companion object {
+        /**
+         * Un tour complet du cercle, saturation basse, la teinte 0 à droite.
+         * Calculé pixel par pixel et non en SweepGradient : sa couture
+         * laissait une rangée de pixels corrompus, un trait jaune du centre
+         * vers le bord.
+         *
+         * Une seule roue pour toutes les cartes. Chaque très rare calculait la
+         * sienne, décalée de sa teinte, et la grille du carnet en construisait
+         * neuf d'un coup : 367 ms sur le fil principal d'un Galaxy A21s
+         * (2026-10-12), l'essentiel de l'à-coup à l'apparition de la grille.
+         */
+        private val IRIS: Bitmap by lazy {
             val cote = 96
             val demi = cote / 2f
             val pixels = IntArray(cote * cote)
-            val hsv = floatArrayOf(0f, 0.45f, 1f)
+            val hsv = floatArrayOf(0f, 0.75f, 1f)
             for (y in 0 until cote) {
                 for (x in 0 until cote) {
                     val angle = Math.atan2((y + 0.5f - demi).toDouble(), (x + 0.5f - demi).toDouble())
                     val tour = ((angle / (2.0 * Math.PI)) + 1.0) % 1.0
-                    hsv[0] = ((teinte + 360f * tour.toFloat()) % 360f + 360f) % 360f
+                    hsv[0] = (360f * tour.toFloat()) % 360f
                     pixels[y * cote + x] = Color.HSVToColor(hsv)
                 }
             }
-            iris = Bitmap.createBitmap(pixels, cote, cote, Bitmap.Config.ARGB_8888)
-            brillance = LinearGradient(
-                zone.left, zone.bottom, zone.right, zone.top,
-                intArrayOf(Color.TRANSPARENT, Color.argb(96, 255, 255, 255), Color.TRANSPARENT),
-                floatArrayOf(0.30f, 0.50f, 0.70f), Shader.TileMode.CLAMP
-            )
-        } else {
-            iris = null
-            brillance = null
-        }
-    }
-
-    /** La face de la fenêtre et sa texture, sous le sujet. */
-    fun dessous(c: Canvas, p: Paint) {
-        p.style = Paint.Style.FILL
-        p.shader = fond
-        c.drawRect(zone, p)
-        p.shader = null
-
-        if (rarete == Rarete.PEU_COMMUN) {
-            p.style = Paint.Style.STROKE
-            p.strokeWidth = 1f
-            p.color = Color.WHITE
-            p.alpha = 22
-            c.drawPath(hachures, p)
-            p.alpha = 255
+            Bitmap.createBitmap(pixels, cote, cote, Bitmap.Config.ARGB_8888)
         }
 
-        // Le halo d'une rare, posé avant le sujet pour rester derrière lui.
-        halo?.let {
-            p.style = Paint.Style.FILL
-            p.shader = it
-            c.drawRect(zone, p)
-            p.shader = null
-        }
-        p.style = Paint.Style.FILL
-    }
-
-    /** Ce qui glisse par-dessus le sujet quand l'appareil tourne. */
-    fun dessus(c: Canvas, p: Paint, roulis: Float) {
-        iris?.let {
-            val rayon = Math.hypot(zone.width() / 2.0, zone.height() / 2.0).toFloat()
-            c.save()
-            c.clipRect(zone)
-            c.rotate(roulis * 55f, zone.centerX(), zone.centerY())
-            p.shader = null
-            p.alpha = 52
-            p.isFilterBitmap = true
-            c.drawBitmap(
-                it, null,
-                RectF(zone.centerX() - rayon, zone.centerY() - rayon, zone.centerX() + rayon, zone.centerY() + rayon),
-                p
-            )
-            p.isFilterBitmap = false
-            p.alpha = 255
-            c.restore()
-        }
-        brillance?.let {
-            matrice.setTranslate(roulis * zone.width() * 0.45f, 0f)
-            it.setLocalMatrix(matrice)
-            p.shader = it
-            c.drawRect(zone, p)
-            p.shader = null
-        }
+        fun pour(rarete: Rarete, zone: RectF, teinte: Float): Irisation? =
+            if (rarete == Rarete.TRES_RARE) Irisation(zone, teinte) else null
     }
 }
 
 /**
- * Ce que le **mot** met dans la fenêtre.
+ * Ce que le **mot** met dans la fenêtre, devant le paysage, dans la boîte
+ * 100 × 66 de [Paysages].
  *
- * Une seule implémentation aujourd'hui, [Trace], et c'est tout l'intérêt de
- * l'interface : la question « quelle image pour quel mot » n'est pas tranchée,
- * et le jour où elle le sera, c'est ici que la réponse se branchera — sans
- * qu'un seul trait de la matière change.
+ * Les deux sujets partagent leur lumière : un halo derrière eux, qui les
+ * détache du lieu, une ombre portée vers le bas à droite (la lumière du carnet
+ * vient d'en haut à gauche), et une **nacre** dont la couleur suit l'heure,
+ * blanche le matin, dorée la nuit.
  */
-private interface Sujet {
-    fun peindre(c: Canvas)
+private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
+
+    protected val plume = Paint(Paint.ANTI_ALIAS_FLAG)
+    protected val nacre: LinearGradient
+    private val halo: RadialGradient
+
+    /** L'ombre portée : plus franche la nuit, où le sujet se détache sur le sombre. */
+    protected val ombre = argb(if (heure.nuit) 150 else 97, 0, 0, 0)
+
+    init {
+        val b = cadre
+        nacre = LinearGradient(
+            b.left, b.top, b.left + b.width() * 0.7f, b.bottom,
+            heure.nacre, floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP
+        )
+        val couleurHalo = when {
+            heure.nuit -> 0xFFE9A8
+            heure.rang == 2 -> 0xFFE0B0
+            else -> 0xFFFFFF
+        }
+        val opacite = intArrayOf(107, 115, 110, 64)[heure.rang]
+        halo = RadialGradient(
+            50f, 38f, 27f,
+            intArrayOf((opacite shl 24) or couleurHalo, couleurHalo),
+            null, Shader.TileMode.CLAMP
+        )
+    }
+
+    protected abstract fun tracer(c: Canvas)
+
+    fun peindre(c: Canvas) {
+        plume.style = Paint.Style.FILL
+        plume.shader = halo
+        c.save()
+        c.scale(1f, 24f / 27f, 50f, 38f)
+        c.drawCircle(50f, 38f, 27f, plume)
+        c.restore()
+        plume.shader = null
+        tracer(c)
+    }
+
+    protected companion object {
+        fun argb(a: Int, r: Int, g: Int, b: Int) = (a shl 24) or (r shl 16) or (g shl 8) or b
+    }
 }
 
 /**
- * L'enluminure : le meuble du mot, gravé dans la matière.
+ * L'enluminure : le meuble du mot, en nacre, posé au sol devant le paysage.
  *
  * C'est le sujet des cartes qu'on collectionne pour elles-mêmes — cent vingt
  * mots sur deux mille huit cents, à peu près quatre sur cent. La rareté
- * n'y est pour rien : elle est fixée par le rang de fréquence et n'est pas
- * négociable, alors que l'enluminure est un second axe de désirabilité, qui
- * peut échoir à une commune comme à une très rare.
+ * n'y est pour rien : elle est fixée par le rang de fréquence, alors que
+ * l'enluminure est un second axe de désirabilité, qui peut échoir à une
+ * commune comme à une très rare.
  *
- * La gravure est celle du reste du carnet — une ombre décalée vers le bas à
- * droite, puis la matière claire — parce que la lumière du carnet vient d'en
- * haut à gauche depuis les volutes. Un meuble posé à plat aurait l'air collé.
- *
- * Le plein cintre des deux paliers hauts mange le haut de la fenêtre : le
- * meuble y rentre d'un cran et descend, au lieu d'être rogné par la découpe.
+ * Un liseré sombre la sépare du ciel : sans lui, une nacre blanche se perd
+ * dans le ciel clair du matin.
  */
-private class Enluminure private constructor(chemin: Path, matrice: Matrix) : Sujet {
+private class Enluminure private constructor(
+    private val trace: Path,
+    private val nom: String,
+    heure: Heure
+) : Sujet(heure, RectF(CX - TAILLE / 2f, CY - TAILLE / 2f, CX + TAILLE / 2f, CY + TAILLE / 2f)) {
 
-    private val plume = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    override fun tracer(c: Canvas) {
+        // L'ombre au sol, qui pose le dessin dans le lieu au lieu de le coller dessus.
+        plume.style = Paint.Style.FILL
+        plume.color = argb(if (heure.nuit) 115 else 64, 0, 0, 0)
+        c.drawOval(CX - 13f, SOL - 1.8f, CX + 13f, SOL + 1.8f, plume)
 
-    /**
-     * Le meuble déjà mis à l'échelle et posé : la carte se trace en unités de
-     * carte, donc la transformation n'a aucune raison d'être refaite à chaque
-     * trame — et le chemin de [Meubles] reste intact pour les autres cartes.
-     */
-    private val trace = Path().also {
-        chemin.transform(matrice, it)
-        // `transform` recopie la règle de remplissage, mais on ne la laisse pas
-        // à la charge d'un détail d'implémentation : sans « pair-impair », la
-        // porte d'une maison cesse d'être un trou et la silhouette se bouche.
-        it.fillType = Path.FillType.EVEN_ODD
-    }
-
-    override fun peindre(c: Canvas) {
         c.save()
-        c.translate(DECALAGE_X, DECALAGE_Y)
-        plume.color = OMBRE
+        c.translate(0.6f, 1f)
+        plume.color = ombre
         c.drawPath(trace, plume)
         c.restore()
-        plume.color = TRAIT
+
+        plume.color = Color.BLACK
+        plume.shader = nacre
         c.drawPath(trace, plume)
+        plume.shader = null
+
+        plume.style = Paint.Style.STROKE
+        plume.strokeWidth = 0.35f
+        plume.strokeJoin = Paint.Join.ROUND
+        plume.color = heure.encre
+        plume.alpha = 200
+        c.drawPath(trace, plume)
+        plume.style = Paint.Style.FILL
+        plume.alpha = 255
+
+        // Le chat de la nuit a les yeux qui brillent.
+        if (nom == "chat" && heure.nuit) {
+            val e = TAILLE / Meubles.COTE
+            for (s in floatArrayOf(-1f, 1f)) {
+                val x = CX + s * 13f * e
+                val y = CY - 2f * e
+                plume.color = argb(64, 0xFF, 0xD3, 0x4D)
+                c.drawCircle(x, y, 2.6f, plume)
+                plume.color = argb(255, 0xFF, 0xD3, 0x4D)
+                c.drawOval(x - 1.1f, y - 0.75f, x + 1.1f, y + 0.75f, plume)
+            }
+        }
     }
 
     companion object {
-        private val OMBRE = Color.argb(77, 0, 0, 0)
-        private val TRAIT = Color.argb(235, 255, 255, 255)
-        private const val DECALAGE_X = 2.2f
-        private const val DECALAGE_Y = 2.8f
+        /** Le dessin tient dans un carré de [TAILLE] centré en ([CX], [CY]), posé sur [SOL]. */
+        private const val TAILLE = 31f
+        private const val CX = 50f
+        private const val CY = 43f
+        private const val SOL = 59f
 
         /** `null` si la bibliothèque ne connaît pas ce meuble. */
-        fun pour(nom: String, zone: RectF, rarete: Rarete): Enluminure? {
+        fun pour(nom: String, heure: Heure): Enluminure? {
             val forme = Meubles.chemin(nom) ?: return null
-            val arche = rarete.ordinal >= 2
-            val taille = zone.height() * (if (arche) 0.60f else 0.72f)
             val m = Matrix()
-            m.setScale(taille / Meubles.COTE, taille / Meubles.COTE)
-            m.postTranslate(
-                zone.centerX(),
-                zone.centerY() + zone.height() * (if (arche) 0.09f else 0.02f)
-            )
-            return Enluminure(forme, m)
+            m.setScale(TAILLE / Meubles.COTE, TAILLE / Meubles.COTE)
+            m.postTranslate(CX, CY)
+            val trace = Path()
+            forme.transform(m, trace)
+            // Sans « pair-impair », la porte d'une maison cesse d'être un trou.
+            trace.fillType = Path.FillType.EVEN_ODD
+            return Enluminure(trace, nom, heure)
         }
     }
 }
 
 /**
- * Le tracé du mot : une signature gravée, lue lettre à lettre.
+ * Le tracé du mot : sa sonorité, lue lettre à lettre, posée en ruban de nacre
+ * devant le paysage.
  *
  * ## La règle
  *
  * Voyelle en haut, consonne en bas, la hauteur affinée par le code du
  * caractère ; un nœud sur chaque voyelle, qui donne la scansion. Le pas est
- * **constant et calé à gauche**, jamais étiré sur la largeur : c'est ce détail
- * qui fait tout le travail, parce que deux formes qui partagent leur début
- * partagent alors leurs points *exactement*, au lieu de seulement se
- * ressembler. Dans une grille, `Woch`, `Wochen` et `Woche` se lisent enfin
- * comme un seul mot à trois états.
+ * **constant et calé à gauche**, jamais étiré sur la largeur : deux formes qui
+ * partagent leur début partagent alors leurs points *exactement*, au lieu de
+ * seulement se ressembler. Dans une grille, `Woch`, `Wochen` et `Woche` se
+ * lisent comme un seul mot à trois états.
  *
- * La teinte va dans le même sens : [Ornement.teinteDe] la lit sur les trois
- * premières lettres, si bien que les formes d'une même famille tombent sur la
- * même couleur **sans qu'on ait eu à consulter le moindre lemme**. Le prix est
- * l'homonymie de préfixe, et il est modeste : une teinte n'identifie rien,
- * elle rapproche.
+ * La règle n'a pas changé avec les paysages, seule la matière du trait a
+ * changé : nacre de l'heure, ombre portée, fil de lumière, et à partir de
+ * *Rare* une lueur de la couleur des fenêtres allumées. Le geste du doigt sur
+ * le clavier a été essayé à la place, et écarté : il dit où sont les touches,
+ * la sonorité dit comment sonne le mot.
  *
- * ## Ce que ça coûte
- *
- * Rien. Pas un octet d'actif, pas une ligne de données, aucune couverture à
- * atteindre — le tracé vaut pour toute forme du carnet, y compris pour les
- * formes que le corpus de fréquences ne connaît même pas. Ce
- * qu'il ne fait pas, il faut le dire aussi : il montre **le mot**, pas **la
- * chose**. C'est un monogramme, pas une illustration.
- *
- * Comme la carte se trace en unités de carte, le chemin et les nœuds sont
- * construits **une fois**, ici, et [peindre] n'alloue rien.
+ * Rien ne coûte : pas un octet d'actif, et le tracé vaut pour toutes les
+ * formes du carnet. C'est un monogramme, pas
+ * une illustration : il montre **le mot**, pas **la chose**.
  */
-private class Trace(mot: String, zone: RectF, teinte: Float) : Sujet {
+private class Trace private constructor(
+    private val xs: FloatArray,
+    private val ys: FloatArray,
+    private val voyelle: BooleanArray,
+    heure: Heure
+) : Sujet(heure, boite(xs, ys)) {
 
     private val chemin = Path()
-    private val noeudsX: FloatArray
-    private val noeudsY: FloatArray
-    private val rayon: Float
-    private val coeur: Float
-    private val couleurCoeur: Int
-    private val plume = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val luit = heure.rang >= 2
+
+    /**
+     * Un mot long doit maigrir, sinon ses nœuds se recouvrent. Sept lettres
+     * est la longueur de référence.
+     */
+    private val maigreur = (7f / maxOf(xs.size, 7)).coerceAtMost(1f)
+    private val epaisseur = 3.2f * maigreur
+    private val rayon = 2.5f * maigreur
+    private val coeur = 1.05f * maigreur
 
     init {
-        val lettres = mot.toCharArray()
-        val n = lettres.size
-        val w = zone.width()
-        val h = zone.height()
-
-        // Un mot de sept lettres occupe toute la largeur utile ; un plus court
-        // s'arrête avant, un plus long resserre son pas. Le pas ne dépend donc
-        // jamais de la longueur du mot voisin, ce qui est la condition pour
-        // que deux préfixes identiques se superposent.
-        val pas = w * 0.76f / (maxOf(n, 7) - 1).toFloat()
-        val x0 = zone.left + w * 0.12f
-        val cy = zone.centerY()
-        val amp = h * 0.30f
-
-        val xs = FloatArray(n)
-        val ys = FloatArray(n)
-        var voyelles = 0
-        for (i in 0 until n) {
-            val ch = lettres[i]
-            val estVoyelle = ch.lowercaseChar() in VOYELLES
-            if (estVoyelle) voyelles++
-            // Un mot d'une seule lettre n'a pas de tracé : on le centre.
-            xs[i] = if (n == 1) zone.centerX() else x0 + pas * i
-            ys[i] = cy + (if (estVoyelle) -1f else 1f) *
-                amp * (0.42f + 0.58f * ((ch.code % 7) / 6f))
-        }
-
-        // Deux quadratiques par segment, par le milieu : la courbe passe par
-        // chaque lettre sans le dépassement qu'une seule donnerait.
+        val n = xs.size
         if (n >= 2) {
+            // Deux quadratiques par segment, par le milieu : la courbe passe
+            // par chaque lettre sans le dépassement qu'une seule donnerait.
             chemin.moveTo(xs[0], ys[0])
             for (i in 0 until n - 1) {
                 val ax = xs[i]; val ay = ys[i]
@@ -3526,59 +4803,62 @@ private class Trace(mot: String, zone: RectF, teinte: Float) : Sujet {
                 chemin.quadTo(bx - (bx - ax) * 0.55f, by, bx, by)
             }
         }
-
-        noeudsX = FloatArray(voyelles)
-        noeudsY = FloatArray(voyelles)
-        var k = 0
-        for (i in 0 until n) {
-            if (lettres[i].lowercaseChar() in VOYELLES) {
-                noeudsX[k] = xs[i]; noeudsY[k] = ys[i]; k++
-            }
-        }
-
-        // Un mot long doit maigrir, sinon ses nœuds se recouvrent : à seize
-        // lettres, un pas fait onze unités et un nœud d'origine en ferait dix
-        // de rayon. Sept lettres est la longueur de référence.
-        val maigreur = (7f / maxOf(n, 7)).coerceAtMost(1f)
-        val epaisseur = h * 0.055f * maigreur
-        rayon = h * 0.055f * maigreur
-        coeur = h * 0.024f * maigreur
-        couleurCoeur = Color.HSVToColor(floatArrayOf(teinte, 0.55f, 0.62f))
-
-        plume.strokeWidth = epaisseur
         plume.strokeCap = Paint.Cap.ROUND
         plume.strokeJoin = Paint.Join.ROUND
     }
 
-    /**
-     * Le tracé se pose deux fois : une ombre décalée, puis le trait clair.
-     *
-     * C'est la gravure du reste du carnet — la lumière vient d'en haut à
-     * gauche, comme pour les volutes et les écus — et c'est ce qui empêche un
-     * trait blanc de disparaître sur la face claire d'une commune.
-     */
-    override fun peindre(c: Canvas) {
+    override fun tracer(c: Canvas) {
+        val n = xs.size
+        if (n == 0) return
+        plume.shader = null
         plume.style = Paint.Style.STROKE
-        c.save()
-        c.translate(1.4f, 1.8f)
-        plume.color = OMBRE
-        c.drawPath(chemin, plume)
-        c.restore()
-        plume.color = TRAIT
-        c.drawPath(chemin, plume)
 
+        if (luit && n >= 2) {
+            plume.color = heure.fenetre
+            plume.alpha = 71
+            plume.strokeWidth = epaisseur * 2.1f
+            c.drawPath(chemin, plume)
+            plume.alpha = 255
+        }
+
+        // L'ombre, puis le ruban, puis son fil de lumière.
+        c.save()
+        c.translate(0.5f, 0.9f)
+        plume.color = ombre
+        plume.strokeWidth = epaisseur
+        if (n >= 2) c.drawPath(chemin, plume)
         plume.style = Paint.Style.FILL
-        for (i in noeudsX.indices) {
-            plume.color = OMBRE
-            c.drawCircle(noeudsX[i] + 1.4f, noeudsY[i] + 1.8f, rayon, plume)
-            plume.color = TRAIT
-            c.drawCircle(noeudsX[i], noeudsY[i], rayon, plume)
-            plume.color = couleurCoeur
-            c.drawCircle(noeudsX[i], noeudsY[i], coeur, plume)
+        for (i in 0 until n) if (voyelle[i] || n == 1) c.drawCircle(xs[i], ys[i], rayon, plume)
+        c.restore()
+
+        if (n >= 2) {
+            plume.style = Paint.Style.STROKE
+            plume.color = Color.BLACK
+            plume.shader = nacre
+            c.drawPath(chemin, plume)
+            plume.shader = null
+            c.save()
+            c.translate(-0.4f, -0.5f)
+            plume.color = argb(191, 255, 255, 255)
+            plume.strokeWidth = 0.8f * maigreur
+            c.drawPath(chemin, plume)
+            c.restore()
+        }
+
+        // Un nœud sur chaque voyelle : la scansion du mot.
+        plume.style = Paint.Style.FILL
+        for (i in 0 until n) {
+            if (!voyelle[i] && n > 1) continue
+            plume.color = Color.BLACK
+            plume.shader = nacre
+            c.drawCircle(xs[i], ys[i], rayon, plume)
+            plume.shader = null
+            plume.color = heure.encre
+            c.drawCircle(xs[i], ys[i], coeur, plume)
         }
     }
 
-    private companion object {
+    companion object {
         /**
          * Les voyelles, diacritiques compris.
          *
@@ -3587,8 +4867,44 @@ private class Trace(mot: String, zone: RectF, teinte: Float) : Sujet {
          * `mòso`), et sans elle le tracé la prendrait pour une consonne — le
          * monogramme de `kréyòl` s'en trouverait faux.
          */
-        const val VOYELLES = "aeiouyàáâäèéêëìíîïòóôöùúûü"
-        val OMBRE = Color.argb(72, 0, 0, 0)
-        val TRAIT = Color.argb(235, 255, 255, 255)
+        private const val VOYELLES = "aeiouyàáâäèéêëìíîïòóôöùúûü"
+
+        /**
+         * Où tombe le tracé dans la boîte 100 × 66 du paysage : entre l'arche
+         * des paliers hauts et le sol, et dans la largeur qu'une vignette
+         * garde une fois rognée sur les côtés.
+         */
+        private const val X0 = 16f
+        private const val LARGEUR = 68f
+        private const val MILIEU = 36f
+        private const val AMPLITUDE = 13f
+
+        fun pour(mot: String, heure: Heure): Trace {
+            val lettres = mot.toCharArray()
+            val n = lettres.size
+            // Un mot de sept lettres occupe toute la largeur ; un plus court
+            // s'arrête avant, un plus long resserre son pas.
+            val pas = LARGEUR / (maxOf(n, 7) - 1).toFloat()
+            val xs = FloatArray(n)
+            val ys = FloatArray(n)
+            val voyelle = BooleanArray(n)
+            for (i in 0 until n) {
+                val ch = lettres[i]
+                voyelle[i] = ch.lowercaseChar() in VOYELLES
+                xs[i] = if (n == 1) 50f else X0 + pas * i
+                ys[i] = MILIEU + (if (voyelle[i]) -1f else 1f) *
+                    AMPLITUDE * (0.42f + 0.58f * ((ch.code % 7) / 6f))
+            }
+            return Trace(xs, ys, voyelle, heure)
+        }
+
+        /** La boîte des lettres, qui oriente la nacre du ruban. */
+        private fun boite(xs: FloatArray, ys: FloatArray): RectF {
+            if (xs.isEmpty()) return RectF(40f, 30f, 60f, 50f)
+            val r = RectF(xs[0], ys[0], xs[0], ys[0])
+            for (i in 1 until xs.size) r.union(xs[i], ys[i])
+            r.inset(-2f, -2f)
+            return r
+        }
     }
 }

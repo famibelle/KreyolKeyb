@@ -99,7 +99,7 @@ Ce clavier s'appuie sur les travaux des plus grands défenseurs du kréyòl :
 🚀 FONCTIONNALITÉS AVANCÉES
 
 📱 COMPATIBILITÉ TOTALE
-• Android 5.0 à 14+ supporté
+• Android 7.0 à 16 supporté
 • Toutes apps : WhatsApp, Facebook, SMS, email
 • Installation guidée en 1 minute, clavier d'essai intégré
 • Mode alphabétique par défaut

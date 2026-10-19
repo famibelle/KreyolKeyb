@@ -1,23 +1,22 @@
 package com.example.kreyolkeyboard.carnet
 
+import com.example.kreyolkeyboard.R
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.example.kreyolkeyboard.TranslationDictionary
+import com.example.kreyolkeyboard.applicatifDansLaLangue
 
 /**
  * La boîte de Leitner comme jeu à part entière dans Spiller.
@@ -35,13 +34,16 @@ import com.example.kreyolkeyboard.TranslationDictionary
  * la liste des jeux. Le rappel d'ici est enregistré après le sien, donc consulté
  * avant, et n'est actif que tant qu'il y a quelque chose à refermer.
  */
-class BoiteFragment : Fragment() {
+class BoiteFragment : Fragment(), com.example.kreyolkeyboard.SettingsActivity.JeuAuClavier {
 
     private lateinit var racine: FrameLayout
     private lateinit var boite: BoiteLeitner
     private var eventail: EventailCasier? = null
     private var casierOuvert = -1
-    private var voileCarte: View? = null
+    private var lecteur: LecteurCartes? = null
+
+    /** Le casier choisi aux flèches d'un clavier physique. -1 : aucun. */
+    private var casierClavier = -1
 
     /**
      * Le contenu de chaque carte du carnet, par forme, lu et écrit sur le fil
@@ -57,10 +59,30 @@ class BoiteFragment : Fragment() {
     /** Écarte un chargement dépassé par un plus récent, après une révision par exemple. */
     private var generation = 0
 
+    /**
+     * La séance de révision en cours, qui survit à une rotation.
+     *
+     * Tourner l'écran le recrée, et la séance disparaissait avec lui. La
+     * rouvrir en redemandant la file au carnet ne suffisait pas : les cartes
+     * déjà notées n'y étaient plus, mais l'arriéré prenait leur place, et le
+     * compteur repartait à 1 sur une séance qui ne finissait plus. On garde
+     * donc la session elle-même, son paquet et ses réponses.
+     */
+    class Seance : androidx.lifecycle.ViewModel() {
+        var ouverte = false
+        var paquet: List<ContenuCarte> = emptyList()
+        var monteesParLeClavier: List<String> = emptyList()
+        var session: SessionSonje? = null
+    }
+
+    private val seance by lazy {
+        androidx.lifecycle.ViewModelProvider(this)[Seance::class.java]
+    }
+
     private val retour = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             when {
-                voileCarte != null -> fermerCarte()
+                lecteur != null -> lecteur?.fermer()
                 eventail != null -> eventail?.fermer()
             }
         }
@@ -119,15 +141,18 @@ class BoiteFragment : Fragment() {
         if (savedInstanceState == null && arguments?.getBoolean(ARG_REVISION_DIRECTE) == true) {
             arguments?.remove(ARG_REVISION_DIRECTE)
             if (Carnet.aRevoir(requireContext()) > 0) view.post { if (isAdded) lancerRevision() }
+        } else if (seance.ouverte) {
+            // Une séance était ouverte avant la rotation : on la reprend.
+            view.post { if (isAdded) reprendreRevision() }
         }
     }
 
     private fun majRetour() {
-        retour.isEnabled = voileCarte != null || eventail != null
+        retour.isEnabled = lecteur != null || eventail != null
     }
 
     private fun chargerEnFond() {
-        val ctx = requireContext().applicationContext
+        val ctx = requireContext().applicatifDansLaLangue()
         val gen = ++generation
         contenusPrets = false
         Thread {
@@ -154,28 +179,68 @@ class BoiteFragment : Fragment() {
      * au même moment.
      */
     private fun chargerContenus(cartes: List<CarteMot>, gen: Int) {
-        val ctx = requireContext().applicationContext
+        val ctx = requireContext().applicatifDansLaLangue()
         Thread {
             TranslationDictionary.charger(ctx)
             TranslationDictionary.chargerExemples(ctx)
             val tous = cartes.map { CarteCarnet.contenu(ctx, it) }
-            activity?.runOnUiThread {
-                if (!isAdded || gen != generation) return@runOnUiThread
-                contenus.clear()
-                tous.forEach { contenus[it.carte.forme] = it }
-                contenusPrets = true
-
-                val cote = (COTE_RECTO * resources.displayMetrics.density).toInt()
-                boite.poserRectos(
-                    boite.cartesVisibles()
-                        .mapNotNull { c -> contenus[c.forme]?.let { c.forme to rendreRecto(it, cote) } }
-                        .toMap()
-                )
-                eventail?.let { ev ->
-                    if (ev.enAttente && casierOuvert >= 0) ev.poserCartes(cartesDuCasier(casierOuvert))
-                }
-            }
+            FilDeRendu.handler.post { poserContenus(tous, gen) }
         }.start()
+    }
+
+    /**
+     * Rend les rectos posés sur les piles, sur le fil de rendu (appelé par
+     * [chargerContenus]), puis remet tout au fil principal. Ils se rendaient à
+     * l'arrivée sur le fil principal, qu'ils bloquaient. À la taille où la
+     * boîte les montre : sur tablette la face d'un casier fait le double des
+     * 64 dp, et un recto agrandi y floutait.
+     */
+    private fun poserContenus(tous: List<ContenuCarte>, gen: Int) {
+        val ctx = context ?: return
+        val parForme = tous.associateBy { it.carte.forme }
+        val rectos = try {
+            val cote = maxOf(
+                (COTE_RECTO * ctx.resources.displayMetrics.density).toInt(),
+                boite.faceDuCasier(0).width().toInt()
+            )
+            boite.cartesVisibles()
+                .mapNotNull { c ->
+                    parForme[c.forme]?.let { contenu ->
+                        c.forme to rendreRecto(contenu, cote) { refaireRectoDePile(contenu, cote, gen) }
+                    }
+                }
+                .toMap()
+        } catch (e: Throwable) {
+            emptyMap()
+        }
+        activity?.runOnUiThread {
+            if (!isAdded || gen != generation) return@runOnUiThread
+            contenus.clear()
+            tous.forEach { contenus[it.carte.forme] = it }
+            contenusPrets = true
+            boite.poserRectos(rectos)
+            eventail?.let { ev ->
+                if (ev.enAttente && casierOuvert >= 0) ev.poserCartes(cartesDuCasier(casierOuvert))
+            }
+        }
+    }
+
+    /**
+     * Refait le recto d'une pile quand son paysage arrive. Comme l'éventail, la
+     * boîte garde une photo de la vignette, qui sans cela restait au ciel seul
+     * sur toutes les piles.
+     */
+    private fun refaireRectoDePile(c: ContenuCarte, cote: Int, gen: Int) {
+        FilDeRendu.handler.post {
+            val recto = try {
+                rendreRecto(c, cote)
+            } catch (e: Throwable) {
+                return@post
+            }
+            activity?.runOnUiThread {
+                if (isAdded && gen == generation) boite.poserRecto(c.carte.forme, recto)
+            }
+        }
     }
 
     /** Les cartes d'un casier, celles à revoir d'abord : c'est l'ordre de la pile. */
@@ -196,19 +261,17 @@ class BoiteFragment : Fragment() {
         val n = boite.combienDans(i)
         val dues = boite.duesDans(i)
         val acquis = i >= Sonje.BOITE_ACQUISE
-        val titre = if (acquis) "Acquis" else "Revient dans ${rythmeLong(Sonje.INTERVALLES[i])}"
+        val titre = if (acquis) getString(R.string.boite_acquis)
+        else getString(R.string.boite_revient_dans, rythmeLong(ctx, Sonje.INTERVALLES[i]))
         val sousTitre = when {
-            n == 0 -> "Aucune carte"
-            dues > 0 -> "${if (n == 1) "1 carte" else "$n cartes"} · $dues à revoir"
-            else -> if (n == 1) "1 carte" else "$n cartes"
+            n == 0 -> getString(R.string.casier_aucune_carte)
+            dues > 0 -> getString(R.string.boite_a_revoir, resources.getQuantityString(R.plurals.cartes, n, n), dues)
+            else -> resources.getQuantityString(R.plurals.cartes, n, n)
         }
         val vide = when {
-            acquis -> "Aucune carte n'est encore acquise. Une carte arrive ici après " +
-                "six révisions réussies, la dernière à trois mois d'intervalle."
-            i == 0 -> "Ce casier est vide pour le moment. Les cartes gagnées dans " +
-                "les jeux arrivent ici, et y reviennent après une erreur."
-            else -> "Ce casier est vide pour le moment. Les cartes y montent depuis " +
-                "le casier précédent, une révision réussie à la fois."
+            acquis -> getString(R.string.casier_vide_acquis)
+            i == 0 -> getString(R.string.casier_vide_premier)
+            else -> getString(R.string.casier_vide_suivant)
         }
 
         // La face avant de la pile, ramenée dans les coordonnées de la racine :
@@ -229,6 +292,7 @@ class BoiteFragment : Fragment() {
             )
         }
         racine.addView(ev)
+        FigerOrientation.tantQue(ev)
         eventail = ev
         casierOuvert = i
         boite.eclairer(i)
@@ -246,12 +310,13 @@ class BoiteFragment : Fragment() {
         eventail?.let { racine.removeView(it) }
         eventail = null
         casierOuvert = -1
-        boite.eclairer(-1)
+        boite.eclairer(casierClavier)
         majRetour()
     }
 
     private fun lancerRevision() {
-        val ctx = requireContext().applicationContext
+        seance.ouverte = true
+        val ctx = requireContext().applicatifDansLaLangue()
         val principal = Handler(Looper.getMainLooper())
         boite.isEnabled = false
         Thread {
@@ -266,15 +331,35 @@ class BoiteFragment : Fragment() {
             principal.post {
                 if (!isAdded) return@post
                 boite.isEnabled = true
-                VueSonje(
-                    hote = racine,
-                    paquet = aDemander,
-                    monteesParLeClavier = ecrites.toList(),
-                    surNotation = { forme, verdict -> Carnet.noter(ctx, forme, verdict) },
-                    surFin = { if (isAdded) chargerEnFond() }
-                ).ouvrir()
+                seance.paquet = aDemander
+                seance.monteesParLeClavier = ecrites.toList()
+                seance.session = SessionSonje(aDemander)
+                ouvrirRevision()
             }
         }.start()
+    }
+
+    /** Après une rotation : la même session, à la carte où elle en était. */
+    private fun reprendreRevision() {
+        if (seance.session == null) lancerRevision() else ouvrirRevision()
+    }
+
+    private fun ouvrirRevision() {
+        val ctx = requireContext().applicatifDansLaLangue()
+        VueSonje(
+            hote = racine,
+            paquet = seance.paquet,
+            monteesParLeClavier = seance.monteesParLeClavier,
+            surNotation = { forme, verdict -> Carnet.noter(ctx, forme, verdict) },
+            surFin = {
+                seance.ouverte = false
+                seance.session = null
+                seance.paquet = emptyList()
+                seance.monteesParLeClavier = emptyList()
+                if (isAdded) chargerEnFond()
+            },
+            session = seance.session ?: SessionSonje(seance.paquet)
+        ).ouvrir()
     }
 
     /**
@@ -286,10 +371,22 @@ class BoiteFragment : Fragment() {
      * les bitmaps de cadre qu'[Ornement] met en cache par largeur sont ainsi
      * partagés avec la grille. Le dessin est ensuite réduit à la cible.
      */
-    private fun rendreRecto(c: ContenuCarte, cible: Int): Bitmap {
+    private fun rendreRecto(
+        c: ContenuCarte,
+        cible: Int,
+        quandLieuArrive: () -> Unit = { eventail?.rafraichir(c.carte.forme) }
+    ): Bitmap {
         val d = resources.displayMetrics.density
-        val largeur = (160 * d).toInt()
-        val vue = CarteCarnet.vignette(requireContext(), c, largeur)
+        // Jamais plus petite que la cible : réduire est net, agrandir floute,
+        // et l'éventail d'une tablette demande des cartes de 220 dp.
+        val largeur = maxOf((160 * d).toInt(), cible)
+        // Appelée en fond (éventail, piles) : `context` et non `requireContext`,
+        // l'appelant rattrape l'échec d'un fragment déjà détaché.
+        val vue = CarteCarnet.vignette(context ?: error("fragment détaché"), c, largeur)
+        // Le paysage d'une vignette arrive en différé : tant qu'il manque, la
+        // photo n'a que le ciel. Quand il est là, l'éventail la refait, et le
+        // paysage, désormais en cache, y entre. Régression de la 36.3.0.
+        (vue as? CarteOrnee)?.quandLieuArrive = quandLieuArrive
         vue.measure(
             View.MeasureSpec.makeMeasureSpec(largeur, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -306,72 +403,90 @@ class BoiteFragment : Fragment() {
         return image
     }
 
+    /**
+     * La carte en grand, feuilletable dans l'ordre du casier ouvert : passer à
+     * la voisine fait tourner l'éventail derrière, si bien qu'en reposant la
+     * carte on retrouve la main là où la lecture s'est arrêtée.
+     */
     private fun ouvrirCarte(contenu: ContenuCarte) {
-        val ctx = context ?: return
-        val d = resources.displayMetrics.density
-
-        val voile = VoileGlissable(ctx) { sensX, sensY -> fermerCarte(sensX, sensY) }.apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(0xCC000000.toInt())
-            isClickable = true
-        }
-
-        val defilement = ScrollView(ctx).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER
-            ).apply { setMargins((22 * d).toInt(), 0, (22 * d).toInt(), 0) }
-            isVerticalScrollBarEnabled = false
-        }
-        val carte = CarteCarnet.complete(ctx, contenu)
-        defilement.addView(carte)
-        voile.addView(defilement)
-
-        voile.setOnClickListener { fermerCarte() }
-        carte.isClickable = true
-
-        voileCarte = voile
-        racine.addView(voile)
-        majRetour()
-        voile.alpha = 0f
-        voile.animate().alpha(1f).setDuration(160).start()
-
-        carte.cameraDistance = 9000f * d
-        carte.rotationY = -85f
-        carte.animate().rotationY(0f)
-            .setDuration(if (contenu.rarete.distinguee) 470L else 360L)
-            .setInterpolator(
-                if (contenu.rarete.distinguee) OvershootInterpolator(1.4f)
-                else DecelerateInterpolator()
-            )
-            // Comme dans le carnet : la carte suit la main une fois retournée,
-            // pas avant, pour ne pas écrire dans `rotationY` pendant le
-            // retournement. Le voile reprend le geste dès qu'il devient un
-            // glissé, et le carton reçoit alors un `CANCEL` qui le relève.
-            .withEndAction {
-                Inclinaison.suivre(carte)
-                (carte as? Carton)?.sensibleAuDoigt = true
+        if (context == null) return
+        val liste = if (casierOuvert >= 0) cartesDuCasier(casierOuvert) else listOf(contenu)
+        val rang = liste.indexOfFirst { it.carte.forme == contenu.carte.forme }
+        lecteur = LecteurCartes(
+            racine,
+            if (rang >= 0) liste else listOf(contenu),
+            rang.coerceAtLeast(0),
+            surChangement = { eventail?.centrerSur(it) },
+            surFermeture = {
+                lecteur = null
+                majRetour()
             }
-            .start()
+        ).also { it.ouvrir() }
+        majRetour()
     }
 
-    /** [sensX] ou [sensY] non nul : la carte a été chassée d'un glissé, elle sort par ce côté. */
-    private fun fermerCarte(sensX: Int = 0, sensY: Int = 0) {
-        val voile = voileCarte ?: return
-        voileCarte = null
-        majRetour()
-        if ((sensX != 0 || sensY != 0) && voile is ViewGroup && voile.childCount > 0) {
-            voile.getChildAt(0).animate()
-                .translationX(sensX * voile.width.toFloat())
-                .translationY(sensY * voile.height.toFloat())
-                .setDuration(200).setInterpolator(DecelerateInterpolator()).start()
+    /**
+     * Un clavier physique, sur une tablette à étui-clavier : ← → choisissent un
+     * casier, Entrée l'ouvre (ou lance la révision si aucun n'est choisi), puis
+     * ← → font tourner l'éventail et Entrée ouvre la carte du centre ; dans la
+     * carte ouverte, ← → passent à la voisine. Échap remonte d'un cran, comme
+     * le bouton retour. La séance de révision garde ses touches pour elle.
+     */
+    override fun surToucheClavier(event: KeyEvent): Boolean {
+        if (seance.ouverte || !isResumed) return false
+        val code = event.keyCode
+        val sens = when (code) {
+            KeyEvent.KEYCODE_DPAD_LEFT -> -1
+            KeyEvent.KEYCODE_DPAD_RIGHT -> 1
+            else -> 0
         }
-        voile.animate().alpha(0f).setDuration(160)
-            .withEndAction { racine.removeView(voile) }.start()
+        val valider = code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_NUMPAD_ENTER ||
+            code == KeyEvent.KEYCODE_SPACE || code == KeyEvent.KEYCODE_DPAD_CENTER
+        val echap = code == KeyEvent.KEYCODE_ESCAPE
+        if (sens == 0 && !valider && !echap) return false
+        // La levée est consommée avec la descente, sans rien faire.
+        if (event.action != KeyEvent.ACTION_DOWN) return true
+
+        val l = lecteur
+        val ev = eventail
+        when {
+            l != null -> when {
+                sens != 0 -> l.feuilleter(sens)
+                echap -> l.fermer()
+            }
+            ev != null -> when {
+                sens != 0 -> ev.tourner(sens)
+                valider -> ev.ouvrirCentre()
+                echap -> ev.fermer()
+            }
+            else -> when {
+                sens != 0 -> {
+                    casierClavier = if (casierClavier < 0) (if (sens > 0) 0 else BoiteLeitner.CASIERS - 1)
+                    else (casierClavier + sens).coerceIn(0, BoiteLeitner.CASIERS - 1)
+                    boite.eclairer(casierClavier)
+                }
+                valider && casierClavier >= 0 -> ouvrirCasier(casierClavier)
+                valider -> if (Carnet.aRevoir(requireContext()) > 0) lancerRevision()
+                echap && casierClavier >= 0 -> {
+                    casierClavier = -1
+                    boite.eclairer(-1)
+                }
+                else -> return false
+            }
+        }
+        return true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as? com.example.kreyolkeyboard.SettingsActivity)?.jeuAuClavier = this
+    }
+
+    override fun onPause() {
+        (activity as? com.example.kreyolkeyboard.SettingsActivity)?.let {
+            if (it.jeuAuClavier === this) it.jeuAuClavier = null
+        }
+        super.onPause()
     }
 
     companion object {

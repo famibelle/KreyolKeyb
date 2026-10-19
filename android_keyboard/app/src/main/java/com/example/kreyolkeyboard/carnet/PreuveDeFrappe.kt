@@ -2,6 +2,7 @@ package com.example.kreyolkeyboard.carnet
 
 import android.content.Context
 import android.util.Log
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
@@ -33,6 +34,16 @@ import java.io.File
  * réussie. Déplacer [FICHIER_REFERENCE] vers les préférences pour « simplifier »
  * ferait sortir un historique de frappe vers le nuage : ne pas le faire.
  *
+ * ## La plume
+ *
+ * Une carte montée ainsi garde une marque, la plume (accordée par le
+ * propriétaire le 2026-10-10, voir `GAMIFICATION-CARNET.md` dans le dépôt LuxKeyb). Dire « ce mot a
+ * été tapé » est une donnée de frappe : elle va donc au même endroit que la
+ * référence, dans [FICHIER_PLUMES] sous `filesDir`, et **jamais** dans le
+ * carnet. Le carnet reste ce qu'il était, des mots gagnés et des échéances.
+ * La liste ne fait que grandir, comme le carnet : une plume ne se perd pas
+ * parce qu'on n'a plus écrit le mot depuis.
+ *
  * Tout ici lit et écrit des fichiers : **à appeler hors du fil principal.**
  */
 object PreuveDeFrappe {
@@ -40,6 +51,11 @@ object PreuveDeFrappe {
     private const val TAG = "PreuveDeFrappe"
     private const val FICHIER_USAGE = "creole_dict_with_usage.json"
     private const val FICHIER_REFERENCE = "carnet_vu.json"
+    private const val FICHIER_PLUMES = "carnet_plumes.json"
+
+    /** Les formes du carnet qui portent la plume, lues une fois. */
+    @Volatile
+    private var plumes: Set<String>? = null
 
     /**
      * Parmi [formes], celles que le joueur a écrites au clavier depuis le
@@ -80,7 +96,39 @@ object PreuveDeFrappe {
             // une raison d'interrompre une révision.
             Log.e(TAG, "Référence non écrite: ${e.message}", e)
         }
+        if (ecrites.isNotEmpty()) donnerLaPlume(context, ecrites)
         return ecrites
+    }
+
+    /** Vrai si la carte [forme] a été écrite au clavier au moins une fois. */
+    fun aLaPlume(context: Context, forme: String): Boolean = forme in lirePlumes(context)
+
+    @Synchronized
+    private fun lirePlumes(context: Context): Set<String> {
+        plumes?.let { return it }
+        val fichier = File(context.filesDir, FICHIER_PLUMES)
+        val lues = try {
+            if (!fichier.exists()) emptySet()
+            else JSONArray(fichier.readText()).let { t -> (0 until t.length()).mapTo(HashSet()) { t.getString(it) } }
+        } catch (e: Exception) {
+            Log.e(TAG, "Plumes illisibles: ${e.message}", e)
+            emptySet<String>()
+        }
+        plumes = lues
+        return lues
+    }
+
+    @Synchronized
+    private fun donnerLaPlume(context: Context, formes: Set<String>) {
+        val toutes = lirePlumes(context) + formes
+        try {
+            File(context.filesDir, FICHIER_PLUMES).writeText(JSONArray(toutes.sorted()).toString())
+            plumes = toutes
+        } catch (e: Exception) {
+            // Une plume non écrite se regagnera à la prochaine preuve : rien
+            // qui vaille d'interrompre une révision.
+            Log.e(TAG, "Plumes non écrites: ${e.message}", e)
+        }
     }
 
     /**
@@ -137,8 +185,28 @@ object PreuveDeFrappe {
         }
     }
 
+    /**
+     * Retire la plume d'une carte cédée : la plume dit que **ce joueur** a
+     * écrit le mot, elle ne suit pas la carte. Si le mot revient un jour, il
+     * devra la regagner. Voir `CESSION-CARTES.md`.
+     */
+    @Synchronized
+    fun retirerPlume(context: Context, forme: String) {
+        val avant = lirePlumes(context)
+        if (forme !in avant) return
+        val apres = avant - forme
+        try {
+            File(context.filesDir, FICHIER_PLUMES).writeText(JSONArray(apres.sorted()).toString())
+            plumes = apres
+        } catch (e: Exception) {
+            Log.e(TAG, "Plume non retirée: ${e.message}", e)
+        }
+    }
+
     /** Efface la référence. N'existe que pour les tests et le débogage. */
     fun oublier(context: Context) {
         File(context.filesDir, FICHIER_REFERENCE).delete()
+        File(context.filesDir, FICHIER_PLUMES).delete()
+        plumes = null
     }
 }

@@ -6,9 +6,15 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.app.Dialog
+import android.graphics.drawable.ColorDrawable
+import android.view.Window
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.kreyolkeyboard.gamification.CreoleLevels
 import com.example.kreyolkeyboard.gamification.LevelUpNotifier
 import android.content.Intent
+import android.content.SharedPreferences
 import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
@@ -56,9 +62,6 @@ import com.example.kreyolkeyboard.crossword.CrosswordDifficulty
 import com.example.kreyolkeyboard.crossword.CrosswordGrid
 import com.example.kreyolkeyboard.crossword.CrosswordSession
 import com.example.kreyolkeyboard.wordsearch.WordSearchGenerator
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.snackbar.Snackbar
 import com.example.kreyolkeyboard.wordsearch.WordSearchPuzzle
 import com.example.kreyolkeyboard.wordsearch.WordSearchWord
 import com.example.kreyolkeyboard.wordsearch.WordSearchDifficulty
@@ -87,12 +90,45 @@ import android.widget.Toast
 import android.widget.GridView
 import android.widget.ScrollView
 import com.example.kreyolkeyboard.carnet.BoiteFragment
+import com.example.kreyolkeyboard.carnet.Booster
+import com.example.kreyolkeyboard.carnet.CarteAccueil
+import com.example.kreyolkeyboard.carnet.CarteCarnet
 import com.example.kreyolkeyboard.carnet.Carnet
 import com.example.kreyolkeyboard.carnet.CarnetFragment
 import com.example.kreyolkeyboard.carnet.JeuCarte
 import com.example.kreyolkeyboard.carnet.Pochette
 
 class SettingsActivity : AppCompatActivity() {
+    /**
+     * Le jeu ouvert dans l'onglet Jé (rang dans `GamesFragment.jeux`), ou -1.
+     *
+     * Tenu par l'activité et non par le fragment : c'est elle qui sauvegarde
+     * son état à la rotation, et le fragment de l'onglet est recréé à neuf par
+     * le pager. Sans cela, tourner le téléphone ramenait au choix des jeux. La
+     * partie elle-même repart de zéro : chaque jeu calcule sa grille d'après
+     * l'écran à l'ouverture, et une grille de portrait ne tient pas en paysage.
+     */
+    internal var jeuOuvert = -1
+
+    /**
+     * Un écran qui sait recevoir les touches d'un clavier physique (v23.0.0,
+     * repris de LuxKeyb 34.2.0) : Mokwaré s'écrit au clavier, la Boîte de
+     * Sonjé se parcourt aux flèches.
+     */
+    interface JeuAuClavier {
+        fun surToucheClavier(event: android.view.KeyEvent): Boolean
+    }
+
+    /** Le jeu à l'écran qui sait recevoir les touches d'un clavier physique. */
+    var jeuAuClavier: JeuAuClavier? = null
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Un champ de texte qui a le focus garde ses touches ; sinon, le jeu
+        // ouvert les prend avant la navigation.
+        if (currentFocus !is EditText && jeuAuClavier?.surToucheClavier(event) == true) return true
+        return super.dispatchKeyEvent(event)
+    }
+
     private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = worldle, 5 = guide, 6 = à propos
     private lateinit var viewPager: ViewPager2
     private lateinit var tabBar: LinearLayout
@@ -136,6 +172,36 @@ class SettingsActivity : AppCompatActivity() {
 
         /** Onglet à ouvrir au démarrage, quand l'activité est lancée depuis le clavier. */
         const val EXTRA_OPEN_TAB = "open_tab"
+
+        /** Largeur du rail d'onglets d'une tablette couchée. */
+        const val RAIL_LARGEUR_DP = 104
+
+        /**
+         * Les écrans de texte, ramenés à une colonne centrée sur tablette (voir
+         * [LargeurLecture]). Les jeux à grille n'y sont pas : ils ont leurs deux
+         * colonnes ([DeuxColonnes]). Le Dictionnaire non plus : il montre sa
+         * liste et sa fiche côte à côte.
+         */
+        private val ECRANS_DE_LECTURE = setOf(
+            OnboardingFragment::class.java,
+            StatsFragment::class.java,
+            AboutFragment::class.java,
+            GuideFragment::class.java,
+            WordScrambleFragment::class.java,
+            MoKarenajFragment::class.java,
+            ClozeFragment::class.java,
+        )
+
+        /**
+         * Pause dans la frappe avant d'ouvrir la fenêtre « Klavyé Kréyòl
+         * aktivé ! » (v23.0.0, repris de LuxKeyb 34.4.0). Côté luxembourgeois,
+         * à 2,5 s le temps de chercher la lettre suivante suffisait à l'ouvrir,
+         * et les touches visées tombaient sur la fenêtre.
+         */
+        private const val DELAI_FELICITATIONS_MS = 4000L
+
+        /** Partage de l'activation à proposer à la prochaine ouverture. */
+        private const val PREF_PARTAGE_EN_ATTENTE = "partage_activation_en_attente"
         const val TAB_JEUX = 1
         const val TAB_DICO = 2
         const val TAB_STATS = 3
@@ -144,6 +210,7 @@ class SettingsActivity : AppCompatActivity() {
         // transfert d'appareil comme du cloud (voir data_extraction_rules.xml)
         private const val ACCUEIL_PREFS = "kreyol_accueil_prefs"
         private const val PREF_DERNIER_JEU_NOM = "dernier_jeu_nom"
+        private const val PREF_CORRECTEUR_ACCUEIL_MASQUE = "correcteur_accueil_masque"
         private const val PREF_DERNIER_JEU_EMOJI = "dernier_jeu_emoji"
         /** Nom de la révision dans GamesFragment.jeux : « Réviser maintenant » l'ouvre. */
         private const val JEU_SONJE = "Sonjé"
@@ -224,7 +291,28 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Sur téléphone, l'appli reste en hauteur (v23.0.0, repris de LuxKeyb
+        // 37.1.3) : couché, il laissait trop peu de place, et en révision la
+        // carte se réduisait à une icône. Les tablettes gardent les deux sens.
+        com.example.kreyolkeyboard.carnet.FigerOrientation.portraitSurTelephone(this)
         super.onCreate(savedInstanceState)
+
+        // Sur tablette, les écrans de texte sont ramenés à une colonne de
+        // lecture centrée. Une seule surveillance plutôt qu'un appel dans
+        // chaque écran : elle couvre aussi le guide, ouvert dans une feuille.
+        supportFragmentManager.registerFragmentLifecycleCallbacks(
+            object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                override fun onFragmentViewCreated(
+                    fm: androidx.fragment.app.FragmentManager,
+                    f: Fragment,
+                    v: View,
+                    savedInstanceState: Bundle?
+                ) {
+                    if (f.javaClass in ECRANS_DE_LECTURE) LargeurLecture.borner(v)
+                }
+            },
+            true
+        )
         
         // Restaurer l'onglet actif si l'activité a été recréée, ou honorer
         // l'onglet demandé par l'intent (puce de niveau tapée depuis le clavier).
@@ -237,6 +325,7 @@ class SettingsActivity : AppCompatActivity() {
             ?: intent?.getIntExtra(EXTRA_OPEN_TAB, 0)
             ?: 0
         currentTab = requestedTab
+        jeuOuvert = savedInstanceState?.getInt("jeuOuvert", -1) ?: -1
         
         // Masquer la barre d'action (bandeau noir)
         supportActionBar?.hide()
@@ -254,6 +343,7 @@ class SettingsActivity : AppCompatActivity() {
         
         // ViewPager2 pour le contenu avec navigation swipe
         viewPager = ViewPager2(this).apply {
+            id = R.id.onglets
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
@@ -277,19 +367,43 @@ class SettingsActivity : AppCompatActivity() {
             
             // 🔄 Démarrer au milieu de la plage virtuelle pour permettre le swipe dans les deux sens
             post {
+                // Après une rotation, ViewPager2 a déjà rétabli sa page et les
+                // fragments qu'elle portait : y sauter à nouveau en créerait
+                // une neuve, et le jeu en cours serait perdu.
+                if (savedInstanceState != null &&
+                    currentItem % SettingsPagerAdapter.REAL_COUNT == requestedTab
+                ) return@post
                 val startPosition = SettingsPagerAdapter.START_POSITION - (SettingsPagerAdapter.START_POSITION % SettingsPagerAdapter.REAL_COUNT) + requestedTab
                 setCurrentItem(startPosition, false)
             }
         }
         
-        mainLayout.addView(tabBar)
-        mainLayout.addView(viewPager)
+        if (navigationLaterale()) {
+            mainLayout.addView(createAppHeader())
+            mainLayout.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                )
+                addView(tabBar)
+                viewPager.layoutParams = LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                )
+                addView(viewPager)
+            })
+        } else {
+            mainLayout.addView(tabBar)
+            mainLayout.addView(viewPager)
+        }
 
         // FrameLayout racine : mainLayout en plein écran + bandeau d'installation
         // superposé, ancré en bas, visible dès l'onboarding (indépendant du scroll
         // du contenu en dessous)
         bottomInstallBanner = createBottomInstallBanner()
         val rootLayout = FrameLayout(this).apply {
+            // Visible sous la barre de navigation en bord à bord (Android 15+) :
+            // sans fond, c'est celui du thème AppCompat, sombre, qui s'y montre.
+            setBackgroundColor(Color.parseColor("#F5F5F5"))
             addView(mainLayout, FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -301,14 +415,30 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         setContentView(rootLayout)
+        // Bord à bord (Android 15+, imposé par targetSdk 35 et plus) : la bande
+        // sous la barre d'état est peinte du bleu du bandeau. La marge va sur
+        // mainLayout, pas sur le bandeau lui-même : updateTabBar() reconstruit
+        // ce dernier à chaque changement d'onglet, et la barre d'onglets est
+        // masquée au premier lancement. Le bas, bandeau d'installation compris,
+        // s'écarte de la navigation et du clavier. En paysage, le bandeau et les
+        // onglets s'étendent sous l'encoche et seul leur contenu s'en écarte.
+        BordABord.appliquer(
+            rootLayout, haut = mainLayout, couleurHaut = Color.parseColor("#0080FF"),
+            lateraux = { (0 until tabBar.childCount).map { tabBar.getChildAt(it) } + viewPager }
+        )
 
         recordFunnelStep("funnel_first_open")
         applyFirstRunMode()
 
         Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
 
-        maybeAskForReview()
-        maybeAskForNotificationPermission()
+        // Le partage reporté passe seul : la demande d'avis et celle des
+        // notifications attendent l'ouverture suivante plutôt que de s'empiler.
+        val partageMontre = savedInstanceState == null && proposerPartageEnAttente()
+        if (!partageMontre) {
+            maybeAskForReview()
+            maybeAskForNotificationPermission()
+        }
         maybeOfferUpdate()
     }
 
@@ -391,17 +521,16 @@ class SettingsActivity : AppCompatActivity() {
     /**
      * Invite à redémarrer l'application une fois la mise à jour téléchargée.
      *
-     * Une Snackbar et non une boîte de dialogue : le téléchargement se termine
+     * Un bandeau et non une boîte de dialogue : le téléchargement se termine
      * à un moment que la personne n'a pas choisi, souvent au milieu d'autre
-     * chose. Elle reste affichée jusqu'à ce qu'on la touche ou qu'on la
-     * balaie, parce qu'un message de quelques secondes se rate.
+     * chose. Il reste affiché jusqu'à ce qu'on le touche, parce qu'un message
+     * de quelques secondes se rate.
      */
     private fun proposerInstallation() {
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            "Mise à jour téléchargée",
-            Snackbar.LENGTH_INDEFINITE
-        ).setAction("Installer") { updateManager.completeUpdate() }.show()
+        bandeauEnHaut(
+            findViewById(android.R.id.content), "Mise à jour téléchargée", longue = true,
+            action = "Installer"
+        ) { updateManager.completeUpdate() }
     }
 
     /**
@@ -493,6 +622,7 @@ class SettingsActivity : AppCompatActivity() {
      * l'application, alors que la condition d'accès est déjà remplie.
      */
     fun revelerNavigationSiClavierActive() {
+        majBandeauInstallation()
         if (tabBar.visibility == View.VISIBLE) return
         if (!aDejaActiveLeClavier()) return
         tabBar.visibility = View.VISIBLE
@@ -513,7 +643,11 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun majBandeauInstallation() {
         if (!::bottomInstallBanner.isInitialized) return
-        val aConfigurer = !onboardingPrefs().getBoolean("onboarding_completed", false)
+        // Une fois le clavier activé, l'étape 2 s'ouvre d'elle-même (sélecteur
+        // ouvert au retour des réglages) et sa carte porte son propre bouton :
+        // le bandeau ne ferait que doubler l'appel, par-dessus le clavier d'essai.
+        val aConfigurer = !onboardingPrefs().getBoolean("onboarding_completed", false) &&
+            !isKeyboardEnabled()
         if (aConfigurer && currentTab == 0) {
             bottomInstallBanner.alpha = 1f
             bottomInstallBanner.visibility = View.VISIBLE
@@ -549,26 +683,117 @@ class SettingsActivity : AppCompatActivity() {
         demoEngine = null
         demoEngineReady = false
 
-        maybeShowActivationSuccessCard()
+        // Les félicitations attendent le premier mot. Ouvertes à la sélection du
+        // clavier, elles tombaient par-dessus le sélecteur système, puis au
+        // moment où l'on touchait le champ d'essai, et l'étape 3 se faisait
+        // derrière elles. Si le mot a déjà été écrit (ailleurs, ou avant ce
+        // rafraîchissement), elles s'ouvrent tout de suite ; sinon c'est
+        // [planifierFelicitations] qui les ouvre, une fois la frappe arrêtée.
+        if (aEcritUnMot()) maybeShowActivationSuccessCard()
     }
 
+    /** Écoute du jalon `funnel_first_word`, tenue ici : l'abonnement est faible. */
+    private var ecoutePremierMot: SharedPreferences.OnSharedPreferenceChangeListener? = null
+    private val minuterieFelicitations = Handler(Looper.getMainLooper())
+    private val felicitationsApresPause = Runnable {
+        if (!isFinishing && !isDestroyed && aEcritUnMot()) maybeShowActivationSuccessCard()
+    }
+
+    /**
+     * Ouvre les félicitations après une pause dans la frappe, jamais au
+     * milieu : l'étape 3 propose d'écrire « Bonjou tout moun », et une fenêtre
+     * ouverte après le premier mot baisserait le clavier avant le second.
+     */
+    private fun planifierFelicitations() {
+        if (onboardingPrefs().getBoolean("activation_success_card_shown", false)) return
+        minuterieFelicitations.removeCallbacks(felicitationsApresPause)
+        minuterieFelicitations.postDelayed(felicitationsApresPause, DELAI_FELICITATIONS_MS)
+    }
+
+    /**
+     * Vrai tant que la pochette de bienvenue est à l'écran : le champ d'essai
+     * ne doit pas relever le clavier par-dessus.
+     */
+    var pochetteAccueilOuverte = false
+
     // Récompense l'utilisateur juste après un parcours d'activation identifié
-    // comme un point de friction (interstitiel + réglages système) : un seul
-    // affichage, jamais reposé même si l'onboarding se rejoue. Le message
-    // proposé au partage est fixe, écrit avant que l'utilisateur ait tapé
-    // quoi que ce soit avec le clavier — aucun contenu personnel n'est lu.
+    // comme un point de friction (réglages système, sélecteur) : un seul
+    // affichage, jamais reposé même si l'onboarding se rejoue. La récompense
+    // est la carte « kréyòl », versée au carnet et ouverte comme une pochette
+    // (v23.0.0, repris de LuxKeyb 26.3.0) ; le partage est proposé à
+    // l'ouverture suivante. Le message proposé au partage est fixe, écrit
+    // avant que l'utilisateur ait tapé quoi que ce soit avec le clavier :
+    // aucun contenu personnel n'est lu.
     private fun maybeShowActivationSuccessCard() {
         val prefs = onboardingPrefs()
         if (prefs.getBoolean("activation_success_card_shown", false)) return
         prefs.edit().putBoolean("activation_success_card_shown", true).apply()
 
+        // L'onboarding lève le clavier sur le champ d'essai, et la fenêtre
+        // rétrécie coupait la carte sous la plaque du nom : le sens, qui est
+        // ce qu'on offre, restait caché.
+        pochetteAccueilOuverte = true
+        currentFocus?.clearFocus()
+        (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(window.decorView.windowToken, 0)
+
+        val ctx = applicatifDansLaLangue()
+        Thread {
+            val neuve = CarteAccueil.offrir(ctx)
+            TranslationDictionary.charger(ctx)
+            TranslationDictionary.chargerExemples(ctx)
+            val contenu = Carnet.cartes(ctx).firstOrNull { it.forme == CarteAccueil.FORME }
+                ?.let { CarteCarnet.contenu(ctx, it) }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                if (contenu == null) {
+                    pochetteAccueilOuverte = false
+                    reporterPartage()
+                    return@runOnUiThread
+                }
+                Booster.ouvrir(
+                    hote = findViewById(android.R.id.content),
+                    jeu = JeuCarte.ACCUEIL,
+                    contenus = listOf(contenu),
+                    nouvelles = if (neuve) setOf(CarteAccueil.FORME) else emptySet(),
+                    animations = !Pochette.animationsReduites(ctx),
+                    surCarnet = { CarnetFragment().show(supportFragmentManager, "carnet") },
+                    surFin = {
+                        pochetteAccueilOuverte = false
+                        reporterPartage()
+                    }
+                )
+            }
+        }.start()
+    }
+
+    /**
+     * Le partage n'est plus proposé dans la foulée de la pochette : c'était la
+     * deuxième fenêtre de suite avant même d'avoir vraiment écrit. Il l'est à
+     * l'ouverture suivante de l'application, une seule fois, et prend alors la
+     * place des demandes d'avis et de notifications, pour ne pas les empiler.
+     */
+    private fun reporterPartage() {
+        onboardingPrefs().edit().putBoolean(PREF_PARTAGE_EN_ATTENTE, true).apply()
+    }
+
+    /** Vrai si la fenêtre de partage a été montrée. */
+    private fun proposerPartageEnAttente(): Boolean {
+        val prefs = onboardingPrefs()
+        if (!prefs.getBoolean(PREF_PARTAGE_EN_ATTENTE, false)) return false
+        // « aktivé ! » au-dessus de la carte « Revenir au clavier » se
+        // contredirait : le partage attend que le clavier soit de retour.
+        if (!isKeyboardEnabled() || !isKeyboardSelected()) return false
+        prefs.edit().remove(PREF_PARTAGE_EN_ATTENTE).apply()
         AlertDialog.Builder(this)
             .setTitle("🎉 Klavyé Kréyòl aktivé !")
-            .setMessage("Bravo, ou fè'y ! Klavyé Kréyòl paré pou maké an kréyòl asi tout aplikasyon aw.")
+            .setMessage("Bravo, ou fè'y ! Klavyé Kréyòl paré pou maké an kréyòl asi tout aplikasyon aw." +
+                "\n\nLa carte « ${CarteAccueil.FORME} » est dans votre carnet.")
             .setPositiveButton("Partager la nouvelle") { _, _ -> shareActivationSuccess() }
             .setNegativeButton("Plus tard", null)
             .setCancelable(true)
             .show()
+        return true
     }
 
     // Partage natif (chooser Android), message pré-rédigé et fixe : célèbre
@@ -636,6 +861,10 @@ class SettingsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        // Une fois par installation : les shaders des cartes se compilent ici,
+        // sur un écran immobile, et non au retournement de la première carte.
+        com.example.kreyolkeyboard.carnet.ChauffeCartes.planifier(this)
+
         if (::tabBar.isInitialized && hasPendingLevelBadge() != levelBadgeDrawn) {
             Log.d("SettingsActivity", "🔄 Pastille de niveau à rafraîchir au retour au premier plan")
             updateTabBar()
@@ -643,7 +872,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Une mise à jour peut avoir fini de se télécharger pendant que
         // l'application était en arrière-plan : l'écouteur a bien reçu
-        // l'événement, mais la Snackbar est partie avec la vue. Sans cette
+        // l'événement, mais le bandeau est parti avec la vue. Sans cette
         // relance, la mise à jour reste téléchargée et jamais installée.
         try {
             updateManager.appUpdateInfo.addOnSuccessListener { info ->
@@ -658,12 +887,16 @@ class SettingsActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         // Sauvegarder l'onglet actif avant que l'activité soit recréée
         outState.putInt("currentTab", currentTab)
+        outState.putInt("jeuOuvert", jeuOuvert)
         Log.d("SettingsActivity", "💾 Sauvegarde de l'onglet actif: $currentTab")
     }
     
     override fun onDestroy() {
         // 🔧 FIX CRITIQUE: Annuler toutes les coroutines de l'activité
         activityScope.cancel()
+        ecoutePremierMot?.let { onboardingPrefs().unregisterOnSharedPreferenceChangeListener(it) }
+        ecoutePremierMot = null
+        minuterieFelicitations.removeCallbacks(felicitationsApresPause)
 
         try {
             updateManager.unregisterListener(updateListener)
@@ -699,7 +932,7 @@ class SettingsActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#0080FF"))
             elevation = 12f
             setPadding(32, 28, 32, 28)
-            setOnClickListener { showPreSettingsWarningDialog() }
+            setOnClickListener { poursuivreInstallation() }
 
             val label = TextView(this@SettingsActivity).apply {
                 text = "Ça vous plaît ? Installez-le →"
@@ -717,88 +950,117 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun createTabBar(): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+    /**
+     * Sur une tablette couchée, les onglets passent dans un rail à gauche
+     * (v23.0.0, repris de LuxKeyb 34.2.0).
+     *
+     * En haut, ils prenaient 70 dp sur les 800 de hauteur, et c'est la hauteur
+     * qui manque aux jeux à grille ; la largeur, elle, est en trop. Le bandeau
+     * bleu reste en haut, sur toute la largeur.
+     */
+    private fun navigationLaterale(): Boolean = DeuxColonnes.actives(this)
+
+    /** Le bandeau bleu : titre et engrenage des réglages du clavier. */
+    private fun createAppHeader(): LinearLayout {
+        val appHeader = LinearLayout(this@SettingsActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(Color.WHITE)
-            elevation = 4f // Ombre légère pour séparer du contenu
-            
-            // Bandeau bleu en haut
-            val appHeader = LinearLayout(this@SettingsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
+            setBackgroundColor(Color.parseColor("#0080FF"))
+            gravity = Gravity.CENTER
+            setPadding(16, 16, 16, 16)
+        }
+        
+        val appTitle = TextView(this@SettingsActivity).apply {
+            text = "Klavyé Kréyòl"
+            textSize = 22f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            // Poids 1 : le titre occupe la place laissée par l'engrenage et reste
+            // centré sur le bandeau entier.
+            layoutParams = LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            )
+        }
+
+        // Les réglages du clavier vivent derrière cet engrenage, dans leur propre
+        // écran : c'est la convention Android, et la barre porte déjà sept onglets.
+        // Icône vectorielle blanche, et non l'emoji ⚙️ : la police emoji du
+        // système le dessine en gris bleuté, une teinte que le bandeau bleu
+        // avale. Le tracé blanc ne dépend plus de la police du téléphone et
+        // ressort de la même façon sur tous les appareils.
+        val densite = resources.displayMetrics.density
+        val settingsButton = ImageView(this@SettingsActivity).apply {
+            setImageResource(R.drawable.ic_settings_gear)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = "Réglages du clavier"
+            // 48 dp de zone tactile, icône dessinée à 26 dp au centre : c'est
+            // l'encombrement qu'avait déjà le TextView, la hauteur du bandeau
+            // ne bouge donc pas.
+            val zone = (48 * densite).toInt()
+            layoutParams = LinearLayout.LayoutParams(zone, zone)
+            val marge = (11 * densite).toInt()
+            setPadding(marge, marge, marge, marge)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, KeyboardSettingsActivity::class.java))
+            }
+        }
+
+        // Cale de la largeur de l'engrenage, à gauche : sans elle le titre,
+        // centré dans la place restante, se décale visiblement vers la gauche.
+        appHeader.addView(View(this@SettingsActivity).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                (48 * densite).toInt(), 1
+            )
+        })
+        appHeader.addView(appTitle)
+        appHeader.addView(settingsButton)
+        return appHeader
+    }
+
+    private fun createTabBar(): LinearLayout {
+        val rail = navigationLaterale()
+        return LinearLayout(this).apply {
+            orientation = if (rail) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+            layoutParams = if (rail) {
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            } else {
+                LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
-                setBackgroundColor(Color.parseColor("#0080FF"))
-                gravity = Gravity.CENTER
-                setPadding(16, 16, 16, 16)
             }
-            
-            val appTitle = TextView(this@SettingsActivity).apply {
-                text = "Klavyé Kréyòl"
-                textSize = 22f
-                setTextColor(Color.WHITE)
-                setTypeface(null, Typeface.BOLD)
-                gravity = Gravity.CENTER
-                // Poids 1 : le titre occupe la place laissée par l'engrenage et reste
-                // centré sur le bandeau entier.
-                layoutParams = LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-                )
-            }
-
-            // Les réglages du clavier vivent derrière cet engrenage, dans leur propre
-            // écran : c'est la convention Android, et la barre porte déjà sept onglets.
-            // Icône vectorielle blanche, et non l'emoji ⚙️ : la police emoji du
-            // système le dessine en gris bleuté, une teinte que le bandeau bleu
-            // avale. Le tracé blanc ne dépend plus de la police du téléphone et
-            // ressort de la même façon sur tous les appareils.
-            val densite = resources.displayMetrics.density
-            val settingsButton = ImageView(this@SettingsActivity).apply {
-                setImageResource(R.drawable.ic_settings_gear)
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                contentDescription = "Réglages du clavier"
-                // 48 dp de zone tactile, icône dessinée à 26 dp au centre : c'est
-                // l'encombrement qu'avait déjà le TextView, la hauteur du bandeau
-                // ne bouge donc pas.
-                val zone = (48 * densite).toInt()
-                layoutParams = LinearLayout.LayoutParams(zone, zone)
-                val marge = (11 * densite).toInt()
-                setPadding(marge, marge, marge, marge)
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
-                    startActivity(Intent(this@SettingsActivity, KeyboardSettingsActivity::class.java))
-                }
-            }
-
-            // Cale de la largeur de l'engrenage, à gauche : sans elle le titre,
-            // centré dans la place restante, se décale visiblement vers la gauche.
-            appHeader.addView(View(this@SettingsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    (48 * densite).toInt(), 1
-                )
-            })
-            appHeader.addView(appTitle)
-            appHeader.addView(settingsButton)
+            setBackgroundColor(Color.WHITE)
+            elevation = 4f // Ombre légère pour séparer du contenu
             
             // Container pour les onglets
             val tabContainer = LinearLayout(this@SettingsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = if (rail) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
                 // Hauteur suivant le contenu, et non 140 px figés : l'emoji seul en
                 // réclamait 165 (60 dp), donc le libellé de chaque onglet était rogné
                 // hors de la vue et la barre n'identifiait sept destinations que par
                 // des emojis nus.
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                gravity = Gravity.CENTER
+                layoutParams = if (rail) {
+                    LinearLayout.LayoutParams(
+                        (RAIL_LARGEUR_DP * resources.displayMetrics.density).toInt(),
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                } else {
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                gravity = if (rail) Gravity.CENTER_HORIZONTAL or Gravity.TOP else Gravity.CENTER
+                if (rail) setPadding(0, (8 * resources.displayMetrics.density).toInt(), 0, 0)
             }
             
             // Tab Dékolaj (« Démarrage » jusqu'en 22.4.0, mot kréyòl donné par le
@@ -835,16 +1097,17 @@ class SettingsActivity : AppCompatActivity() {
             // quotidiennes. Elles s'ouvrent depuis le pied de l'onglet
             // Dékolaj, en plein écran (voir SheetFragment).
 
-            // Ligne de séparation en bas (fine)
+            // Ligne de séparation fine : en bas de la barre, à droite du rail
             val separator = View(this@SettingsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    2
-                )
+                layoutParams = if (rail) {
+                    LinearLayout.LayoutParams(2, LinearLayout.LayoutParams.MATCH_PARENT)
+                } else {
+                    LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
+                }
                 setBackgroundColor(Color.parseColor("#E0E0E0"))
             }
             
-            addView(appHeader)
+            if (!rail) addView(createAppHeader())
             addView(tabContainer)
             addView(separator)
         }
@@ -864,11 +1127,19 @@ class SettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(8, 10, 8, 8)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1f
-            )
+            layoutParams = if (navigationLaterale()) {
+                // Dans le rail : empilés en haut, chacun à sa hauteur.
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = (4 * resources.displayMetrics.density).toInt() }
+            } else {
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f
+                )
+            }
             // Background légèrement coloré si onglet actif
             setBackgroundColor(
                 if (tabIndex == currentTab) 
@@ -982,6 +1253,8 @@ class SettingsActivity : AppCompatActivity() {
         val enfants = (0 until fraiche.childCount).map { fraiche.getChildAt(it) }
         fraiche.removeAllViews() // une vue ne peut pas avoir deux parents
         enfants.forEach { tabBar.addView(it) }
+        // Les enfants neufs n'ont pas encore l'écart de l'encoche (paysage).
+        BordABord.ecarterLateralement(enfants)
     }
 
     // Onglet 1 : Dékolaj (installation, puis accueil du jour)
@@ -1061,6 +1334,15 @@ class SettingsActivity : AppCompatActivity() {
         }
         if (modeDuJour) {
             mainLayout.addView(creerAccueilDuJour())
+            // Le correcteur était rangé dans le volet replié ci-dessous, que
+            // personne ne rouvre une fois le clavier installé : un utilisateur
+            // configuré ne le découvrait jamais. Android interdit de le choisir
+            // à sa place, donc on le lui propose ici, jusqu'à ce qu'il le fasse
+            // ou qu'il dise « plus tard ».
+            if (!isSpellCheckerSelected() &&
+                !onboardingPrefs().getBoolean(PREF_CORRECTEUR_ACCUEIL_MASQUE, false)) {
+                mainLayout.addView(carteCorrecteurAccueil())
+            }
             mainLayout.addView(createSpacing(8))
             mainLayout.addView(ligneConfiguration(cible))
             mainLayout.addView(cible)
@@ -1547,6 +1829,10 @@ class SettingsActivity : AppCompatActivity() {
             }
         }.start()
 
+        // Sur une tablette couchée, les quatre cartes tiennent en deux rangées
+        // sous la date (v23.0.0, repris de LuxKeyb 34.2.0).
+        if (DeuxColonnes.actives(this)) DeuxColonnes.parPaires(colonne, 1)
+
         return colonne
     }
 
@@ -1575,6 +1861,52 @@ class SettingsActivity : AppCompatActivity() {
                 topMargin = enDp(8); bottomMargin = enDp(8)
             }
             contentDescription = "${nombre(fait)} mots sur ${nombre(etape)} jusqu'au niveau suivant"
+        }
+    }
+
+    /**
+     * Invitation au correcteur sur l'accueil, pour qui a installé le clavier
+     * sans jamais ouvrir le volet de configuration. Un toucher ouvre
+     * directement le bon écran d'Android ; « Plus tard » la retire de
+     * l'accueil, la carte complète restant dans le volet.
+     */
+    private fun carteCorrecteurAccueil(): LinearLayout {
+        val encre = Color.parseColor("#1C1C1C")
+        val gris = Color.parseColor("#6B6B6B")
+        val bleu = Color.parseColor("#0080FF")
+        val coupe = isSpellCheckerChosenButOff()
+        val carte = carteAccueil(Color.WHITE)
+        return carte.apply {
+            addView(texteAccueil("🔤  Fini le trait rouge sous vos mots", 18f, encre, gras = true))
+            addView(texteAccueil(
+                if (coupe) "La correction orthographique est coupée dans Android. " +
+                    "Rallumez-la pour que vos mots kréyòl soient reconnus partout."
+                else "Android souligne vos mots kréyòl dans Messages, Notes et " +
+                    "ailleurs. Choisissez notre correcteur pour qu'il les reconnaisse.",
+                14f, gris).apply { setPadding(0, enDp(4), 0, 0) })
+            // L'avertissement d'Android parle de mots de passe et de cartes
+            // bancaires : dit d'avance, il fait moins peur.
+            if (!coupe) addView(texteAccueil(
+                "Android affichera un avertissement, comme pour tout correcteur. " +
+                    "Le nôtre ne conserve rien et n'envoie rien.",
+                12f, Color.parseColor("#9E9E9E")).apply { setPadding(0, enDp(6), 0, 0) })
+            addView(LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, enDp(12), 0, 0)
+                addView(boutonAccueil(if (coupe) "Rallumer" else "Activer", bleu, Color.WHITE) {
+                    openSpellCheckerSettings()
+                }.apply { (layoutParams as LinearLayout.LayoutParams).topMargin = 0 })
+                addView(texteAccueil("Plus tard", 15f, gris).apply {
+                    setPadding(enDp(20), enDp(12), enDp(20), enDp(12))
+                    setOnClickListener {
+                        onboardingPrefs().edit()
+                            .putBoolean(PREF_CORRECTEUR_ACCUEIL_MASQUE, true).apply()
+                        (carte.parent as? ViewGroup)?.removeView(carte)
+                    }
+                })
+            })
+            setOnClickListener { openSpellCheckerSettings() }
         }
     }
 
@@ -1791,6 +2123,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val titre = TextView(this).apply {
+            tag = "bandeau_pret_titre"
             text = if (aDejaEcrit) "Tout est prêt !" else "Clavier en place !"
             textSize = 17f
             setTextColor(Color.WHITE)
@@ -1798,6 +2131,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val sousTitre = TextView(this).apply {
+            tag = "bandeau_pret_sous_titre"
             text = if (aDejaEcrit) "Vous pouvez taper en kréyòl partout."
                    else "Écrivez un mot pour terminer la configuration."
             textSize = 13f
@@ -1992,8 +2326,9 @@ class SettingsActivity : AppCompatActivity() {
                     "💡 Presque ! Validez bien les 2 avertissements Android l'un après " +
                     "l'autre : s'arrêter au premier annule l'activation."))
                 !isEnabled -> addView(encart("#FFF8E1", "#5D4037",
-                    "ℹ️ Android affiche un avertissement de sécurité standard, montré pour " +
-                    "tous les claviers tiers. Klavyé Kréyòl ne collecte aucune donnée."))
+                    "ℹ️ Android affiche un avertissement de sécurité, le même pour tous les " +
+                    "claviers tiers : appuyez sur OK (deux fois si un second message suit), " +
+                    "puis sur Retour. Klavyé Kréyòl ne collecte aucune donnée."))
             }
             if (!isEnabled) {
                 addView(TextView(this@SettingsActivity).apply {
@@ -2010,7 +2345,7 @@ class SettingsActivity : AppCompatActivity() {
             addView(createSpacing(12))
             addView(bouton(
                 if (isEnabled) "Rouvrir les réglages Android ↗" else "Ouvrir les réglages Android ↗"
-            ) { showPreSettingsWarningDialog() })
+            ) { openKeyboardSettings() })
         }
 
         val ligne1 = createSetupRow(
@@ -2027,7 +2362,8 @@ class SettingsActivity : AppCompatActivity() {
         // === Étape 2 : sélectionner le clavier ===
         val corps2 = corps().apply {
             addView(texte("Choisissez « Klavyé Kréyòl Karukéra » dans la liste des claviers " +
-                    "qui s'affiche. Vos autres claviers restent installés."))
+                    "qui s'affiche. Si vous ne le voyez pas, faites défiler : il est souvent " +
+                    "tout en bas. Vos autres claviers restent installés."))
             addView(bouton("Ouvrir le sélecteur de claviers ↗") { openInputMethodPicker() })
         }
 
@@ -2050,6 +2386,15 @@ class SettingsActivity : AppCompatActivity() {
         val champTest = EditText(this).apply {
             tag = "onboarding_test_field"
             hint = "Koumansé maké on bèl kréyòl isit..."
+            // Sans correcteur système : celui de Gboard, encore choisi à ce
+            // stade, soulignait en rouge les mots kréyòl que l'étape demande
+            // d'écrire. Notre clavier ignore ce drapeau et propose ses
+            // suggestions comme ailleurs. Multiligne : sans ce drapeau,
+            // l'indication tiendrait sur une ligne coupée et Entrée deviendrait
+            // « Terminé ».
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
+                    android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
             textSize = 16f
             setPadding(enDp(14), enDp(14), enDp(14), enDp(14))
             minHeight = enDp(56)
@@ -2097,15 +2442,38 @@ class SettingsActivity : AppCompatActivity() {
         // au premier mot écrit. Le jalon lu est celui du service de saisie, donc
         // la pastille ne s'allume pas sur un texte collé ou tapé avec un autre
         // clavier — et ne se rallume pas à faux au rafraîchissement suivant.
+        //
+        // Le texte du champ change avant que le service n'ait posé son jalon :
+        // relire le jalon à chaque frappe laissait l'étape à 2/3 après le
+        // premier mot, et ne la cochait qu'au deuxième. On écoute donc le jalon
+        // lui-même ; le service tourne dans le même processus, l'écoute est
+        // prévenue dès son écriture. Les frappes, elles, repoussent les
+        // félicitations.
         if (!etape3Faite) {
+            fun cocher() {
+                if (anneau.done >= 3) return
+                marquerEtapeFaite(ligne3)
+                anneau.done = 3
+                sousTitre.text = "Les 3 étapes sont faites."
+                window.decorView.findViewWithTag<TextView>("bandeau_pret_titre")
+                    ?.text = "Tout est prêt !"
+                window.decorView.findViewWithTag<TextView>("bandeau_pret_sous_titre")
+                    ?.text = "Vous pouvez taper en kréyòl partout."
+            }
+            ecoutePremierMot?.let { onboardingPrefs().unregisterOnSharedPreferenceChangeListener(it) }
+            ecoutePremierMot = SharedPreferences.OnSharedPreferenceChangeListener { _, cle ->
+                if (cle == "funnel_first_word" && aEcritUnMot()) {
+                    cocher()
+                    planifierFelicitations()
+                }
+            }.also { onboardingPrefs().registerOnSharedPreferenceChangeListener(it) }
             champTest.addTextChangedListener(object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(s: android.text.Editable?) {
                     if (s.isNullOrEmpty() || !aEcritUnMot()) return
-                    marquerEtapeFaite(ligne3)
-                    anneau.done = 3
-                    sousTitre.text = "Les 3 étapes sont faites."
+                    cocher()
+                    planifierFelicitations()
                 }
             })
         }
@@ -2282,6 +2650,7 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun createSpellCheckerCard(): LinearLayout {
         val estActif = isSpellCheckerSelected()
+        val coupe = isSpellCheckerChosenButOff()
         val card = createRoundedCard("#FFFFFF")
 
         val header = LinearLayout(this).apply {
@@ -2337,6 +2706,9 @@ class SettingsActivity : AppCompatActivity() {
             text = if (estActif) {
                 "Vos mots kréyòl sont reconnus dans Messages, Notes et ailleurs, " +
                     "sans trait rouge dessous."
+            } else if (coupe) {
+                "Le correcteur kréyòl est bien choisi, mais la correction " +
+                    "orthographique est coupée dans Android. Touchez ici pour la rallumer."
             } else {
                 "Faites reconnaître vos mots kréyòl dans Messages, Notes et " +
                     "ailleurs, sans trait rouge dessous."
@@ -2361,13 +2733,16 @@ class SettingsActivity : AppCompatActivity() {
             setLineSpacing(0f, 1.3f)
             setPadding(0, 0, 0, 12)
         }
-        card.addView(avertissement)
+        // Déjà choisi et seulement coupé : Android ne repose pas la question.
+        if (!coupe) card.addView(avertissement)
 
         val details = TextView(this).apply {
-            text = "Dans l'écran qui s'ouvre :\n" +
-                "1. touchez « Correcteur par défaut »\n" +
-                "2. choisissez « Correcteur Kréyòl Karukéra »\n" +
-                "3. confirmez l'avertissement d'Android"
+            text = if (coupe) "Dans l'écran qui s'ouvre, allumez l'interrupteur " +
+                "« Utiliser le correcteur orthographique »." else "Dans l'écran qui s'ouvre :\n" +
+                "1. allumez « Utiliser le correcteur orthographique » s'il est éteint\n" +
+                "2. touchez « Correcteur par défaut »\n" +
+                "3. choisissez « Correcteur Kréyòl Karukéra »\n" +
+                "4. confirmez l'avertissement d'Android"
             textSize = 14f
             setTextColor(Color.parseColor("#666666"))
             setLineSpacing(0f, 1.35f)
@@ -2793,7 +3168,7 @@ class SettingsActivity : AppCompatActivity() {
             // réglages système en pleine frappe)
             visibility = View.INVISIBLE
             alpha = 0f
-            setOnClickListener { showPreSettingsWarningDialog() }
+            setOnClickListener { poursuivreInstallation() }
         }
 
         fun revealInstallCta() {
@@ -3337,8 +3712,12 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     
-    // Fonction pour vérifier si notre correcteur orthographique est sélectionné
-    fun isSpellCheckerSelected(): Boolean {
+    // Notre correcteur travaille-t-il vraiment ? Il faut qu'il soit choisi ET
+    // que l'interrupteur général « Utiliser le correcteur » soit allumé : choisi
+    // mais coupé, il ne souligne rien, et la carte annonçait pourtant « actif ».
+    fun isSpellCheckerSelected(): Boolean = isSpellCheckerChosen() && isSpellCheckingOn()
+
+    private fun isSpellCheckerChosen(): Boolean {
         return try {
             val current = Settings.Secure.getString(contentResolver, "selected_spell_checker")
             current?.contains(packageName) == true
@@ -3347,6 +3726,16 @@ class SettingsActivity : AppCompatActivity() {
             false
         }
     }
+
+    // Absent sur une installation neuve : Android le considère alors allumé.
+    private fun isSpellCheckingOn(): Boolean = try {
+        Settings.Secure.getString(contentResolver, "spell_checker_enabled") != "0"
+    } catch (e: Exception) {
+        true
+    }
+
+    /** Choisi, mais l'interrupteur général l'empêche de travailler. */
+    fun isSpellCheckerChosenButOff(): Boolean = isSpellCheckerChosen() && !isSpellCheckingOn()
 
     // Fonction pour ouvrir les paramètres où choisir le correcteur orthographique
     private fun openSpellCheckerSettings() {
@@ -3357,15 +3746,13 @@ class SettingsActivity : AppCompatActivity() {
         try {
             val intent = Intent().apply {
                 setClassName("com.android.settings", "com.android.settings.Settings\$SpellCheckersSettingsActivity")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                // Sans FLAG_ACTIVITY_NEW_TASK : voir openKeyboardSettings().
             }
             startActivity(intent)
         } catch (e: Exception) {
             Log.e("SettingsActivity", "Erreur ouverture écran correcteur, repli sur les paramètres clavier: ${e.message}")
             try {
-                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
+                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
                 // Seul cas où un Toast d'instruction reste utile : l'écran de
                 // repli n'est pas celui attendu, la carte de l'étape 4 ne
                 // décrit donc pas ce que l'utilisateur a sous les yeux
@@ -3383,67 +3770,24 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // Interstitiel montrant l'avertissement Android réel (capturé sur
-    // l'émulateur) avant d'y envoyer l'utilisateur : le voir à l'avance,
-    // annoté, le désamorce mieux qu'une description abstraite dans une
-    // carte qu'il a pu ne pas lire. Un seul bouton d'action ; pas de bouton
-    // d'annulation explicite, le retour matériel suffit à fermer sans
-    // naviguer ailleurs.
-    private fun showPreSettingsWarningDialog() {
-        val dialogLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 8)
-        }
-
-        val warningImage = ImageView(this).apply {
-            setImageResource(R.drawable.onboarding_ime_warning_preview)
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-
-        val annotationText = TextView(this).apply {
-            text = "👆 Appuyez sur OK : c'est normal pour tous les claviers tiers"
-            textSize = 16f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#333333"))
-            setPadding(0, 24, 0, 12)
-            setLineSpacing(0f, 1.2f)
-        }
-
-        val reassuranceText = TextView(this).apply {
-            text = "Klavyé Kréyòl n'a pas accès à Internet : rien ne quitte votre téléphone."
-            textSize = 16f
-            setTextColor(Color.parseColor("#666666"))
-            setPadding(0, 0, 0, 12)
-            setLineSpacing(0f, 1.2f)
-        }
-
-        val returnHintText = TextView(this).apply {
-            text = "◀ Ensuite, appuyez sur Retour : vous revenez ici automatiquement"
-            textSize = 16f
-            setTextColor(Color.parseColor("#666666"))
-            setLineSpacing(0f, 1.2f)
-        }
-
-        dialogLayout.addView(warningImage)
-        dialogLayout.addView(annotationText)
-        dialogLayout.addView(reassuranceText)
-        dialogLayout.addView(returnHintText)
-
-        val scrollView = ScrollView(this).apply { addView(dialogLayout) }
-
-        AlertDialog.Builder(this)
-            .setTitle("Avant de continuer")
-            .setView(scrollView)
-            .setCancelable(true)
-            .setPositiveButton("J'ai compris, on y va") { _, _ -> openKeyboardSettings() }
-            .show()
+    /**
+     * Ce qui reste à faire pour installer le clavier, depuis les boutons qui ne
+     * savent pas où en est l'utilisateur (bandeau du bas, bouton du clavier
+     * d'essai) : ils renvoyaient tous à l'étape 1, y compris quand elle était
+     * faite.
+     */
+    private fun poursuivreInstallation() {
+        if (isKeyboardEnabled()) openInputMethodPicker() else openKeyboardSettings()
     }
 
-    // Ouvre les paramètres de clavier système. Pas de Toast d'instruction :
-    // la carte de l'étape 1 dit déjà quoi faire, avant le saut vers les
-    // réglages (le Toast s'affichait par-dessus l'écran système, en bas,
-    // sans garantie de position ni de durée suffisante)
+    // Ouvre les paramètres de clavier système, directement. Il y avait avant un
+    // écran « Avant de continuer » montrant une capture de l'avertissement
+    // d'Android : retiré en 23.0.0 (comme LuxKeyb en 34.4.0), parce que la
+    // capture, nette, ressemblait plus à une vraie fenêtre que la vraie, grisée
+    // par le thème sombre, et qu'on touchait le « OK » de l'image sans que rien
+    // ne se passe. La carte de l'étape 1 dit la même chose avant le départ. Pas
+    // de Toast non plus : il s'affichait par-dessus l'écran système, sans
+    // garantie de durée.
     private fun openKeyboardSettings() {
         try {
             // Horodater le départ vers les réglages : si l'utilisateur
@@ -3452,8 +3796,12 @@ class SettingsActivity : AppCompatActivity() {
             // affiche une carte d'encouragement ciblée
             onboardingPrefs().edit()
                 .putLong("settings_visit_at", System.currentTimeMillis()).apply()
+            // Pas de FLAG_ACTIVITY_NEW_TASK : l'écran des réglages doit
+            // s'empiler sur l'appli, pour que Retour y ramène. Avec ce
+            // drapeau, Samsung le posait dans la tâche Réglages déjà ouverte,
+            // par-dessus ce qu'on y avait laissé, et Retour menait à un ancien
+            // écran (« Correction orthographique ») au lieu de l'étape 2.
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             // Tentative de surlignage de la ligne IME dans l'écran système :
             // extra non documenté, respecté par les Settings AOSP/Pixel,
             // ignoré silencieusement ailleurs (pas d'effet de bord).
@@ -4034,7 +4382,9 @@ class SettingsActivity : AppCompatActivity() {
                 
                 var currentRowWidth = 0
                 // Calculer la largeur disponible: largeur écran - padding container (24) - padding statsContainer (48) - marges (24)
-                val screenWidth = resources.displayMetrics.widthPixels - 96
+                // La largeur du contenu, et non celle de l'écran : sur tablette
+                // l'onglet est ramené à une colonne (voir LargeurLecture).
+                val screenWidth = LargeurLecture.largeur(this@SettingsActivity) - 96
                 
                 words.forEach { word ->
                     // Créer le chip du mot
@@ -4480,6 +4830,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (changed) {
                     refreshContent()
                     chainNextStep(wasEnabled, wasSelected)
+                    confirmerCorrecteurSiActive()
                 }
             }
         }
@@ -4507,6 +4858,7 @@ class SettingsActivity : AppCompatActivity() {
             val wasSelected = lastKnownSelected
             refreshContent()
             chainNextStep(wasEnabled, wasSelected)
+            confirmerCorrecteurSiActive()
 
             val resolver = requireContext().contentResolver
             resolver.registerContentObserver(
@@ -4515,6 +4867,8 @@ class SettingsActivity : AppCompatActivity() {
                 Settings.Secure.getUriFor(Settings.Secure.ENABLED_INPUT_METHODS), false, settingsObserver)
             resolver.registerContentObserver(
                 Settings.Secure.getUriFor("selected_spell_checker"), false, settingsObserver)
+            resolver.registerContentObserver(
+                Settings.Secure.getUriFor("spell_checker_enabled"), false, settingsObserver)
         }
 
         override fun onPause() {
@@ -4525,6 +4879,26 @@ class SettingsActivity : AppCompatActivity() {
         private var lastKnownEnabled = false
         private var lastKnownSelected = false
         private var lastKnownSpellCheckerOn = false
+
+        // État du correcteur au dernier passage, null avant le premier : sans
+        // cela, ouvrir l'application avec un correcteur déjà actif afficherait
+        // la confirmation à chaque fois.
+        private var correcteurConnu: Boolean? = null
+
+        /**
+         * Dit « c'est bon » quand le correcteur vient de passer actif, en
+         * général au retour de l'écran système où l'utilisateur l'a choisi.
+         * Sans ce mot, il revient sans savoir si sa manipulation a marché.
+         */
+        private fun confirmerCorrecteurSiActive() {
+            val avant = correcteurConnu
+            correcteurConnu = lastKnownSpellCheckerOn
+            if (avant == false && lastKnownSpellCheckerOn) {
+                Toast.makeText(requireContext(),
+                    "✓ Correcteur activé : vos mots kréyòl sont reconnus partout.",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
 
         private fun shouldRefresh(currentEnabled: Boolean, currentSelected: Boolean, currentSpellCheckerOn: Boolean): Boolean {
             val hasChanged = currentEnabled != lastKnownEnabled || currentSelected != lastKnownSelected || currentSpellCheckerOn != lastKnownSpellCheckerOn
@@ -4588,6 +4962,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun focusTestField() {
+            if ((activity as? SettingsActivity)?.pochetteAccueilOuverte == true) return
             val field = rootView?.findViewWithTag<EditText>("onboarding_test_field") ?: return
             field.requestFocus()
             val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -4861,14 +5236,40 @@ class SettingsActivity : AppCompatActivity() {
     
     // Fragment pour les mots mêlés
     class WordSearchFragment : Fragment() {
-        
-        private var currentPuzzle: WordSearchPuzzle? = null
-        private var startTime: Long = 0
-        private var wordsFound = 0
+
+        /**
+         * Ce qui doit survivre à une rotation : la grille, ses cases trouvées et
+         * le score (v23.0.0, repris de LuxKeyb 34.1.0). Tourner le téléphone
+         * recrée l'écran ; le ViewModel survit à la recréation et disparaît avec
+         * le jeu quand on le ferme.
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var puzzle: WordSearchPuzzle? = null
+            val casesTrouvees = mutableSetOf<Int>()
+            var startTime: Long = 0
+            var wordsFound = 0
+            var score = 0
+            val gagnes = mutableListOf<String>()
+            val neuves = mutableSetOf<String>()
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var currentPuzzle: WordSearchPuzzle?
+            get() = memoire.puzzle
+            set(valeur) { memoire.puzzle = valeur }
+        private var startTime: Long
+            get() = memoire.startTime
+            set(valeur) { memoire.startTime = valeur }
+        private var wordsFound: Int
+            get() = memoire.wordsFound
+            set(valeur) { memoire.wordsFound = valeur }
 
         /** Ce que la grille en cours a versé au carnet, et ce qui y était neuf. */
-        private val gagnes = mutableListOf<String>()
-        private val neuves = mutableSetOf<String>()
+        private val gagnes get() = memoire.gagnes
+        private val neuves get() = memoire.neuves
         private var pochette: View? = null
         private lateinit var gridView: GridView
         private lateinit var wordsListContainer: LinearLayout
@@ -4927,20 +5328,39 @@ class SettingsActivity : AppCompatActivity() {
                     // Grille de mots mêlés
                     gridView = GridView(activity).apply {
                         // Calculer la taille disponible pour la grille
-                        val screenWidth = resources.displayMetrics.widthPixels
-                        val availableWidth = screenWidth - 48
+                        val screenWidth = LargeurLecture.largeurEcran(activity)
+                        val deuxColonnes = DeuxColonnes.actives(activity)
+                        val availableWidth = ((screenWidth - 48) *
+                            (if (deuxColonnes) DeuxColonnes.PART_GRILLE else 1f)).toInt()
                         
                         // La grille est toujours 8x8
                         val gridSize = 8
                         // Calculer la taille d'une cellule en fonction de la largeur
-                        val cellSize = availableWidth / gridSize
+                        var cellSize = availableWidth / gridSize
+                        // Sur tablette, la largeur seule donnait des cases de
+                        // trois centimètres et une grille plus haute que
+                        // l'écran : la hauteur borne aussi. Un téléphone
+                        // couché avait le même défaut, en pire : une seule
+                        // rangée visible. Debout, il garde sa grille.
+                        val configuration = resources.configuration
+                        if (configuration.smallestScreenWidthDp >= 600 ||
+                            configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                            val budgetHauteur = (resources.displayMetrics.heightPixels *
+                                (if (deuxColonnes) DeuxColonnes.PART_HAUTEUR else 0.5f)).toInt()
+                            cellSize = minOf(cellSize, budgetHauteur / gridSize)
+                        }
                         // Hauteur de la grille = 8 cellules + espacements + padding
                         val gridHeight = (cellSize * gridSize) + (4 * (gridSize - 1)) + 24
                         
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            gridHeight
-                        )
+                        layoutParams = if (cellSize * gridSize < availableWidth) {
+                            LinearLayout.LayoutParams(gridHeight, gridHeight)
+                                .apply { gravity = Gravity.CENTER_HORIZONTAL }
+                        } else {
+                            LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                gridHeight
+                            )
+                        }
                         setPadding(12, 12, 12, 12)
                         stretchMode = GridView.STRETCH_COLUMN_WIDTH
                         setBackgroundColor(Color.parseColor("#F5F5F5")) // Fond gris très clair
@@ -5007,17 +5427,34 @@ class SettingsActivity : AppCompatActivity() {
                         setBackgroundColor(Color.parseColor("#FFFFFF"))
                     }
                     addView(wordsListContainer)
+
+                    // Tablette couchée : la grille à gauche, le reste à droite
+                    // (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(headerLayout),
+                            aGauche = listOf(gridView)
+                        )
+                    }
                 }
                 
                 addView(mainLayout)
                 
-                // Générer la première grille après que la vue soit créée
+                // Générer la première grille après que la vue soit créée, ou
+                // redessiner celle qu'une rotation a laissée en mémoire
                 post {
                     // Le post() s'exécute au prochain passage de la boucle de messages :
                     // si l'utilisateur a déjà changé d'onglet entre-temps, le fragment
                     // n'est plus attaché et requireActivity()/requireContext() planterait.
                     if (isAdded) {
-                        generateNewPuzzle()
+                        val enCours = currentPuzzle
+                        if (enCours != null) {
+                            displayPuzzle(enCours)
+                            updateScore(0)
+                        } else {
+                            generateNewPuzzle()
+                        }
                     }
                 }
             }
@@ -5032,6 +5469,8 @@ class SettingsActivity : AppCompatActivity() {
                 enleverPochette()
                 gagnes.clear()
                 neuves.clear()
+                memoire.casesTrouvees.clear()
+                memoire.score = 0
 
                 // Générer une nouvelle grille 8x8 avec des mots aléatoires du dictionnaire
                 currentPuzzle = WordSearchGenerator.generatePuzzle(
@@ -5063,7 +5502,7 @@ class SettingsActivity : AppCompatActivity() {
             val activity = requireActivity() as SettingsActivity
             
             // Configurer l'adaptateur de la grille
-            val adapter = WordSearchGridAdapter(activity, puzzle)
+            val adapter = WordSearchGridAdapter(activity, puzzle, memoire.casesTrouvees)
             adapter.setOnWordFoundListener { word ->
                 onWordFound(word)
             }
@@ -5124,20 +5563,14 @@ class SettingsActivity : AppCompatActivity() {
             
             // Vérifier si tous les mots sont trouvés
             // Toast.setGravity() est ignoré par le système depuis Android 11 : on utilise
-            // une Snackbar (vue applicative, pas une fenêtre système) pour l'ancrer en haut
-            // et éviter qu'elle ne recouvre le mot qui vient de passer en vert dans la liste.
+            // un bandeau (vue applicative, pas une fenêtre système) pour l'ancrer en haut
+            // et éviter qu'il ne recouvre le mot qui vient de passer en vert dans la liste.
             val message = if (wordsFound == currentPuzzle?.words?.size) {
                 "🎉 Félicitations ! Tous les mots trouvés !"
             } else {
                 "✅ Mot trouvé : $word (+$points pts)"
             }
-            val duration = if (wordsFound == currentPuzzle?.words?.size) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT
-            Snackbar.make(requireView(), message, duration).apply {
-                (view.layoutParams as? FrameLayout.LayoutParams)?.let {
-                    it.gravity = Gravity.TOP
-                    view.layoutParams = it
-                }
-            }.show()
+            bandeauEnHaut(requireView(), message, longue = wordsFound == currentPuzzle?.words?.size)
 
             if (wordsFound == currentPuzzle?.words?.size) ouvrirPochette()
         }
@@ -5182,9 +5615,8 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun updateScore(points: Int) {
-            val currentScore = tvScore.text.toString().replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
-            val newScore = currentScore + points
-            tvScore.text = "⭐ $newScore"
+            memoire.score += points
+            tvScore.text = "⭐ ${memoire.score}"
         }
     }
     
@@ -5205,21 +5637,58 @@ class SettingsActivity : AppCompatActivity() {
         private var scrambledAdapter: com.example.kreyolkeyboard.wordscramble.ScrambledLettersAdapter? = null
         private var answerAdapter: com.example.kreyolkeyboard.wordscramble.AnswerLettersAdapter? = null
         
-        private var currentWord: String = ""
-        private var scrambledLetters: List<Char> = listOf()
-        private val currentAnswer = mutableListOf<Char?>()
-        private val selectedPositions = mutableListOf<Int>()
-        
-        private var gameWords: List<String> = listOf()
-        private var currentWordIndex = 0
-        private var wordsCorrect = 0
-        private var score = 0
+        /**
+         * Ce qui doit survivre à une rotation : la série de mots, le mot en
+         * cours avec ses lettres déjà placées, et le score (v23.0.0, repris de
+         * LuxKeyb 34.1.0). Même raison que pour les Mots Mêlés, voir
+         * [WordSearchFragment.Partie].
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var currentWord: String = ""
+            var scrambledLetters: List<Char> = listOf()
+            val currentAnswer = mutableListOf<Char?>()
+            val selectedPositions = mutableListOf<Int>()
+            var gameWords: List<String> = listOf()
+            var currentWordIndex = 0
+            var wordsCorrect = 0
+            var score = 0
+            var difficulty = com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty.NORMAL
+            val gagnes = mutableListOf<String>()
+            val neuves = mutableSetOf<String>()
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var currentWord: String
+            get() = memoire.currentWord
+            set(valeur) { memoire.currentWord = valeur }
+        private var scrambledLetters: List<Char>
+            get() = memoire.scrambledLetters
+            set(valeur) { memoire.scrambledLetters = valeur }
+        private val currentAnswer get() = memoire.currentAnswer
+        private val selectedPositions get() = memoire.selectedPositions
+        private var gameWords: List<String>
+            get() = memoire.gameWords
+            set(valeur) { memoire.gameWords = valeur }
+        private var currentWordIndex: Int
+            get() = memoire.currentWordIndex
+            set(valeur) { memoire.currentWordIndex = valeur }
+        private var wordsCorrect: Int
+            get() = memoire.wordsCorrect
+            set(valeur) { memoire.wordsCorrect = valeur }
+        private var score: Int
+            get() = memoire.score
+            set(valeur) { memoire.score = valeur }
 
         /** Ce que la manche a versé au carnet, et ce qui y était neuf. */
-        private val gagnes = mutableListOf<String>()
-        private val neuves = mutableSetOf<String>()
+        private val gagnes get() = memoire.gagnes
+        private val neuves get() = memoire.neuves
         private var pochette: View? = null
-        private var difficulty = com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty.NORMAL
+        private var difficulty: com.example.kreyolkeyboard.wordscramble.ScrambleDifficulty
+            get() = memoire.difficulty
+            set(valeur) { memoire.difficulty = valeur }
         
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -5458,7 +5927,14 @@ class SettingsActivity : AppCompatActivity() {
                     // ce post() peut s'exécuter après que l'utilisateur a changé
                     // d'onglet, auquel cas le fragment n'est plus attaché.
                     if (isAdded) {
-                        startNewGame()
+                        if (gameWords.isEmpty()) {
+                            startNewGame()
+                        } else {
+                            // Après une rotation : le même mot, avec les
+                            // lettres déjà placées.
+                            progressBar.max = gameWords.size
+                            if (currentWordIndex < gameWords.size) afficherMot()
+                        }
                     }
                 }
             }
@@ -5520,7 +5996,16 @@ class SettingsActivity : AppCompatActivity() {
             } else {
                 scrambledLetters = allScrambledLetters
             }
-            
+
+            afficherMot()
+        }
+
+        /**
+         * Dessine le mot en cours tel que la partie le tient : lettres mêlées,
+         * lettres déjà placées, score. Séparé de [loadNextWord] pour qu'une
+         * rotation redessine le même mot au lieu d'en tirer un autre.
+         */
+        private fun afficherMot() {
             scrambledAdapter = com.example.kreyolkeyboard.wordscramble.ScrambledLettersAdapter(requireContext(), scrambledLetters)
             answerAdapter = com.example.kreyolkeyboard.wordscramble.AnswerLettersAdapter(requireContext(), currentAnswer)
             
@@ -5539,6 +6024,8 @@ class SettingsActivity : AppCompatActivity() {
             tvWordNumber.text = "Mot ${currentWordIndex + 1}/${gameWords.size}"
             tvScore.text = "Score: $score"
             progressBar.progress = currentWordIndex
+            selectedPositions.forEach { scrambledAdapter?.markAsSelected(it) }
+            btnValidate.isEnabled = currentAnswer.isNotEmpty() && currentAnswer.all { it != null }
         }
 
         
@@ -5720,12 +6207,37 @@ class SettingsActivity : AppCompatActivity() {
         private lateinit var tvAttempts: TextView
         private lateinit var legendContainer: LinearLayout
 
-        private var targetWord: String = ""
-        private var currentAttempt = 0
+        /**
+         * Ce qui doit survivre à une rotation : le mot à trouver, les essais
+         * déjà joués et le mot en cours de frappe (v23.0.0, repris de LuxKeyb
+         * 34.1.0 et 34.2.0). Même raison que pour les Mots Mêlés, voir
+         * [WordSearchFragment.Partie].
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var targetWord: String = ""
+            var currentAttempt = 0
+            var gameOver = false
+            val rows = mutableListOf<MoKarenajRow>()
+            val letterBestState = mutableMapOf<Char, LetterState>()
+            var saisie: String = ""
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var targetWord: String
+            get() = memoire.targetWord
+            set(valeur) { memoire.targetWord = valeur }
+        private var currentAttempt: Int
+            get() = memoire.currentAttempt
+            set(valeur) { memoire.currentAttempt = valeur }
         private var pochette: View? = null
-        private var gameOver = false
-        private val rows = mutableListOf<MoKarenajRow>()
-        private val letterBestState = mutableMapOf<Char, LetterState>()
+        private var gameOver: Boolean
+            get() = memoire.gameOver
+            set(valeur) { memoire.gameOver = valeur }
+        private val rows get() = memoire.rows
+        private val letterBestState get() = memoire.letterBestState
 
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -5870,8 +6382,13 @@ class SettingsActivity : AppCompatActivity() {
                             setSingleLine(true)
                             isAllCaps = true // après setSingleLine() : sinon la transformation majuscules est écrasée
                             imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
-                            setOnEditorActionListener { _, actionId, _ ->
-                                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                            // Entrée d'un clavier physique valide aussi : elle arrive
+                            // sans action, en simple touche.
+                            setOnEditorActionListener { _, actionId, event ->
+                                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE ||
+                                    (event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
+                                        event.action == android.view.KeyEvent.ACTION_DOWN)
+                                ) {
                                     submitGuess()
                                     true
                                 } else false
@@ -5953,7 +6470,7 @@ class SettingsActivity : AppCompatActivity() {
                     // Même précaution que les autres jeux : si l'utilisateur a déjà
                     // changé d'onglet, le fragment n'est plus attaché.
                     if (isAdded) {
-                        startNewGame()
+                        if (targetWord.isEmpty()) startNewGame() else reprendre()
                     }
                 }
             }
@@ -6007,11 +6524,23 @@ class SettingsActivity : AppCompatActivity() {
                 )
             }
             renderBoard()
+            memoire.saisie = ""
             editGuess.setText("")
             editGuess.isEnabled = true
             btnSubmit.isEnabled = true
             tvAttempts.text = "Essai ${currentAttempt + 1}/${MoKarenajData.MAX_ATTEMPTS}"
             legendContainer.removeAllViews()
+        }
+
+        /** Redessine la partie qu'une rotation a laissée en mémoire. */
+        private fun reprendre() {
+            renderBoard()
+            dessinerLegende()
+            editGuess.setText(memoire.saisie)
+            editGuess.setSelection(memoire.saisie.length)
+            editGuess.isEnabled = !gameOver
+            btnSubmit.isEnabled = !gameOver
+            tvAttempts.text = "Essai ${minOf(currentAttempt + 1, MoKarenajData.MAX_ATTEMPTS)}/${MoKarenajData.MAX_ATTEMPTS}"
         }
 
         private fun submitGuess() {
@@ -6052,19 +6581,14 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Toast.setGravity() est ignoré depuis Android 11 : ancré en haut via Snackbar
-        // pour ne pas se faire masquer par le clavier virtuel (même piste que WordSearchFragment).
+        // Toast.setGravity() est ignoré depuis Android 11 : ancré en haut par un
+        // bandeau pour ne pas se faire masquer par le clavier virtuel (même piste
+        // que WordSearchFragment).
         private fun showTopMessage(message: String) {
-            Snackbar.make(requireView(), message, Snackbar.LENGTH_SHORT).apply {
-                (view.layoutParams as? FrameLayout.LayoutParams)?.let {
-                    it.gravity = Gravity.TOP
-                    view.layoutParams = it
-                }
-            }.show()
+            bandeauEnHaut(requireView(), message, longue = false)
         }
 
         private fun updateLegend(guess: String, states: List<LetterState>) {
-            val activity = requireActivity()
             guess.forEachIndexed { index, letter ->
                 val newState = states[index]
                 val existing = letterBestState[letter]
@@ -6072,7 +6596,11 @@ class SettingsActivity : AppCompatActivity() {
                     letterBestState[letter] = newState
                 }
             }
+            dessinerLegende()
+        }
 
+        private fun dessinerLegende() {
+            val activity = requireActivity()
             legendContainer.removeAllViews()
             letterBestState.entries.sortedBy { it.key }.forEach { (letter, state) ->
                 val chip = TextView(activity).apply {
@@ -6150,6 +6678,8 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         override fun onDestroyView() {
+            // Le mot en cours de frappe, pour le retrouver après une rotation.
+            if (::editGuess.isInitialized) memoire.saisie = editGuess.text.toString()
             super.onDestroyView()
             enleverPochette()
             rootView = null
@@ -6175,16 +6705,48 @@ class SettingsActivity : AppCompatActivity() {
 
         private val optionButtons = mutableListOf<Button>()
 
-        private var round: List<ClozeQuestion> = emptyList()
-        private var questionIndex = 0
-        private var score = 0
-        private var answered = false
+        /**
+         * Ce qui doit survivre à une rotation : la manche, la question en
+         * cours, le score et la réponse déjà donnée (v23.0.0, repris de
+         * LuxKeyb 34.1.0). Même raison que pour les Mots Mêlés, voir
+         * [WordSearchFragment.Partie].
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var round: List<ClozeQuestion> = emptyList()
+            var questionIndex = 0
+            var score = 0
+            var answered = false
+            /** La proposition touchée à la question en cours, -1 avant. */
+            var choisi = -1
+            var difficulty = ClozeDifficulty.NORMALE
+            val gagnes = mutableListOf<String>()
+            val neuves = mutableSetOf<String>()
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var round: List<ClozeQuestion>
+            get() = memoire.round
+            set(valeur) { memoire.round = valeur }
+        private var questionIndex: Int
+            get() = memoire.questionIndex
+            set(valeur) { memoire.questionIndex = valeur }
+        private var score: Int
+            get() = memoire.score
+            set(valeur) { memoire.score = valeur }
+        private var answered: Boolean
+            get() = memoire.answered
+            set(valeur) { memoire.answered = valeur }
 
         /** Ce que la manche a versé au carnet, et ce qui y était neuf. */
-        private val gagnes = mutableListOf<String>()
-        private val neuves = mutableSetOf<String>()
+        private val gagnes get() = memoire.gagnes
+        private val neuves get() = memoire.neuves
         private var pochette: View? = null
-        private var difficulty = ClozeDifficulty.NORMALE
+        private var difficulty: ClozeDifficulty
+            get() = memoire.difficulty
+            set(valeur) { memoire.difficulty = valeur }
 
         private val couleurNeutre = Color.parseColor("#FF8C00")
         private val couleurJuste = Color.parseColor("#4CAF50")
@@ -6459,7 +7021,7 @@ class SettingsActivity : AppCompatActivity() {
                     // Même précaution que les autres jeux : ce post() peut
                     // s'exécuter après un changement d'onglet.
                     if (isAdded) {
-                        startNewRound()
+                        if (round.isEmpty()) startNewRound() else reprendre()
                     }
                 }
             }
@@ -6488,6 +7050,17 @@ class SettingsActivity : AppCompatActivity() {
             renderQuestion()
         }
 
+        /** Redessine la manche qu'une rotation a laissée en mémoire. */
+        private fun reprendre() {
+            tvScore.text = "$score / ${round.size}"
+            progressBar.max = maxOf(1, round.size)
+            progressBar.progress = questionIndex + (if (answered) 1 else 0)
+            highlightDifficulty()
+            val choisi = memoire.choisi
+            renderQuestion()
+            if (choisi >= 0) montrerReponse(choisi)
+        }
+
         private fun highlightDifficulty() {
             for (i in 0 until difficultyRow.childCount) {
                 val bouton = difficultyRow.getChildAt(i) as Button
@@ -6514,6 +7087,7 @@ class SettingsActivity : AppCompatActivity() {
         private fun renderQuestion() {
             val question = round[questionIndex]
             answered = false
+            memoire.choisi = -1
 
             tvProgress.text = "Question ${questionIndex + 1} / ${round.size}"
             tvSource.text = question.source
@@ -6573,14 +7147,24 @@ class SettingsActivity : AppCompatActivity() {
             if (answered || round.isEmpty()) return
             val question = round[questionIndex]
             val choix = question.options.getOrNull(position) ?: return
-            answered = true
-
-            val juste = choix == question.answer
-            if (juste) {
+            if (choix == question.answer) {
                 score++
                 tvScore.text = "$score / ${round.size}"
                 encarter(question.answer)
             }
+            montrerReponse(position)
+        }
+
+        /**
+         * Fige les propositions et révèle la phrase, après un choix. Séparé du
+         * décompte des points pour qu'une rotation le redessine sans les
+         * compter deux fois.
+         */
+        private fun montrerReponse(position: Int) {
+            val question = round[questionIndex]
+            val juste = question.options.getOrNull(position) == question.answer
+            answered = true
+            memoire.choisi = position
 
             // Toutes les propositions se figent : la bonne en vert, celle qu'on
             // a touchée en rouge si elle était fausse. Voir la bonne réponse
@@ -6711,7 +7295,7 @@ class SettingsActivity : AppCompatActivity() {
      *   le pavé ne bouge jamais. Les deux boutons destructifs sont à l'autre
      *   bout du défilement, sous la liste des définitions.
      */
-    class CrosswordFragment : Fragment() {
+    class CrosswordFragment : Fragment(), JeuAuClavier {
 
         private companion object {
             /**
@@ -6745,8 +7329,32 @@ class SettingsActivity : AppCompatActivity() {
         private lateinit var conteneurVertical: LinearLayout
         private lateinit var ligneDifficulte: LinearLayout
 
-        private var session: CrosswordSession? = null
-        private var difficulte = CrosswordDifficulty.NORMALE
+        /**
+         * Ce qui doit survivre à une rotation : la partie, pas l'écran
+         * (v23.0.0, repris de LuxKeyb 34.1.0).
+         *
+         * Tourner le téléphone recrée tout l'écran, et la grille en cours
+         * repartait de zéro avec ses mots déjà trouvés. Le ViewModel survit à
+         * la recréation ; il disparaît avec le jeu quand on le ferme.
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var session: CrosswordSession? = null
+            var difficulte = CrosswordDifficulty.NORMALE
+            val resolus = mutableSetOf<Int>()
+            val cartesNeuves = mutableSetOf<Int>()
+            var solutionAffichee = false
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var session: CrosswordSession?
+            get() = memoire.session
+            set(valeur) { memoire.session = valeur }
+        private var difficulte: CrosswordDifficulty
+            get() = memoire.difficulte
+            set(valeur) { memoire.difficulte = valeur }
 
         /** Fond de chaque case jouable, indexé par ligne × largeur + colonne. */
         private val fondsCase = mutableMapOf<Int, GradientDrawable>()
@@ -6754,7 +7362,7 @@ class SettingsActivity : AppCompatActivity() {
         private val lignesDefinition = mutableMapOf<Int, TextView>()
 
         /** Mots déjà trouvés, pour ne féliciter qu'une fois. */
-        private val resolus = mutableSetOf<Int>()
+        private val resolus get() = memoire.resolus
 
         /**
          * Vrai dès que « Solution » a rempli la grille.
@@ -6763,10 +7371,12 @@ class SettingsActivity : AppCompatActivity() {
          * une solution, [resolus] contient tous les mots sans que le joueur en
          * ait trouvé un seul, et il n'a rien à perdre.
          */
-        private var solutionAffichee = false
+        private var solutionAffichee: Boolean
+            get() = memoire.solutionAffichee
+            set(valeur) { memoire.solutionAffichee = valeur }
 
         /** Emplacements dont la carte était neuve, pour le bilan de la pochette. */
-        private val cartesNeuves = mutableSetOf<Int>()
+        private val cartesNeuves get() = memoire.cartesNeuves
         private var pochette: View? = null
 
         /** Dimension en pixels, depuis une valeur en dp. Voir [HAUTEUR_TOUCHE_DP]. */
@@ -7080,6 +7690,17 @@ class SettingsActivity : AppCompatActivity() {
                         })
                     }
                     addView(carteRegles)
+
+                    // Tablette couchée : la définition et la grille à gauche,
+                    // les listes et les boutons à droite ; le pavé reste
+                    // épinglé dessous (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(entete, ligneDifficulte),
+                            aGauche = listOf(carteDefinition, conteneurGrille)
+                        )
+                    }
                 }
 
                 addView(colonne)
@@ -7117,7 +7738,19 @@ class SettingsActivity : AppCompatActivity() {
                 post {
                     // Même précaution que les autres jeux : ce post() peut
                     // s'exécuter après un changement d'onglet.
-                    if (isAdded) nouvelleGrille()
+                    if (isAdded) {
+                        val enCours = session
+                        if (enCours == null) {
+                            nouvelleGrille()
+                        } else {
+                            // Après une rotation : la même grille, ses lettres
+                            // et ses mots trouvés, redessinée pour cet écran.
+                            surlignerDifficulte()
+                            construireGrille(activity, enCours.grid)
+                            construireDefinitions(activity, enCours.grid)
+                            rafraichir()
+                        }
+                    }
                 }
             }
 
@@ -7132,6 +7765,37 @@ class SettingsActivity : AppCompatActivity() {
          * [CrosswordData.LETTRES] pour ce que cette disposition reprend au
          * clavier et les deux points où elle s'en écarte.
          */
+        /**
+         * Un clavier physique écrit dans la grille comme le pavé (v23.0.0,
+         * repris de LuxKeyb 34.2.0). Seules les lettres du pavé passent : une
+         * lettre que la grille ne peut pas porter ne doit rien écrire.
+         */
+        override fun surToucheClavier(event: android.view.KeyEvent): Boolean {
+            if (event.action != android.view.KeyEvent.ACTION_DOWN) return false
+            if (event.keyCode == android.view.KeyEvent.KEYCODE_DEL) {
+                session?.effacer()
+                apresSaisie()
+                return true
+            }
+            val code = event.unicodeChar
+            if (code == 0 || code and android.view.KeyCharacterMap.COMBINING_ACCENT != 0) return false
+            val lettre = code.toChar().uppercaseChar()
+            if (CrosswordData.LETTRES.none { lettre in it }) return false
+            session?.ecrire(lettre)
+            apresSaisie()
+            return true
+        }
+
+        override fun onPause() {
+            (activity as? SettingsActivity)?.let { if (it.jeuAuClavier === this) it.jeuAuClavier = null }
+            super.onPause()
+        }
+
+        override fun onResume() {
+            super.onResume()
+            (activity as? SettingsActivity)?.jeuAuClavier = this
+        }
+
         private fun construirePave(activity: SettingsActivity) {
             CrosswordData.LETTRES.forEachIndexed { rang, rangee ->
                 val ligne = LinearLayout(activity).apply {
@@ -7304,7 +7968,8 @@ class SettingsActivity : AppCompatActivity() {
             lettresCase.clear()
 
             val densite = resources.displayMetrics.density
-            val disponible = resources.displayMetrics.widthPixels - (48 * 2)
+            val disponible = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (DeuxColonnes.actives(activity)) DeuxColonnes.PART_GRILLE else 1f)).toInt()
             val cote = minOf(disponible / grille.width, (44 * densite).toInt())
 
             for (r in 0 until grille.height) {
@@ -7611,7 +8276,6 @@ class SettingsActivity : AppCompatActivity() {
             fondsCase.clear()
             lettresCase.clear()
             lignesDefinition.clear()
-            session = null
             rootView = null
         }
     }
@@ -7699,7 +8363,7 @@ class SettingsActivity : AppCompatActivity() {
             grilleChoix = construireGrilleChoix(activity).also { colonne.addView(it) }
 
             conteneurJeu = FrameLayout(activity).apply {
-                id = View.generateViewId()
+                id = R.id.conteneur_jeu
                 visibility = View.GONE
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -7714,6 +8378,12 @@ class SettingsActivity : AppCompatActivity() {
             prechargerLesGloses(activity)
 
             rootView = colonne
+            // Après une rotation, on rouvre le jeu qui était ouvert, et le
+            // même : le système l'a restauré dans son cadre, avec sa partie.
+            activity.jeuOuvert.takeIf { it in jeux.indices }?.let { i ->
+                val restaure = childFragmentManager.findFragmentById(R.id.conteneur_jeu)
+                if (restaure != null) ouvrirLeJeu(jeux[i], restaure) else ouvrirLeJeu(jeux[i])
+            }
             return colonne
         }
 
@@ -7787,8 +8457,11 @@ class SettingsActivity : AppCompatActivity() {
             // aurait poussé les derniers jeux hors de l'écran, là où on ne les
             // découvre plus. Une ligne incomplète (le nombre de jeux est
             // impair) reçoit une cale de même poids, faute de quoi sa carte
-            // s'étirerait sur toute la largeur.
-            jeux.chunked(2).forEach { paire ->
+            // s'étirerait sur toute la largeur. Quatre par ligne sur une
+            // tablette couchée : les sept jeux y tiennent alors sur un écran,
+            // au lieu de cartes de 50 cm de large qu'il fallait faire défiler.
+            val parLigne = if (DeuxColonnes.actives(activity)) 4 else 2
+            jeux.chunked(parLigne).forEach { paire ->
                 colonne.addView(LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(
@@ -7796,9 +8469,9 @@ class SettingsActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply { bottomMargin = 16 }
                     paire.forEachIndexed { rang, jeu ->
-                        addView(carteJeu(activity, jeu, marginDroite = rang == 0))
+                        addView(carteJeu(activity, jeu, marginDroite = rang < parLigne - 1))
                     }
-                    if (paire.size == 1) {
+                    repeat(parLigne - paire.size) {
                         addView(View(activity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
@@ -7953,7 +8626,7 @@ class SettingsActivity : AppCompatActivity() {
                     // collection se lit d'un coup d'œil comme une carte de
                     // progression, sans compter ni classer.
                     text = jeux.joinToString(" ") { it.emoji } +
-                        "   ${jeux.size}/${JeuCarte.values().size} jeux"
+                        "   ${jeux.size}/${JeuCarte.JEUX.size} jeux"
                     setTextColor(0xFFE8E0FF.toInt())
                 }
             }
@@ -8022,9 +8695,14 @@ class SettingsActivity : AppCompatActivity() {
             // Sonjé a sa propre carte sur l'accueil : seul un jeu devient
             // « votre dernier jeu »
             if (jeu.nom != JEU_SONJE) (activity as? SettingsActivity)?.retenirDernierJeu(jeu.emoji, jeu.nom)
-            childFragmentManager.beginTransaction()
-                .replace(conteneur.id, fragment)
-                .commit()
+            (activity as? SettingsActivity)?.jeuOuvert = jeux.indexOf(jeu)
+            if (!fragment.isAdded) {
+                childFragmentManager.beginTransaction().apply {
+                    // Un seul jeu à la fois dans le cadre.
+                    childFragmentManager.fragments.forEach { remove(it) }
+                    add(conteneur.id, fragment)
+                }.commit()
+            }
             grilleChoix?.visibility = View.GONE
             conteneur.visibility = View.VISIBLE
             barreRetour?.visibility = View.VISIBLE
@@ -8033,6 +8711,7 @@ class SettingsActivity : AppCompatActivity() {
 
         private fun fermerLeJeu() {
             val conteneur = conteneurJeu ?: return
+            (activity as? SettingsActivity)?.jeuOuvert = -1
             childFragmentManager.findFragmentById(conteneur.id)?.let {
                 childFragmentManager.beginTransaction().remove(it).commit()
             }
@@ -8072,15 +8751,36 @@ class SettingsActivity : AppCompatActivity() {
         private lateinit var conteneurGagnes: LinearLayout
         private lateinit var ligneDifficulte: LinearLayout
 
-        private var session: ChasseCroiseSession? = null
-        private var difficulte = CrosswordDifficulty.NORMALE
+        /**
+         * Ce qui doit survivre à une rotation : la grille, ses mots posés et
+         * gagnés, le décompte des retraits (v23.0.0, repris de LuxKeyb 34.1.0).
+         * Même raison que pour Mokwaré, voir [CrosswordFragment.Partie].
+         */
+        class Partie : androidx.lifecycle.ViewModel() {
+            var session: ChasseCroiseSession? = null
+            var difficulte = CrosswordDifficulty.NORMALE
+            val resolus = mutableSetOf<Int>()
+            val cartesNeuves = mutableSetOf<Int>()
+            var retraits = 0
+        }
+
+        private val memoire by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[Partie::class.java]
+        }
+
+        private var session: ChasseCroiseSession?
+            get() = memoire.session
+            set(valeur) { memoire.session = valeur }
+        private var difficulte: CrosswordDifficulty
+            get() = memoire.difficulte
+            set(valeur) { memoire.difficulte = valeur }
 
         private val fondsCase = mutableMapOf<Int, GradientDrawable>()
         private val lettresCase = mutableMapOf<Int, TextView>()
         private val chipsParMot = mutableMapOf<Int, TextView>()
 
         /** Mots déjà verrouillés, pour ne récompenser qu'une fois. */
-        private val resolus = mutableSetOf<Int>()
+        private val resolus get() = memoire.resolus
 
         /**
          * Lignes de « Ce que vous avez gagné » déjà portées à l'écran : sert à
@@ -8094,7 +8794,9 @@ class SettingsActivity : AppCompatActivity() {
          * gagné ne se reprend plus, donc ceci ne compte que les tâtonnements —
          * c'est la note de fin de grille.
          */
-        private var retraits = 0
+        private var retraits: Int
+            get() = memoire.retraits
+            set(valeur) { memoire.retraits = valeur }
 
         /**
          * Emplacements dont le mot est entré au carnet pour la première fois
@@ -8102,7 +8804,7 @@ class SettingsActivity : AppCompatActivity() {
          * distingue « nouveau » de « revu » dans la liste des sens gagnés, et
          * c'est le seul frisson que la collection ait à offrir.
          */
-        private val cartesNeuves = mutableSetOf<Int>()
+        private val cartesNeuves get() = memoire.cartesNeuves
 
         private val couleurNeutre = Color.parseColor("#00796B")
         private val couleurJuste = Color.parseColor("#4CAF50")
@@ -8400,6 +9102,16 @@ class SettingsActivity : AppCompatActivity() {
                         })
                     }
                     addView(carteRegles)
+
+                    // Tablette couchée : la grille à gauche, la liste des mots
+                    // et les boutons à droite (v23.0.0, repris de LuxKeyb 34.1.0).
+                    if (DeuxColonnes.actives(activity)) {
+                        DeuxColonnes.repartir(
+                            this,
+                            enHaut = listOf(entete, ligneDifficulte),
+                            aGauche = listOf(tvRetour, conteneurGrille)
+                        )
+                    }
                 }
 
                 addView(colonne)
@@ -8407,7 +9119,22 @@ class SettingsActivity : AppCompatActivity() {
                 post {
                     // Même précaution que les autres jeux : ce post() peut
                     // s'exécuter après un changement d'onglet.
-                    if (isAdded) nouvelleGrille()
+                    if (isAdded) {
+                        val enCours = session
+                        if (enCours == null) {
+                            nouvelleGrille()
+                        } else {
+                            // Après une rotation : la même grille, redessinée
+                            // pour cet écran. Les lignes gagnées ne s'animent
+                            // pas une seconde fois.
+                            gagnesAffiches.addAll(resolus)
+                            surlignerDifficulte()
+                            majBoutonCarnet()
+                            construireGrille(activity, enCours.grid)
+                            construireListe(activity, enCours)
+                            rafraichir()
+                        }
+                    }
                 }
             }
 
@@ -8444,7 +9171,7 @@ class SettingsActivity : AppCompatActivity() {
                 tvProgres.text = ""
                 annoncer(
                     "Aucune grille disponible : l'actif " +
-                        "luxemburgish_chassecroise.json manque à l'application.",
+                        "creole_chassecroise.json manque à l'application.",
                     couleurFausse
                 )
                 return
@@ -8485,8 +9212,13 @@ class SettingsActivity : AppCompatActivity() {
             conteneurGrille.clipToPadding = false
 
             val densite = resources.displayMetrics.density
-            val disponible = resources.displayMetrics.widthPixels - (48 * 2)
-            val budgetHauteur = (resources.displayMetrics.heightPixels * 0.38f).toInt()
+            val deuxColonnes = DeuxColonnes.actives(activity)
+            val disponible = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (deuxColonnes) DeuxColonnes.PART_GRILLE else 1f)).toInt()
+            // En deux colonnes, la liste n'est plus sous la grille : elle
+            // reprend la hauteur qu'elle occupait.
+            val budgetHauteur = (resources.displayMetrics.heightPixels *
+                (if (deuxColonnes) DeuxColonnes.PART_HAUTEUR else 0.38f)).toInt()
             val cote = minOf(
                 disponible / grille.width,
                 budgetHauteur / grille.height,
@@ -8560,7 +9292,9 @@ class SettingsActivity : AppCompatActivity() {
 
             val grille = partie.grid
             val densite = resources.displayMetrics.density
-            val largeurDispo = resources.displayMetrics.widthPixels - (48 * 2)
+            // En deux colonnes, la liste n'a que la colonne de droite.
+            val largeurDispo = ((LargeurLecture.largeurEcran(activity) - (48 * 2)) *
+                (if (DeuxColonnes.actives(activity)) 1f - DeuxColonnes.PART_GRILLE else 1f)).toInt()
             val ecart = (8 * densite).toInt()
 
             partie.liste
@@ -9205,7 +9939,6 @@ class SettingsActivity : AppCompatActivity() {
             fondsCase.clear()
             lettresCase.clear()
             chipsParMot.clear()
-            session = null
             rootView = null
         }
 
@@ -9305,6 +10038,26 @@ class SettingsActivity : AppCompatActivity() {
 
         private var rootView: ScrollView? = null
         private lateinit var champRecherche: EditText
+
+        /**
+         * Le panneau de droite où s'ouvre la fiche, sur tablette en paysage
+         * seulement ; ailleurs elle reste une fenêtre ancrée en bas (v23.0.0,
+         * repris de LuxKeyb 34.1.0).
+         *
+         * Côte à côte, on parcourt les résultats sans ouvrir et fermer une
+         * fenêtre à chaque mot : c'est ce que le grand écran apporte à un
+         * dictionnaire.
+         */
+        private var panneauFiche: FrameLayout? = null
+
+        /** La fiche ouverte dans le panneau, pour la retrouver après une rotation. */
+        class FicheOuverte : androidx.lifecycle.ViewModel() {
+            var entree: TranslationDictionary.Entree? = null
+        }
+
+        private val ficheOuverte by lazy {
+            androidx.lifecycle.ViewModelProvider(this)[FicheOuverte::class.java]
+        }
         private lateinit var conteneurResultats: LinearLayout
         private lateinit var tvEtat: TextView
 
@@ -9421,7 +10174,57 @@ class SettingsActivity : AppCompatActivity() {
             rootView = racine
 
             afficherResultats("")
-            return racine
+            if (!DeuxColonnes.actives(activity)) {
+                panneauFiche = null
+                return racine
+            }
+
+            // Tablette en paysage : la liste à gauche, la fiche à droite.
+            val panneau = FrameLayout(activity).apply {
+                setBackgroundColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                )
+            }
+            panneauFiche = panneau
+            val choisie = ficheOuverte.entree
+            if (choisie != null) montrerDansLePanneau(activity, choisie) else inviterAuChoix(activity)
+
+            return LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
+                addView(racine, LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
+                ))
+                addView(panneau)
+            }
+        }
+
+        /** Le panneau vide : il dit à quoi il sert plutôt que de rester blanc. */
+        private fun inviterAuChoix(activity: SettingsActivity) {
+            val panneau = panneauFiche ?: return
+            panneau.removeAllViews()
+            panneau.addView(TextView(activity).apply {
+                text = "Touchez un mot de la liste pour ouvrir sa fiche ici."
+                textSize = 16f
+                gravity = Gravity.CENTER
+                setTextColor(Color.parseColor("#999999"))
+                setLineSpacing(0f, 1.25f)
+                setPadding(48, 48, 48, 48)
+            }, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            ))
+        }
+
+        private fun montrerDansLePanneau(
+            activity: SettingsActivity,
+            entree: TranslationDictionary.Entree
+        ) {
+            val panneau = panneauFiche ?: return
+            ficheOuverte.entree = entree
+            panneau.removeAllViews()
+            panneau.addView(contenuFiche(activity, entree, null))
         }
 
         override fun onResume() {
@@ -9529,27 +10332,43 @@ class SettingsActivity : AppCompatActivity() {
         /**
          * Fiche d'un mot : son sens, sa prononciation, ses exemples, sa source.
          *
-         * Déployée d'emblée et sans position repliée. Une feuille inférieure
-         * s'ouvre par défaut à une hauteur calculée sur l'écran : tant que la
-         * fiche tient dedans on ne voit rien, mais sur un petit écran — ou avec
-         * une police système agrandie, ce qui revient au même — elle s'ouvre en
-         * cachant les boutons, sans que rien n'indique qu'il faut la tirer.
+         * Déployée d'emblée et sans position repliée : une feuille inférieure
+         * repliée cachait les boutons sur un petit écran ou avec une police
+         * système agrandie, sans que rien n'indique qu'il fallait la tirer.
          */
         private fun ouvrirFiche(
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree
         ) {
-            val dialogue = BottomSheetDialog(activity)
+            if (panneauFiche != null) {
+                montrerDansLePanneau(activity, entree)
+                return
+            }
+            // Une Dialog ordinaire ancrée en bas, et non un BottomSheetDialog :
+            // Material y appelle Window.setStatusBarColor et
+            // setNavigationBarColor, obsolètes depuis Android 15, et la Play
+            // Console le signale. Le contenu défile déjà dans un ScrollView, qui
+            // prend la hauteur de l'écran s'il la dépasse : plus de position
+            // repliée à gérer.
+            val dialogue = Dialog(activity)
+            dialogue.requestWindowFeature(Window.FEATURE_NO_TITLE)
             dialogue.setContentView(contenuFiche(activity, entree, dialogue))
-            dialogue.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            dialogue.behavior.skipCollapsed = true
+            dialogue.window?.apply {
+                setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                setGravity(Gravity.BOTTOM)
+                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
             dialogue.show()
         }
 
         private fun contenuFiche(
             activity: SettingsActivity,
             entree: TranslationDictionary.Entree,
-            dialogue: BottomSheetDialog
+            /** `null` quand la fiche est dans le panneau d'une tablette : rien à fermer. */
+            dialogue: Dialog?
         ): View {
             val colonne = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -9658,7 +10477,7 @@ class SettingsActivity : AppCompatActivity() {
                     Color.parseColor("#FF8C00"), Color.WHITE, null
                 ) {
                     copierMot(activity, entree.mot)
-                    dialogue.dismiss()
+                    dialogue?.dismiss()
                 }.apply {
                     (layoutParams as LinearLayout.LayoutParams).bottomMargin = 20
                 })
@@ -9676,12 +10495,22 @@ class SettingsActivity : AppCompatActivity() {
                         Color.parseColor("#B9D6DD")
                     ) {
                         ouvrirLien(activity, url)
-                        dialogue.dismiss()
+                        dialogue?.dismiss()
                     })
                 }
             })
 
-            return ScrollView(activity).apply { addView(colonne) }
+            return ScrollView(activity).apply {
+                addView(colonne)
+                // Affichage bord à bord (Android 15) : la fenêtre passe sous la
+                // barre de navigation, le bas de la fiche doit la contourner.
+                clipToPadding = false
+                ViewCompat.setOnApplyWindowInsetsListener(this) { vue, insets ->
+                    val barres = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    vue.setPadding(0, 0, 0, barres.bottom)
+                    insets
+                }
+            }
         }
 
         /**
@@ -9735,7 +10564,10 @@ class SettingsActivity : AppCompatActivity() {
             val presse = activity.getSystemService(Context.CLIPBOARD_SERVICE)
                     as android.content.ClipboardManager
             presse.setPrimaryClip(ClipData.newPlainText("Dictionnaire", mot))
-            Snackbar.make(requireView(), "« $mot » copié", Snackbar.LENGTH_SHORT).show()
+            // Android 13+ confirme lui-même la copie : un second message ferait doublon.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                Toast.makeText(activity, "« $mot » copié", Toast.LENGTH_SHORT).show()
+            }
         }
 
         private fun ouvrirLien(activity: SettingsActivity, url: String) {
@@ -9752,6 +10584,7 @@ class SettingsActivity : AppCompatActivity() {
             super.onDestroyView()
             rechercheEnAttente?.let { delaiRecherche.removeCallbacks(it) }
             rootView = null
+            panneauFiche = null
         }
     }
 
@@ -9820,12 +10653,20 @@ class SettingsActivity : AppCompatActivity() {
 
             val hote = FrameLayout(activity).apply {
                 id = View.generateViewId()
+                // Le fond des deux pages : en paysage, la bande de l'encoche
+                // est ce fond-là, et une bande blanche longeait le gris.
+                setBackgroundColor(Color.parseColor("#F5F5F5"))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.MATCH_PARENT
                 )
             }
             colonne.addView(hote)
+            // Fenêtre plein écran : bord à bord comme l'activité sous Android 15.
+            BordABord.appliquer(
+                colonne, haut = colonne.getChildAt(0),
+                lateraux = { listOf(colonne.getChildAt(0), colonne.getChildAt(1)) }
+            )
 
             if (savedInstanceState == null) {
                 childFragmentManager.beginTransaction()
@@ -9849,5 +10690,74 @@ class SettingsActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
+    }
+}
+
+/**
+ * Message bref ancré en haut de l'écran, à la place de la Snackbar de Material.
+ *
+ * La bibliothèque Material a été retirée (portage de LuxKeyb 27.0.0) : même
+ * inutilisés, ses composants restaient dans le dex (R8 garde
+ * `MaterialDatePicker` par un layout interne) et y laissaient
+ * `Window.setStatusBarColor` / `setNavigationBarColor`, obsolètes depuis
+ * Android 15, que la Play Console signale. Ce bandeau est une simple vue posée
+ * dans le contenu de l'activité, comme l'était la Snackbar.
+ *
+ * Avec [action], il reste affiché jusqu'à ce qu'on le touche, et le toucher
+ * déclenche [surAction] : c'est l'invitation à installer une mise à jour, qui
+ * ne doit pas s'effacer d'elle-même.
+ */
+internal fun bandeauEnHaut(
+    ancre: View,
+    message: String,
+    longue: Boolean,
+    action: String? = null,
+    surAction: (() -> Unit)? = null
+) {
+    val racine = ancre.rootView.findViewById<ViewGroup>(android.R.id.content) as? FrameLayout ?: return
+    val densite = ancre.resources.displayMetrics.density
+    val marge = (8 * densite).toInt()
+    val bandeau = TextView(ancre.context).apply {
+        text = if (action == null) message else "$message   ·   ${action.uppercase()}"
+        textSize = 14f
+        setTextColor(Color.WHITE)
+        setPadding((16 * densite).toInt(), (14 * densite).toInt(), (16 * densite).toInt(), (14 * densite).toInt())
+        background = GradientDrawable().apply {
+            setColor(Color.parseColor("#323232"))
+            cornerRadius = 4 * densite
+        }
+        elevation = 6 * densite
+        alpha = 0f
+    }
+    // Bord à bord (Android 15+) : le contenu commence sous la barre d'état, le
+    // bandeau doit s'en écarter pour ne pas recouvrir l'heure. Les encarts de la
+    // fenêtre comptent la barre d'état même quand le système a déjà écarté le
+    // contenu (avant Android 15), d'où la soustraction de sa position réelle.
+    val barres = ViewCompat.getRootWindowInsets(ancre)?.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+    )
+    val position = IntArray(2).also { racine.getLocationInWindow(it) }
+    racine.addView(bandeau, FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        Gravity.TOP
+    ).apply {
+        setMargins(
+            marge + maxOf(0, (barres?.left ?: 0) - position[0]),
+            marge + maxOf(0, (barres?.top ?: 0) - position[1]),
+            marge + maxOf(0, (barres?.right ?: 0) - (racine.rootView.width - position[0] - racine.width)),
+            marge
+        )
+    })
+    bandeau.animate().alpha(1f).setDuration(150).start()
+    val retirer = {
+        bandeau.animate().alpha(0f).setDuration(150).withEndAction {
+            racine.removeView(bandeau)
+        }.start()
+    }
+    if (action != null) {
+        bandeau.setOnClickListener { retirer(); surAction?.invoke() }
+    } else {
+        bandeau.postDelayed({ retirer() }, if (longue) 2750L else 1500L)
     }
 }

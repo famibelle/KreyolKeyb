@@ -113,6 +113,13 @@ object KeyFeedback {
     private const val DUREE_IMPULSION_MAX = 80L
     private const val FENETRE_IMPULSION = 55L
 
+    /**
+     * L'impulsion la plus longue d'une révélation de carte, pour l'éclat
+     * d'une très rare. Au-delà de ~120 ms un moteur à balourd ne cogne plus,
+     * il bourdonne.
+     */
+    private const val DUREE_REVELATION_MAX = 110L
+
     // Conservé entre les frappes : le service de son se cherche une fois, pas à
     // chaque touche. Le contexte d'application est utilisé pour ne pas retenir une
     // vue ni la fenêtre de saisie.
@@ -375,6 +382,22 @@ object KeyFeedback {
     }
 
     /**
+     * Retour de l'ouverture d'une popup d'accents par appui long (v23.0.0, repris de LuxKeyb 29.5.0) :
+     * vibration seule, l'effet système des appuis longs.
+     *
+     * Le long-clic natif la jouait de lui-même, en suivant le réglage du
+     * téléphone. Les touches à accents mesurant désormais leur propre délai,
+     * elle passe ici, sous l'interrupteur de vibration de l'application comme
+     * les autres retours.
+     */
+    fun onLongPress(view: View) {
+        val context = view.context
+        if (hapticEnabled ?: KeyboardPreferences.hapticEnabled(context).also { hapticEnabled = it }) {
+            vibrate(view, HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
+
+    /**
      * Retour d'un cran de déplacement du curseur, quand le doigt glisse sur la
      * barre d'espace (v14.0.0) : vibration seule, et jamais de son.
      *
@@ -484,6 +507,69 @@ object KeyFeedback {
         if (hapticEnabled ?: KeyboardPreferences.hapticEnabled(context).also { hapticEnabled = it }) {
             tic(view)
         }
+    }
+
+    /**
+     * Un temps de la révélation d'une carte dans la pochette de fin de jeu
+     * (v37.4.1) : vibration seule, et jamais de son.
+     *
+     * [force] va de 0 (un frémissement) à 1 (l'éclat d'une très rare). La
+     * pochette en compose une partition par palier de rareté ; ici on ne
+     * décide que de la façon de rendre un coup de cette force sur ce
+     * téléphone-là, selon les mêmes niveaux que le relief des cartes.
+     *
+     * Elle passait jusque-là par `performHapticFeedback(CLOCK_TICK / CONFIRM)`
+     * en direct, et restait donc muette sur le Galaxy A21s pour la raison
+     * décrite à [NiveauTactile.IMPULSION] : la très rare elle-même n'y
+     * vibrait pas.
+     *
+     * - [NiveauTactile.COMPOSITION] : `PRIMITIVE_CLICK` à l'échelle de la
+     *   force, et `PRIMITIVE_THUD`, plus sourd et plus lourd, pour les coups
+     *   pleins quand l'actionneur le connaît.
+     * - [NiveauTactile.IMPULSION] : la durée dit la force, de
+     *   [DUREE_IMPULSION] à [DUREE_REVELATION_MAX]. Plus long que le plus haut
+     *   relief d'une carte, parce qu'un éclat n'est pas une marche.
+     * - [NiveauTactile.CANNED] : deux timbres seulement, le tic léger sous
+     *   une demi-force et la confirmation au-dessus.
+     */
+    fun onRevelation(view: View, force: Float) {
+        val context = view.context
+        val active = hapticEnabled
+            ?: KeyboardPreferences.hapticEnabled(context).also { hapticEnabled = it }
+        if (!active) return
+        val f = force.coerceIn(0f, 1f)
+        val fort = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.LONG_PRESS
+        when (niveauTactile(context)) {
+            NiveauTactile.COMPOSITION -> try {
+                vibrerCompose(coupCompose(f))
+            } catch (e: Exception) {
+                Log.d(TAG, "Coup composé refusé: ${e.message}")
+                vibrate(view, if (f < 0.5f) HapticFeedbackConstants.CLOCK_TICK else fort)
+            }
+            NiveauTactile.IMPULSION -> try {
+                val duree = DUREE_IMPULSION + ((DUREE_REVELATION_MAX - DUREE_IMPULSION) * f).roundToInt()
+                vibrerCompose(VibrationEffect.createOneShot(duree, VibrationEffect.DEFAULT_AMPLITUDE))
+            } catch (e: Exception) {
+                Log.d(TAG, "Impulsion refusée: ${e.message}")
+                vibrate(view, if (f < 0.5f) HapticFeedbackConstants.CLOCK_TICK else fort)
+            }
+            NiveauTactile.CANNED ->
+                vibrate(view, if (f < 0.5f) HapticFeedbackConstants.CLOCK_TICK else fort)
+            NiveauTactile.AUCUN -> Unit
+        }
+    }
+
+    /** Le coup composé d'une révélation ; voir [onRevelation]. API 30+, garanti par [sonder]. */
+    private fun coupCompose(force: Float): VibrationEffect {
+        val v = vibreur
+        val sourd = force >= 0.85f && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            v != null && v.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)
+        val primitive = if (sourd) VibrationEffect.Composition.PRIMITIVE_THUD
+        else VibrationEffect.Composition.PRIMITIVE_CLICK
+        return VibrationEffect.startComposition()
+            .addPrimitive(primitive, ECHELLE_MIN + (1f - ECHELLE_MIN) * force)
+            .compose()
     }
 
     /**

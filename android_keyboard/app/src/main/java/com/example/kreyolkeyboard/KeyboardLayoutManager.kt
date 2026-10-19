@@ -18,6 +18,8 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 
 /**
  * Gestionnaire responsable de la création et du stylisme des layouts de clavier
@@ -26,6 +28,26 @@ import androidx.core.content.ContextCompat
 class KeyboardLayoutManager(private val context: Context) {
     
     companion object {
+        /**
+         * Les trois rangées de lettres de la page alphabétique. Elles sont ici et
+         * non dans [createAlphabeticLayout] pour que [VoisinsClavier] calcule les
+         * touches voisines sur la géométrie réellement affichée.
+         */
+        internal val RANGEE_1 = arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
+        internal val RANGEE_2 = arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+        internal val RANGEE_3 = arrayOf("⇧", "w", "x", "c", "v", "b", "n", "'", "⌫")
+
+        /** Largeur relative d'une touche dans sa rangée. */
+        internal fun poidsTouche(key: String): Float = when (key) {
+            " " -> 4.0f      // Barre d'espace plus large
+            // v10.11.4 : 1,5 → 1,25 pour financer l'apostrophe ajoutée en rangée 3
+            // sans rétrécir les lettres sous la largeur des rangées 1 et 2. Ces deux
+            // touches restent les plus larges de leur rangée, ce qui compte : elles
+            // sont aux deux extrémités, là où la visée du pouce est la plus mauvaise.
+            "⇧", "⌫" -> 1.25f
+            else -> 1.0f     // Touches normales
+        }
+
         private const val BUTTON_HEIGHT_DP = 48
         // Sous cette hauteur les touches deviennent difficiles à viser : mieux vaut
         // alors rogner ailleurs que continuer à réduire.
@@ -37,6 +59,51 @@ class KeyboardLayoutManager(private val context: Context) {
         // étant la seule ressource qui manque dans cette orientation, où la largeur
         // laisse au contraire chaque touche deux fois plus large qu'en portrait.
         private const val BUTTON_HEIGHT_LANDSCAPE_DP = BUTTON_MIN_HEIGHT_DP
+        // Sur tablette, la hauteur ne manque dans aucune orientation, et un
+        // doigt y vise des touches nettement plus larges qu'au téléphone : 48 dp
+        // les laissaient deux fois et demie plus larges que hautes en paysage.
+        // Les libellés et les aperçus des coins suivent, étant proportionnels.
+        private const val BUTTON_HEIGHT_TABLET_DP = 56
+        /**
+         * Part de la largeur laissée vide au milieu d'un clavier scindé (v23.0.0,
+         * repris de LuxKeyb 34.2.0) : sur une tablette de 10 pouces couchée,
+         * chaque moitié garde des touches de la largeur de celles d'un
+         * téléphone, et le centre, que les pouces n'atteignent pas, reste libre.
+         */
+        internal const val PART_VIDE_SCINDE = 0.3f
+
+        /**
+         * Une rangée coupée en deux : les touches et la place du vide central, en
+         * poids. La coupure tombe au milieu de la largeur de la rangée ; la touche
+         * qui la chevauche passe à gauche, sauf la barre d'espace, dédoublée pour
+         * qu'il y en ait une sous chaque pouce.
+         */
+        internal fun scinder(keys: Array<String>, poids: (String) -> Float): List<Pair<String?, Float>> {
+            val total = keys.sumOf { poids(it).toDouble() }.toFloat()
+            val vide = total * PART_VIDE_SCINDE / (1f - PART_VIDE_SCINDE)
+            val resultat = mutableListOf<Pair<String?, Float>>()
+            var cumul = 0f
+            var coupe = false
+            for (key in keys) {
+                val w = poids(key)
+                if (!coupe && cumul + w >= total / 2f) {
+                    coupe = true
+                    if (key == " " && cumul < total / 2f) {
+                        val gauche = total / 2f - cumul
+                        resultat += key to gauche
+                        resultat += null to vide
+                        resultat += key to (w - gauche)
+                    } else {
+                        resultat += key to w
+                        resultat += null to vide
+                    }
+                } else {
+                    resultat += key to w
+                }
+                cumul += w
+            }
+            return resultat
+        }
         private const val KEYBOARD_ROW_COUNT = 4
         // Padding vertical du bloc de touches, resserré en paysage pour la même
         // raison. Le service s'en sert pour calculer la place laissée aux rangées,
@@ -122,8 +189,20 @@ class KeyboardLayoutManager(private val context: Context) {
         internal fun cursorStepsFor(deltaPx: Float, stepPx: Float): Int =
             if (stepPx <= 0f) 0 else (deltaPx / stepPx).toInt()
 
+        /**
+         * Vrai en paysage **sur un téléphone** : c'est la hauteur qui y manque,
+         * et tout ce qui s'en sert (touches à 32 dp, une seule rangée de
+         * suggestions, marges resserrées) répond à ce manque. Une tablette
+         * couchée garde 800 dp de haut ; lui appliquer ces économies lui donnait
+         * des touches plates et des aperçus de coin illisibles.
+         */
         fun isLandscape(context: Context): Boolean =
-            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                !isTablet(context)
+
+        /** Tablette : plus petit côté d'au moins 600 dp, la convention d'Android. */
+        fun isTablet(context: Context): Boolean =
+            context.resources.configuration.smallestScreenWidthDp >= 600
 
         fun verticalPaddingDp(context: Context): Int =
             if (isLandscape(context)) VERTICAL_PADDING_LANDSCAPE_DP else VERTICAL_PADDING_DP
@@ -175,6 +254,17 @@ class KeyboardLayoutManager(private val context: Context) {
     private val spaceLongPressHandler = Handler(Looper.getMainLooper())
     private var spaceLongPressRunnable: Runnable? = null
     private var isSpaceLongPressTriggered = false
+
+    // Appui long des touches à accents (v23.0.0, repris de LuxKeyb 29.5.0). Un seul délai, compté depuis
+    // l'instant où le doigt se pose et réglable (KeyboardPreferences), au lieu
+    // du long-clic natif d'Android suivi des 500 ms d'AccentHandler : près
+    // d'une seconde avant de voir « ò », jugé trop long par les utilisateurs.
+    // Un seul appui long à la fois : une autre touche posée entre-temps (frappe
+    // roulée) annule celui qui était en attente.
+    private val appuiLongHandler = Handler(Looper.getMainLooper())
+    private var appuiLongEnAttente: Runnable? = null
+    private var appuiLongVue: View? = null
+    private var appuiLongDeclenche = false
 
     // Glissement horizontal sur la barre d'espace (v14.0.0). L'ancre n'est pas
     // le point de départ du geste mais le dernier cran franchi : elle avance
@@ -228,7 +318,11 @@ class KeyboardLayoutManager(private val context: Context) {
      */
     private fun keyHeightPx(): Int {
         val nominal = dpToPx(
-            if (isLandscape(context)) BUTTON_HEIGHT_LANDSCAPE_DP else BUTTON_HEIGHT_DP
+            when {
+                isLandscape(context) -> BUTTON_HEIGHT_LANDSCAPE_DP
+                isTablet(context) -> BUTTON_HEIGHT_TABLET_DP
+                else -> BUTTON_HEIGHT_DP
+            }
         )
         if (availableRowsHeightPx <= 0) return nominal
         val verticalMargins = dpToPx(BUTTON_MARGIN_DP) * 2
@@ -369,8 +463,8 @@ class KeyboardLayoutManager(private val context: Context) {
         // l'indice de coin de la touche), l'échange se fait contre un appui long sur
         // un caractère rare. Même raisonnement que é et è, dédiés en rangée 4 où ils
         // ne coûtent aucune largeur aux lettres.
-        val row1 = arrayOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
-        val row2 = arrayOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+        val row1 = RANGEE_1
+        val row2 = RANGEE_2
         // v10.11.4 : l'apostrophe redevient une touche visible, ici et non en
         // rangée 4. Cette rangée est celle qui peut le mieux se le permettre : ses
         // touches sont les plus larges du clavier (37,0 dp mesurés, contre 32,4 en
@@ -391,7 +485,7 @@ class KeyboardLayoutManager(private val context: Context) {
         //
         // Elle reste sous l'appui long de "," (AccentHandler), comme é et è restent
         // sous celui de "e" malgré leur touche dédiée.
-        val row3 = arrayOf("⇧", "w", "x", "c", "v", "b", "n", "'", "⌫")
+        val row3 = RANGEE_3
         // v8.6.0 : "-" ajouté en touche dédiée (21,7% des mots créoles en
         // contiennent un, fréquence cumulée supérieure à celle de "ò")
         // v9.1.0 : "'" retiré (0 occurrence dans creole_dict.json, contre 1088
@@ -490,13 +584,23 @@ class KeyboardLayoutManager(private val context: Context) {
             }
         }
         
-        val totalWeight = calculateRowWeight(keys)
-        
-        for (key in keys) {
+        // Sur une tablette couchée, réglage allumé : un vide au milieu, sans
+        // touche, qui renvoie chaque moitié contre son bord.
+        val touches: List<Pair<String?, Float>> =
+            if (rangeesScindees()) scinder(keys, ::poidsTouche) else keys.map { it to getKeyWeight(it) }
+        val totalWeight = touches.sumOf { it.second.toDouble() }.toFloat()
+
+        for ((key, weight) in touches) {
+            if (key == null) {
+                rowLayout.addView(View(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, 1, weight)
+                })
+                continue
+            }
             // createKeyButton() alimente déjà keyboardButtons avec la touche
             // interactive brute (avant l'éventuel enrobage des indices de coin) ;
             // un second ajout ici dupliquait chaque touche dans la liste.
-            val button = createKeyButton(key, totalWeight)
+            val button = createKeyButton(key, totalWeight, weight)
             rowLayout.addView(button)
         }
         
@@ -506,7 +610,7 @@ class KeyboardLayoutManager(private val context: Context) {
     /**
      * Crée un bouton de touche individuel (Button ou ImageButton selon le type)
      */
-    private fun createKeyButton(key: String, totalWeight: Float): View {
+    private fun createKeyButton(key: String, totalWeight: Float, poids: Float = getKeyWeight(key)): View {
         // Déterminer si on utilise une icône Material Design
         val useIcon = key in listOf("⌫", "⏎", "⇧")
         
@@ -570,7 +674,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 tag = key
                 
                 // Calcul du poids selon le type de touche
-                val weight = getKeyWeight(key)
+                val weight = poids
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     keyHeightPx(),
@@ -621,7 +725,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 val widthRatio = if (key == "EMOJI") EMOJI_WIDTH_RATIO else LABEL_WIDTH_RATIO
                 val taillePx = minOf(
                     keyHeightPx() * labelRatio,
-                    keyWidthPx(getKeyWeight(key), totalWeight) * widthRatio
+                    keyWidthPx(poids, totalWeight) * widthRatio
                 )
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, taillePx)
                 // Même raison que pour les puces de suggestion : la réserve de
@@ -647,7 +751,7 @@ class KeyboardLayoutManager(private val context: Context) {
                 minWidth = 0
                 
                 // Calcul du poids selon le type de touche
-                val weight = getKeyWeight(key)
+                val weight = poids
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     keyHeightPx(),
@@ -940,6 +1044,24 @@ class KeyboardLayoutManager(private val context: Context) {
             // le clic natif se déclenchait aussi) → double espace inséré à chaque frappe.
             button.setOnLongClickListener(null) // Désactiver le listener par défaut
             setupSpaceLongPress(button, key)
+        } else if (accentHandler?.hasAccents(key) == true) {
+            button.setOnClickListener {
+                interactionListener?.onKeyPress(key)
+            }
+            // Pas de long-clic natif : son délai, fixé par le système, s'ajoutait
+            // au nôtre. Le minuteur vit dans addAccentKeyTouch.
+            button.isLongClickable = false
+            addAccentKeyTouch(button, key)
+            // Sans long-clic natif, TalkBack perdrait son action « appui long »
+            // sur ces touches : elle est redéclarée ici, et ouvre la popup.
+            ViewCompat.replaceAccessibilityAction(
+                button,
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
+                "Autres caractères"
+            ) { vue, _ ->
+                interactionListener?.onLongPress(key, vue)
+                true
+            }
         } else {
             button.setOnClickListener {
                 interactionListener?.onKeyPress(key)
@@ -976,6 +1098,7 @@ class KeyboardLayoutManager(private val context: Context) {
         button.setOnTouchListener { view, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
                     isSpaceLongPressTriggered = false
                     isSpaceCursorMode = false
                     spaceCursorAnchorX = event.x
@@ -1084,6 +1207,8 @@ class KeyboardLayoutManager(private val context: Context) {
         view.setOnTouchListener { v, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
+
                     // Animation d'appui (100ms comme l'original)
                     v.animate()
                         .scaleX(0.95f)
@@ -1112,6 +1237,93 @@ class KeyboardLayoutManager(private val context: Context) {
         }
     }
     
+    /**
+     * Gestes d'une touche à accents : appui court, ou appui long qui ouvre la
+     * popup d'accents (v23.0.0, repris de LuxKeyb 29.5.0).
+     *
+     * Le minuteur part sur ACTION_DOWN, avec le délai choisi dans les réglages
+     * (0,3 s par défaut). Il est abandonné si le doigt se lève avant, s'il sort
+     * de la touche, ou si une autre touche est posée entre-temps.
+     *
+     * Quand la popup s'est ouverte, le relâchement ne doit pas écrire en plus
+     * la lettre de base. Le long-clic natif s'en chargeait en consommant le
+     * geste ; ici, le relâchement est converti en ACTION_CANCEL pour la touche,
+     * qui perd son état enfoncé sans déclencher son clic.
+     */
+    private fun addAccentKeyTouch(view: View, key: String) {
+        val slopPx = android.view.ViewConfiguration.get(context).scaledTouchSlop
+
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    annulerAppuiLongEnAttente()
+
+                    v.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(100)
+                        .start()
+
+                    KeyFeedback.onKeyPress(v, key)
+
+                    appuiLongVue = v
+                    appuiLongDeclenche = false
+                    val tache = Runnable {
+                        appuiLongEnAttente = null
+                        appuiLongDeclenche = true
+                        KeyFeedback.onLongPress(v)
+                        interactionListener?.onLongPress(key, v)
+                    }
+                    appuiLongEnAttente = tache
+                    appuiLongHandler.postDelayed(
+                        tache, KeyboardPreferences.delaiAppuiLong(context).ms
+                    )
+                    false
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    // Même tolérance que le long-clic natif : la touche, plus la
+                    // marge sous laquelle Android tient un doigt pour immobile.
+                    val horsDeLaTouche = event.x < -slopPx || event.y < -slopPx ||
+                            event.x > v.width + slopPx || event.y > v.height + slopPx
+                    if (appuiLongVue === v && horsDeLaTouche) {
+                        annulerAppuiLongEnAttente()
+                    }
+                    false
+                }
+                android.view.MotionEvent.ACTION_UP,
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    releaseKeyScale(v)
+
+                    val popupOuverte = appuiLongVue === v && appuiLongDeclenche
+                    if (appuiLongVue === v) {
+                        annulerAppuiLongEnAttente()
+                        appuiLongVue = null
+                        appuiLongDeclenche = false
+                    }
+                    interactionListener?.onKeyRelease()
+
+                    if (popupOuverte && event.action == android.view.MotionEvent.ACTION_UP) {
+                        val annulation = android.view.MotionEvent.obtain(event).apply {
+                            action = android.view.MotionEvent.ACTION_CANCEL
+                        }
+                        v.onTouchEvent(annulation)
+                        annulation.recycle()
+                        true
+                    } else {
+                        false
+                    }
+                }
+                else -> false
+            }
+        }
+    }
+
+    /** Abandonne l'appui long en attente, sans toucher à une popup déjà ouverte. */
+    private fun annulerAppuiLongEnAttente() {
+        appuiLongEnAttente?.let { appuiLongHandler.removeCallbacks(it) }
+        appuiLongEnAttente = null
+    }
+
     /**
      * Met à jour l'affichage du clavier selon l'état actuel
      */
@@ -1322,6 +1534,8 @@ class KeyboardLayoutManager(private val context: Context) {
      * Nettoie les ressources
      */
     fun cleanup() {
+        annulerAppuiLongEnAttente()
+        appuiLongVue = null
         keyboardButtons.forEach { button ->
             cleanupView(button)
         }
@@ -1355,21 +1569,27 @@ class KeyboardLayoutManager(private val context: Context) {
         }
     }
     
-    private fun getKeyWeight(key: String): Float {
-        return when (key) {
-            " " -> 4.0f      // Barre d'espace plus large
-            // v10.11.4 : 1,5 → 1,25 pour financer l'apostrophe ajoutée en rangée 3
-            // sans rétrécir les lettres sous la largeur des rangées 1 et 2. Ces deux
-            // touches restent les plus larges de leur rangée, ce qui compte : elles
-            // sont aux deux extrémités, là où la visée du pouce est la plus mauvaise.
-            "⇧", "⌫" -> 1.25f
-            else -> 1.0f     // Touches normales
-        }
+    private fun getKeyWeight(key: String): Float = poidsTouche(key)
+
+    /** Le réglage « clavier scindé », tel que lu dans les préférences. */
+    private var scinde = false
+
+    /** Retient le réglage ; `true` quand il change, la vue est alors à refaire. */
+    fun definirScinde(nouveau: Boolean): Boolean {
+        if (nouveau == scinde) return false
+        scinde = nouveau
+        return true
     }
-    
+
+    /** Coupé en deux pour de vrai : réglage allumé, tablette, tenue couchée. */
+    private fun rangeesScindees(): Boolean =
+        scinde && isTablet(context) &&
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     private fun calculateRowWeight(keys: Array<String>): Float {
         return keys.sumOf { getKeyWeight(it).toDouble() }.toFloat()
     }
+
     
     /**
      * Touche brute portée par une vue. Le tag fait foi : le libellé affiché ne

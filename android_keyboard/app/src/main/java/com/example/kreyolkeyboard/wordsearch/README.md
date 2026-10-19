@@ -100,7 +100,7 @@ Le jeu est accessible directement via l'onglet « Mots Mêlés 🎲 » de l'écr
 
 ## Compatibilité
 
-- **Android** : API 21+ (Android 5.0)
+- **Android** : API 24+ (Android 7.0)
 - **Orientation** : Portrait uniquement
 - **Résolution** : Adaptatif 320dp à 1080dp+
 - **Accessibilité** : Compatible TalkBack (à améliorer)

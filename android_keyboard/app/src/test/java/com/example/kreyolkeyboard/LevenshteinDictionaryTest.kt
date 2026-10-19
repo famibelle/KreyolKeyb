@@ -150,6 +150,7 @@ class LevenshteinDictionaryTest {
         val matches = LevenshteinDistance.findClosestMatchesNormalized(
             input = "kreyol",
             dictionary = dictionary,
+            normalizedWords = dictionary.map { normalizer(it.first) },
             normalizer = normalizer,
             maxDistance = 1,
             maxResults = 5

@@ -413,7 +413,7 @@ Les suggestions s'appuient sur les œuvres de :
 | | |
 |---|---|
 | Accroches du projet | « Osez le Kréyòl » et « An kréyòl nou ka palé, an kréyòl nou ka maké » |
-| Plateforme | Android 5.0+ aujourd'hui. L'ambition est de couvrir tous les claviers, iPhone compris : la version iOS est en préparation |
+| Plateforme | Android 7.0+ aujourd'hui. L'ambition est de couvrir tous les claviers, iPhone compris : la version iOS est en préparation |
 | Prix | Gratuit, sans pub, sans achat intégré |
 | Données personnelles | Aucune collecte, fonctionnement 100 % hors ligne |
 | Licence | Open source (MIT), code sur [GitHub](https://github.com/famibelle/KreyolKeyb) |

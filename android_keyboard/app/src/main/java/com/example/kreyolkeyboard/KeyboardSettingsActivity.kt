@@ -60,6 +60,11 @@ class KeyboardSettingsActivity : AppCompatActivity() {
             addView(contenu())
         })
         setContentView(racine)
+        // Bord à bord sous Android 15 : le bandeau bleu passe sous la barre d'état.
+        BordABord.appliquer(
+            racine, haut = racine.getChildAt(0),
+            lateraux = { listOf(racine.getChildAt(0), racine.getChildAt(1)) }
+        )
     }
 
     /** Bandeau bleu avec la flèche de retour, repris de l'écran principal. */
@@ -115,6 +120,46 @@ class KeyboardSettingsActivity : AppCompatActivity() {
                 "« Comme le téléphone » suit le mode sombre du système. Les deux " +
                         "autres positions existent parce que sur plusieurs surcouches ce " +
                         "mode ne descend pas jusqu'aux claviers tiers."
+            ))
+        })
+        addView(espacement())
+
+        // Sur tablette seulement : un téléphone couché n'a pas la largeur d'un
+        // clavier coupé en deux.
+        if (KeyboardLayoutManager.isTablet(this@KeyboardSettingsActivity)) {
+            addView(carte().apply {
+                addView(titreSection("Disposition"))
+                addView(interrupteur(
+                    "Clavier scindé en paysage",
+                    KeyboardPreferences.clavierScinde(this@KeyboardSettingsActivity)
+                ) { actif ->
+                    KeyboardPreferences.setClavierScinde(this@KeyboardSettingsActivity, actif)
+                })
+                addView(explication(
+                    "Sur une tablette tenue à deux mains, les touches se partagent entre " +
+                            "les deux bords, à portée des pouces. Tablettes seulement, tenues couchées."
+                ))
+            })
+            addView(espacement())
+        }
+
+        addView(carte().apply {
+            addView(titreSection("Suggestions"))
+            addView(explication(
+                "Les mots kréyòl sont proposés en vert. À partir de trois " +
+                        "lettres, une seconde rangée en bleu propose aussi des mots français."
+            ))
+            addView(interrupteur(
+                "Propositions en français",
+                KeyboardPreferences.propositionsFrancais(this@KeyboardSettingsActivity)
+            ) { actif ->
+                KeyboardPreferences.setPropositionsFrancais(this@KeyboardSettingsActivity, actif)
+                Log.d(TAG, "Propositions en français : $actif")
+            })
+            addView(explication(
+                "Sans elles, le clavier garde une seule rangée de suggestions et " +
+                        "laisse un peu plus de place à l'écran. Le correcteur " +
+                        "orthographique continue de reconnaître le français."
             ))
         })
         addView(espacement())
@@ -186,6 +231,20 @@ class KeyboardSettingsActivity : AppCompatActivity() {
         addView(espacement())
 
         addView(carte().apply {
+            addView(titreSection("Appui long"))
+            addView(explication(
+                "Le temps qu'il faut maintenir une touche pour ouvrir ses accents " +
+                        "et ses symboles (à sous a, ò sous o, ? sous le point…)."
+            ))
+            addView(choixDelaiAppuiLong())
+            addView(explication(
+                "Si les accents s'ouvrent alors que vous vouliez seulement taper la " +
+                        "lettre, choisissez un délai plus long."
+            ))
+        })
+        addView(espacement())
+
+        addView(carte().apply {
             addView(titreSection("Emojis récents"))
             addView(explication(
                 "Le panneau emoji place en tête les 30 derniers emojis que vous " +
@@ -232,43 +291,68 @@ class KeyboardSettingsActivity : AppCompatActivity() {
      * Un groupe radio et non un interrupteur : trois états, dont un, « comme le
      * téléphone », n'est ni l'un ni l'autre des deux autres et se perdrait dans
      * une bascule à deux positions.
+     */
+    private fun choixTheme(): View = groupeRadio(
+        options = KeyboardTheme.Mode.entries,
+        actuel = KeyboardPreferences.themeMode(this),
+        libelle = { it.libelle }
+    ) { mode ->
+        KeyboardPreferences.setThemeMode(this, mode)
+        Log.d(TAG, "Thème du clavier : ${mode.cle}")
+    }
+
+    /**
+     * Les crans du délai d'appui long (v23.0.0, repris de LuxKeyb 29.5.0), en boutons radio comme le
+     * thème : quatre durées nommées se lisent mieux qu'un curseur, et chacune
+     * se retrouve à l'identique d'un téléphone à l'autre.
+     */
+    private fun choixDelaiAppuiLong(): View = groupeRadio(
+        options = KeyboardPreferences.DelaiAppuiLong.entries,
+        actuel = KeyboardPreferences.delaiAppuiLong(this),
+        libelle = { it.libelle }
+    ) { delai ->
+        KeyboardPreferences.setDelaiAppuiLong(this, delai)
+        Log.d(TAG, "Délai d'appui long : ${delai.ms} ms")
+    }
+
+    /**
+     * Un choix exclusif parmi [options], en boutons radio verticaux.
      *
      * Les couleurs sont posées à la main pour la même raison que sur les
      * interrupteurs voisins : l'état non coché du thème est un gris presque blanc,
      * invisible sur une carte blanche.
      */
-    private fun choixTheme(): View {
-        val actuel = KeyboardPreferences.themeMode(this)
-        return RadioGroup(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            KeyboardTheme.Mode.entries.forEach { mode ->
-                addView(RadioButton(this@KeyboardSettingsActivity).apply {
-                    id = View.generateViewId()
-                    tag = mode
-                    text = mode.libelle
-                    textSize = 16f
-                    setTextColor(Color.parseColor(ENCRE))
-                    isChecked = mode == actuel
-                    setPadding(dp(8), dp(12), 0, dp(12))
-                    buttonTintList = ColorStateList(
-                        arrayOf(
-                            intArrayOf(android.R.attr.state_checked),
-                            intArrayOf(-android.R.attr.state_checked)
-                        ),
-                        intArrayOf(Color.parseColor(BLEU), Color.parseColor("#757575"))
-                    )
-                })
-            }
-            setOnCheckedChangeListener { groupe, idCoche ->
-                val mode = groupe.findViewById<View>(idCoche)?.tag as? KeyboardTheme.Mode
-                    ?: return@setOnCheckedChangeListener
-                KeyboardPreferences.setThemeMode(this@KeyboardSettingsActivity, mode)
-                Log.d(TAG, "Thème du clavier : ${mode.cle}")
-            }
+    private fun <T : Any> groupeRadio(
+        options: List<T>,
+        actuel: T,
+        libelle: (T) -> String,
+        onChoix: (T) -> Unit
+    ): View = RadioGroup(this).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        options.forEach { option ->
+            addView(RadioButton(this@KeyboardSettingsActivity).apply {
+                id = View.generateViewId()
+                text = libelle(option)
+                textSize = 16f
+                setTextColor(Color.parseColor(ENCRE))
+                isChecked = option == actuel
+                setPadding(dp(8), dp(12), 0, dp(12))
+                buttonTintList = ColorStateList(
+                    arrayOf(
+                        intArrayOf(android.R.attr.state_checked),
+                        intArrayOf(-android.R.attr.state_checked)
+                    ),
+                    intArrayOf(Color.parseColor(BLEU), Color.parseColor("#757575"))
+                )
+            })
+        }
+        setOnCheckedChangeListener { groupe, idCoche ->
+            val rang = groupe.indexOfChild(groupe.findViewById<View>(idCoche))
+            options.getOrNull(rang)?.let(onChoix)
         }
     }
 

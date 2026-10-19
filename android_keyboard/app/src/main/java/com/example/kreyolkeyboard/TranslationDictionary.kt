@@ -503,3 +503,14 @@ object TranslationDictionary {
         return entrees.size
     }
 }
+
+/**
+ * Le contexte de l'application, pour les écrans qui chargent les gloses sur un
+ * fil de fond sans retenir l'activité.
+ *
+ * Côté LuxKeyb, il prend aussi la langue de l'interface, que l'utilisateur
+ * peut choisir ; ce clavier n'a qu'une langue d'interface, le contexte de
+ * l'application suffit. Le nom est gardé pour que le code du carnet, partagé
+ * avec LuxKeyb, reste le même des deux côtés.
+ */
+fun android.content.Context.applicatifDansLaLangue(): android.content.Context = applicationContext

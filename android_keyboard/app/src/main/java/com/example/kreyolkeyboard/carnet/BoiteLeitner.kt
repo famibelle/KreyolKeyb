@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.carnet
 
+import com.example.kreyolkeyboard.R
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
@@ -114,6 +115,9 @@ internal class BoiteLeitner(context: Context) : View(context) {
     private val rectos = HashMap<String, Bitmap>()
     private val pinceauImage = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val cadreCarte = RectF()
+    private val aPlat = FloatArray(8)
+    private val posee = FloatArray(8)
+    private val miseEnPlace = Matrix()
 
     /** Le casier ou la plaque sous le doigt, pour l'état pressé. [RIEN] sinon. */
     private var presse = RIEN
@@ -183,8 +187,8 @@ internal class BoiteLeitner(context: Context) : View(context) {
             pileParCasier[i].addAll(r)
         }
         contentDescription = buildString {
-            append("Boîte de révision, sept casiers, $total carte")
-            if (total > 1) append("s")
+            append(context.getString(R.string.boite_description,
+                context.resources.getQuantityString(R.plurals.cartes, total, total)))
             append(". ")
             append(
                 if (aRevoir > 0) "${libelleRevision()}."
@@ -244,6 +248,13 @@ internal class BoiteLeitner(context: Context) : View(context) {
         invalidate()
     }
 
+    /** Remplace un seul recto, celui dont le paysage vient d'arriver. */
+    fun poserRecto(forme: String, recto: Bitmap) {
+        if (forme !in rectos) return
+        rectos[forme] = recto
+        invalidate()
+    }
+
     /**
      * Le compte de la plaque est celui de la **session**, pas de l'arriéré.
      *
@@ -254,11 +265,11 @@ internal class BoiteLeitner(context: Context) : View(context) {
      */
     private fun libelleRevision(): String {
         val n = minOf(aRevoir, Sonje.PLAFOND_SESSION)
-        return if (n == 1) "Réviser 1 carte" else "Réviser $n cartes"
+        return context.resources.getQuantityString(R.plurals.reviser_cartes, n, n)
     }
 
     private fun libelleAJour(): String =
-        if (prochainDans < 0) "Tout est acquis" else "Tout est à jour"
+        context.getString(if (prochainDans < 0) R.string.boite_tout_acquis else R.string.boite_a_jour)
 
     /**
      * Quand revenir. Une plaque « rien à revoir » sans date est un bouton mort :
@@ -267,12 +278,12 @@ internal class BoiteLeitner(context: Context) : View(context) {
     private fun libelleProchaine(): String? {
         if (prochainDans < 0) return null
         val quand = when (prochainDans) {
-            1 -> "demain"
-            2 -> "après-demain"
-            else -> "dans $prochainDans jours"
+            1 -> context.getString(R.string.boite_demain)
+            2 -> context.getString(R.string.boite_apres_demain)
+            else -> context.resources.getQuantityString(R.plurals.boite_dans_jours, prochainDans, prochainDans)
         }
-        val cartes = if (prochainCombien == 1) "1 carte" else "$prochainCombien cartes"
-        return "$cartes $quand"
+        val cartes = context.resources.getQuantityString(R.plurals.cartes, prochainCombien, prochainCombien)
+        return context.getString(R.string.boite_prochaine, cartes, quand)
     }
 
     // La boîte prend toute la hauteur que son parent lui donne : ouverte depuis
@@ -494,29 +505,27 @@ internal class BoiteLeitner(context: Context) : View(context) {
         val soulevees = if (dues[i] < LEVEES) dues[i] else LEVEES
         val normales = visibles - soulevees
 
-        // La pile s'empile en **espace écran**, pas en profondeur. Calée sur la
-        // profondeur, chaque carte suivait la fuite du trapèze et se décalait de
-        // quelques pixels sur le côté : la pile se lisait comme un escalier. Une
-        // pile de fiches est parallèle aux parois de sa fente ; c'est la fente
-        // qui converge, pas elle.
+        // Chaque carte est posée **dans la perspective de sa fente** : ses deux
+        // bords suivent les parois, et elle rétrécit un peu en s'éloignant. Une
+        // pile de rectangles droits ne tenait que sur un téléphone, où la boîte
+        // est plate ; sur une tablette les fentes sont hautes, leurs parois
+        // fuient franchement, et la découpe tranchait en biais les cartes des
+        // casiers du bord. Le pas est continu, donc la pile ne se lit plus en
+        // escalier comme quand on décalait des rectangles d'une carte à l'autre.
         // La pile s'assoit sur la lèvre de la fente, pas huit densités au-dessus,
         // sinon elle flotte. Et elle occupe une bonne moitié de la profondeur :
         // trop basse, la fente se lit comme un trou et la boîte comme vide.
         val marge = (u1 - u0) * 0.09f
+        val ug = u0 + marge
+        val ud = u1 - marge
         val vBase = vAvant + 0.025f
-        val g = sx(u0 + marge, vBase)
-        val dr = sx(u1 - marge, vBase)
         val bas = sy(vBase)
-        // Proportionnées à la fente elle-même, et non plus à une boîte de
-        // référence : une pile de huit cartes en occupe alors les trois quarts,
-        // et quatre cartes ne sont plus un liseré au bas d'un long trou sombre.
-        // La tranche reste la même d'un casier à l'autre, pour que la hauteur de
-        // la pile continue de dire lequel est le plus rempli.
         // La face garde les proportions du recto, carré en vignette : une carte
         // étirée à la hauteur de la fente déformerait son illustration. Même
         // proportion en carton uni, pour que rien ne saute quand les rectos
-        // arrivent.
-        val hauteur = (dr - g) * Ornement.HAUTEUR_VIGNETTE / Ornement.LARGEUR
+        // arrivent. La tranche reste la même d'un casier à l'autre, pour que la
+        // hauteur de la pile continue de dire lequel est le plus rempli.
+        val hauteur = (sx(ud, vBase) - sx(ug, vBase)) * Ornement.HAUTEUR_VIGNETTE / Ornement.LARGEUR
         // L'écart entre deux cartes et la levée des dues suivent la carte et non
         // la fente : réglés sur la profondeur, ils dépassaient la hauteur d'une
         // face carrée, et la pile se défaisait en cartes flottant séparément.
@@ -535,16 +544,12 @@ internal class BoiteLeitner(context: Context) : View(context) {
         // travers, comme une fiche qu'on a tirée à moitié pour ne pas l'oublier.
         // Une pile bien alignée se lit comme rangée ; c'est le désordre qui dit
         // « à faire ».
-        val cx = (g + dr) / 2f
         for (j in soulevees - 1 downTo 0) {
             val pied = bas - (normales + j) * tranche - levee
-            canvas.save()
-            canvas.rotate(PENCHES[j % PENCHES.size], cx, pied)
-            carte(canvas, g, dr, pied, hauteur, true, pile.getOrNull(j))
-            canvas.restore()
+            carte(canvas, ug, ud, pied, PENCHES[j % PENCHES.size], true, pile.getOrNull(j))
         }
         for (j in normales - 1 downTo 0) {
-            carte(canvas, g, dr, bas - j * tranche, hauteur, false, pile.getOrNull(soulevees + j))
+            carte(canvas, ug, ud, bas - j * tranche, 0f, false, pile.getOrNull(soulevees + j))
         }
         canvas.restore()
         voileSiPresse(canvas, fente, i)
@@ -569,23 +574,43 @@ internal class BoiteLeitner(context: Context) : View(context) {
      */
     private fun carte(
         canvas: Canvas,
-        g: Float,
-        dr: Float,
+        ug: Float,
+        ud: Float,
         bas: Float,
-        hauteur: Float,
+        penche: Float,
         due: Boolean,
         qui: CarteMot?
     ) {
-        val haut = bas - hauteur
-        val rayon = (dr - g) * Ornement.RAYON / Ornement.LARGEUR
-        cadreCarte.set(g, haut, dr, bas)
+        // La carte est dessinée à plat, de 0 à [large] sur 0 à [haute], puis
+        // posée sur le trapèze que ses deux bords découpent dans la fente.
+        val profondeur = yAv - yAr
+        val vBas = (yAv - bas) / profondeur
+        val large = sx(ud, vBas) - sx(ug, vBas)
+        val haute = large * Ornement.HAUTEUR_VIGNETTE / Ornement.LARGEUR
+        val vHaut = vBas + haute / profondeur
+        aPlat[0] = 0f; aPlat[1] = haute
+        aPlat[2] = large; aPlat[3] = haute
+        aPlat[4] = large; aPlat[5] = 0f
+        aPlat[6] = 0f; aPlat[7] = 0f
+        posee[0] = sx(ug, vBas); posee[1] = bas
+        posee[2] = sx(ud, vBas); posee[3] = bas
+        posee[4] = sx(ud, vHaut); posee[5] = sy(vHaut)
+        posee[6] = sx(ug, vHaut); posee[7] = sy(vHaut)
+        miseEnPlace.setPolyToPoly(aPlat, 0, posee, 0, 4)
+
+        canvas.save()
+        canvas.concat(miseEnPlace)
+        if (penche != 0f) canvas.rotate(penche, large / 2f, haute)
+
+        val rayon = large * Ornement.RAYON / Ornement.LARGEUR
+        cadreCarte.set(0f, 0f, large, haute)
         val recto = qui?.let { rectos[it.forme] }
 
         if (recto != null) {
             canvas.drawBitmap(recto, null, cadreCarte, pinceauImage)
         } else {
             pinceau.shader = LinearGradient(
-                g, haut, g, bas,
+                0f, 0f, 0f, haute,
                 if (due) CARTE_DUE_CLAIR else CARTE_CLAIR,
                 if (due) CARTE_DUE_SOMBRE else CARTE_SOMBRE,
                 Shader.TileMode.CLAMP
@@ -604,9 +629,10 @@ internal class BoiteLeitner(context: Context) : View(context) {
         } else if (recto == null) {
             pinceau.color = CARTE_TRANCHE
             pinceau.strokeWidth = px(1.4f)
-            canvas.drawLine(g + rayon, haut, dr - rayon, haut, pinceau)
+            canvas.drawLine(rayon, 0f, large - rayon, 0f, pinceau)
         }
         pinceau.style = Paint.Style.FILL
+        canvas.restore()
     }
 
     /**
@@ -627,8 +653,8 @@ internal class BoiteLeitner(context: Context) : View(context) {
         val pas = sx(uCasier[1][0], vAvant / 2f) - sx(uCasier[0][0], vAvant / 2f)
 
         val rythmes = Array(CASIERS) { i ->
-            if (i >= Sonje.BOITE_ACQUISE) "★ acquis"
-            else rythmeCourt(Sonje.INTERVALLES[i])
+            if (i >= Sonje.BOITE_ACQUISE) context.getString(R.string.boite_acquis_court)
+            else rythmeCourt(context, Sonje.INTERVALLES[i])
         }
         legende.typeface = Typeface.DEFAULT
         ajuster(legende, minOf(px(11f), bandeau * 0.26f), rythmes.toList(), pas * 0.94f)
@@ -649,7 +675,7 @@ internal class BoiteLeitner(context: Context) : View(context) {
         val fond = sy(V_ARRIERE)
         val hautFond = fond - yAr
         val largeurFond = sx(1f, 1f) - sx(0f, 1f)
-        val regle = "Bonne réponse : la carte avance et revient plus tard  →"
+        val regle = context.getString(R.string.boite_regle)
         legende.typeface = Typeface.DEFAULT_BOLD
         ajuster(legende, minOf(px(12.5f), hautFond * 0.5f), listOf(regle), largeurFond * 0.9f)
         val cy = yAr + hautFond / 2f - (legende.descent() + legende.ascent()) / 2f
@@ -957,8 +983,8 @@ internal fun etiquetteCasier(ctx: Context, boite: Int, combien: Int, dues: Int):
             layoutParams = LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
             )
-            text = if (acquis) "Acquis"
-            else "Revient dans ${rythmeLong(Sonje.INTERVALLES[boite])}"
+            text = if (acquis) ctx.getString(R.string.boite_acquis)
+            else ctx.getString(R.string.boite_revient_dans, rythmeLong(ctx, Sonje.INTERVALLES[boite]))
             textSize = 14f
             setTypeface(null, Typeface.BOLD)
             setTextColor(if (vide) Color.parseColor("#9E9E9E") else accent)
@@ -966,7 +992,7 @@ internal fun etiquetteCasier(ctx: Context, boite: Int, combien: Int, dues: Int):
         addView(TextView(ctx).apply {
             text = when {
                 vide -> "—"
-                dues > 0 -> "$combien · $dues à revoir"
+                dues > 0 -> ctx.getString(R.string.boite_a_revoir, combien.toString(), dues)
                 else -> "$combien"
             }
             textSize = 13f
@@ -1009,13 +1035,13 @@ internal fun etiquetteCasier(ctx: Context, boite: Int, combien: Int, dues: Int):
  * d'intervalles retouchée laisserait sinon sept libellés qui mentent, sans rien
  * casser au passage.
  */
-internal fun rythmeLong(jours: Int): String {
+internal fun rythmeLong(context: Context, jours: Int): String {
     val (n, unite) = arrondiRythme(jours)
-    return when (unite) {
-        UniteRythme.JOUR -> if (n == 1) "1 jour" else "$n jours"
-        UniteRythme.SEMAINE -> if (n == 1) "1 semaine" else "$n semaines"
-        UniteRythme.MOIS -> "$n mois"
-    }
+    return context.resources.getQuantityString(when (unite) {
+        UniteRythme.JOUR -> R.plurals.rythme_jours
+        UniteRythme.SEMAINE -> R.plurals.rythme_semaines
+        UniteRythme.MOIS -> R.plurals.rythme_mois
+    }, n, n)
 }
 
 /**
@@ -1027,19 +1053,19 @@ internal fun rythmeLong(jours: Int): String {
  * ouvert : deux chiffres pour le même casier, dont le joueur ne peut deviner
  * qu'ils désignent la même chose.
  */
-internal fun rythmeCourt(jours: Int): String {
+internal fun rythmeCourt(context: Context, jours: Int): String {
     val (n, unite) = arrondiRythme(jours)
-    return when (unite) {
-        UniteRythme.JOUR -> if (n == 1) "1 jour" else "$n jours"
-        UniteRythme.SEMAINE -> "$n sem."
-        UniteRythme.MOIS -> "$n mois"
-    }
+    return context.resources.getQuantityString(when (unite) {
+        UniteRythme.JOUR -> R.plurals.rythme_jours_court
+        UniteRythme.SEMAINE -> R.plurals.rythme_semaines_court
+        UniteRythme.MOIS -> R.plurals.rythme_mois_court
+    }, n, n)
 }
 
-private enum class UniteRythme { JOUR, SEMAINE, MOIS }
+internal enum class UniteRythme { JOUR, SEMAINE, MOIS }
 
 /** Arrondi à la semaine ou au mois : « 2 semaines » pour seize jours dit le rythme, et le rythme est tout ce qu'on lit là. */
-private fun arrondiRythme(jours: Int): Pair<Int, UniteRythme> = when {
+internal fun arrondiRythme(jours: Int): Pair<Int, UniteRythme> = when {
     jours <= 1 -> 1 to UniteRythme.JOUR
     jours < 7 -> jours to UniteRythme.JOUR
     jours < 30 -> (jours + 3) / 7 to UniteRythme.SEMAINE

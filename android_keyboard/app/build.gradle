@@ -55,10 +55,10 @@ android {
 
     defaultConfig {
         applicationId "com.potomitan.kreyolkeyboard"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
-        versionCode = 220501
-        versionName "22.5.1"
+        versionCode = 230000
+        versionName "23.0.0"
         
         // Améliorer la compatibilité Samsung ULTRA
         multiDexEnabled true
@@ -143,7 +143,6 @@ androidComponents {
 dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
@@ -165,6 +164,13 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
     implementation 'androidx.lifecycle:lifecycle-service:2.8.6'
     implementation 'androidx.concurrent:concurrent-futures-ktx:1.2.0'
+
+    // Cession de cartes par codes QR (v23.0.0, repris de LuxKeyb 35.0.0) :
+    // l'encodeur ZXing pour dessiner, et le scanner qui décode sur l'appareil.
+    // Pas ML Kit, qui contacte les serveurs de Google pour ses modèles et ses
+    // statistiques.
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
     
     // Dépendances de test
     testImplementation 'junit:junit:4.13.2'

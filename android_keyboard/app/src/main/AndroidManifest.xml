@@ -33,7 +33,6 @@
         android:theme="@style/Theme.AppCompat"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
-        android:extractNativeLibs="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         tools:targetApi="34">
@@ -97,6 +96,17 @@
             android:label="Réglages du clavier"
             android:parentActivityName=".SettingsActivity"
             android:exported="false" />
+
+
+        <!-- Le scanner des codes de cession de cartes (v23.0.0, repris de
+             LuxKeyb 35.0.0). La bibliothèque le fige à l'italienne ; on le
+             laisse suivre le téléphone, que l'on tient debout pour viser
+             l'écran d'un autre. L'autorisation CAMERA vient de la bibliothèque
+             et n'est demandée qu'au premier scan. -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="fullSensor"
+            tools:replace="android:screenOrientation" />
 
     </application>
 

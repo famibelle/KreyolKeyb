@@ -96,7 +96,7 @@
 <body>
 <button type="button" class="theme-toggle fixed" aria-label="Changer de thème">🌙</button>
 <h1>Politique de Confidentialité - Klavyé Kréyòl Karukera • Potomitan™</h1>
-<p><strong>Date d&#39;entrée en vigueur :</strong> 19 septembre 2025<br><strong>Dernière mise à jour :</strong> 26 août 2026<br><strong>Version :</strong> 2.1<br><strong>Application :</strong> Klavyé Kréyòl Karukera • Potomitan™<br><strong>Nom du package :</strong> com.potomitan.kreyolkeyboard</p>
+<p><strong>Date d&#39;entrée en vigueur :</strong> 19 septembre 2025<br><strong>Dernière mise à jour :</strong> 19 octobre 2026<br><strong>Version :</strong> 2.2<br><strong>Application :</strong> Klavyé Kréyòl Karukera • Potomitan™<br><strong>Nom du package :</strong> com.potomitan.kreyolkeyboard</p>
 <hr>
 <h2>🏛️ Informations sur le Développeur</h2>
 <p><strong>Nom du développeur :</strong> Médhi Famibelle / Potomitan™<br><strong>Adresse :</strong> Guadeloupe, Antilles françaises<br><strong>Email de contact :</strong> <a href="mailto:contact@potomitan.io">contact@potomitan.io</a><br><strong>Site web :</strong> <a href="https://potomitan.io">https://potomitan.io</a><br><strong>URL de la politique de confidentialité :</strong> <a href="https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html">https://famibelle.github.io/KreyolKeyb/privacy/privacy-policy.html</a></p>
@@ -172,7 +172,7 @@
 <td>❌ Non</td>
 <td>❌ Non</td>
 <td>S.O.</td>
-<td>Aucun accès aux médias</td>
+<td>L&#39;appareil photo ne sert qu&#39;à lire le code d&#39;une carte offerte, sur le téléphone même : aucune image n&#39;est gardée ni envoyée</td>
 </tr>
 <tr>
 <td><strong>Fichiers audio</strong></td>
@@ -422,6 +422,10 @@
 <p><strong>Ce qu&#39;elle fait :</strong> Permet à l&#39;app de fonctionner comme méthode de saisie (clavier)<br><strong>Pourquoi nous en avons besoin :</strong> Sans cette autorisation de base, l&#39;app ne peut pas fonctionner comme clavier<br><strong>Impact sur la vie privée :</strong> Aucun - c&#39;est une autorisation au niveau système requise pour toutes les apps de clavier<br><strong>Ce qu&#39;elle NE PEUT PAS faire :</strong> Cette autorisation ne donne PAS accès à votre contenu tapé<br><strong>Contrôle utilisateur :</strong> Vous activez ceci en sélectionnant notre clavier dans les paramètres Android (Paramètres &gt; Système &gt; Langues et saisie &gt; Clavier à l&#39;écran)</p>
 <h3>2️⃣ POST_NOTIFICATIONS (Optionnel, Android 13+)</h3>
 <p><strong>Ce qu&#39;elle fait :</strong> Permet d&#39;afficher une notification<br><strong>Pourquoi nous en avons besoin :</strong> Uniquement pour signaler qu&#39;un nouveau niveau de vocabulaire vient d&#39;être atteint<br><strong>Impact sur la vie privée :</strong> Aucun - la notification est composée sur l&#39;appareil, rien n&#39;est transmis<br><strong>Ce qu&#39;elle NE PEUT PAS faire :</strong> Ne donne accès à aucune donnée, ni aux vôtres ni à celles des autres apps<br><strong>Contrôle utilisateur :</strong> Peut être refusée à l&#39;invite ou révoquée dans Infos app &gt; Notifications ; l&#39;app fonctionne à l&#39;identique sans elle<br><strong>Emplacement des données :</strong> Aucune donnée stockée</p>
+<h3>3️⃣ VIBRATE (Automatique, sans invite)</h3>
+<p><strong>Ce qu&#39;elle fait :</strong> Permet de faire vibrer le téléphone<br><strong>Pourquoi nous en avons besoin :</strong> Pour la vibration des touches et pour faire sentir le relief d&#39;une carte du carnet sous le doigt, ou l&#39;arrivée d&#39;une carte rare<br><strong>Impact sur la vie privée :</strong> Aucun - elle ne lit ni ne transmet rien<br><strong>Ce qu&#39;elle NE PEUT PAS faire :</strong> Donner accès à une donnée quelconque<br><strong>Contrôle utilisateur :</strong> L&#39;interrupteur « Vibration à la frappe » des Réglages du clavier coupe toutes ces vibrations<br><strong>Emplacement des données :</strong> Aucune donnée stockée</p>
+<h3>4️⃣ CAMERA (Demandée au premier scan d&#39;une carte)</h3>
+<p><strong>Ce qu&#39;elle fait :</strong> Permet de lire le code carré (code QR) affiché par un autre téléphone, quand on donne ou reçoit une carte du carnet<br><strong>Pourquoi nous en avons besoin :</strong> Uniquement pour offrir ou recevoir une carte. Le clavier et les jeux ne s&#39;en servent pas<br><strong>Impact sur la vie privée :</strong> L&#39;appareil photo ne s&#39;ouvre qu&#39;après un appui sur « Scanner son code » ou « Scanner la carte » dans le carnet, après une phrase qui explique à quoi il sert, et se referme dès que le code est lu. Les images sont analysées sur le téléphone même, image par image, et aucune n&#39;est enregistrée ni envoyée. Les deux téléphones restent côte à côte : rien ne passe par Internet<br><strong>Ce qu&#39;elle NE PEUT PAS faire :</strong> Prendre des photos, filmer, ou s&#39;ouvrir en arrière-plan<br><strong>Contrôle utilisateur :</strong> Refusez-la à l&#39;invite, ou retirez-la dans Infos app &gt; Autorisations ; tout fonctionne alors comme avant, sauf l&#39;échange de cartes<br><strong>Emplacement des données :</strong> Aucune - rien n&#39;est stocké ni transmis</p>
 <h3>🧹 Autorisations Retirées en Version 10.14.3</h3>
 <p><strong>WRITE_USER_DICTIONARY</strong> et <strong>READ_EXTERNAL_STORAGE</strong> figuraient au manifeste des versions antérieures sans qu&#39;aucune ligne de code ne les appelle. La première avait été ajoutée pour le dictionnaire personnel de la 10.5.0, fonction supprimée dès la 10.6.0. Elles ne sont plus demandées : une autorisation affichée sur la fiche Play doit correspondre à un usage réel.</p>
 <h3>❌ Autorisations que Nous NE Demandons PAS :</h3>
@@ -429,7 +433,6 @@
 <ul>
 <li><strong>INTERNET :</strong> Pas nécessaire (l&#39;app fonctionne hors ligne)</li>
 <li><strong>ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION :</strong> Pas de suivi de localisation</li>
-<li><strong>CAMERA :</strong> Pas de capture photo/vidéo</li>
 <li><strong>RECORD_AUDIO / MICROPHONE :</strong> Pas d&#39;enregistrement vocal</li>
 <li><strong>READ_CONTACTS / WRITE_CONTACTS :</strong> Pas d&#39;accès aux contacts</li>
 <li><strong>READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE :</strong> Pas d&#39;accès aux fichiers</li>
@@ -692,7 +695,7 @@ L&#39;app demande à Android de ne rien envoyer à la sauvegarde cloud : ni pré
 <li>❌ <strong>Pas de classements</strong> (pas de partage de données avec d&#39;autres utilisateurs)</li>
 <li>❌ <strong>Pas de compétition en ligne</strong> (pas de fonctionnalités multijoueur)</li>
 <li>❌ <strong>Pas de fonctionnalités sociales</strong> nécessitant un téléchargement de données</li>
-<li>❌ <strong>Pas de partage sur les réseaux sociaux</strong></li>
+<li>❌ <strong>Pas de partage automatique</strong> : une carte du carnet ne part que si vous touchez « Partager », en image, par le menu de partage d&#39;Android, vers l&#39;application que vous choisissez</li>
 <li>✅ <strong>Suivi de progression 100% local</strong></li>
 <li>✅ <strong>Aucun compte requis</strong></li>
 <li>✅ <strong>La progression se réinitialise si vous effacez les données de l&#39;app</strong> (pas de sauvegarde cloud)</li>
@@ -736,7 +739,7 @@ L&#39;app demande à Android de ne rien envoyer à la sauvegarde cloud : ni pré
 </ul>
 <h3>Contrôle de Version :</h3>
 <ol>
-<li><strong>Numéro de Version :</strong> Chaque mise à jour incrémente la version (Actuelle : <strong>2.1</strong>)</li>
+<li><strong>Numéro de Version :</strong> Chaque mise à jour incrémente la version (Actuelle : <strong>2.2</strong>)</li>
 <li><strong>Date d&#39;Entrée en Vigueur :</strong> Mise à jour en haut de ce document</li>
 <li><strong>Historique des Changements :</strong> Disponible sur notre dépôt GitHub</li>
 <li><strong>Changements Importants :</strong> Seront mis en évidence dans les annonces de mise à jour</li>
@@ -756,6 +759,12 @@ L&#39;app demande à Android de ne rien envoyer à la sauvegarde cloud : ni pré
 <li>Option de réviser les changements avant d&#39;accepter</li>
 </ul>
 <h3>Historique des Changements :</h3>
+<p><strong>Version 2.2 (19 octobre 2026) :</strong></p>
+<ul>
+<li>Nouvelle autorisation documentée : CAMERA, demandée au premier scan, seulement pour lire le code d&#39;une carte offerte</li>
+<li>VIBRATE documentée : déclarée depuis la version 21.0.0 pour le relief des cartes, elle manquait à ce document</li>
+<li>Partage d&#39;une carte en image et échange de cartes entre deux téléphones : ce qui part, et ce qui ne part pas</li>
+</ul>
 <p><strong>Version 2.0 (10 novembre 2025) :</strong></p>
 <ul>
 <li>Réécriture complète pour la conformité Data Safety de Google Play</li>

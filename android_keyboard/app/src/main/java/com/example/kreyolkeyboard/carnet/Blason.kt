@@ -163,6 +163,11 @@ object Armorial {
      */
     fun natureDe(forme: String): Nature = Nature.AUTRE
 
+    /** Lit l'armorial d'avance, sur un fil de fond : voir `CarnetFragment.chargerEnFond`. */
+    fun precharger(context: Context) {
+        charger(context)
+    }
+
     private fun charger(context: Context): Map<String, Blasonnement> {
         table?.let { return it }
         val lu = try {
