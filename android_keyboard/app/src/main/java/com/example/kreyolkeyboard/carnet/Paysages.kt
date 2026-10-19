@@ -824,6 +824,40 @@ object Paysages {
             ovale(x + s * 0.4f, y - s * 1.06f, s * 0.28f, s * 0.11f, orange)
         }
 
+        /** Un touloulou, le petit crabe rouge des plages, vu de face. */
+        fun touloulou(x: Float, y: Float) {
+            val rouge = duJour(0xFFD8402E.toInt())
+            ovale(x, y, 1.1f, 0.65f, rouge)
+            trait("M${x - 1f} ${y}L${x - 1.9f} ${y + 0.7f}M${x + 1f} ${y}L${x + 1.9f} ${y + 0.7f}" +
+                "M${x - 0.8f} ${y + 0.3f}L${x - 1.5f} ${y + 1.1f}M${x + 0.8f} ${y + 0.3f}L${x + 1.5f} ${y + 1.1f}", rouge, 0.22f)
+            rond(x - 1.4f, y - 0.7f, 0.45f, rouge)
+            rond(x + 1.4f, y - 0.7f, 0.45f, rouge)
+        }
+
+        /** Une tortue verte qui nage sous la surface, vue d'en haut. */
+        fun tortue(x: Float, y: Float, l: Float) {
+            val dos = mix(duJour(0xFF5E6B3A.toInt()), P.eau, 0.35f)
+            val nageoire = mix(dos, P.eau, 0.3f)
+            ovale(x - l * 0.5f, y - l * 0.32f, l * 0.32f, l * 0.11f, nageoire)
+            ovale(x + l * 0.5f, y - l * 0.32f, l * 0.32f, l * 0.11f, nageoire)
+            ovale(x - l * 0.3f, y + l * 0.36f, l * 0.18f, l * 0.08f, nageoire)
+            ovale(x + l * 0.3f, y + l * 0.36f, l * 0.18f, l * 0.08f, nageoire)
+            ovale(x, y - l * 0.55f, l * 0.13f, l * 0.15f, nageoire)
+            ovale(x, y, l * 0.38f, l * 0.48f, dos)
+            trait("M$x ${y - l * 0.4f}L$x ${y + l * 0.4f}M${x - l * 0.3f} ${y}L${x + l * 0.3f} $y", mix(dos, P.pres, 0.35f), l * 0.04f)
+        }
+
+        /** Un pélican brun posé sur un pieu, le bec rentré. */
+        fun pelican(x: Float, y: Float) {
+            val bois = mix(P.sol, P.pierre, 0.2f)
+            rect(x - 0.4f, y, 0.8f, 6f, bois)
+            val plume = duJour(0xFF7A6A58.toInt())
+            ovale(x, y - 1.6f, 1.4f, 1.8f, plume)
+            trait("M${x + 0.4f} ${y - 3f}Q${x + 0.8f} ${y - 4.8f} ${x + 0.2f} ${y - 5.2f}", plume, 0.7f)
+            rond(x + 0.2f, y - 5.2f, 0.6f, duJour(0xFFE9E2D0.toInt()))
+            trait("M${x + 0.6f} ${y - 5.1f}L${x + 2.6f} ${y - 3.4f}", duJour(0xFFC9A24A.toInt()), 0.4f)
+        }
+
         /** Une tombe en damier, comme au cimetière de Morne-à-l'Eau. */
         fun tombe(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int) {
             rect(x, y - h, w, h, blanc)
@@ -843,7 +877,7 @@ object Paysages {
 
         // ------------------------------------------------------ les lieux
 
-        /** Grande Anse : la grande plage de Deshaies, les raisiniers, un flamboyant, l'îlet au large. */
+        /** Grande Anse : la grande plage de Deshaies, les raisiniers, un flamboyant, des touloulous, l'îlet au large. */
         fun grandeAnse() {
             crete(30f, 1.2f, 101, P.loin, x0 = 52f)
             forme("M30 35Q33 31.6 37 31.8Q41 32.2 43 35Z", mix(P.loin, P.milieu, 0.3f))
@@ -860,6 +894,7 @@ object Paysages {
             bosquet(2f, 16f, 50f, 2.2f, 104, mix(P.pres, P.milieu, 0.5f))
             flamboyant(84f, 56f, 14f)
             forme("M0 66L0 58Q20 55 40 58.5Q60 62 80 57.5Q92 55.5 100 56L100 66Z", mix(sable(), P.sol, 0.3f))
+            touloulou(38f, 53f); touloulou(46f, 54.6f); touloulou(61f, 52.4f)
         }
 
         /** Les Saintes : la baie, le Pain de Sucre, une saintoise sous voile. */
@@ -944,6 +979,8 @@ object Paysages {
             vapeur(63f, 52.5f, 9f)
             bosquet(-2f, 18f, 53f, 3.2f, 144, P.sol)
             bosquet(82f, 102f, 53f, 3.2f, 145, P.sol)
+            balisier(12f, 60f, 11f, mix(P.pres, P.milieu, 0.3f))
+            balisier(88f, 60f, 12f, mix(P.pres, P.milieu, 0.3f))
         }
 
         /** Ravine Chaude : la rivière tiède au fond de la ravine, les roches, les fougères. */
@@ -1054,7 +1091,7 @@ object Paysages {
             bosquet(80f, 102f, 56f, 3f, 183, P.pres)
         }
 
-        /** Bouillante : les îlets Pigeon, le pavillon de plongée, la plage sombre qui fume. */
+        /** Bouillante : les îlets Pigeon, une tortue verte, le pavillon de plongée, la plage sombre qui fume. */
         fun bouillante() {
             plan(1)
             eau(36f, 191)
@@ -1068,6 +1105,8 @@ object Paysages {
             rect(84f, 38f, 3.6f, 2.6f, duJour(0xFFD6352E.toInt()))
             trait("M84 38L87.6 40.6", duJour(0xFFF4F1EA.toInt()), 0.5f)
             rond(84f, 44.4f, 0.9f, duJour(0xFFE87A2E.toInt()))
+            // Une tortue verte, comme on en croise sur ce rivage.
+            tortue(56f, 45f, 4f)
             plan(2)
             forme("M0 66L0 53Q40 49 70 52.6Q86 54.6 100 52.4L100 66Z", mix(P.sol, P.pierre, 0.25f))
             vapeur(40f, 52f, 10f)
@@ -1098,7 +1137,7 @@ object Paysages {
             }
         }
 
-        /** L'îlet Macou : le banc de sable, sa mangrove et la chapelle des marins disparus, une yole. */
+        /** L'îlet Macou : le banc de sable, sa mangrove et la chapelle des marins disparus, une yole, un pélican. */
         fun iletMacou() {
             crete(34f, 0.7f, 211, P.loin)
             plan(1)
@@ -1121,6 +1160,7 @@ object Paysages {
             forme("M70 58Q78 60.4 88 57.6L87 59.6Q78 61.8 71 59.8Z", duJour(0xFFF4F1EA.toInt()))
             forme("M71 59.8Q78 61.8 87 59.6L86.8 60.3Q78 62.4 71.4 60.5Z", duJour(0xFFD6452E.toInt()))
             rect(68.4f, 56.6f, 1.6f, 2.6f, P.sol)
+            pelican(92f, 56f)
         }
 
         /** Les Roches gravées : la forêt de Trois-Rivières, les visages taillés dans le rocher. */
@@ -1152,6 +1192,8 @@ object Paysages {
             }
             bosquet(10f, 20f, 61f, 2f, 224, mix(P.pres, P.milieu, 0.4f))
             bosquet(84f, 96f, 62f, 2f, 225, mix(P.pres, P.milieu, 0.4f))
+            balisier(8f, 64f, 11f, mix(P.pres, P.milieu, 0.3f))
+            balisier(93f, 64f, 12f, mix(P.pres, P.milieu, 0.3f))
         }
 
         /** La place de la Victoire : les maisons à balcons, les sabliers, la statue de Vélo et son ka. */
@@ -1224,6 +1266,8 @@ object Paysages {
             bosquet(14f, 86f, 22f, 4.6f, 243, P.pres)
             bosquet(22f, 78f, 15f, 4f, 244, mix(P.pres, P.milieu, 0.35f))
             bosquet(34f, 66f, 10f, 3.4f, 245, mix(P.pres, P.milieu, 0.2f))
+            balisier(10f, 62f, 11f, mix(P.pres, P.milieu, 0.3f))
+            balisier(90f, 62f, 12f, mix(P.pres, P.milieu, 0.3f))
             val liane = mix(bois, P.pres, 0.2f)
             for (k in 0 until 14) {
                 val x = 24f + k * 4f + r() * 2f

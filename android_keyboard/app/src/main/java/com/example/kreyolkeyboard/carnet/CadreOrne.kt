@@ -3927,11 +3927,12 @@ class CarteOrnee(
         if (vignette || Pochette.animationsReduites(context)) return this
         motif.profondeur = true
         val zone = RectF(fenetre.left, fenetre.top, fenetre.right, min(fenetre.bottom, Ornement.PLAQUE.top + 4f))
-        // L'été, l'heure de la carte choisit : aigrettes le jour, lucioles
-        // le soir et la nuit, les heures des deux paliers hauts.
+        // Au carême, l'heure de la carte choisit : aigrettes le jour,
+        // lucioles le soir et la nuit, les heures des deux paliers hauts. Le
+        // lieu ajoute sa faune (voir Faune).
         ambiance = Ambiance.pour(
             souvenir, zone, mot.hashCode(), nuit = rarete.ordinal >= Rarete.RARE.ordinal,
-            oiseaux = motif.profondeur
+            oiseaux = motif.profondeur, lieu = if (Paysages.LIEUX_DESSINES) Lieu.du(mot) else null
         )
         oublierLesCouches()
         if (isAttachedToWindow) armerSecousse()
