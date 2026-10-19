@@ -1,8 +1,16 @@
 {
   "production_version": "22.3.0",
-  "latest_version": "22.5.1",
-  "as_of": "2026-10-18",
+  "latest_version": "23.0.0",
+  "as_of": "2026-10-19",
   "features": [
+    {
+      "version": "23.0.0",
+      "emoji": "✨",
+      "title": "Ajouté",
+      "description": "Le doigt tombé sur la touche d'à côté est reconnu : « poun » propose",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v23.0.0",
+      "curated": false
+    },
     {
       "version": "22.5.1",
       "emoji": "✍️",
