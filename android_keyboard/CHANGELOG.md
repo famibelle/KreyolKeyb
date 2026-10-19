@@ -5,6 +5,14 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.1.1] - 2026-10-19
+
+### 🔧 Corrigé
+
+- **Le carnet garde sa vue quand on tourne la tablette** : le tri choisi
+  (« Séries », « Étagère »…) et les filtres par jeu et par rareté
+  survivent à la rotation, au lieu de revenir à « Récent ».
+
 ## [23.1.0] - 2026-10-19
 
 Les cartes du carnet s'ouvrent sur trente lieux de Guadeloupe, gardent la saison et la fête du jour où on les a gagnées, et leur faune s'anime.

@@ -83,6 +83,11 @@ class CarnetFragment : DialogFragment() {
         /** Les rangées de la vue Séries posées à chaque trame, une fois le premier écran rempli. */
         private const val ETAPES_PAR_TRAME = 3
 
+        /** Les clés de la vue choisie, gardée à la rotation. */
+        private const val ETAT_TRI = "tri"
+        private const val ETAT_FILTRE = "filtre"
+        private const val ETAT_RARETE = "filtreRarete"
+
         /**
          * Largeur visée pour une vignette, en dp — celle mesurée en portrait
          * sur un téléphone (deux colonnes sur ~393dp de large). Le nombre de
@@ -191,6 +196,20 @@ class CarnetFragment : DialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, android.R.style.Theme_DeviceDefault_Light_NoActionBar)
+        // La vue choisie survit à la rotation : tourner la tablette ramenait
+        // « Séries » à « Récent » (vu sur tablette 10 pouces, 2026-10-19).
+        savedInstanceState?.let { etat ->
+            etat.getString(ETAT_TRI)?.let { n -> Tri.values().find { it.name == n } }?.let { tri = it }
+            filtre = etat.getString(ETAT_FILTRE)?.let { n -> JeuCarte.values().find { it.name == n } }
+            filtreRarete = etat.getString(ETAT_RARETE)?.let { n -> Rarete.values().find { it.name == n } }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(ETAT_TRI, tri.name)
+        outState.putString(ETAT_FILTRE, filtre?.name)
+        outState.putString(ETAT_RARETE, filtreRarete?.name)
     }
 
     override fun onCreateView(
