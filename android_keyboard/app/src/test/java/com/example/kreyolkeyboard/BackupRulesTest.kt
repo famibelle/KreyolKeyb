@@ -70,6 +70,9 @@ class BackupRulesTest {
         assertTrue("carnet_vu.json" in exclus)
         // Le dernier jeu ouvert (accueil de l'onglet Dékolaj) est une trace d'usage
         assertTrue("kreyol_accueil_prefs.xml" in exclus)
+        // Les codes de cession appartiennent au téléphone qui les a tirés
+        assertTrue("carnet_cession.xml" in exclus)
+        assertTrue("carnet_chauffe.xml" in exclus)
     }
 
     @Test

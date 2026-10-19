@@ -164,6 +164,13 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
     implementation 'androidx.lifecycle:lifecycle-service:2.8.6'
     implementation 'androidx.concurrent:concurrent-futures-ktx:1.2.0'
+
+    // Cession de cartes par codes QR (v23.0.0, repris de LuxKeyb 35.0.0) :
+    // l'encodeur ZXing pour dessiner, et le scanner qui décode sur l'appareil.
+    // Pas ML Kit, qui contacte les serveurs de Google pour ses modèles et ses
+    // statistiques.
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
     
     // Dépendances de test
     testImplementation 'junit:junit:4.13.2'

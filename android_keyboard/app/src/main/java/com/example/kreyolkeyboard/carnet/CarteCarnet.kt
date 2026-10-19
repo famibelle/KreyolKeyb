@@ -9,9 +9,9 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.StringRes
+import com.example.kreyolkeyboard.R
 import com.example.kreyolkeyboard.TranslationDictionary
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 /**
@@ -50,7 +50,9 @@ data class ContenuCarte(
      * arriver — les cinq jeux ne tirent que dans les mots glosés — mais un
      * carnet repris d'une version antérieure peut en porter.
      */
-    val sourceGlose: String = ""
+    val sourceGlose: String = "",
+    /** Le joueur a écrit ce mot au clavier : la carte porte la plume. */
+    val plume: Boolean = false
 )
 
 /**
@@ -112,8 +114,6 @@ data class ContenuCarte(
  */
 object CarteCarnet {
 
-    private val FORMAT_DATE = SimpleDateFormat("dd.MM.yy", Locale.FRENCH)
-
     private const val ENCRE = 0xFF1B1610.toInt()
     private const val ENCRE_DOUCE = 0xFF4A4234.toInt()
     private const val ENCRE_PALE = 0xFF7A7160.toInt()
@@ -136,7 +136,8 @@ object CarteCarnet {
             // rangement, contrairement au carnet luxembourgeois.
             blason = Armorial.pour(context, carte.forme, carte.forme),
             creditExemple = exemple?.credit?.ifEmpty { null },
-            sourceGlose = entree?.libelleSource.orEmpty()
+            sourceGlose = entree?.libelleSource.orEmpty(),
+            plume = PreuveDeFrappe.aLaPlume(context, carte.forme)
         )
     }
 
@@ -154,8 +155,12 @@ object CarteCarnet {
      * l'ont donnée. La barre de Leitner est peinte sur le cadre.
      */
     fun vignette(context: Context, c: ContenuCarte, cote: Int): View {
-        val carte = CarteOrnee(context, c.carte.forme, c.rarete, vignette = true, blason = c.blason)
+        val carte = CarteOrnee(
+            context, c.carte.forme, c.rarete, vignette = true, blason = c.blason,
+            souvenir = Souvenir.de(c.carte.premiereFois)
+        )
             .avecBoite(c.carte.boite)
+            .avecPlume(c.plume)
 
         carte.posee(
             ligne(context, c.carte.forme, taille = 18f, couleur = ENCRE, gras = true),
@@ -193,21 +198,48 @@ object CarteCarnet {
      * - le **médaillon de provenance**, entre les écus, dit la partie qui a
      *   donné la carte : l'emblème du jeu sur un émail de sa couleur, « gagné
      *   à » et son nom en légende. C'est une mention d'inventaire, comme le
-     *   numéro et la date de la ligne juste dessous. Il est tracé par la carte
+     *   numéro de la ligne juste dessous. Il est tracé par la carte
      *   elle-même (voir [Ornement.dessinerMedaillon]), pas posé comme une vue.
      *   Le corps de l'étiquette de nature s'ajuste : voir [corpsDeLEtiquette] ;
      * - les deux **écus** comptent les rencontres et la boîte de révision ;
      * - la **ligne de série** situe la carte dans la collection : son numéro
-     *   d'entrée, le jour de la capture, et le rang de fréquence qui a
-     *   décidé de sa rareté.
+     *   d'entrée et le rang de fréquence qui a décidé de sa rareté. Le jour
+     *   de la capture n'y est plus : il ne se lit que par sa saison, au
+     *   poinçon gravé juste après le numéro (voir [Ornement.dessinerSaison]).
      */
+    /**
+     * Calcule sur le fil appelant, un fil de fond, ce que la carte complète
+     * de [c] calculerait à sa première image : son métal, ses rayons et son
+     * paysage, à la largeur [largeurPx]. Le lecteur s'en sert pour les deux
+     * cartes voisines, si bien qu'on feuillette sans attendre.
+     */
+    fun preparer(context: Context, c: ContenuCarte, largeurPx: Int) {
+        if (largeurPx <= 0) return
+        Ornement.metal(context, c.rarete, largeurPx, vignette = false)
+        Ornement.rayons(c.rarete, largeurPx, vignette = false)
+        Motif(c.carte.forme, c.rarete, Ornement.FENETRE, c.blason, Souvenir.de(c.carte.premiereFois))
+            .rendreLieu(largeurPx / Ornement.LARGEUR)
+    }
+
+    /**
+     * Demande le paysage de la vignette de [c], au côté [cote] : voir
+     * `CarnetFragment.chargerEnFond`. [pret] est appelé quand il est en cache.
+     */
+    fun preparerVignette(c: ContenuCarte, cote: Int, pret: () -> Unit) {
+        Motif(c.carte.forme, c.rarete, Ornement.FENETRE_VIGNETTE, c.blason, Souvenir.de(c.carte.premiereFois))
+            .demanderLieu(cote / Ornement.LARGEUR, pret)
+    }
+
     fun complete(context: Context, c: ContenuCarte): View {
         val jeu = c.carte.origine
         val metal = Ornement.metal(c.rarete)
+        val souvenir = Souvenir.de(c.carte.premiereFois)
         val carte = CarteOrnee(
             context, c.carte.forme, c.rarete, vignette = false, blason = c.blason, jeu = jeu,
-            intensite = Rarete.intensitePourRang(c.rang)
-        )
+            intensite = Rarete.intensitePourRang(c.rang),
+            souvenir = souvenir
+        ).avecBoite(c.carte.boite) // pour le sceau d'une carte apprise
+            .avecPlume(c.plume)
 
         carte.posee(
             ligne(context, "${c.carte.forme.length}", taille = 25f, couleur = Color.WHITE, gras = true),
@@ -251,11 +283,21 @@ object CarteCarnet {
         // lecteurs d'écran, qui ne lisent pas une légende dessinée.
         carte.posee(
             View(context).apply {
-                contentDescription = "gagné à ${jeu.nom}"
+                contentDescription = context.getString(R.string.carte_gagne_a, jeu.libelle(context))
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             },
             Ornement.PROVENANCE
         )
+        // Le poinçon de saison est gravé, lui aussi : une vue vide le dit.
+        souvenir?.let {
+            carte.posee(
+                View(context).apply {
+                    contentDescription = context.getString(R.string.carte_saison, it.nom)
+                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+                },
+                Ornement.saison(c.rarete)
+            )
+        }
 
         // Les écus mordent sur le bas du panneau (375 contre 378) : le texte
         // s'arrête au-dessus, sinon sa dernière ligne passe sous « VUES ».
@@ -283,21 +325,28 @@ object CarteCarnet {
         // Le corps de 7,5 est imposé par la bande, qui vit maintenant dans la
         // marge : voir [Ornement.SERIE_G]. C'est celui des libellés d'écu.
         // Le jeu n'y figure plus : le médaillon le dit déjà, par son emblème
-        // et son nom.
-        val serie = "n° %03d · %s".format(
-            Locale.FRENCH, c.carte.numero, FORMAT_DATE.format(Date(c.carte.premiereFois))
+        // et son nom. La date non plus : c'est une donnée technique, la carte
+        // n'en montre que la saison, sur son cachet (propriétaire, 2026-10-11).
+        val serie = context.getString(
+            R.string.carte_serie,
+            "%03d".format(Locale.ROOT, c.carte.numero)
         )
         carte.posee(
             ligne(context, serie, taille = 7.5f, couleur = metal.trait, gras = true, ou = Gravity.START),
-            Ornement.SERIE_G
+            Ornement.serieG(c.rarete)
         )
+        // Le palier en toutes lettres avant le rang : « 9769ᵉ » seul ne disait
+        // pas ce qu'il valait, et la rareté ne se lisait qu'au code des
+        // bordures et des heures.
+        val rang = c.rang?.let { context.getString(R.string.carte_rang, it + 1) }
+            ?: context.getString(R.string.carte_hors_corpus)
         carte.posee(
             ligne(
                 context,
-                c.rang?.let { "${it + 1}ᵉ" } ?: "hors corpus",
+                "${c.rarete.symbole} ${context.getString(c.rarete.libelle)} · $rang",
                 taille = 7.5f, couleur = metal.trait, gras = true, ou = Gravity.END
             ),
-            Ornement.SERIE_D
+            Ornement.serieD(c.rarete)
         )
         return carte
     }

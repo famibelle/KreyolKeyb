@@ -1,5 +1,6 @@
 package com.example.kreyolkeyboard.carnet
 
+import com.example.kreyolkeyboard.R
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
@@ -12,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.kreyolkeyboard.TranslationDictionary
+import com.example.kreyolkeyboard.applicatifDansLaLangue
 
 /**
  * Le branchement d'un jeu sur le carnet, écrit une fois pour les cinq.
@@ -68,7 +70,7 @@ object Pochette {
         surVue: (View?) -> Unit = {},
         surFin: () -> Unit = {}
     ) {
-        val ctx = fragment.context?.applicationContext ?: return
+        val ctx = fragment.context?.applicatifDansLaLangue() ?: return
         // Rien de gagné : le jeu reprend la main tout de suite, sans délai —
         // attendre une pochette qui n'ouvrira pas ne ferait que retarder son
         // bilan.
@@ -86,9 +88,12 @@ object Pochette {
         Thread {
             TranslationDictionary.charger(ctx)
             TranslationDictionary.chargerExemples(ctx)
+            Carnet.preparer(ctx)
             val connues = Carnet.cartes(ctx).associateBy { it.forme }
             val contenus = distinctes.mapNotNull { connues[it] }
                 .map { CarteCarnet.contenu(ctx, it) }
+            val completees = Series.aFeter(ctx, neuves.mapNotNull { connues[it] })
+            val etape = if (neuves.any { it in connues }) Etapes.aFeter(ctx, connues.size) else null
             val reste = delai - (System.currentTimeMillis() - depuis)
             principal.postDelayed({
                 if (!fragment.isAdded || !encoreValide()) return@postDelayed
@@ -101,6 +106,8 @@ object Pochette {
                 surVue(
                     Booster.ouvrir(
                         hote, jeu, contenus, neuves, anime,
+                        seriesCompletees = completees,
+                        etape = etape,
                         surCarnet = { montrerLeCarnet(fragment) },
                         surFin = {
                             surVue(null)
@@ -152,7 +159,7 @@ object Pochette {
     /** Remet le total à jour sur une pastille créée par [bouton]. */
     fun rafraichir(bouton: TextView, context: Context) {
         val total = Carnet.taille(context)
-        bouton.text = if (total == 0) "📔 Carnet" else "📔 Carnet · $total"
+        bouton.text = if (total == 0) context.getString(R.string.carnet_bouton) else context.getString(R.string.carnet_bouton_total, total)
     }
 
     /**

@@ -90,6 +90,9 @@ import android.widget.Toast
 import android.widget.GridView
 import android.widget.ScrollView
 import com.example.kreyolkeyboard.carnet.BoiteFragment
+import com.example.kreyolkeyboard.carnet.Booster
+import com.example.kreyolkeyboard.carnet.CarteAccueil
+import com.example.kreyolkeyboard.carnet.CarteCarnet
 import com.example.kreyolkeyboard.carnet.Carnet
 import com.example.kreyolkeyboard.carnet.CarnetFragment
 import com.example.kreyolkeyboard.carnet.JeuCarte
@@ -106,6 +109,25 @@ class SettingsActivity : AppCompatActivity() {
      * l'écran à l'ouverture, et une grille de portrait ne tient pas en paysage.
      */
     internal var jeuOuvert = -1
+
+    /**
+     * Un écran qui sait recevoir les touches d'un clavier physique (v23.0.0,
+     * repris de LuxKeyb 34.2.0) : Mokwaré s'écrit au clavier, la Boîte de
+     * Sonjé se parcourt aux flèches.
+     */
+    interface JeuAuClavier {
+        fun surToucheClavier(event: android.view.KeyEvent): Boolean
+    }
+
+    /** Le jeu à l'écran qui sait recevoir les touches d'un clavier physique. */
+    var jeuAuClavier: JeuAuClavier? = null
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Un champ de texte qui a le focus garde ses touches ; sinon, le jeu
+        // ouvert les prend avant la navigation.
+        if (currentFocus !is EditText && jeuAuClavier?.surToucheClavier(event) == true) return true
+        return super.dispatchKeyEvent(event)
+    }
 
     private var currentTab = 0 // 0 = démarrage, 1 = stats, 2 = mots mêlés, 3 = mots mélangés, 4 = worldle, 5 = guide, 6 = à propos
     private lateinit var viewPager: ViewPager2
@@ -177,6 +199,9 @@ class SettingsActivity : AppCompatActivity() {
          * et les touches visées tombaient sur la fenêtre.
          */
         private const val DELAI_FELICITATIONS_MS = 4000L
+
+        /** Partage de l'activation à proposer à la prochaine ouverture. */
+        private const val PREF_PARTAGE_EN_ATTENTE = "partage_activation_en_attente"
         const val TAB_JEUX = 1
         const val TAB_DICO = 2
         const val TAB_STATS = 3
@@ -266,6 +291,10 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Sur téléphone, l'appli reste en hauteur (v23.0.0, repris de LuxKeyb
+        // 37.1.3) : couché, il laissait trop peu de place, et en révision la
+        // carte se réduisait à une icône. Les tablettes gardent les deux sens.
+        com.example.kreyolkeyboard.carnet.FigerOrientation.portraitSurTelephone(this)
         super.onCreate(savedInstanceState)
 
         // Sur tablette, les écrans de texte sont ramenés à une colonne de
@@ -403,8 +432,13 @@ class SettingsActivity : AppCompatActivity() {
 
         Log.d("SettingsActivity", "Interface avec tabs en haut et swipe cyclique créée avec succès")
 
-        maybeAskForReview()
-        maybeAskForNotificationPermission()
+        // Le partage reporté passe seul : la demande d'avis et celle des
+        // notifications attendent l'ouverture suivante plutôt que de s'empiler.
+        val partageMontre = savedInstanceState == null && proposerPartageEnAttente()
+        if (!partageMontre) {
+            maybeAskForReview()
+            maybeAskForNotificationPermission()
+        }
         maybeOfferUpdate()
     }
 
@@ -676,23 +710,90 @@ class SettingsActivity : AppCompatActivity() {
         minuterieFelicitations.postDelayed(felicitationsApresPause, DELAI_FELICITATIONS_MS)
     }
 
+    /**
+     * Vrai tant que la pochette de bienvenue est à l'écran : le champ d'essai
+     * ne doit pas relever le clavier par-dessus.
+     */
+    var pochetteAccueilOuverte = false
+
     // Récompense l'utilisateur juste après un parcours d'activation identifié
     // comme un point de friction (réglages système, sélecteur) : un seul
-    // affichage, jamais reposé même si l'onboarding se rejoue. Le message
-    // proposé au partage est fixe, écrit avant que l'utilisateur ait tapé
-    // quoi que ce soit avec le clavier — aucun contenu personnel n'est lu.
+    // affichage, jamais reposé même si l'onboarding se rejoue. La récompense
+    // est la carte « kréyòl », versée au carnet et ouverte comme une pochette
+    // (v23.0.0, repris de LuxKeyb 26.3.0) ; le partage est proposé à
+    // l'ouverture suivante. Le message proposé au partage est fixe, écrit
+    // avant que l'utilisateur ait tapé quoi que ce soit avec le clavier :
+    // aucun contenu personnel n'est lu.
     private fun maybeShowActivationSuccessCard() {
         val prefs = onboardingPrefs()
         if (prefs.getBoolean("activation_success_card_shown", false)) return
         prefs.edit().putBoolean("activation_success_card_shown", true).apply()
 
+        // L'onboarding lève le clavier sur le champ d'essai, et la fenêtre
+        // rétrécie coupait la carte sous la plaque du nom : le sens, qui est
+        // ce qu'on offre, restait caché.
+        pochetteAccueilOuverte = true
+        currentFocus?.clearFocus()
+        (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(window.decorView.windowToken, 0)
+
+        val ctx = applicatifDansLaLangue()
+        Thread {
+            val neuve = CarteAccueil.offrir(ctx)
+            TranslationDictionary.charger(ctx)
+            TranslationDictionary.chargerExemples(ctx)
+            val contenu = Carnet.cartes(ctx).firstOrNull { it.forme == CarteAccueil.FORME }
+                ?.let { CarteCarnet.contenu(ctx, it) }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                if (contenu == null) {
+                    pochetteAccueilOuverte = false
+                    reporterPartage()
+                    return@runOnUiThread
+                }
+                Booster.ouvrir(
+                    hote = findViewById(android.R.id.content),
+                    jeu = JeuCarte.ACCUEIL,
+                    contenus = listOf(contenu),
+                    nouvelles = if (neuve) setOf(CarteAccueil.FORME) else emptySet(),
+                    animations = !Pochette.animationsReduites(ctx),
+                    surCarnet = { CarnetFragment().show(supportFragmentManager, "carnet") },
+                    surFin = {
+                        pochetteAccueilOuverte = false
+                        reporterPartage()
+                    }
+                )
+            }
+        }.start()
+    }
+
+    /**
+     * Le partage n'est plus proposé dans la foulée de la pochette : c'était la
+     * deuxième fenêtre de suite avant même d'avoir vraiment écrit. Il l'est à
+     * l'ouverture suivante de l'application, une seule fois, et prend alors la
+     * place des demandes d'avis et de notifications, pour ne pas les empiler.
+     */
+    private fun reporterPartage() {
+        onboardingPrefs().edit().putBoolean(PREF_PARTAGE_EN_ATTENTE, true).apply()
+    }
+
+    /** Vrai si la fenêtre de partage a été montrée. */
+    private fun proposerPartageEnAttente(): Boolean {
+        val prefs = onboardingPrefs()
+        if (!prefs.getBoolean(PREF_PARTAGE_EN_ATTENTE, false)) return false
+        // « aktivé ! » au-dessus de la carte « Revenir au clavier » se
+        // contredirait : le partage attend que le clavier soit de retour.
+        if (!isKeyboardEnabled() || !isKeyboardSelected()) return false
+        prefs.edit().remove(PREF_PARTAGE_EN_ATTENTE).apply()
         AlertDialog.Builder(this)
             .setTitle("🎉 Klavyé Kréyòl aktivé !")
-            .setMessage("Bravo, ou fè'y ! Klavyé Kréyòl paré pou maké an kréyòl asi tout aplikasyon aw.")
+            .setMessage("Bravo, ou fè'y ! Klavyé Kréyòl paré pou maké an kréyòl asi tout aplikasyon aw." +
+                "\n\nLa carte « ${CarteAccueil.FORME} » est dans votre carnet.")
             .setPositiveButton("Partager la nouvelle") { _, _ -> shareActivationSuccess() }
             .setNegativeButton("Plus tard", null)
             .setCancelable(true)
             .show()
+        return true
     }
 
     // Partage natif (chooser Android), message pré-rédigé et fixe : célèbre
@@ -759,6 +860,10 @@ class SettingsActivity : AppCompatActivity() {
      */
     override fun onResume() {
         super.onResume()
+
+        // Une fois par installation : les shaders des cartes se compilent ici,
+        // sur un écran immobile, et non au retournement de la première carte.
+        com.example.kreyolkeyboard.carnet.ChauffeCartes.planifier(this)
 
         if (::tabBar.isInitialized && hasPendingLevelBadge() != levelBadgeDrawn) {
             Log.d("SettingsActivity", "🔄 Pastille de niveau à rafraîchir au retour au premier plan")
@@ -4857,6 +4962,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun focusTestField() {
+            if ((activity as? SettingsActivity)?.pochetteAccueilOuverte == true) return
             val field = rootView?.findViewWithTag<EditText>("onboarding_test_field") ?: return
             field.requestFocus()
             val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -6276,8 +6382,13 @@ class SettingsActivity : AppCompatActivity() {
                             setSingleLine(true)
                             isAllCaps = true // après setSingleLine() : sinon la transformation majuscules est écrasée
                             imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
-                            setOnEditorActionListener { _, actionId, _ ->
-                                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                            // Entrée d'un clavier physique valide aussi : elle arrive
+                            // sans action, en simple touche.
+                            setOnEditorActionListener { _, actionId, event ->
+                                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE ||
+                                    (event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
+                                        event.action == android.view.KeyEvent.ACTION_DOWN)
+                                ) {
                                     submitGuess()
                                     true
                                 } else false
@@ -7184,7 +7295,7 @@ class SettingsActivity : AppCompatActivity() {
      *   le pavé ne bouge jamais. Les deux boutons destructifs sont à l'autre
      *   bout du défilement, sous la liste des définitions.
      */
-    class CrosswordFragment : Fragment() {
+    class CrosswordFragment : Fragment(), JeuAuClavier {
 
         private companion object {
             /**
@@ -7654,6 +7765,37 @@ class SettingsActivity : AppCompatActivity() {
          * [CrosswordData.LETTRES] pour ce que cette disposition reprend au
          * clavier et les deux points où elle s'en écarte.
          */
+        /**
+         * Un clavier physique écrit dans la grille comme le pavé (v23.0.0,
+         * repris de LuxKeyb 34.2.0). Seules les lettres du pavé passent : une
+         * lettre que la grille ne peut pas porter ne doit rien écrire.
+         */
+        override fun surToucheClavier(event: android.view.KeyEvent): Boolean {
+            if (event.action != android.view.KeyEvent.ACTION_DOWN) return false
+            if (event.keyCode == android.view.KeyEvent.KEYCODE_DEL) {
+                session?.effacer()
+                apresSaisie()
+                return true
+            }
+            val code = event.unicodeChar
+            if (code == 0 || code and android.view.KeyCharacterMap.COMBINING_ACCENT != 0) return false
+            val lettre = code.toChar().uppercaseChar()
+            if (CrosswordData.LETTRES.none { lettre in it }) return false
+            session?.ecrire(lettre)
+            apresSaisie()
+            return true
+        }
+
+        override fun onPause() {
+            (activity as? SettingsActivity)?.let { if (it.jeuAuClavier === this) it.jeuAuClavier = null }
+            super.onPause()
+        }
+
+        override fun onResume() {
+            super.onResume()
+            (activity as? SettingsActivity)?.jeuAuClavier = this
+        }
+
         private fun construirePave(activity: SettingsActivity) {
             CrosswordData.LETTRES.forEachIndexed { rang, rangee ->
                 val ligne = LinearLayout(activity).apply {
@@ -8484,7 +8626,7 @@ class SettingsActivity : AppCompatActivity() {
                     // collection se lit d'un coup d'œil comme une carte de
                     // progression, sans compter ni classer.
                     text = jeux.joinToString(" ") { it.emoji } +
-                        "   ${jeux.size}/${JeuCarte.values().size} jeux"
+                        "   ${jeux.size}/${JeuCarte.JEUX.size} jeux"
                     setTextColor(0xFFE8E0FF.toInt())
                 }
             }

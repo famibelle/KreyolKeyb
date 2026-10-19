@@ -1,5 +1,8 @@
 package com.example.kreyolkeyboard.carnet
 
+import com.example.kreyolkeyboard.R
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
 import android.content.Context
 import android.graphics.Color
 import android.util.Log
@@ -32,11 +35,24 @@ enum class JeuCarte(
     MO_AN_KARENAJ("mk", "Mo an Karénaj", "🟩", 0xFF4CAF50.toInt()),
     FRAZ_A_TWOU("ft", "Fraz a twou", "📝", 0xFFFF8C00.toInt()),
     MOKWARE("mw", "Mokwaré", "🧩", 0xFFC2185B.toInt()),
-    MO_AN_PLAS("mp", "Mo an plas", "🔡", 0xFF00796B.toInt());
+    MO_AN_PLAS("mp", "Mo an plas", "🔡", 0xFF00796B.toInt()),
+
+    /** Pas un jeu : la provenance de la carte offerte à la fin de l'installation. */
+    ACCUEIL("ac", "Bienvenue", "👋", 0xFF27864D.toInt()),
+
+    /** Pas un jeu : une carte cédée par un autre téléphone. Voir [Cession]. */
+    CADEAU("cd", "Cadeau", "🎁", 0xFFB8860B.toInt());
+
+    /** Le nom affiché : celui du jeu, ou de la provenance qui n'en est pas un. */
+    @Suppress("UNUSED_PARAMETER")
+    fun libelle(context: Context): String = nom
 
     companion object {
         private val PAR_ID = values().associateBy { it.id }
         fun parId(id: String): JeuCarte? = PAR_ID[id]
+
+        /** Les sept vrais jeux, dans l'ordre du hub : tout compteur de jeux part d'ici. */
+        val JEUX: List<JeuCarte> = values().filter { it != ACCUEIL && it != CADEAU }
     }
 }
 
@@ -127,7 +143,10 @@ object Carnet {
                         forme = forme,
                         premiereFois = o.optLong("d"),
                         rencontres = o.optInt("n", 1),
-                        numero = cartes.size + 1,
+                        // Stocké depuis la cession : retirer une carte ne doit
+                        // pas renuméroter les suivantes. Absent, c'est le rang,
+                        // qui est exactement le numéro qu'elle affichait.
+                        numero = o.optInt("k", cartes.size + 1),
                         jeux = lireJeux(o.optString("g")),
                         boite = o.optInt("b", 0),
                         jourEcheance = o.optInt("j", Sonje.JAMAIS_PLANIFIEE)
@@ -203,7 +222,7 @@ object Carnet {
                 forme = forme,
                 premiereFois = System.currentTimeMillis(),
                 rencontres = 1,
-                numero = cartes.size + 1,
+                numero = (cartes.maxOfOrNull { it.numero } ?: 0) + 1,
                 jeux = setOf(jeu)
             )
         )
@@ -229,12 +248,19 @@ object Carnet {
         return forme in parForme
     }
 
-    /** Les jeux dont au moins une carte est au carnet, dans l'ordre du menu. */
+    /** Les valeurs des numéraux au carnet (côté LuxKeyb, pour Zuelwuert) : toujours vide ici. */
+    @Synchronized
+    fun nombres(context: Context): Set<Int> {
+        charger(context)
+        return cartes.mapNotNullTo(HashSet()) { it.nombre }
+    }
+
+    /** Les jeux dont au moins une carte est au carnet, dans l'ordre du hub. */
     @Synchronized
     fun jeuxRepresentes(context: Context): List<JeuCarte> {
         charger(context)
         val vus = cartes.flatMapTo(HashSet()) { it.jeux }
-        return JeuCarte.values().filter { it in vus }
+        return JeuCarte.JEUX.filter { it in vus }
     }
 
     /**
@@ -322,10 +348,44 @@ object Carnet {
         return Rarete.pourRang(rangs[carte.forme])
     }
 
+    /**
+     * Les paliers que le carnet possède déjà, sans compter les formes [sauf] :
+     * celles que la pochette en cours vient d'y verser. C'est ce qui dit si
+     * une rare est la **première** (voir [Booster.premieres]).
+     */
+    @Synchronized
+    fun paliersPossedes(context: Context, sauf: Set<String>): Set<Rarete> {
+        assurerRangs(context)
+        return cartes.filter { it.forme !in sauf }.mapTo(HashSet()) { rarete(context, it) }
+    }
+
     @Synchronized
     fun rang(context: Context, forme: String): Int? {
         assurerRangs(context)
         return rangs[forme]
+    }
+
+    /**
+     * Retire une carte du carnet : elle a été cédée à un autre téléphone.
+     *
+     * Le carnet ne faisait que grandir ; la cession, décidée par le
+     * propriétaire le 2026-10-10, est la seule façon d'en sortir. Les numéros
+     * des autres cartes ne bougent pas, puisqu'ils sont stockés. Voir
+     * `CESSION-CARTES.md`. Rend vrai si la carte était là.
+     */
+    @Synchronized
+    fun retirer(context: Context, forme: String): Boolean {
+        charger(context)
+        val index = parForme[forme] ?: return false
+        cartes.removeAt(index)
+        parForme = HashMap<String, Int>().apply {
+            cartes.forEachIndexed { i, c -> put(c.forme, i) }
+        }
+        // Le cache des rangs se reconnaît à la taille du carnet : un retrait
+        // suivi d'un gain la rendrait identique pour un autre jeu de formes.
+        rangsPour = -1
+        enregistrer(context)
+        return true
     }
 
     /** Remet le carnet à zéro. N'existe que pour les tests et le débogage. */
@@ -350,6 +410,8 @@ object Carnet {
                 .put("d", it.premiereFois)
                 .put("n", it.rencontres)
                 .put("g", it.jeux.joinToString(",") { j -> j.id })
+                .put("k", it.numero)
+            it.nombre?.let { v -> o.put("v", v) }
             // La révision n'écrit que ces deux entiers, et c'est ce qui tient
             // la promesse de [PreuveDeFrappe] : une échéance repoussée parce
             // que le mot a été écrit au clavier est indiscernable d'une
@@ -362,36 +424,130 @@ object Carnet {
         prefs(context).edit().putString(CLE_CARTES, tableau.toString()).apply()
     }
 
+    /**
+     * Lit les rangs et répare au passage la casse des cartes versées en
+     * minuscules (voir [suspectesDeCasse]). Lit le dictionnaire : **hors du fil principal**, avant de
+     * lister les cartes, pour que l'écran montre déjà le carnet réparé.
+     */
+    @Synchronized
+    fun preparer(context: Context) = assurerRangs(context)
+
     private fun assurerRangs(context: Context) {
         charger(context)
         if (rangsPour == cartes.size) return
+        if (cartes.isEmpty()) {
+            rangsPour = 0
+            rangs = emptyMap()
+            return
+        }
+        val formes = cartes.filter { it.nombre == null }.mapTo(HashSet()) { it.forme }
+        val lecture = lireRangs(context, formes, suspectesDeCasse(cartes))
+        if (lecture.canoniques.isNotEmpty()) {
+            val reparees = fusionnerCasse(cartes) { lecture.canoniques[it] }
+            if (reparees.size != cartes.size || reparees.zip(cartes).any { (a, b) -> a.forme != b.forme }) {
+                Log.d(TAG, "Casse réparée : ${cartes.size} → ${reparees.size} cartes")
+                cartes = ArrayList(reparees)
+                parForme = HashMap<String, Int>().apply {
+                    cartes.forEachIndexed { i, c -> put(c.forme, i) }
+                }
+                enregistrer(context)
+            }
+        }
         rangsPour = cartes.size
-        rangs = if (cartes.isEmpty()) emptyMap()
-        else lireRangs(context, cartes.mapTo(HashSet()) { it.forme })
+        rangs = lecture.rangs
     }
+
+    /**
+     * Les cartes versées en minuscules alors que le dictionnaire écrit le mot
+     * autrement.
+     *
+     * Côté LuxKeyb, Wuertriet versait « affer » là où les autres jeux versent
+     * « Affer » : deux cartes pour un mot, la seconde sans rang. Le dictionnaire
+     * kréyòl est tout en minuscules, si bien qu'aucune forme ne se répare ici
+     * en pratique ; la réparation est gardée telle quelle pour suivre le code
+     * partagé avec LuxKeyb, et parce qu'elle ne coûte rien (le même balayage
+     * lit les rangs). Ce ne sont que des suspectes, et seul le dictionnaire
+     * peut trancher : voir [fusionnerCasse].
+     */
+    internal fun suspectesDeCasse(cartes: List<CarteMot>): Set<String> =
+        cartes.filter { c ->
+            c.nombre == null && c.forme == c.forme.lowercase() &&
+                (JeuCarte.MO_AN_KARENAJ in c.jeux || JeuCarte.CADEAU in c.jeux)
+        }.mapTo(HashSet()) { it.forme }
+
+    /**
+     * Rend à leur forme du dictionnaire les cartes versées en minuscules, en
+     * fusionnant celles qui existaient déjà sous cette forme.
+     *
+     * [canonique] donne, pour une forme absente telle quelle du dictionnaire,
+     * celle qui y figure (« affer » → « Affer »), et `null` pour toute autre :
+     * un vrai mot en minuscules (« froen » à côté de « Froen ») n'est jamais
+     * touché.
+     *
+     * La carte fusionnée garde la place et le numéro de la plus ancienne, la
+     * première rencontre, la somme des rencontres, les jeux des deux dans
+     * l'ordre où ils l'ont donnée, et la révision la plus avancée : un joueur
+     * ne doit rien perdre de ce qu'il a fait sur l'une ou l'autre.
+     */
+    internal fun fusionnerCasse(
+        cartes: List<CarteMot>,
+        canonique: (String) -> String?
+    ): List<CarteMot> {
+        val renommees = cartes.map { c ->
+            if (c.nombre != null) c else canonique(c.forme)?.let { c.copy(forme = it) } ?: c
+        }
+        val parForme = LinkedHashMap<String, CarteMot>()
+        renommees.sortedBy { it.numero }.forEach { c ->
+            parForme[c.forme] = parForme[c.forme]?.let { ancienne ->
+                val avancee = if (c.boite > ancienne.boite) c else ancienne
+                ancienne.copy(
+                    premiereFois = minOf(ancienne.premiereFois, c.premiereFois),
+                    rencontres = ancienne.rencontres + c.rencontres,
+                    jeux = LinkedHashSet(ancienne.jeux).apply { addAll(c.jeux) },
+                    nombre = ancienne.nombre ?: c.nombre,
+                    boite = avancee.boite,
+                    jourEcheance = avancee.jourEcheance
+                )
+            } ?: c
+        }
+        // L'ordre de capture d'origine, celui de la liste stockée.
+        val gardees = parForme.values.associateBy { it.numero }
+        return renommees.mapNotNull { c -> gardees[c.numero]?.takeIf { it.forme == c.forme } }
+    }
+
+    private class LectureDico(val rangs: Map<String, Int>, val canoniques: Map<String, String>)
 
     /**
      * Le rang de chaque forme demandée dans `creole_dict.json`.
      *
-     * L'actif est un tableau de paires `[["ka", 1800], ["an", 1388], …]` trié
-     * par fréquence décroissante : le rang est la position, et il suffit de
-     * compter les ouvertures de paire en relevant la chaîne de tête. On balaye
-     * donc le texte une fois, sans construire le moindre objet JSON — voir la
-     * note de classe. Les formes du dictionnaire ne contiennent ni guillemet
-     * ni contre-oblique, la lecture est donc sûre telle quelle.
+     * L'actif est un tableau de paires `[["ka", 1800], ["an", 1388], …]`
+     * trié par fréquence décroissante : le rang est la position, et il suffit
+     * de compter les ouvertures de paire en relevant la chaîne de tête. On
+     * balaye donc le texte une fois, sans construire le moindre objet JSON —
+     * voir la note de classe. Les formes du dictionnaire ne contiennent ni
+     * guillemet ni contre-oblique, la lecture est donc sûre telle quelle.
+     *
+     * Le même balayage relève la forme du dictionnaire des [suspectes] de
+     * [suspectesDeCasse] qu'il ne connaît pas telles quelles, avec son rang :
+     * la réparation ne coûte donc aucune lecture de plus.
      */
-    private fun lireRangs(context: Context, formes: Set<String>): Map<String, Int> {
-        if (formes.isEmpty()) return emptyMap()
+    private fun lireRangs(
+        context: Context,
+        formes: Set<String>,
+        suspectes: Set<String> = emptySet()
+    ): LectureDico {
+        if (formes.isEmpty()) return LectureDico(emptyMap(), emptyMap())
         return try {
             val texte = BufferedReader(
                 InputStreamReader(context.assets.open(ASSET_DICO))
             ).use { it.readText() }
 
             val trouves = HashMap<String, Int>(formes.size)
+            val enMajuscule = HashMap<String, String>()
             var i = 0
             var rang = 0
             val n = texte.length
-            while (i < n && trouves.size < formes.size) {
+            while (i < n && (suspectes.isNotEmpty() || trouves.size < formes.size)) {
                 // Début d'une paire : le premier guillemet qui suit un '['.
                 val crochet = texte.indexOf('[', i)
                 if (crochet < 0) break
@@ -401,15 +557,25 @@ object Carnet {
                 if (ferme < 0) break
                 val forme = texte.substring(ouvre + 1, ferme)
                 if (forme in formes) trouves[forme] = rang
+                if (suspectes.isNotEmpty()) {
+                    val minuscule = forme.lowercase()
+                    // La plus fréquente l'emporte : le tableau est trié.
+                    if (minuscule != forme && minuscule in suspectes && minuscule !in enMajuscule) {
+                        enMajuscule[minuscule] = forme
+                        trouves.putIfAbsent(forme, rang)
+                    }
+                }
                 rang++
                 i = ferme + 1
             }
-            trouves
+            // Une suspecte que le dictionnaire connaît telle quelle est un vrai mot.
+            val canoniques = enMajuscule.filterKeys { it !in trouves }
+            LectureDico(trouves, canoniques)
         } catch (e: Exception) {
             // Sans rangs, tout est « commun » : le carnet reste consultable,
             // il perd seulement sa hiérarchie.
             Log.e(TAG, "Rangs illisibles: ${e.message}", e)
-            emptyMap()
+            LectureDico(emptyMap(), emptyMap())
         }
     }
 }
@@ -428,6 +594,12 @@ data class CarteMot(
     val rencontres: Int,
     val numero: Int,
     val jeux: Set<JeuCarte> = setOf(JeuCarte.MOKWARE),
+    /**
+     * La valeur d'un numéral, côté LuxKeyb (jeu Zuelwuert). Toujours `null` ici :
+     * le kréyòl n'a pas de jeu de nombres. Gardé pour que le code partagé avec
+     * LuxKeyb (séries, fusion des doublons) reste le même des deux côtés.
+     */
+    val nombre: Int? = null,
     val boite: Int = 0,
     val jourEcheance: Int = Sonje.JAMAIS_PLANIFIEE
 ) {
@@ -468,11 +640,17 @@ data class CarteMot(
  * comme le plus rare : c'est la lecture juste, une forme que le corpus ne
  * connaît pas est plus rare que tout ce qu'il connaît.
  */
-enum class Rarete(val libelle: String, val symbole: String, val couleur: Int) {
-    COMMUN("Commun", "●", 0xFF78909C.toInt()),
-    PEU_COMMUN("Peu commun", "◆", 0xFF43A047.toInt()),
-    RARE("Rare", "★", 0xFF1E88E5.toInt()),
-    TRES_RARE("Très rare", "✦", 0xFF8E24AA.toInt());
+enum class Rarete(
+    @StringRes val libelle: Int,
+    val symbole: String,
+    val couleur: Int,
+    /** « 5 très rares » : la légende du compte en tête du carnet. */
+    @PluralsRes val compte: Int
+) {
+    COMMUN(R.string.rarete_commun, "●", 0xFF78909C.toInt(), R.plurals.rarete_compte_commun),
+    PEU_COMMUN(R.string.rarete_peu_commun, "◆", 0xFF43A047.toInt(), R.plurals.rarete_compte_peu_commun),
+    RARE(R.string.rarete_rare, "★", 0xFF1E88E5.toInt(), R.plurals.rarete_compte_rare),
+    TRES_RARE(R.string.rarete_tres_rare, "✦", 0xFF8E24AA.toInt(), R.plurals.rarete_compte_tres_rare);
 
     /**
      * Le symbole, répété autant de fois que le palier est haut.

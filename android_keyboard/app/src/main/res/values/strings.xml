@@ -8,4 +8,190 @@
     <string name="spellchecker_name">Correcteur Kreyòl Karukéra • Potomitan™</string>
     <string name="subtype_kreyol">Klavyé Kréyòl Karukéra</string>
     <string name="subtype_kreyol_description">Kréyòl Gwadloup</string>
+
+    <!-- Carnet Sanblé, révision Sonjé et pochettes (v23.0.0, repris de LuxKeyb
+         35.0.0 à 37.4.9, en français : l'application n'a qu'une langue). -->
+    <string name="a_remettre_bandeau">📤 « %1$s » attend d\'être scannée par l\'autre téléphone. Touchez ici pour remontrer son code.</string>
+    <string name="accueil_glose">bonjour</string>
+    <string name="accueil_traduction">Bonjour, comment ça va ?</string>
+    <string name="album_carte_precedente">Carte précédente</string>
+    <string name="album_carte_suivante">Carte suivante</string>
+    <string name="album_page_precedente">Page précédente</string>
+    <string name="album_page_suivante">Page suivante</string>
+    <string name="boite_a_jour">Tout est à jour</string>
+    <string name="boite_a_revoir">%1$s · %2$d à revoir</string>
+    <string name="boite_acquis">Acquis</string>
+    <string name="boite_acquis_court">★ acquis</string>
+    <string name="boite_apres_demain">après-demain</string>
+    <plurals name="boite_dans_jours">
+        <item quantity="one">dans %d jour</item>
+        <item quantity="other">dans %d jours</item>
+    </plurals>
+    <string name="boite_demain">demain</string>
+    <string name="boite_description">Boîte de révision, sept casiers, %1$s</string>
+    <string name="boite_prochaine">%1$s %2$s</string>
+    <string name="boite_regle">"Bonne réponse : la carte avance et revient plus tard  →"</string>
+    <string name="boite_revient_dans">Revient dans %1$s</string>
+    <string name="boite_tout_acquis">Tout est acquis</string>
+    <string name="camera_pourquoi_message">L\'appareil photo sert seulement à lire le code affiché par l\'autre téléphone. Rien n\'est photographié, gardé ni envoyé.</string>
+    <string name="camera_pourquoi_ok">Continuer</string>
+    <string name="camera_pourquoi_titre">Lire le code de la carte</string>
+    <plurals name="carnet_acquis_sur">
+        <item quantity="one">%1$d acquis sur %2$d. Six révisions réussies par carte, étalées sur cinq mois.</item>
+        <item quantity="other">%1$d acquis sur %2$d. Six révisions réussies par carte, étalées sur cinq mois.</item>
+    </plurals>
+    <string name="carnet_bouton">📔 Carnet</string>
+    <string name="carnet_bouton_total">📔 Carnet · %1$d</string>
+    <string name="carnet_mots_dans">%1$s dans %2$s</string>
+    <string name="carnet_ouverture">Ouverture du carnet…</string>
+    <string name="carnet_recevoir">🎁 Recevoir</string>
+    <string name="carnet_tous">Tous</string>
+    <string name="carnet_vide">Le carnet est vide.</string>
+    <string name="carnet_vide_explication">Chaque mot gagné dans l\'un des six jeux devient une carte et vient s\'ajouter ici. Trouvez un mot, devinez-en un, écrivez-en un : la première carte est à une partie d\'ici.</string>
+    <string name="carte_ceder">🤝 Céder</string>
+    <string name="carte_ecu_niveau">NIVEAU</string>
+    <string name="carte_ecu_vues">VUES</string>
+    <string name="carte_gagne_a">gagné à %1$s</string>
+    <string name="carte_gagne_a_medaillon">GAGNÉ À</string>
+    <string name="carte_hors_corpus">hors corpus</string>
+    <string name="carte_partage_message">J\'ai gagné la carte « %1$s » (%2$s) avec Klavyé Kréyòl Karukéra, le clavier kréyòl.\n\nTélécharge-le gratuitement :\nhttps://play.google.com/store/apps/details?id=%3$s&amp;referrer=utm_source%%3Dcard_share%%26utm_campaign%%3Dcarte\n\n#KlavyéKréyòl</string>
+    <string name="carte_partage_pied">Klavyé Kréyòl Karukéra, gratuit sur Google Play</string>
+    <string name="carte_partager">📤 Partager</string>
+    <string name="carte_partager_titre">Partager la carte</string>
+    <string name="carte_rang">%1$dᵉ</string>
+    <string name="carte_recue_medaillon">REÇUE EN</string>
+    <string name="carte_saison">Saison : %1$s</string>
+    <string name="carte_serie">n° %1$s</string>
+    <plurals name="cartes">
+        <item quantity="one">%d carte</item>
+        <item quantity="other">%d cartes</item>
+    </plurals>
+    <string name="casier_aucune_carte">Aucune carte</string>
+    <string name="casier_vide_acquis">Aucune carte n\'est encore acquise. Une carte arrive ici après six révisions réussies, la dernière à trois mois d\'intervalle.</string>
+    <string name="casier_vide_premier">Ce casier est vide pour le moment. Les cartes gagnées dans les jeux arrivent ici, et y reviennent après une erreur.</string>
+    <string name="casier_vide_suivant">Ce casier est vide pour le moment. Les cartes y montent depuis le casier précédent, une révision réussie à la fois.</string>
+    <string name="cat_salutation">Salutation</string>
+    <string name="ceder_message">Demandez à l\'autre personne de toucher « Recevoir » dans son carnet, puis scannez le code qu\'elle affiche. La carte quittera votre carnet à ce moment-là, définitivement. Son apprentissage et sa plume restent avec vous.</string>
+    <string name="ceder_oui">📷 Scanner son code</string>
+    <string name="ceder_titre">Céder « %1$s » ?</string>
+    <string name="cession_version">L\'autre téléphone a une ancienne version du clavier. Mettez-le à jour pour échanger des cartes.</string>
+    <string name="demande_etapes">1. Le donneur ouvre sa carte, touche « Céder » et scanne ce code.\n2. Scannez ensuite le code qu\'il affichera : la carte arrivera dans votre carnet.</string>
+    <string name="demande_invalide">Ce code n\'est pas une demande de carte. L\'autre personne doit toucher « Recevoir » dans son carnet.</string>
+    <string name="demande_scanner">📷 Scanner la carte</string>
+    <string name="demande_titre">Recevoir une carte</string>
+    <string name="emplacement_dessin">Carte manquante : un mot illustré</string>
+    <string name="emplacement_jeu">Carte manquante : un mot gagné à %1$s</string>
+    <string name="emplacement_nombre">Carte manquante : le nombre %1$s</string>
+    <string name="emplacement_paysage">Carte manquante : %1$s, %2$s</string>
+    <string name="etape_atteinte">Votre carnet compte maintenant %1$d cartes !</string>
+    <string name="eventail_aide_plusieurs">Glissez pour parcourir · touchez une carte pour la lire</string>
+    <string name="eventail_aide_une">Touchez la carte pour la lire</string>
+    <string name="eventail_parcourir">Glissez pour parcourir les cartes.</string>
+    <string name="eventail_preparation">Préparation des cartes…</string>
+    <string name="eventail_ranger">Touchez ailleurs pour ranger</string>
+    <string name="eventail_refermer">Touchez pour refermer</string>
+    <string name="fermer">Fermer</string>
+    <string name="heure_0">le matin</string>
+    <string name="heure_1">l\'après-midi</string>
+    <string name="heure_2">le soir</string>
+    <string name="heure_3">la nuit</string>
+    <plurals name="mots">
+        <item quantity="one">%d mot</item>
+        <item quantity="other">%d mots</item>
+    </plurals>
+    <string name="pochette_bilan_deja">Vous les aviez déjà toutes : elles restent dans votre carnet.</string>
+    <string name="pochette_bilan_neuves">Elles sont rangées dans votre carnet.</string>
+    <string name="pochette_carte_rare">"★  CARTE RARE"</string>
+    <string name="pochette_carte_tres_rare">"✦  CARTE TRÈS RARE"</string>
+    <string name="pochette_mon_carnet">📔 Mon carnet</string>
+    <string name="pochette_nouvelle_carte">"✨  NOUVELLE CARTE"</string>
+    <plurals name="pochette_nouvelles">
+        <item quantity="one">%d nouvelle</item>
+        <item quantity="other">%d nouvelles</item>
+    </plurals>
+    <string name="pochette_parcourir">glissez pour parcourir ›</string>
+    <string name="pochette_passer">Passer</string>
+    <string name="pochette_premiere_rare">Votre première carte rare ! On la reconnaît à son ciel du soir et à sa bordure d\'argent.</string>
+    <string name="pochette_premiere_tres_rare">Votre première carte très rare ! On la reconnaît à sa nuit étoilée et à sa bordure d\'or.</string>
+    <string name="pochette_revoir">‹ glissez à droite pour revoir vos cartes</string>
+    <string name="pochette_titre">🎁 Votre pochette : %1$s</string>
+    <string name="rarete_commun">Commun</string>
+    <plurals name="rarete_compte_commun">
+        <item quantity="one">%d commun</item>
+        <item quantity="other">%d communs</item>
+    </plurals>
+    <plurals name="rarete_compte_peu_commun">
+        <item quantity="one">%d peu commun</item>
+        <item quantity="other">%d peu communs</item>
+    </plurals>
+    <plurals name="rarete_compte_rare">
+        <item quantity="one">%d rare</item>
+        <item quantity="other">%d rares</item>
+    </plurals>
+    <plurals name="rarete_compte_tres_rare">
+        <item quantity="one">%d très rare</item>
+        <item quantity="other">%d très rares</item>
+    </plurals>
+    <string name="rarete_peu_commun">Peu commun</string>
+    <string name="rarete_rare">Rare</string>
+    <string name="rarete_tres_rare">Très rare</string>
+    <string name="reception_impossible">Cette carte n\'existe pas dans le clavier.</string>
+    <string name="reception_titre">« %1$s » est dans votre carnet</string>
+    <string name="remise_autre">Ce code a été préparé pour un autre téléphone.</string>
+    <string name="remise_deja">« %1$s » est déjà arrivée dans votre carnet.</string>
+    <string name="remise_etapes">Faites scanner ce code par l\'autre téléphone : lui seul peut recevoir cette carte. Si vous fermez cet écran, le code reste en haut de votre carnet.</string>
+    <string name="remise_faite">C\'est fait, elle est arrivée</string>
+    <string name="remise_invalide">Ce code n\'est pas une carte.</string>
+    <string name="remise_plus_tard">Plus tard</string>
+    <string name="remise_titre">« %1$s » a quitté votre carnet</string>
+    <plurals name="reviser_cartes">
+        <item quantity="one">Réviser %d carte</item>
+        <item quantity="other">Réviser %d cartes</item>
+    </plurals>
+    <string name="revision_a_revoir">À revoir demain : %1$s</string>
+    <string name="revision_ecrits">Vous avez écrit vous-même %1$s depuis la dernière fois : ces cartes n\'avaient rien à prouver.</string>
+    <string name="revision_je_savais">Je savais</string>
+    <string name="revision_pas_su">Pas su</string>
+    <string name="revision_retourner">Retourner la carte</string>
+    <string name="revision_score">%1$d sur %2$d retrouvés.</string>
+    <string name="revision_souvenez">Vous souvenez-vous ?</string>
+    <string name="revision_terminee">Session terminée</string>
+    <plurals name="rythme_jours">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="rythme_jours_court">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="rythme_mois">
+        <item quantity="one">%d mois</item>
+        <item quantity="other">%d mois</item>
+    </plurals>
+    <plurals name="rythme_mois_court">
+        <item quantity="one">%d mois</item>
+        <item quantity="other">%d mois</item>
+    </plurals>
+    <plurals name="rythme_semaines">
+        <item quantity="one">%d semaine</item>
+        <item quantity="other">%d semaines</item>
+    </plurals>
+    <plurals name="rythme_semaines_court">
+        <item quantity="one">%d sem.</item>
+        <item quantity="other">%d sem.</item>
+    </plurals>
+    <string name="scan_invite">Visez le code de la carte</string>
+    <string name="serie_complete">Série complète : %1$s</string>
+    <string name="serie_complete_court">Complète ✓</string>
+    <string name="serie_enluminures">Les illustrations</string>
+    <string name="serie_jeux">Les six jeux</string>
+    <string name="serie_nombres">Les nombres</string>
+    <string name="serie_paysages">Les paysages</string>
+    <string name="serie_progression">%1$d / %2$d</string>
+    <string name="series_resume">%1$d emplacements remplis sur %2$d. Une série est complète quand chaque emplacement porte sa carte.</string>
+    <string name="tri_alpha">A → Z</string>
+    <string name="tri_etagere">Étagère</string>
+    <string name="tri_rarete">Rareté</string>
+    <string name="tri_recent">Récent</string>
+    <string name="tri_series">Séries</string>
 </resources>

@@ -11,7 +11,11 @@
    et sa référence (creole_dict_with_usage.json, carnet_vu.json) restent exclus :
    ce qui a été tapé ne part nulle part. Le dernier jeu ouvert, retenu pour
    l'accueil (kreyol_accueil_prefs.xml), est une trace d'usage : exclu aussi.
-   BackupRulesTest vérifie les deux sections.
+   Les codes de cession de cartes (carnet_cession.xml) appartiennent au
+   téléphone qui les a tirés : recopiés, un code de remise pourrait faire
+   entrer deux fois la même carte. Le préchauffage des cartes (carnet_chauffe.xml)
+   dépend du matériel. Exclus tous les deux. BackupRulesTest vérifie les deux
+   sections.
 -->
 <data-extraction-rules xmlns:tools="http://schemas.android.com/tools">
     <cloud-backup>
@@ -26,6 +30,8 @@
         <include domain="sharedpref" path="."/>
         <exclude domain="sharedpref" path="device.xml"/>
         <exclude domain="sharedpref" path="kreyol_accueil_prefs.xml"/>
+        <exclude domain="sharedpref" path="carnet_cession.xml"/>
+        <exclude domain="sharedpref" path="carnet_chauffe.xml"/>
         <exclude domain="file" path="creole_dict_with_usage.json"
             tools:ignore="FullBackupContent"/>
         <exclude domain="file" path="carnet_vu.json"
