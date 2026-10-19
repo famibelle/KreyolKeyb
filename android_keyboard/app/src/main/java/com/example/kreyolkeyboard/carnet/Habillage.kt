@@ -224,9 +224,12 @@ internal object Habillage {
                 p.style = Paint.Style.STROKE
                 p.strokeWidth = 1.3f * u
                 p.strokeCap = Paint.Cap.ROUND
-                p.color = if (P.nuit) argb(0.6f, 255, 255, 255) else argb(0.7f, 30, 26, 30)
+                // Des hérons garde-bœufs, blancs, qui rentrent au dortoir ; en
+                // pleine nuit ils ne volent plus (les tirages restent les mêmes).
+                p.color = argb(0.85f, 255, 255, 255)
                 repeat(6) {
                     val x = W * (0.12f + alea() * 0.5f); val y = H * (0.08f + alea() * 0.22f); val t = (3f + alea() * 3f) * u
+                    if (P.nuit) return@repeat
                     val oiseau = Path()
                     oiseau.moveTo(x - t, y - t * 0.5f)
                     oiseau.quadTo(x - t * 0.4f, y - t * 0.7f, x, y)

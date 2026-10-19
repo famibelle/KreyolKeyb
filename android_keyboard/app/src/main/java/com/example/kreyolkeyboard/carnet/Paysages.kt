@@ -12,6 +12,7 @@ import android.os.Looper
 import android.util.LruCache
 import java.util.concurrent.Executors
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
@@ -21,27 +22,38 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Le lieu que la fenêtre d'une carte montre : quinze lieux de Guadeloupe,
- * choisis par le propriétaire (2026-10-19).
+ * Le lieu que la fenêtre d'une carte montre : trente lieux de Guadeloupe,
+ * choisis par le propriétaire (quinze le 2026-10-19, quinze de plus le même
+ * jour sur maquettes).
  *
  * ## Pourquoi un lieu
  *
  * Un paysage fait deux choses à la fois : il distingue les cartes d'un coup
  * d'œil, en vignette comme en deutéranopie, et il donne une raison de
- * collectionner (l'album des paysages, quinze lieux à quatre heures).
+ * collectionner (l'album des paysages, trente lieux à quatre heures).
  *
  * ## Quel lieu pour quel mot
  *
  * LuxKeyb tire le lieu du champ sémantique du mot ; le kréyòl n'a pas encore
  * ce classement (`creole_blasons.json`). Le lieu se tire donc **du mot
  * lui-même**, par une empreinte fixe : un mot montre toujours le même lieu,
- * sur tous les téléphones et d'une version à l'autre. Mesuré sur les 602 mots
- * glosés du dictionnaire : chacune des soixante cases de l'album (quinze
- * lieux, quatre raretés) a au moins un mot qui la remplit.
+ * sur tous les téléphones et d'une version à l'autre.
  *
- * **Ne pas réordonner ni retirer d'entrée** : l'ordre fixe l'empreinte, et
- * changer le nombre de lieux changerait le lieu de presque toutes les cartes
- * déjà gagnées. Un lieu de plus se paie de la même façon.
+ * L'empreinte est salée par [GRAINE]. Sans elle, deux des cent vingt cases
+ * de l'album (trente lieux, quatre raretés) n'avaient aucun mot : il n'y a
+ * que 64 mots très rares pour trente lieux. La graine a été choisie parmi
+ * vingt mille sur les 622 mots glosés : avec elle chaque case a au moins un
+ * mot, et c'est encore vrai dans 28 tirages sur 30 où les rangs du
+ * dictionnaire bougent de 10 %, ce que fait une régénération du corpus.
+ * `PaysagesAlbumTest` rejoue la mesure sur les actifs livrés.
+ *
+ * **Ne pas réordonner, retirer ni ajouter d'entrée, ni changer la graine,
+ * une fois une version publiée avec ces lieux** : l'ordre, le nombre et la
+ * graine fixent l'empreinte, et en changer un déplacerait presque toutes les
+ * cartes déjà gagnées. La 23.0.0 ne montrait aucun lieu (`LIEUX_DESSINES`
+ * était faux) : c'est ce qui a permis de passer de quinze à trente sans rien
+ * déplacer chez personne. Un lieu de plus, après publication, demandera de
+ * garder dans la carte le lieu où elle a été gagnée.
  *
  * Les noms sont les noms d'usage, en français, comme sur les cartes routières.
  */
@@ -60,7 +72,22 @@ enum class Lieu(val nom: String) {
     ILET_MACOU("Îlet Macou"),
     ROCHES_GRAVEES("Roches gravées"),
     PLACE_VICTOIRE("Place de la Victoire"),
-    FIGUIER_MAUDIT("Figuier maudit");
+    FIGUIER_MAUDIT("Figuier maudit"),
+    GRAND_ETANG("Grand Étang"),
+    BAINS_JAUNES("Bains Jaunes"),
+    CASCADE_ECREVISSES("Cascade aux Écrevisses"),
+    SAUT_LEZARDE("Saut de la Lézarde"),
+    GRANDE_VIGIE("Pointe de la Grande Vigie"),
+    PORTE_ENFER("Porte d'Enfer"),
+    PETITE_TERRE("Petite-Terre"),
+    ILET_GOSIER("Îlet du Gosier"),
+    GRAND_CUL_DE_SAC("Grand Cul-de-Sac Marin"),
+    GUEULE_GRAND_GOUFFRE("Gueule Grand Gouffre"),
+    TRAVERSEE("Route de la Traversée"),
+    GRIVELIERE("Habitation La Grivelière"),
+    MATOUBA("Matouba"),
+    FORT_DELGRES("Fort Delgrès"),
+    MEMORIAL_ACTE("Mémorial ACTe");
 
     companion object {
         /**
@@ -71,10 +98,22 @@ enum class Lieu(val nom: String) {
          */
         fun du(forme: String): Lieu {
             val cle = java.text.Normalizer.normalize(forme.lowercase(), java.text.Normalizer.Form.NFC)
-            return values()[Math.floorMod(cle.hashCode(), values().size)]
+            return values()[Math.floorMod((GRAINE + cle).hashCode(), values().size)]
         }
+
+        /** Le sel de l'empreinte, voir plus haut : il fige la répartition des mots. */
+        const val GRAINE = "8576:"
     }
 }
+
+/** Les espèces que les lieux peignent, et que la carte ouverte fait bouger : voir [Paysages.BETES]. */
+enum class Espece {
+    TOULOULOU, TORTUE, PELICAN_PIEU, PELICAN, PELICAN_QUAI, LIBELLULE, ANOLI, PIC, AGOUTI, RATON,
+    SIFFLEUR, PARULINE, BALEINE, ECREVISSE, IGUANE
+}
+
+/** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
+class Bete(val espece: Espece, val x: Float, val y: Float, val plan: Int = 2, val taille: Float = 1f)
 
 /**
  * L'heure d'une carte, et sa palette : la rareté fait avancer le jour.
@@ -182,7 +221,7 @@ class Heure private constructor(
 }
 
 /**
- * Les quinze lieux, dessinés par le code dans une boîte de 100 × 66 unités.
+ * Les trente lieux, dessinés par le code dans une boîte de 100 × 66 unités.
  *
  * Aucun fichier image : chaque lieu est une suite de plans (crête lointaine,
  * colline, bâti, eau, premier plan) et la même suite se repeint aux quatre
@@ -198,8 +237,8 @@ object Paysages {
     const val HAUTEUR = 66f
 
     /**
-     * Un huitième du tas : un tiroir du carnet montre jusqu'à soixante
-     * paysages différents (quinze lieux, quatre heures) et chacun pèse un demi
+     * Un huitième du tas : un tiroir du carnet montre jusqu'à cent vingt
+     * paysages différents (trente lieux, quatre heures) et chacun pèse un demi
      * mégaoctet en vignette. Un cache plus petit que ce qu'une seule page
      * affiche ne cache plus rien, il redessine tout à chaque trame.
      */
@@ -223,7 +262,7 @@ object Paysages {
      * Le lieu à l'heure dite, rendu à [largeurPx] × [hauteurPx], habillé par
      * la saison de [souvenir] s'il y en a un (voir [Habillage]).
      *
-     * Le souvenir entre dans la clé : quinze lieux, quatre heures, deux
+     * Le souvenir entre dans la clé : trente lieux, quatre heures, deux
      * saisons et cinq fêtes, mais un tiroir n'en montre qu'une poignée à la
      * fois, et deux cartes gagnées le même carême partagent toujours leur rendu.
      */
@@ -417,7 +456,7 @@ object Paysages {
             val c = Canvas(b)
             c.translate(ks[i][1], ks[i][2])
             c.scale(ks[i][0], ks[i][0])
-            dessiner(c, lieu, heure, ciel = ciel, lieuAussi = lieuAussi, seul = i)
+            dessiner(c, lieu, heure, ciel = ciel, lieuAussi = lieuAussi, seul = i, faune = false)
             return b
         }
         // Le lointain : le ciel, puis la crête, floutée seule pour que la lune
@@ -493,13 +532,57 @@ object Paysages {
     }
 
     /**
+     * Les bêtes de chaque lieu, où elles se tiennent dans la boîte 100 × 66,
+     * et le plan qui les porte (pour glisser avec lui quand la carte penche).
+     *
+     * Une seule table pour les deux rendus : la vignette les peint au repos,
+     * la carte ouverte les fait bouger au même endroit ([Atelier]). Une ou
+     * deux par lieu, pas plus (propriétaire, 2026-10-19).
+     */
+    internal val BETES: Map<Lieu, List<Bete>> = mapOf(
+        Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f), Bete(Espece.TOULOULOU, 46f, 54.6f), Bete(Espece.TOULOULOU, 61f, 52.4f)),
+        Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 56f, 45f, plan = 1, taille = 4f)),
+        Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f)),
+        Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
+        Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
+        Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 43f)),
+        Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 62f, 54.6f), Bete(Espece.LIBELLULE, 33f, 43f)),
+        Lieu.SAUT_LEZARDE to listOf(Bete(Espece.LIBELLULE, 44f, 50f, plan = 1)),
+        Lieu.GRANDE_VIGIE to listOf(Bete(Espece.BALEINE, 78f, 42f, plan = 1)),
+        Lieu.PORTE_ENFER to listOf(Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
+        Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 22f, 54.4f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
+        Lieu.ILET_GOSIER to listOf(Bete(Espece.PELICAN, 22f, 47f, plan = 1), Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
+        Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.TORTUE, 34f, 58f, plan = 1, taille = 3f)),
+        Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 50f, 57f, plan = 1)),
+        Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 22f, 52f)),
+        Lieu.MATOUBA to listOf(Bete(Espece.PIC, 13.6f, 30f)),
+        Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
+        Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
+    )
+
+    /**
+     * Ce qui peint les bêtes d'un lieu dans l'ambiance de la carte ouverte,
+     * avec les mêmes tracés et la même palette que le paysage : une bête qui
+     * bouge ne change pas de couleur en quittant la vignette.
+     */
+    internal class Atelier(heure: Heure) {
+        private val peintre = Peintre(Canvas(), heure)
+
+        /** Peint [b] à l'instant [t], en secondes ; [i] décale son rythme de celui des autres. */
+        fun peindre(c: Canvas, b: Bete, t: Float, i: Int) {
+            peintre.c = c
+            peintre.bete(b, t, i, immobile = false)
+        }
+    }
+
+    /**
      * Les lieux de Guadeloupe sont dessinés (2026-10-19). Éteint, une carte ne
      * montrerait que le ciel de son heure et l'album des paysages disparaîtrait.
      */
     internal const val LIEUX_DESSINES = true
 
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
-                 seul: Int = -1) {
+                 seul: Int = -1, faune: Boolean = true) {
         val p = Peintre(c, heure, seul)
         if (ciel) p.ciel()
         if (!lieuAussi || !LIEUX_DESSINES) return
@@ -519,7 +602,25 @@ object Paysages {
             Lieu.ROCHES_GRAVEES -> p.rochesGravees()
             Lieu.PLACE_VICTOIRE -> p.placeVictoire()
             Lieu.FIGUIER_MAUDIT -> p.figuierMaudit()
+            Lieu.GRAND_ETANG -> p.grandEtang()
+            Lieu.BAINS_JAUNES -> p.bainsJaunes()
+            Lieu.CASCADE_ECREVISSES -> p.cascadeEcrevisses()
+            Lieu.SAUT_LEZARDE -> p.sautLezarde()
+            Lieu.GRANDE_VIGIE -> p.grandeVigie()
+            Lieu.PORTE_ENFER -> p.porteEnfer()
+            Lieu.PETITE_TERRE -> p.petiteTerre()
+            Lieu.ILET_GOSIER -> p.iletGosier()
+            Lieu.GRAND_CUL_DE_SAC -> p.grandCulDeSac()
+            Lieu.GUEULE_GRAND_GOUFFRE -> p.gueuleGrandGouffre()
+            Lieu.TRAVERSEE -> p.traversee()
+            Lieu.GRIVELIERE -> p.griveliere()
+            Lieu.MATOUBA -> p.matouba()
+            Lieu.FORT_DELGRES -> p.fortDelgres()
+            Lieu.MEMORIAL_ACTE -> p.memorialActe()
         }
+        // Les bêtes au repos, par-dessus le lieu. La carte ouverte les tait
+        // ici et les fait vivre dans son ambiance (voir [Atelier]).
+        if (faune) BETES[lieu]?.forEachIndexed { i, b -> p.bete(b, 0f, i, immobile = true) }
     }
 
     /**
@@ -572,7 +673,7 @@ object Paysages {
     }
 
     /** Tout l'outillage de tracé d'un lieu, sur un canevas déjà à l'échelle. */
-    private class Peintre(val c: Canvas, val P: Heure, private val seul: Int = -1) {
+    private class Peintre(var c: Canvas, val P: Heure, private val seul: Int = -1) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val BAS = HAUTEUR
 
@@ -594,10 +695,19 @@ object Paysages {
 
         fun mix(a: Int, b: Int, t: Float) = Heure.melange(a, b, t)
 
+        private companion object {
+            /** Le siffleur des montagnes, gris ardoise ; la paruline caféiette, vert olive. */
+            const val COULEUR_SIFFLEUR = 0xFF4E5560.toInt()
+            const val COULEUR_PARULINE = 0xFF8C8A3A.toInt()
+        }
+
+        /** Une opacité de plus sur tout ce qui se peint : une bête qui paraît ou s'efface. */
+        var voile = 1f
+
         fun teinte(col: Int, opacite: Float) {
             p.shader = null
             p.color = col
-            p.alpha = (opacite * 255f).roundToInt().coerceIn(0, 255)
+            p.alpha = (opacite * voile * 255f).roundToInt().coerceIn(0, 255)
         }
 
         fun rect(x: Float, y: Float, w: Float, h: Float, col: Int, o: Float = 1f) {
@@ -847,10 +957,11 @@ object Paysages {
             trait("M$x ${y - l * 0.4f}L$x ${y + l * 0.4f}M${x - l * 0.3f} ${y}L${x + l * 0.3f} $y", mix(dos, P.pres, 0.35f), l * 0.04f)
         }
 
+        /** Le pieu où se pose le pélican de l'îlet Macou. */
+        fun pieu(x: Float, y: Float) = rect(x - 0.4f, y, 0.8f, 6f, mix(P.sol, P.pierre, 0.2f))
+
         /** Un pélican brun posé sur un pieu, le bec rentré. */
         fun pelican(x: Float, y: Float) {
-            val bois = mix(P.sol, P.pierre, 0.2f)
-            rect(x - 0.4f, y, 0.8f, 6f, bois)
             val plume = duJour(0xFF7A6A58.toInt())
             ovale(x, y - 1.6f, 1.4f, 1.8f, plume)
             trait("M${x + 0.4f} ${y - 3f}Q${x + 0.8f} ${y - 4.8f} ${x + 0.2f} ${y - 5.2f}", plume, 0.7f)
@@ -894,7 +1005,6 @@ object Paysages {
             bosquet(2f, 16f, 50f, 2.2f, 104, mix(P.pres, P.milieu, 0.5f))
             flamboyant(84f, 56f, 14f)
             forme("M0 66L0 58Q20 55 40 58.5Q60 62 80 57.5Q92 55.5 100 56L100 66Z", mix(sable(), P.sol, 0.3f))
-            touloulou(38f, 53f); touloulou(46f, 54.6f); touloulou(61f, 52.4f)
         }
 
         /** Les Saintes : la baie, le Pain de Sucre, une saintoise sous voile. */
@@ -920,23 +1030,37 @@ object Paysages {
             forme("M24.7 44L18.6 55L24.7 55Z", duJour(0xFFE3B65C.toInt()))
         }
 
-        /** La Soufrière : le dôme, le soufre au sommet, les fumerolles, la forêt dense. */
+        /**
+         * La Soufrière : le dôme raide qui remplit la fenêtre, son chapeau de
+         * nuages, les fumerolles, la savane d'altitude sur ses flancs et la
+         * forêt dense tout autour. Le premier dessin la posait sur une bande
+         * verte qui se lisait comme une plaine (propriétaire, 2026-10-19).
+         */
         fun soufriere() {
-            crete(40f, 1.4f, 121, P.loin)
+            forme("M0 34Q12 26 24 30L24 66L0 66Z", P.loin)
+            forme("M100 32Q88 25 76 30L76 66L100 66Z", P.loin)
             plan(1)
-            forme("M0 56Q14 47 28 38Q38 27 44 23.5L56 23.5Q62 27 72 38Q86 47 100 52L100 66L0 66Z", P.milieu)
-            val roc = mix(P.pierre, P.milieu, 0.45f)
-            forme("M44 23.5L56 23.5Q58 25 59 27L41 27Q42 25 44 23.5Z", roc)
-            trait("M46 27L44 34M51 27L50.6 31M55 27L57 33", roc, 0.6f, 0.8f)
-            forme("M48 23.6L53 23.6L52 25L49 25Z", duJour(0xFFD8C467.toInt()), 0.8f)
-            vapeur(49f, 23f, 12f)
-            vapeur(53.5f, 23.5f, 9f)
+            forme("M16 54Q20 30 33 20Q42 12 52 12Q63 13 71 22Q81 32 86 54Z", mix(P.pierre, P.milieu, 0.45f))
+            forme("M52 12Q63 13 71 22Q81 32 86 54L66 54Q68 30 52 12Z", mix(P.pierre, P.sol, 0.45f), 0.4f)
+            trait("M40 18Q42 28 38 38M50 13Q52 24 49 36M60 16Q58 26 63 40M33 26Q32 32 29 36", mix(P.pierre, P.sol, 0.5f), 0.5f)
+            ovale(46f, 15.6f, 3.2f, 1f, duJour(0xFFD8C467.toInt()), 0.9f)
+            vapeur(46f, 13f, 10f)
+            vapeur(58f, 14.6f, 8f)
+            brume(46f, 11.5f, 20f, 3.4f, 0.75f)
+            brume(62f, 9.6f, 12f, 2.6f, 0.6f)
+            for ((nx, ny, nr) in arrayOf(Triple(38f, 10.6f, 3.2f), Triple(45f, 9.4f, 3.8f), Triple(52f, 10f, 3.4f), Triple(59f, 9f, 2.8f)))
+                rond(nx, ny, nr, blanc(), 0.22f)
+            bosquet(16f, 86f, 53f, 2.2f, 122, P.milieu)
             plan(2)
-            bosquet(-2f, 102f, 57f, 3.4f, 122, P.pres)
-            bosquet(-2f, 102f, 61.5f, 3f, 123, mix(P.pres, P.sol, 0.4f))
-            rect(0f, 62f, 100f, 4f, P.sol)
-            balisier(10f, 60f, 10f, mix(P.pres, P.milieu, 0.3f))
-            balisier(90f, 61f, 12f, mix(P.pres, P.milieu, 0.3f))
+            forme("M0 44Q14 38 26 48Q34 55 40 66L0 66Z", P.milieu)
+            forme("M100 42Q86 38 76 48Q66 55 60 66L100 66Z", P.milieu)
+            bosquet(-2f, 30f, 45f, 3.4f, 123, P.milieu)
+            bosquet(70f, 102f, 44f, 3.4f, 124, P.milieu)
+            forme("M0 66L0 56Q50 50 100 56L100 66Z", P.pres)
+            bosquet(-2f, 102f, 56f, 4.2f, 125, P.pres)
+            bosquet(-2f, 102f, 62f, 3.6f, 126, mix(P.pres, P.sol, 0.3f))
+            balisier(10f, 65f, 12f, feuille())
+            balisier(90f, 65f, 12f, feuille())
         }
 
         /** Les Chutes du Carbet : la chute dans la paroi, le bassin, les fougères. */
@@ -1105,8 +1229,6 @@ object Paysages {
             rect(84f, 38f, 3.6f, 2.6f, duJour(0xFFD6352E.toInt()))
             trait("M84 38L87.6 40.6", duJour(0xFFF4F1EA.toInt()), 0.5f)
             rond(84f, 44.4f, 0.9f, duJour(0xFFE87A2E.toInt()))
-            // Une tortue verte, comme on en croise sur ce rivage.
-            tortue(56f, 45f, 4f)
             plan(2)
             forme("M0 66L0 53Q40 49 70 52.6Q86 54.6 100 52.4L100 66Z", mix(P.sol, P.pierre, 0.25f))
             vapeur(40f, 52f, 10f)
@@ -1160,7 +1282,7 @@ object Paysages {
             forme("M70 58Q78 60.4 88 57.6L87 59.6Q78 61.8 71 59.8Z", duJour(0xFFF4F1EA.toInt()))
             forme("M71 59.8Q78 61.8 87 59.6L86.8 60.3Q78 62.4 71.4 60.5Z", duJour(0xFFD6452E.toInt()))
             rect(68.4f, 56.6f, 1.6f, 2.6f, P.sol)
-            pelican(92f, 56f)
+            pieu(92f, 56f)
         }
 
         /** Les Roches gravées : la forêt de Trois-Rivières, les visages taillés dans le rocher. */
@@ -1273,6 +1395,694 @@ object Paysages {
                 val x = 24f + k * 4f + r() * 2f
                 ligne(x, 22f + r() * 4f, x + (r() - 0.5f) * 1.2f, 42f + r() * 16f, liane, 0.35f)
             }
+        }
+
+        // ------------------------------------------------------ flore et faune des trente lieux
+
+        /** La couleur des feuilles qui bordent un lieu de forêt, pour les balisiers. */
+        fun feuille() = mix(P.pres, P.milieu, 0.3f)
+
+        /** Le lagon : l'eau de l'heure, éclaircie vers le turquoise le jour. */
+        fun lagon() = mix(P.eau, 0xFF8FE0D2.toInt(), if (P.nuit) 0.08f else 0.4f)
+
+        /** Un anthurium : la spathe rouge en cœur, le spadice jaune, une feuille. */
+        fun anthurium(x: Float, y: Float) {
+            val tige = feuille()
+            trait("M$x ${y}Q${x + 0.4f} ${y - 2f} ${x + 0.2f} ${y - 3.4f}", tige, 0.3f)
+            ovale(x - 1.4f, y - 1.6f, 0.9f, 1.6f, tige)
+            forme("M${x + 0.2f} ${y - 3.4f}Q${x - 1.6f} ${y - 4.8f} ${x - 0.8f} ${y - 5.6f}Q${x + 0.2f} ${y - 5.2f} " +
+                "${x + 0.2f} ${y - 4.6f}Q${x + 0.2f} ${y - 5.2f} ${x + 1.2f} ${y - 5.6f}Q${x + 2f} ${y - 4.8f} ${x + 0.2f} ${y - 3.4f}Z",
+                duJour(0xFFC8282E.toInt()))
+            trait("M${x + 0.2f} ${y - 4.4f}L${x + 0.9f} ${y - 6f}", duJour(0xFFE8C440.toInt()), 0.3f)
+        }
+
+        /** Un raisinier bord de mer : des feuilles rondes serrées, une qui rougit. */
+        fun raisinier(x: Float, y: Float, s: Float) {
+            val vert = duJour(0xFF6E9A44.toInt())
+            for ((dx, dy) in arrayOf(0f to 0f, -1.4f to 0.5f, 1.4f to 0.5f, -0.7f to -1.1f, 0.8f to -1f, 0f to 1f))
+                rond(x + dx * s, y + dy * s, 0.95f * s, vert)
+            rond(x + 0.8f * s, y - s, 0.5f * s, duJour(0xFFB0603A.toInt()))
+        }
+
+        /** Un amandier pays : le tronc et ses étages de feuillage à plat, une feuille rouge. */
+        fun amandier(x: Float, y: Float, h: Float) {
+            trait("M$x ${y}L$x ${y - h}M$x ${y - h * 0.45f}L${x - h * 0.4f} ${y - h * 0.6f}M$x ${y - h * 0.7f}L${x + h * 0.4f} ${y - h * 0.82f}",
+                mix(P.sol, P.pierre, 0.2f), 0.7f)
+            val vert = duJour(0xFF4E7A3A.toInt())
+            ovale(x - h * 0.4f, y - h * 0.62f, h * 0.38f, h * 0.07f, vert)
+            ovale(x + h * 0.4f, y - h * 0.84f, h * 0.36f, h * 0.07f, vert)
+            ovale(x, y - h, h * 0.44f, h * 0.09f, vert)
+            ovale(x + h * 0.2f, y - h * 0.98f, h * 0.12f, h * 0.05f, duJour(0xFFB8502E.toInt()))
+        }
+
+        /** Un palétuvier dressé sur ses racines échasses. */
+        fun paletuvier(x: Float, y: Float) {
+            trait("M$x ${y - 6f}L$x ${y - 14f}M$x ${y - 6f}Q${x - 3f} ${y - 4f} ${x - 4f} ${y}M$x ${y - 6f}Q${x - 1f} ${y - 3f} ${x - 1.4f} ${y}" +
+                "M$x ${y - 6f}Q${x + 1.4f} ${y - 3f} ${x + 1.6f} ${y}M$x ${y - 6f}Q${x + 3.4f} ${y - 4f} ${x + 4.4f} $y",
+                mix(P.sol, P.pierre, 0.2f), 0.5f)
+            ovale(x, y - 15f, 6f, 3.4f, duJour(0xFF3E6A36.toInt()))
+            ovale(x - 3f, y - 13.4f, 3.4f, 2f, duJour(0xFF4E7A3A.toInt()))
+            ovale(x + 3f, y - 13.6f, 3.4f, 2f, duJour(0xFF4E7A3A.toInt()))
+        }
+
+        /** Un bananier : le stipe, et ses grandes feuilles retombantes. */
+        fun bananier(x: Float, y: Float, h: Float) {
+            rect(x - 0.7f, y - h * 0.55f, 1.4f, h * 0.55f, duJour(0xFF7A8A4A.toInt()))
+            val vert = duJour(0xFF5E8A3A.toInt())
+            val ax = x
+            val ay = y - h * 0.55f
+            for ((angle, l) in arrayOf(-48f to 0.5f, -22f to 0.55f, 12f to 0.55f, 42f to 0.5f, 70f to 0.4f)) {
+                c.save()
+                c.rotate(angle, ax, ay)
+                ovale(ax, ay - h * l / 2f, 1.3f, h * l / 2f, vert)
+                c.restore()
+            }
+        }
+
+        /** Des fleurs jaunes de coquelicot des Antilles, semées dans l'herbe. */
+        fun turnera(vararg xy: Float) {
+            val jaune = duJour(0xFFE8C440.toInt())
+            var i = 0
+            while (i < xy.size) { rond(xy[i], xy[i + 1], 0.45f, jaune); i += 2 }
+        }
+
+        /** Un grand tronc de forêt, avec ses contreforts au pied. */
+        fun tronc(x: Float, w: Float, haut: Float, pied: Float) {
+            val bois = mix(P.pierre, P.sol, 0.65f)
+            forme("M$x ${haut}L${x + w} ${haut}L${x + w + 0.4f} ${pied - 14f}Q${x + w + 2f} ${pied - 6f} ${x + w + 6f} ${pied}" +
+                "L${x - 6f} ${pied}Q${x - 2f} ${pied - 6f} ${x - 0.4f} ${pied - 14f}Z", bois)
+            trait("M${x + w / 2f} ${pied - 12f}L${x + w / 2f - 1f} $pied", mix(bois, P.sol, 0.5f), 0.4f)
+        }
+
+        /** Une libellule au repos dans l'air : le corps, deux paires d'ailes. Le jour seulement. */
+        fun libellule(x: Float, y: Float) {
+            if (P.nuit) return
+            ligne(x - 1.6f, y, x + 1.6f, y, duJour(0xFF3B6E8C.toInt()), 0.35f)
+            trait("M${x - 0.4f} ${y - 1f}L${x + 0.4f} ${y + 1f}M${x + 0.4f} ${y - 1f}L${x - 0.4f} ${y + 1f}", blanc(), 0.3f, 0.8f)
+        }
+
+        /** Un pélican brun posé, le bec le long du cou. */
+        fun pelicanPose(x: Float, y: Float) {
+            val plume = duJour(0xFF6E6258.toInt())
+            ovale(x, y, 2.4f, 1.3f, plume)
+            ovale(x + 1.6f, y - 1.9f, 0.8f, 0.7f, duJour(0xFFD9CBB0.toInt()))
+            trait("M${x + 1.2f} ${y - 1f}L${x + 1.5f} ${y - 1.5f}", plume, 0.45f)
+            trait("M${x + 2.2f} ${y - 1.9f}L${x + 4.4f} ${y - 1f}", duJour(0xFFC9A24A.toInt()), 0.45f)
+        }
+
+        /** Un anoli au soleil, le fanon orange déployé. Le jour seulement. */
+        fun anoli(x: Float, y: Float) {
+            if (P.nuit) return
+            val vert = duJour(0xFF5E9A3A.toInt())
+            forme("M${x - 2f} ${y}Q$x ${y - 0.7f} ${x + 2f} ${y}Q$x ${y + 0.5f} ${x - 2f} ${y}Z", vert)
+            trait("M${x - 2f} ${y}Q${x - 4f} ${y + 0.4f} ${x - 5f} ${y + 1.6f}", vert, 0.35f)
+            rond(x + 1.4f, y + 0.6f, 0.5f, duJour(0xFFE07A2E.toInt()))
+        }
+
+        /** Le pic de la Guadeloupe accroché à un tronc. Le jour seulement. */
+        fun pic(x: Float, y: Float) {
+            if (P.nuit) return
+            val noir = duJour(0xFF26262C.toInt())
+            ovale(x, y, 0.8f, 1.7f, noir)
+            rond(x + 0.2f, y - 2f, 0.7f, noir)
+            trait("M${x + 0.7f} ${y - 2f}L${x + 1.8f} ${y - 2.2f}", duJour(0xFF4A4A4A.toInt()), 0.25f)
+            rond(x + 0.4f, y - 1.2f, 0.4f, duJour(0xFF7A2E2E.toInt()))
+        }
+
+        /** Un agouti qui traverse. Le jour seulement. */
+        fun agouti(x: Float, y: Float) {
+            if (P.nuit) return
+            val poil = duJour(0xFF9A6A3A.toInt())
+            ovale(x, y, 2.4f, 1.2f, poil)
+            ovale(x + 2.2f, y - 0.5f, 0.9f, 0.7f, poil)
+            trait("M${x - 1.4f} ${y + 0.8f}L${x - 1.6f} ${y + 2f}M${x + 1.2f} ${y + 0.8f}L${x + 1.4f} ${y + 2f}",
+                duJour(0xFF5C3E22.toInt()), 0.3f)
+        }
+
+        /** Le raton laveur, la queue annelée. La nuit seulement, quand il sort. */
+        fun raton(x: Float, y: Float) {
+            if (!P.nuit) return
+            val gris = 0xFF6E7488.toInt()
+            ovale(x, y, 2.2f, 1.3f, gris)
+            ovale(x + 2f, y - 0.7f, 0.9f, 0.8f, 0xFF7C8296.toInt())
+            ovale(x + 2.3f, y - 0.8f, 0.45f, 0.25f, 0xFF1C2030.toInt())
+            trait("M${x - 2f} ${y}Q${x - 3.6f} ${y - 0.4f} ${x - 4.2f} ${y - 1.6f}", gris, 0.7f)
+            trait("M${x - 3f} ${y - 0.2f}L${x - 3f} ${y + 0.3f}M${x - 3.8f} ${y - 0.9f}L${x - 3.6f} ${y - 0.5f}", 0xFF2A2E40.toInt(), 0.3f)
+        }
+
+        /** Un petit passereau perché, de la couleur dite. Le jour seulement. */
+        fun oiselet(x: Float, y: Float, col: Int) {
+            if (P.nuit) return
+            val plume = duJour(col)
+            ovale(x, y, 1.1f, 0.8f, plume)
+            rond(x + 0.9f, y - 0.6f, 0.5f, plume)
+            trait("M${x - 1f} ${y}L${x - 2f} ${y + 0.6f}", plume, 0.4f)
+        }
+
+        /** Une baleine à bosse au large : la queue qui sonde, le souffle. Le jour seulement. */
+        fun baleine(x: Float, y: Float) {
+            queue(x, y)
+            souffle(x, y)
+        }
+
+        /**
+         * La queue de la baleine qui sonde, l'écume à son pied. Le jour
+         * seulement. Assez grande pour se lire dans la fenêtre : à 5 unités de
+         * large au ras de l'horizon, elle passait pour une mouette.
+         */
+        fun queue(x: Float, y: Float) {
+            if (P.nuit) return
+            val s = 1.9f
+            ovale(x, y + 0.2f, 3.2f * s, 0.6f, blanc(), 0.7f)
+            forme("M$x ${y}L${x - 0.4f * s} ${y - 1.6f * s}Q${x - 2f * s} ${y - 2.4f * s} ${x - 2.6f * s} ${y - 1.8f * s}" +
+                "Q${x - 1f * s} ${y - 1.6f * s} ${x - 0.2f * s} ${y - 1.4f * s}L${x + 0.2f * s} ${y - 1.4f * s}" +
+                "Q${x + 1f * s} ${y - 1.6f * s} ${x + 2.6f * s} ${y - 1.8f * s}Q${x + 2f * s} ${y - 2.4f * s} ${x + 0.4f * s} ${y - 1.6f * s}" +
+                "L${x + 0.6f * s} ${y}Z", duJour(0xFF3A4652.toInt()))
+            ovale(x - 1.4f * s, y - 1.85f * s, 0.9f, 0.25f, duJour(0xFFE8ECEF.toInt()), 0.5f)
+        }
+
+        /** Le dos qui affleure et le souffle, un panache haut et blanc. Le jour seulement. */
+        fun souffle(x: Float, y: Float) {
+            if (P.nuit) return
+            ovale(x - 9f, y + 0.1f, 4.4f, 0.9f, duJour(0xFF3A4652.toInt()))
+            ovale(x - 9f, y + 0.5f, 5.6f, 0.5f, blanc(), 0.6f)
+            ovale(x - 10.6f, y - 2.4f, 0.9f, 2.4f, blanc(), 0.6f)
+            ovale(x - 10.6f, y - 4.8f, 2.2f, 1.4f, blanc(), 0.5f)
+            ovale(x - 10.6f, y - 5.6f, 1.4f, 0.9f, blanc(), 0.4f)
+        }
+
+        /**
+         * Une nappe de brume au bord fondu : quatre ovales de plus en plus
+         * petits, chacun très léger. Un seul ovale opaque se lisait comme une
+         * soucoupe posée sur le paysage.
+         */
+        fun brume(x: Float, y: Float, rx: Float, ry: Float, o: Float = 0.3f) {
+            for (k in 0 until 4) {
+                val f = 1f - k * 0.2f
+                ovale(x, y, rx * f, ry * (0.6f + f * 0.4f), blanc(), o / 3f)
+            }
+        }
+
+        /** Le feuillage qui déborde du bord d'une paroi, de [y0] à [y1], du côté [sens]. */
+        fun bordFeuillu(x: Float, y0: Float, y1: Float, sens: Float, graine: Int, col: Int) {
+            val r = Alea(graine)
+            var y = y0
+            while (y < y1) {
+                val t = 1.6f + r() * 1.6f
+                rond(x + sens * (r() * 2.4f - 0.6f), y, t, col)
+                y += 2.2f + r() * 2.2f
+            }
+        }
+
+        /** Une ligne d'écume, un ressac. */
+        fun ecume(d: String) = trait(d, blanc(), 0.5f, 0.7f)
+
+        /** L'iguane des Petites Antilles, gris-vert, couché ; [tete] lève ou baisse la tête. */
+        fun iguane(x: Float, y: Float, tete: Float = 0f) {
+            val peau = duJour(mix(0xFF7E8E6A.toInt(), 0xFFB8B0A0.toInt(), 0.3f))
+            forme("M$x ${y}Q${x + 4f} ${y - 2f} ${x + 10f} ${y - 1f}L${x + 13.4f} ${y - 0.2f}Q${x + 11.6f} ${y + 0.8f} ${x + 8f} ${y + 0.8f}" +
+                "Q${x + 4f} ${y + 1.2f} $x ${y + 0.8f}Z", peau)
+            trait("M$x ${y + 0.4f}Q${x - 6f} ${y + 0.6f} ${x - 9f} ${y + 3f}", peau, 0.7f)
+            trait("M${x + 2f} ${y - 0.8f}L${x + 2.6f} ${y - 1.7f}L${x + 3.3f} ${y - 1.1f}L${x + 4f} ${y - 1.9f}L${x + 4.7f} ${y - 1.3f}" +
+                "L${x + 5.4f} ${y - 2f}L${x + 6.1f} ${y - 1.4f}", mix(peau, P.sol, 0.3f), 0.3f)
+            ovale(x + 14.2f, y - 0.6f + tete, 1.7f, 1f, peau)
+            trait("M${x + 4f} ${y + 0.8f}L${x + 3.4f} ${y + 2.2f}M${x + 9f} ${y + 0.8f}L${x + 9.6f} ${y + 2.2f}", peau, 0.5f)
+        }
+
+        /** Une écrevisse sur sa pierre. */
+        fun ecrevisse(x: Float, y: Float) {
+            val carapace = duJour(0xFF8A4B2E.toInt())
+            ovale(x, y, 1.5f, 0.6f, carapace)
+            trait("M${x - 1.4f} ${y - 0.2f}L${x - 2.6f} ${y - 1f}M${x - 1.4f} ${y + 0.2f}L${x - 2.6f} ${y + 0.8f}M${x + 1.4f} ${y}L${x + 2.6f} ${y - 0.4f}",
+                carapace, 0.3f)
+        }
+
+        /**
+         * Une bête à l'instant [t]. [immobile] : la pose de repos, celle des
+         * vignettes, à l'endroit exact de la table. Chaque mouvement est celui
+         * de l'espèce : le touloulou file de côté, l'anoli fait ses pompes et
+         * déploie son fanon, le pic tape, l'agouti traverse, la baleine souffle
+         * puis sonde, l'iguane hoche la tête.
+         */
+        fun bete(b: Bete, t: Float, i: Int, immobile: Boolean) {
+            val ph = i * 1.7f
+            val x = b.x
+            val y = b.y
+            voile = 1f
+            if (immobile) {
+                when (b.espece) {
+                    Espece.TOULOULOU -> touloulou(x, y)
+                    Espece.TORTUE -> tortue(x, y, b.taille)
+                    Espece.PELICAN_PIEU -> pelican(x, y)
+                    Espece.PELICAN -> pelicanPose(x, y)
+                    Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y)
+                    Espece.LIBELLULE -> libellule(x, y)
+                    Espece.ANOLI -> anoli(x, y)
+                    Espece.PIC -> pic(x, y)
+                    Espece.AGOUTI -> agouti(x, y)
+                    Espece.RATON -> raton(x, y)
+                    Espece.SIFFLEUR -> oiselet(x, y, COULEUR_SIFFLEUR)
+                    Espece.PARULINE -> oiselet(x, y, COULEUR_PARULINE)
+                    Espece.BALEINE -> baleine(x, y)
+                    Espece.ECREVISSE -> ecrevisse(x, y)
+                    Espece.IGUANE -> iguane(x, y)
+                }
+                return
+            }
+            when (b.espece) {
+                // Un pas de côté, une pause, puis le retour.
+                Espece.TOULOULOU -> {
+                    val u = (t + ph) % 6f
+                    val dx = when {
+                        u < 2.4f -> 0f
+                        u < 2.8f -> (u - 2.4f) / 0.4f * 2.4f
+                        u < 4.8f -> 2.4f
+                        u < 5.3f -> 2.4f * (1f - (u - 4.8f) / 0.5f)
+                        else -> 0f
+                    }
+                    touloulou(x + dx, y)
+                }
+                Espece.TORTUE -> tortue(x + sin(t * 0.25f + ph) * 3f, y + sin(t * 0.5f + ph) * 0.3f, b.taille)
+                Espece.PELICAN_PIEU -> pelican(x, y + sin(t * 0.8f + ph) * 0.15f)
+                // Posé sur l'eau, il monte et descend avec la houle.
+                Espece.PELICAN -> pelicanPose(x + sin(t * 0.15f + ph) * 1.5f, y + sin(t * 1.2f + ph) * 0.35f)
+                Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y + sin(t * 0.7f + ph) * 0.12f)
+                Espece.LIBELLULE -> libellule(
+                    x + sin(t * 1.3f + ph) * 3f + sin(t * 3.1f) * 0.6f,
+                    y + cos(t * 1.7f + ph) * 1.2f
+                )
+                Espece.ANOLI -> {
+                    val u = (t + ph) % 4f
+                    val pompe = if (u < 1.2f) abs(sin(u / 1.2f * PI.toFloat() * 3f)) * 0.4f else 0f
+                    if (P.nuit) return
+                    anoli(x, y - pompe)
+                    // Le fanon s'ouvre pendant les pompes.
+                    if (u < 1.2f) rond(x + 1.4f, y + 0.7f - pompe, 0.5f + pompe * 1.4f, duJour(0xFFE07A2E.toInt()))
+                }
+                Espece.PIC -> {
+                    val u = (t + ph) % 3f
+                    pic(x - if (u < 0.8f) abs(sin(u * 18f)) * 0.35f else 0f, y)
+                }
+                // Il traverse la route, puis la forêt le cache un moment.
+                Espece.AGOUTI -> {
+                    val u = (t + 4f + ph) % 11f
+                    if (u < 8f) agouti(x - 14f + u / 8f * 28f, y + abs(sin(u * 9f)) * -0.2f)
+                }
+                Espece.RATON -> {
+                    val dx = sin(t * 0.3f + ph) * 6f
+                    val sens = if (cos(t * 0.3f + ph) >= 0f) 1f else -1f
+                    c.save()
+                    c.scale(sens, 1f, x + dx, y)
+                    raton(x + dx, y)
+                    c.restore()
+                }
+                Espece.SIFFLEUR, Espece.PARULINE -> {
+                    val u = (t + ph) % 3.4f
+                    val saut = if (u < 0.35f) sin(u / 0.35f * PI.toFloat()) * 1.2f else 0f
+                    oiselet(x, y - saut, if (b.espece == Espece.SIFFLEUR) COULEUR_SIFFLEUR else COULEUR_PARULINE)
+                }
+                // Le souffle, puis la queue qui sort de l'eau et sonde.
+                Espece.BALEINE -> {
+                    val u = (t + ph) % 12f
+                    voile = when {
+                        u < 1f -> u
+                        u < 2.5f -> 1f
+                        u < 3.5f -> 3.5f - u
+                        u in 5f..6f -> u - 5f
+                        u in 6f..8.5f -> 1f
+                        u in 8.5f..9.5f -> 9.5f - u
+                        else -> 0f
+                    }
+                    if (voile > 0f) {
+                        if (u < 4f) souffle(x, y) else queue(x, y + (if (u < 6f) (6f - u) else if (u > 8.5f) (u - 8.5f) else 0f) * 1.2f)
+                    }
+                    voile = 1f
+                }
+                Espece.ECREVISSE -> ecrevisse(x + sin(t * 0.6f + ph) * 1.2f, y)
+                Espece.IGUANE -> {
+                    val u = (t + ph) % 5f
+                    iguane(x, y, if (u < 1.4f) -abs(sin(u / 1.4f * PI.toFloat() * 3f)) * 0.6f else 0f)
+                }
+            }
+        }
+
+        // ------------------------------------------------------ les quinze lieux de la deuxième vague
+
+        /** Le Grand Étang : le lac dans sa cuvette de forêt, les mornes, une libellule. */
+        fun grandEtang() {
+            forme("M0 30Q14 17 28 23Q44 9 60 21Q78 13 100 25L100 66L0 66Z", P.loin)
+            bosquet(-2f, 102f, 26f, 2.4f, 251, mix(P.loin, P.milieu, 0.5f))
+            plan(1)
+            forme("M0 38Q14 32 30 42L30 50L0 50Z", P.milieu)
+            forme("M70 42Q86 31 100 36L100 50L70 50Z", P.milieu)
+            bosquet(-2f, 30f, 37f, 3f, 252, mix(P.milieu, P.pres, 0.2f))
+            bosquet(70f, 102f, 36f, 3f, 253, mix(P.milieu, P.pres, 0.2f))
+            forme("M0 46Q50 41 100 46L100 52L0 52Z", P.milieu)
+            bosquet(-2f, 102f, 46f, 2.6f, 254, P.milieu)
+            ovale(50f, 53f, 44f, 6f, P.eau)
+            trait("M30 52L46 52M56 54.5L72 54.5M40 56.5L52 56.5", blanc(), 0.5f, 0.6f)
+            brume(40f, 45f, 26f, 1.8f)
+            brume(72f, 41f, 16f, 1.3f, 0.25f)
+            plan(2)
+            forme("M0 60Q20 56 40 61Q62 57 80 60Q92 57 100 59L100 66L0 66Z", P.pres)
+            bosquet(-2f, 102f, 61f, 3.2f, 255, P.pres)
+            anthurium(24f, 61f)
+            balisier(12f, 63f, 10f, feuille())
+            balisier(88f, 64f, 11f, feuille())
+        }
+
+        /** Les Bains Jaunes : le bassin de pierre au pied de la Soufrière, la vapeur, le raton laveur la nuit. */
+        fun bainsJaunes() {
+            forme("M0 26Q20 16 40 22Q60 12 80 20Q92 16 100 20L100 66L0 66Z", P.loin)
+            bosquet(-2f, 102f, 25f, 2.6f, 261, mix(P.loin, P.milieu, 0.5f))
+            plan(1)
+            forme("M0 36Q25 28 50 36Q75 28 100 34L100 66L0 66Z", P.milieu)
+            bosquet(-2f, 102f, 35f, 3.4f, 262, P.milieu)
+            bosquet(-2f, 102f, 41f, 3f, 263, mix(P.milieu, P.pres, 0.25f))
+            plan(2)
+            rect(18f, 44f, 64f, 12f, P.pierre)
+            trait("M18 48H82M18 52H82M26 44V48M40 48V52M54 44V48M68 48V52M33 52V56M61 52V56", mix(P.pierre, P.sol, 0.4f), 0.35f)
+            rect(22f, 45.5f, 56f, 3f, mix(P.eau, 0xFFD8C467.toInt(), if (P.nuit) 0.15f else 0.45f))
+            rect(10f, 53f, 8f, 3f, P.pierre)
+            rect(13f, 50.5f, 5f, 2.5f, P.pierre)
+            vapeur(36f, 45f, 10f)
+            vapeur(56f, 44f, 11f)
+            forme("M0 58Q30 55 50 58Q70 55 100 58L100 66L0 66Z", P.pres)
+            rect(0f, 62.5f, 100f, 3.5f, P.sol)
+            anthurium(86f, 60f)
+            balisier(7f, 62f, 11f, feuille())
+            balisier(93f, 62f, 10f, feuille())
+        }
+
+        /** La Cascade aux Écrevisses : la chute large et basse, le bassin, une écrevisse sur une pierre. */
+        fun cascadeEcrevisses() {
+            val r = Alea(271)
+            forme("M0 18Q20 8 50 14Q80 6 100 16L100 66L0 66Z", P.loin)
+            bosquet(-2f, 102f, 21f, 3.6f, 272, mix(P.loin, P.milieu, 0.5f))
+            plan(1)
+            forme("M0 30Q50 24 100 30L100 66L0 66Z", P.milieu)
+            bosquet(-2f, 102f, 29f, 3.2f, 273, mix(P.milieu, P.pres, 0.2f))
+            forme("M26 31Q50 27 74 31L77 47L23 47Z", mix(P.pierre, P.pres, 0.5f))
+            rect(40f, 30f, 20f, 17f, blanc(), 0.85f)
+            val ecume = mix(P.eau, 0xFFFFFFFF.toInt(), 0.5f)
+            for (k in 0 until 18) rect(40.5f + r() * 19f, 31f + r() * 13f, 0.3f, 2f + r() * 3f, ecume, 0.8f)
+            plan(2)
+            ovale(50f, 51f, 31f, 5.5f, P.eau)
+            ovale(50f, 47.5f, 14f, 1.6f, blanc(), 0.9f)
+            val roc = mix(P.pierre, P.pres, 0.35f)
+            ovale(23f, 53f, 7f, 4f, roc); ovale(77f, 52f, 8f, 4f, roc); ovale(62f, 57f, 5f, 2.4f, roc)
+            forme("M0 66L0 38Q10 42 16 52Q20 60 22 66Z", P.pres)
+            forme("M100 66L100 36Q90 42 85 52Q81 60 79 66Z", P.pres)
+            anthurium(88f, 57f)
+            balisier(10f, 64f, 10f, feuille())
+        }
+
+        /** Le Saut de la Lézarde : la gorge étroite, la chute droite, le bassin sombre, les lianes. */
+        fun sautLezarde() {
+            val r = Alea(281)
+            forme("M36 10Q50 7 64 10L62 66L38 66Z", mix(P.pierre, P.sol, 0.55f))
+            plan(1)
+            rect(47f, 10f, 6f, 45f, blanc(), 0.9f)
+            val ecume = mix(P.eau, 0xFFFFFFFF.toInt(), 0.5f)
+            for (k in 0 until 14) rect(47.4f + r() * 5f, 11f + r() * 40f, 0.3f, 2f + r() * 4f, ecume, 0.8f)
+            ovale(50f, 59f, 15f, 4f, mix(P.eau, P.sol, 0.35f))
+            ovale(50f, 56f, 6f, 1.4f, blanc(), 0.9f)
+            plan(2)
+            forme("M0 0L38 0Q33 20 40 40Q36 55 42 66L0 66Z", P.milieu)
+            forme("M100 0L62 0Q67 22 58 40Q62 55 56 66L100 66Z", P.milieu)
+            val ombre = mix(P.milieu, P.sol, 0.45f)
+            forme("M30 0L38 0Q33 20 40 40Q36 55 42 66L34 66Q30 50 33 36Q28 18 30 0Z", ombre)
+            forme("M70 0L62 0Q67 22 58 40Q62 55 56 66L64 66Q68 52 65 40Q71 22 70 0Z", ombre)
+            val bord = mix(P.milieu, P.pres, 0.3f)
+            bordFeuillu(33f, 4f, 40f, 1f, 284, bord)
+            bordFeuillu(67f, 4f, 40f, -1f, 285, bord)
+            bosquet(-2f, 36f, 2f, 3.6f, 282, P.pres)
+            bosquet(64f, 102f, 2f, 3.6f, 283, P.pres)
+            trait("M37 2Q39 12 36 24M63 2Q61 14 65 22M40 4Q41 9 39 15", P.pres, 0.5f)
+            anthurium(36f, 48f)
+        }
+
+        /** La Pointe de la Grande Vigie : la falaise au nord de la Grande-Terre, la houle, Antigua au loin, une baleine. */
+        fun grandeVigie() {
+            forme("M76 34Q80 31.4 84 31.4Q88 31.4 92 34Z", P.loin)
+            plan(1)
+            eau(34f, 291)
+            plan(2)
+            forme("M0 26L52 24Q56 24 57 28L60 66L0 66Z", mix(P.pierre, P.milieu, 0.25f))
+            forme("M52 24Q56 24 57 28L60 66L44 66Q49 46 52 24Z", mix(P.pierre, P.sol, 0.4f))
+            forme("M0 25.2L52 23.4L52.6 25.4L0 28Z", P.milieu)
+            raisinier(10f, 24.4f, 0.9f)
+            raisinier(30f, 23.8f, 0.7f)
+            turnera(18f, 25.6f, 22f, 25.2f, 38f, 24.6f, 44f, 24.4f, 6f, 26f)
+            ecume("M58 58Q64 56 70 58Q76 60 82 58M60 63Q68 61 76 63")
+        }
+
+        /** La Porte d'Enfer : le lagon entre deux bras de falaise, la passe, la plage et ses touloulous. */
+        fun porteEnfer() {
+            plan(1)
+            eau(30f, 301)
+            val falaise = mix(P.pierre, P.milieu, 0.3f)
+            forme("M0 28L40 30Q44 31 44 34L44 46Q36 50 0 52Z", falaise)
+            forme("M100 28L60 30Q56 31 56 34L56 46Q64 50 100 52Z", falaise)
+            forme("M0 27.4L40 29.4L41 30.6L0 29.4Z", P.milieu)
+            forme("M100 27.4L60 29.4L59 30.6L100 29.4Z", P.milieu)
+            forme("M44 34L56 34L56 46Q64 50 100 52L100 58L0 58L0 52Q36 50 44 46Z", lagon())
+            ecume("M45 35Q50 34 55 35")
+            plan(2)
+            forme("M0 58Q50 54 100 58L100 66L0 66Z", sable())
+            raisinier(14f, 56f, 1.3f)
+            amandier(86f, 58f, 12f)
+        }
+
+        /** Petite-Terre : les deux îlets, le lagon, le phare, l'iguane des Petites Antilles, des touloulous. */
+        fun petiteTerre() {
+            plan(1)
+            eau(34f, 311)
+            forme("M0 40Q20 34 46 38L46 42L0 44Z", P.milieu)
+            forme("M54 38Q76 33 100 37L100 43L54 42Z", P.milieu)
+            raisinier(8f, 39.6f, 0.8f)
+            raisinier(92f, 38.6f, 0.8f)
+            rect(0f, 42.5f, 100f, 7f, lagon())
+            rect(80f, 22f, 3f, 14f, duJour(0xFFF4F1EA.toInt()))
+            rect(79.4f, 20f, 4.2f, 2.6f, P.toit)
+            if (P.allume) rond(81.5f, 21.3f, 2.4f, P.fenetre, 0.5f)
+            plan(2)
+            forme("M0 56Q30 50 60 54Q80 52 100 56L100 66L0 66Z", sable())
+            ovale(28f, 57.5f, 11f, 3.6f, mix(P.pierre, P.sol, 0.35f))
+        }
+
+        /** L'îlet du Gosier : l'îlet et son phare tout proches, un canot, un pélican, des touloulous. */
+        fun iletGosier() {
+            plan(1)
+            eau(36f, 321)
+            forme("M28 41Q50 33 74 41Z", sable())
+            ovale(52f, 37f, 11f, 3.4f, P.milieu)
+            ovale(63f, 38f, 7f, 2.4f, P.milieu)
+            rect(38f, 26f, 2.4f, 13f, duJour(0xFFF4F1EA.toInt()))
+            rect(37.6f, 24.6f, 3.2f, 1.8f, P.toit)
+            if (P.allume) rond(39.2f, 25.5f, 2.2f, P.fenetre, 0.5f)
+            ecume("M20 44Q26 43 32 44M70 45Q76 44 82 45")
+            forme("M64 50L76 50L74 52.4L66 52.4Z", duJour(0xFF2F6FA6.toInt()))
+            rect(64f, 49.6f, 12f, 0.5f, duJour(0xFFF4F1EA.toInt()))
+            plan(2)
+            forme("M0 57Q40 53 100 58L100 66L0 66Z", sable())
+            raisinier(8f, 56f, 1.2f)
+            amandier(90f, 58f, 10f)
+        }
+
+        /** Le Grand Cul-de-Sac Marin : le lagon, la mangrove, le banc de sable de l'îlet Caret, une tortue verte. */
+        fun grandCulDeSac() {
+            forme("M0 30Q10 22 22 26Q34 16 48 24Q60 20 72 28Q86 24 100 30L100 40L0 40Z", P.loin)
+            plan(1)
+            forme("M0 38.6Q50 35.6 100 38.6L100 42L0 42Z", P.milieu)
+            bosquet(-2f, 102f, 39f, 1.6f, 331, P.milieu)
+            rect(0f, 41.6f, 100f, 24.4f, lagon())
+            rect(0f, 41.6f, 100f, 4f, P.eau, 0.6f)
+            forme("M20 52Q50 46 82 52Q50 54.4 20 52Z", sable())
+            ovale(44f, 49.4f, 2.6f, 1.6f, P.pres)
+            ovale(49f, 49.2f, 1.8f, 1.1f, P.pres)
+            ecume("M14 56Q20 55 26 56M70 58Q78 57 86 58")
+            forme("M60 59Q66 60.6 72 59L71 60.6Q66 62 61 60.6Z", duJour(0xFFF4F1EA.toInt()))
+            forme("M61 60.6Q66 62 71 60.6L70.8 61.2Q66 62.6 61.4 61.2Z", duJour(0xFFD6452E.toInt()))
+            plan(2)
+            paletuvier(7f, 60f)
+        }
+
+        /** Gueule Grand Gouffre : la falaise de Marie-Galante percée d'un gouffre où la mer s'engouffre. */
+        fun gueuleGrandGouffre() {
+            plan(1)
+            eau(40f, 341)
+            ecume("M84 50Q90 48 96 50M82 58Q90 56 98 58")
+            plan(2)
+            forme("M0 22L70 24Q78 25 80 30L84 66L0 66Z", mix(P.pierre, P.milieu, 0.25f))
+            forme("M0 21.4L70 23.4L71 25L0 24Z", P.milieu)
+            bosquet(4f, 40f, 23f, 1.6f, 342, P.pres)
+            turnera(8f, 23.6f, 16f, 23.8f, 24f, 24f, 34f, 24.2f, 44f, 24.4f)
+            forme("M48 66C48 50 52 40 61.5 40C71 40 75 50 75 66Z", mix(P.pierre, 0xFF000000.toInt(), 0.62f))
+            forme("M51 66Q53 55 61.5 53Q70 55 72 66Z", P.eau)
+            ovale(61.5f, 56f, 6f, 1.4f, blanc(), 0.7f)
+        }
+
+        /** La route de la Traversée : sous la canopée, les grands troncs, une Mamelle boisée dans la trouée, un agouti. */
+        fun traversee() {
+            forme("M30 36Q36 22 43 19Q49 18 52 24Q56 16 62 16Q69 18 72 36Z", mix(P.milieu, P.loin, 0.3f))
+            bosquet(34f, 70f, 26f, 2f, 351, mix(P.milieu, P.loin, 0.15f))
+            brume(50f, 31f, 20f, 2.4f, 0.4f)
+            plan(1)
+            forme("M0 0L34 0Q27 20 33 38L36 66L0 66Z", P.milieu)
+            forme("M100 0L68 0Q75 18 67 38L64 66L100 66Z", P.milieu)
+            val bord = mix(P.milieu, P.pres, 0.3f)
+            bordFeuillu(31f, 4f, 38f, 1f, 353, bord)
+            bordFeuillu(69f, 4f, 38f, -1f, 354, bord)
+            forme("M44 14L56 14L68 66L34 66Z", blanc(), 0.07f)
+            forme("M27 66Q41 52 48 38L53 38Q58 52 75 66Z", mix(P.pierre, P.sol, 0.45f))
+            for (k in 0 until 7) rect(50.4f + k * 0.08f, 41f + k * 3.4f, 0.3f, 1.6f, blanc(), 0.55f)
+            val fut = mix(P.pierre, P.sol, 0.7f)
+            rect(26f, 10f, 1.4f, 40f, fut)
+            rect(71f, 8f, 1.6f, 42f, fut)
+            plan(2)
+            forme("M0 0L100 0L100 8Q80 14 70 10Q60 16 50 12Q40 16 30 10Q18 14 0 8Z", P.pres)
+            bosquet(-2f, 102f, 10f, 4f, 352, P.pres)
+            tronc(8f, 6f, 0f, 66f)
+            tronc(86f, 5f, 0f, 66f)
+            ovale(14f, 24f, 2.6f, 1.3f, P.milieu); ovale(8.4f, 34f, 2f, 1f, P.milieu)
+            ovale(87f, 30f, 2.8f, 1.3f, P.milieu); ovale(91.6f, 18f, 2f, 1f, P.milieu)
+            trait("M14 4Q18 20 15 34Q14 40 16 46M23 8Q21 18 25 30M78 6Q80 22 76 36M86 10Q82 22 84 30M40 12Q42 18 40 24",
+                mix(P.pres, P.sol, 0.3f), 0.5f)
+            anthurium(88f, 42f)
+            forme("M0 66L0 50Q8 54 14 60Q18 64 20 66Z", P.pres)
+            forme("M100 66L100 52Q92 56 86 61Q83 64 82 66Z", P.pres)
+            balisier(21f, 65f, 12f, feuille())
+            balisier(80f, 65f, 11f, feuille())
+        }
+
+        /** L'habitation La Grivelière : la case à galerie dans sa clairière, le glacis à café, les caféiers sous les arbres. */
+        fun griveliere() {
+            forme("M0 16Q20 4 42 12Q62 2 82 10Q92 6 100 10L100 66L0 66Z", mix(P.milieu, P.loin, 0.45f))
+            bosquet(-2f, 102f, 14f, 3f, 361, mix(P.milieu, P.loin, 0.35f))
+            brume(40f, 16f, 26f, 2.2f)
+            plan(1)
+            forme("M0 24Q30 16 60 22Q80 16 100 22L100 66L0 66Z", P.milieu)
+            bosquet(-2f, 102f, 24f, 3.4f, 362, P.milieu)
+            bosquet(-2f, 102f, 30f, 3.6f, 363, mix(P.milieu, P.pres, 0.25f))
+            forme("M30 44Q40 34 66 34Q82 36 86 44Z", mix(P.milieu, sable(), 0.25f))
+            triangle(44f, 32f, 57f, 25f, 70f, 32f, P.toit)
+            rect(46f, 32f, 22f, 8f, mix(P.pierre, 0xFFB88E62.toInt(), 0.25f))
+            fenetre(49f, 34f, 3f, 4f, null)
+            fenetre(55.5f, 34f, 3f, 4f, null)
+            fenetre(62f, 34f, 3f, 4f, null)
+            rect(44f, 40f, 26f, 1.4f, P.toit)
+            trait("M45 40V36M51 40V36M57 40V36M63 40V36M69 40V36", mix(P.pierre, P.sol, 0.3f), 0.4f)
+            forme("M34 46L66 44.4L68 48.6L32 50.6Z", mix(P.pierre, 0xFFC9B79A.toInt(), 0.2f))
+            val grain = duJour(0xFF7A3A26.toInt())
+            for ((gx, gy) in arrayOf(38f to 47.6f, 44f to 47f, 50f to 47.8f, 56f to 46.6f, 42f to 49f, 54f to 48.4f, 61f to 46.8f))
+                rect(gx, gy - 0.3f, 1f, 0.6f, grain)
+            plan(2)
+            val fut = mix(P.pierre, P.sol, 0.65f)
+            rect(14f, 0f, 2.6f, 66f, fut)
+            rect(26f, 6f, 1.6f, 46f, fut)
+            rect(82f, 0f, 3f, 66f, fut)
+            rect(74f, 8f, 1.6f, 44f, fut)
+            forme("M0 0L44 0Q36 6 28 4Q20 10 10 6Q4 10 0 8Z", P.pres)
+            forme("M100 0L60 0Q66 6 76 5Q84 10 92 6Q96 9 100 8Z", P.pres)
+            bosquet(-2f, 40f, 6f, 3.6f, 364, P.pres)
+            bosquet(62f, 102f, 6f, 3.6f, 365, P.pres)
+            trait("M16 6Q19 20 16 32M84 6Q80 18 83 28M28 6Q30 14 27 22", mix(P.pres, P.sol, 0.3f), 0.45f)
+            ovale(16.4f, 22f, 2.4f, 1.1f, P.milieu)
+            ovale(83f, 30f, 2.6f, 1.2f, P.milieu)
+            // Des cabosses de cacao sur le tronc.
+            val cabosse = duJour(0xFFC07A2A.toInt())
+            ovale(27f, 40f, 0.6f, 1f, cabosse)
+            ovale(26.2f, 44f, 0.6f, 1f, cabosse)
+            bananier(90f, 56f, 16f)
+            forme("M0 66L0 52Q30 50 50 56Q70 50 100 52L100 66Z", P.pres)
+            bosquet(-2f, 102f, 56f, 3.6f, 366, P.pres)
+            bosquet(-2f, 102f, 62f, 3.2f, 367, mix(P.pres, P.sol, 0.3f))
+            // Les cerises rouges des caféiers.
+            val cerise = duJour(0xFFC0302A.toInt())
+            for ((cx, cy) in arrayOf(6f to 54f, 10f to 56.4f, 22f to 53.6f, 30f to 57f, 70f to 54.4f, 78f to 56.6f, 90f to 53.4f, 94f to 56f))
+                rond(cx, cy, 0.45f, cerise)
+        }
+
+        /** Matouba : la stèle de Delgrès et de ses compagnons, dans sa clairière, au cœur de la forêt. */
+        fun matouba() {
+            val fut = mix(P.pierre, P.sol, 0.65f)
+            rect(0f, 0f, 100f, 66f, mix(P.milieu, P.loin, 0.4f))
+            bosquet(-2f, 102f, 10f, 4f, 371, mix(P.milieu, P.loin, 0.3f))
+            bosquet(-2f, 102f, 20f, 4f, 372, mix(P.milieu, P.loin, 0.2f))
+            rect(36f, 4f, 1.4f, 44f, mix(P.pierre, P.sol, 0.55f), 0.7f)
+            rect(62f, 2f, 1.6f, 46f, mix(P.pierre, P.sol, 0.55f), 0.7f)
+            brume(50f, 30f, 30f, 2.6f, 0.4f)
+            plan(1)
+            bosquet(-2f, 102f, 34f, 4f, 373, P.milieu)
+            forme("M30 50Q40 40 60 40Q72 42 74 50Z", mix(P.milieu, sable(), 0.25f))
+            forme("M44 0L56 0L64 54L36 54Z", blanc(), 0.1f)
+            forme("M46.4 38Q50 35.6 53.6 38L54.8 53L45.2 53Z", P.pierre)
+            rect(47.6f, 41.6f, 4.8f, 4f, mix(P.pierre, P.sol, 0.35f))
+            rect(42f, 53f, 16f, 2.6f, mix(P.pierre, P.sol, 0.2f))
+            trait("M45.6 52.6Q44 51 44.4 49M54.4 52.6Q56.2 51.4 55.6 49.4", P.milieu, 0.6f)
+            plan(2)
+            rect(22f, 4f, 1.8f, 50f, fut)
+            rect(76f, 6f, 1.8f, 48f, fut)
+            tronc(10f, 3f, 0f, 66f)
+            tronc(86f, 3.2f, 0f, 66f)
+            forme("M0 0L42 0Q34 6 26 4Q18 10 8 6Q3 9 0 8Z", P.pres)
+            forme("M100 0L58 0Q66 6 74 4Q82 10 92 6Q97 9 100 8Z", P.pres)
+            bosquet(-2f, 40f, 6f, 3.6f, 374, P.pres)
+            bosquet(60f, 102f, 6f, 3.6f, 375, P.pres)
+            trait("M12 6Q16 20 12 34Q11 40 13 44M24 6Q22 16 26 26M88 6Q84 20 87 32M78 8Q80 16 77 22", mix(P.pres, P.sol, 0.3f), 0.45f)
+            ovale(12.6f, 24f, 2.6f, 1.2f, P.milieu)
+            ovale(87.6f, 28f, 2.6f, 1.2f, P.milieu)
+            ovale(23f, 36f, 1.8f, 0.9f, P.milieu)
+            forme("M0 66L0 54Q22 52 38 58Q50 54 62 58Q78 52 100 54L100 66Z", P.pres)
+            bosquet(-2f, 36f, 57f, 3.6f, 376, P.pres)
+            bosquet(64f, 102f, 57f, 3.6f, 377, P.pres)
+            bosquet(-2f, 102f, 63f, 3.2f, 378, mix(P.pres, P.sol, 0.3f))
+            anthurium(57f, 54f)
+            balisier(30f, 65f, 11f, feuille())
+            balisier(71f, 65f, 10f, feuille())
+        }
+
+        /** Le fort Delgrès : le bastion et son échauguette, la mer, la Soufrière derrière, un anoli sur le mur. */
+        fun fortDelgres() {
+            forme("M0 40Q20 30 36 20Q44 14 52 14Q60 16 68 24Q84 34 100 38L100 66L0 66Z", P.loin)
+            vapeur(50f, 14f, 8f)
+            plan(1)
+            rect(58f, 45f, 42f, 21f, P.eau)
+            ecume("M70 52Q76 51 82 52M84 58Q90 57 96 58")
+            flamboyant(10f, 47f, 9f)
+            plan(2)
+            forme("M0 44L30 44L42 50L58 46L58 66L0 66Z", P.pierre)
+            forme("M0 44L30 44L42 50L58 46L58 48L42 52L30 46L0 46Z", mix(P.pierre, P.sol, 0.3f))
+            trait("M0 52H40M0 58H58M0 63H58M10 46V52M24 46V52M18 52V58M36 52V58M48 58V63M28 58V63", mix(P.pierre, P.sol, 0.35f), 0.3f)
+            rect(40f, 42.6f, 4.4f, 8f, P.pierre)
+            ovale(42.2f, 42.6f, 2.6f, 1.6f, mix(P.pierre, P.sol, 0.2f))
+            rect(41.8f, 45f, 0.8f, 2f, mix(P.pierre, P.sol, 0.6f))
+            forme("M0 62Q8 59 18 62L18 66L0 66Z", P.pres)
+        }
+
+        /** Le Mémorial ACTe : le granit noir pris dans ses racines d'argent, la passerelle, la baie, un pélican. */
+        fun memorialActe() {
+            forme("M0 38Q50 34.4 100 38L100 41L0 41Z", P.loin)
+            plan(1)
+            rect(0f, 40.6f, 100f, 10f, P.eau)
+            ecume("M8 46H20M76 47H90")
+            val granit = mix(0xFF2B2D33.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
+            val argent = duJour(0xFFC9CDD3.toInt())
+            rect(14f, 32f, 72f, 18f, granit)
+            if (P.allume) { rect(20f, 44f, 8f, 3f, P.fenetre); rect(60f, 44f, 10f, 3f, P.fenetre) }
+            trait("M14 32Q22 26 30 32Q38 38 46 32Q54 26 62 32Q70 38 78 32Q82 29 86 30" +
+                "M14 38Q24 30 34 38Q44 46 54 38Q64 30 74 38Q80 42 86 36" +
+                "M18 32L26 50M34 32L30 50M42 32L50 50M58 32L54 50M66 32L74 50M80 32L78 50", argent, 0.5f, 0.9f)
+            trait("M86 40Q94 36 100 34", argent, 0.7f)
+            plan(2)
+            rect(0f, 50f, 100f, 16f, mix(P.pierre, P.sol, 0.3f))
+            ligne(0f, 54f, 100f, 54f, mix(P.pierre, P.sol, 0.5f), 0.3f)
+            // La bitte d'amarrage où se tient le pélican : posé à plat sur le
+            // quai, il avait l'air de flotter sur le béton (propriétaire).
+            val fonte = mix(0xFF2B2D33.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
+            rect(91.1f, 50f, 1.8f, 2.6f, fonte)
+            ovale(92f, 50f, 1.3f, 0.5f, fonte)
         }
     }
 }

@@ -60,6 +60,12 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
     /** Une secousse de force [force], dans ]0, 1]. */
     open fun secouer(force: Float) = Unit
 
+    /**
+     * Où regarde l'œil, de -1 à 1 sur chaque axe : ce qui décale les plans du
+     * lieu ([Paysages.GLISSEMENT]). Ce qui se tient sur un plan glisse avec lui.
+     */
+    open fun regarder(x: Float, y: Float) = Unit
+
     /** Fait avancer l'ambiance de [dt] secondes. */
     abstract fun avancer(dt: Float)
 
@@ -78,8 +84,18 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
          * (voir [Habillage.appliquerPlans]). Le rendu à plat les garde peints.
          */
         fun pour(souvenir: Souvenir?, zone: RectF, graine: Int, nuit: Boolean = false,
-                 oiseaux: Boolean = false, lieu: Lieu? = null): Ambiance? {
-            val faune = lieu?.let { Faune.de(it, zone, graine, nuit) }
+                 oiseaux: Boolean = false, lieu: Lieu? = null, heure: Heure? = null): Ambiance? {
+            // Les bêtes peintes du lieu bougent quand le lieu est rendu en
+            // plans, c'est-à-dire sans elles : jamais un jour de fête, où il
+            // reste à plat et les garde peintes.
+            val betes = if (oiseaux && lieu != null && heure != null && souvenir?.fete == null &&
+                Paysages.BETES[lieu] != null) BetesDuLieu(zone, lieu, heure) else null
+            val volants = lieu?.let { Faune.de(it, zone, graine, nuit) }
+            val faune = when {
+                betes == null -> volants
+                volants == null -> betes
+                else -> Ensemble(betes, volants)
+            }
             val temps = when (souvenir?.fete) {
                 // Jamais de feu d'artifice : une nuit calme et ses lucioles.
                 Fete.NOUVEL_AN -> Lucioles(zone, graine)
@@ -92,9 +108,11 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     Saison.HIVERNAGE -> Pluie(zone, graine)
                     Saison.CAREME -> {
                         val air = if (nuit) Lucioles(zone, graine) else Tournoyants(zone, graine, Tournoyants.AIGRETTES)
-                        // Un lieu qui a sa faune la fait voler à la place des
-                        // oiseaux génériques : deux vols se gêneraient.
-                        if (oiseaux && faune == null) Ensemble(Oiseaux(zone, graine, nuit), air) else air
+                        // Un lieu qui a sa faune volante la fait voler à la
+                        // place des oiseaux génériques : deux vols se
+                        // gêneraient. Les bêtes posées ne comptent pas.
+                        // En pleine nuit (très rare) les garde-bœufs dorment.
+                        if (oiseaux && volants == null && heure?.nuit != true) Ensemble(Oiseaux(zone, graine), air) else air
                     }
                     null -> null
                 }
@@ -702,31 +720,46 @@ private class Lumieres(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /**
- * Les oiseaux d'un ciel de carême, ceux que [Habillage] peint dans le paysage à
- * plat (37.4.4) : mêmes traits, même taille, même coin du ciel. Ils battent
- * lentement des ailes, chacun à son rythme, et planent sur place en dérivant
- * à peine. Ils ne traversent pas la fenêtre : on doit les voir vivre, pas
- * les voir partir. La pesanteur et les secousses ne les touchent pas.
+ * Les hérons garde-bœufs d'un ciel de carême, blancs, qui rentrent au dortoir
+ * en file lâche : ils traversent la fenêtre tous dans le même sens, d'un
+ * battement lent et continu, sans planer. C'est le vol de cet oiseau, et
+ * c'est l'oiseau blanc qu'on voit traverser le ciel le soir en Guadeloupe.
+ * Jusqu'au 2026-10-19 c'étaient des oiseaux sans espèce qui faisaient du
+ * surplace, ce qu'aucun oiseau ne fait sauf le colibri (propriétaire).
+ *
+ * Quand la file est sortie, une autre entre de l'autre côté après une
+ * pause. La pesanteur et les secousses ne les touchent pas.
  */
-private class Oiseaux(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+private class Oiseaux(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 
     // Un pixel de la maquette, en unités de carte : la boîte de 100 de large
     // couvre la fenêtre, et la maquette en comptait 4,8 pixels par unité.
     private val px = largeur / 100f / 4.8f
-    private val n = 6
-    private val x0 = FloatArray(n) { zone.left + largeur * (0.12f + hasard() * 0.5f) }
-    private val y0 = FloatArray(n) { zone.top + hauteur * (0.08f + hasard() * 0.22f) }
-    private val t = FloatArray(n) { (3f + hasard() * 3f) * px }
-    private val battement = FloatArray(n) { 0.5f + hasard() * 0.4f }
-    private val derive = FloatArray(n) { 0.15f + hasard() * 0.2f }
+    private val n = 5
+    private val sens = if (hasard() < 0.5f) 1f else -1f
+    // La file : chaque oiseau en retrait et un peu plus bas que le précédent.
+    private val retrait = FloatArray(n) { it * (9f + hasard() * 5f) * px }
+    private val ecart = FloatArray(n) { (it * 2.2f + (hasard() - 0.5f) * 3f) * px }
+    private val t = FloatArray(n) { (3.4f + hasard() * 1.2f) * px }
     private val phase = FloatArray(n) { hasard() * 6.28f }
-    private val couleur = if (nuit) 0x99FFFFFF.toInt() else 0xB31E1A1E.toInt()
+    private val vitesse = (5.5f + hasard() * 1.5f) * largeur / 100f
+    private val haut = zone.top + hauteur * (0.1f + hasard() * 0.15f)
+    private var tete = 0f
     private val trait = 1.3f * px
     private val chemin = android.graphics.Path()
     private var temps = 0f
 
+    private val longueur: Float get() = retrait[n - 1] + 10f * px
+
+    init {
+        tete = hasard() * largeur
+    }
+
     override fun avancer(dt: Float) {
         temps += dt
+        tete += vitesse * dt
+        // La file entière est sortie : une autre entre, après une pause d'une demi-largeur.
+        if (tete - longueur > largeur * 1.5f) tete = -largeur * 0.1f
     }
 
     override fun dessiner(c: Canvas, p: Paint) {
@@ -734,15 +767,13 @@ private class Oiseaux(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, 
         p.style = Paint.Style.STROKE
         p.strokeWidth = trait
         p.strokeCap = Paint.Cap.ROUND
-        p.color = couleur
+        p.color = COULEUR
         for (i in 0 until n) {
-            // Une dérive de quelques pixels de maquette, en huit couché.
-            val a = temps * derive[i] + phase[i]
-            val x = x0[i] + sin(a) * 2.5f * px
-            val y = y0[i] + sin(a * 2f) * 0.8f * px
-            // L'aile monte et descend un peu autour de la pose peinte (0,7),
-            // moins d'un battement par seconde : un oiseau qui plane.
-            val aile = 0.7f + 0.15f * sin(temps * battement[i] * 2f * PI.toFloat() + phase[i])
+            val avance = tete - retrait[i]
+            val x = if (sens > 0f) zone.left + avance else zone.right - avance
+            val y = haut + ecart[i] + sin(temps * 0.6f + phase[i]) * 0.6f * px
+            // Un battement lent et continu, deux et demi par seconde, ample.
+            val aile = 0.7f + 0.5f * sin(temps * 2.5f * 2f * PI.toFloat() + phase[i])
             val ti = t[i]
             chemin.rewind()
             chemin.moveTo(x - ti, y - ti * (1.2f - aile))
@@ -752,12 +783,17 @@ private class Oiseaux(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, 
         }
         p.style = Paint.Style.FILL
     }
+
+    private companion object {
+        const val COULEUR = 0xE6FFFFFF.toInt()
+    }
 }
 
 /** Plusieurs ambiances l'une sur l'autre, la première dessous. */
 private class Ensemble(private vararg val parts: Ambiance) : Ambiance(RectF(), 0) {
     override fun orienter(basX: Float, basY: Float) = parts.forEach { it.orienter(basX, basY) }
     override fun secouer(force: Float) = parts.forEach { it.secouer(force) }
+    override fun regarder(x: Float, y: Float) = parts.forEach { it.regarder(x, y) }
     override fun avancer(dt: Float) = parts.forEach { it.avancer(dt) }
     override fun dessiner(c: Canvas, p: Paint) {
         for (a in parts) a.dessiner(c, p)
@@ -772,16 +808,21 @@ private class Ensemble(private vararg val parts: Ambiance) : Ambiance(RectF(), 0
  * - **la frégate superbe** plane au-dessus des lieux de mer, le jour ;
  * - **le colibri** butine les balisiers des lieux de forêt, le jour : c'est
  *   lui qui pollinise le balisier, et le dessin met les deux ensemble ;
- * - **la chauve-souris frugivore** les remplace la nuit, en forêt.
+ * - **le molosse**, une chauve-souris insectivore, les remplace la nuit en
+ *   forêt : il chasse les insectes en zigzag au-dessus des arbres.
  *
  * Les lieux de terre ouverte (Marie-Galante, Morne-à-l'Eau, la place de la
  * Victoire) n'en ont pas : leur saison suffit.
  */
 internal object Faune {
     private val MER = setOf(Lieu.GRANDE_ANSE, Lieu.LES_SAINTES, Lieu.POINTE_CHATEAUX,
-        Lieu.DESIRADE, Lieu.BOUILLANTE, Lieu.ILET_MACOU)
+        Lieu.DESIRADE, Lieu.BOUILLANTE, Lieu.ILET_MACOU, Lieu.GRANDE_VIGIE, Lieu.PORTE_ENFER,
+        Lieu.PETITE_TERRE, Lieu.ILET_GOSIER, Lieu.GRAND_CUL_DE_SAC, Lieu.GUEULE_GRAND_GOUFFRE,
+        Lieu.FORT_DELGRES, Lieu.MEMORIAL_ACTE)
     private val FORET = setOf(Lieu.SOUFRIERE, Lieu.CHUTES_CARBET, Lieu.SOFAIA,
-        Lieu.RAVINE_CHAUDE, Lieu.ROCHES_GRAVEES, Lieu.FIGUIER_MAUDIT)
+        Lieu.RAVINE_CHAUDE, Lieu.ROCHES_GRAVEES, Lieu.FIGUIER_MAUDIT, Lieu.GRAND_ETANG,
+        Lieu.BAINS_JAUNES, Lieu.CASCADE_ECREVISSES, Lieu.SAUT_LEZARDE, Lieu.TRAVERSEE,
+        Lieu.GRIVELIERE, Lieu.MATOUBA)
 
     fun de(lieu: Lieu, zone: RectF, graine: Int, nuit: Boolean): Ambiance? = when {
         lieu in MER && !nuit -> Fregates(zone, graine)
@@ -792,28 +833,85 @@ internal object Faune {
 }
 
 /**
- * Deux ou trois frégates qui planent sans un battement, ailes coudées et
- * queue fourchue, et traversent lentement le ciel en s'inclinant.
+ * Les bêtes peintes d'un lieu, rendues vivantes sur la carte ouverte : la
+ * même place et les mêmes couleurs que sur la vignette, et le mouvement de
+ * chaque espèce (voir `Peintre.bete` dans [Paysages]). Chacune glisse avec le
+ * plan qui la porte quand la carte penche, pour ne pas patiner sur son sol.
+ */
+private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone, 0) {
+    private val atelier = Paysages.Atelier(heure)
+    private val betes = Paysages.BETES[lieu].orEmpty()
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1], zone.top + cadre[2])
+        c.scale(e, e)
+        betes.forEachIndexed { i, b ->
+            c.save()
+            c.translate(Paysages.GLISSEMENT[b.plan] * largeur * regardX / e,
+                Paysages.GLISSEMENT[b.plan] * hauteur * regardY / e)
+            atelier.peindre(c, b, temps, i)
+            c.restore()
+        }
+        c.restore()
+    }
+}
+
+/**
+ * Deux ou trois frégates en V arrondi qui tournent en larges cercles dans les
+ * courants chauds, comme les vraies, en dérivant lentement avec le vent.
+ * Elles planent presque tout le temps et donnent de loin en loin deux coups
+ * d'ailes lents, chacune à son rythme (propriétaire, 2026-10-19). Le cercle
+ * est vu de biais, donc aplati, et l'oiseau penche vers l'intérieur.
  */
 private class Fregates(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     private val u = largeur / 100f
     private val n = 2 + (hasard() * 2f).toInt()
-    private val x = FloatArray(n) { zone.left + hasard() * largeur }
-    private val y = FloatArray(n) { zone.top + hauteur * (0.08f + hasard() * 0.25f) }
+    private val cx = FloatArray(n) { zone.left + hasard() * largeur }
+    private val cy = FloatArray(n) { zone.top + hauteur * (0.12f + hasard() * 0.22f) }
+    private val rayon = FloatArray(n) { (9f + hasard() * 7f) * u }
+    private val angle = FloatArray(n) { hasard() * 6.28f }
+    private val tour = FloatArray(n) { (0.22f + hasard() * 0.15f) * (if (hasard() < 0.5f) 1f else -1f) }
     private val t = FloatArray(n) { (4.5f + hasard() * 2.5f) * u }
-    private val vitesse = FloatArray(n) { (2.2f + hasard() * 1.6f) * u * (if (hasard() < 0.5f) 1f else -1f) }
+    private val derive = (0.8f + hasard() * 0.8f) * u * (if (hasard() < 0.5f) 1f else -1f)
     private val phase = FloatArray(n) { hasard() * 6.28f }
+    private val periode = FloatArray(n) { 5f + hasard() * 3f }
     private val chemin = android.graphics.Path()
     private var temps = 0f
 
     override fun avancer(dt: Float) {
         temps += dt
         for (i in 0 until n) {
-            x[i] += vitesse[i] * dt
-            val marge = t[i] * 1.5f
-            if (x[i] > zone.right + marge) x[i] = zone.left - marge
-            if (x[i] < zone.left - marge) x[i] = zone.right + marge
+            angle[i] += tour[i] * dt
+            cx[i] += derive * dt
+            val marge = rayon[i] + t[i] * 1.5f
+            if (cx[i] > zone.right + marge) cx[i] = zone.left - marge
+            if (cx[i] < zone.left - marge) cx[i] = zone.right + marge
         }
+    }
+
+    /**
+     * L'ouverture des ailes : 1 en vol plané, jusqu'à -0,55 au bas d'un coup
+     * d'aile. Deux battements de 0,45 s par période, le reste plané.
+     */
+    private fun aile(i: Int): Float {
+        val cycle = (temps + phase[i] * periode[i]) % periode[i]
+        if (cycle > BATTEMENT) return 1f
+        return 0.225f + 0.775f * cos(cycle / BATTEMENT * 2f * PI.toFloat() * 2f)
     }
 
     override fun dessiner(c: Canvas, p: Paint) {
@@ -823,21 +921,17 @@ private class Fregates(zone: RectF, graine: Int) : Ambiance(zone, graine) {
         p.strokeJoin = Paint.Join.ROUND
         p.color = COULEUR
         for (i in 0 until n) {
-            // Un lent roulis : une aile monte quand l'autre descend.
-            val roulis = sin(temps * 0.5f + phase[i]) * 0.18f
-            val yy = y[i] + sin(temps * 0.3f + phase[i]) * 1.2f * u
+            // Sur son cercle, vu de biais ; l'aile intérieure plus basse.
+            val xx = cx[i] + cos(angle[i]) * rayon[i]
+            val yy = cy[i] + sin(angle[i]) * rayon[i] * 0.3f
+            val roulis = 0.12f * (if (tour[i] > 0f) 1f else -1f) * (0.6f + 0.4f * sin(angle[i]))
             val ti = t[i]
+            val k = aile(i)
             p.strokeWidth = ti * 0.11f
             chemin.rewind()
-            chemin.moveTo(x[i] - ti, yy - ti * (0.28f + roulis))
-            chemin.lineTo(x[i] - ti * 0.42f, yy + ti * 0.06f)
-            chemin.lineTo(x[i], yy - ti * 0.04f)
-            chemin.lineTo(x[i] + ti * 0.42f, yy + ti * 0.06f)
-            chemin.lineTo(x[i] + ti, yy - ti * (0.28f - roulis))
-            chemin.moveTo(x[i], yy)
-            chemin.lineTo(x[i] - ti * 0.1f, yy + ti * 0.42f)
-            chemin.moveTo(x[i], yy)
-            chemin.lineTo(x[i] + ti * 0.1f, yy + ti * 0.42f)
+            chemin.moveTo(xx - ti, yy - ti * (0.35f * k + roulis))
+            chemin.quadTo(xx - ti * 0.35f, yy - ti * 0.3f * k, xx, yy + ti * 0.1f)
+            chemin.quadTo(xx + ti * 0.35f, yy - ti * 0.3f * k, xx + ti, yy - ti * (0.35f * k - roulis))
             c.drawPath(chemin, p)
         }
         p.style = Paint.Style.FILL
@@ -845,6 +939,7 @@ private class Fregates(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 
     private companion object {
         const val COULEUR = 0xD91E1A22.toInt()
+        const val BATTEMENT = 0.9f
     }
 }
 
@@ -923,8 +1018,10 @@ private class Colibri(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /**
- * Les chauves-souris frugivores de la nuit en forêt : un vol brisé, des
- * battements rapides, dans le haut de la fenêtre.
+ * Les molosses de la nuit en forêt, des chauves-souris qui chassent les
+ * insectes : un vol rapide et brisé, des battements rapides, dans le haut de
+ * la fenêtre. C'est le vol de l'insectivore ; une frugivore volerait plus
+ * droit, d'arbre en arbre, d'où le choix de l'espèce.
  */
 private class ChauvesSouris(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     private val u = largeur / 100f
@@ -933,15 +1030,27 @@ private class ChauvesSouris(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     private val y = FloatArray(n) { zone.top + hauteur * (0.1f + hasard() * 0.3f) }
     private val cap = FloatArray(n) { hasard() * 6.28f }
     private val phase = FloatArray(n) { hasard() * 6.28f }
+    private val vitesse = FloatArray(n) { (20f + hasard() * 10f) * u }
+    private val virage = FloatArray(n) { hasard() * 0.4f }
     private val chemin = android.graphics.Path()
     private var temps = 0f
 
+    /**
+     * Le vol d'une chauve-souris : vite, et en zigzag. Toutes les 0,15 à 0,6 s
+     * elle casse sa trajectoire d'un coup, jusqu'à 75° d'un côté ou de
+     * l'autre, comme lorsqu'elle chasse (propriétaire, 2026-10-19). Avant,
+     * elle tournait en courbes douces, à la vitesse d'un oiseau.
+     */
     override fun avancer(dt: Float) {
         temps += dt
         for (i in 0 until n) {
-            cap[i] += sin(temps * 1.7f + phase[i]) * 2.4f * dt
-            x[i] += cos(cap[i]) * 9f * u * dt
-            y[i] += sin(cap[i]) * 5f * u * dt
+            virage[i] -= dt
+            if (virage[i] <= 0f) {
+                cap[i] += (hasard() - 0.5f) * 2.6f
+                virage[i] = 0.15f + hasard() * 0.45f
+            }
+            x[i] += cos(cap[i]) * vitesse[i] * dt
+            y[i] += sin(cap[i]) * vitesse[i] * 0.6f * dt
             if (x[i] < zone.left + 2f * u || x[i] > zone.right - 2f * u) cap[i] = PI.toFloat() - cap[i]
             if (y[i] < zone.top + 2f * u || y[i] > zone.top + hauteur * 0.5f) cap[i] = -cap[i]
             x[i] = x[i].coerceIn(zone.left + 2f * u, zone.right - 2f * u)
@@ -955,16 +1064,18 @@ private class ChauvesSouris(zone: RectF, graine: Int) : Ambiance(zone, graine) {
         p.color = COULEUR
         for (i in 0 until n) {
             val t = 2.4f * u
-            val aile = sin(temps * 14f + phase[i]) * 0.6f
+            // Des battements rapides, et le petit sursaut qui va avec.
+            val aile = sin(temps * 46f + phase[i]) * 0.7f
+            val yy = y[i] + sin(temps * 23f + phase[i]) * 0.35f * u
             chemin.rewind()
-            chemin.moveTo(x[i], y[i])
-            chemin.lineTo(x[i] - t, y[i] - t * aile)
-            chemin.lineTo(x[i] - t * 0.6f, y[i] + t * 0.15f)
-            chemin.lineTo(x[i] - t * 0.3f, y[i] + t * 0.05f)
-            chemin.lineTo(x[i], y[i] + t * 0.25f)
-            chemin.lineTo(x[i] + t * 0.3f, y[i] + t * 0.05f)
-            chemin.lineTo(x[i] + t * 0.6f, y[i] + t * 0.15f)
-            chemin.lineTo(x[i] + t, y[i] - t * aile)
+            chemin.moveTo(x[i], yy)
+            chemin.lineTo(x[i] - t, yy - t * aile)
+            chemin.lineTo(x[i] - t * 0.6f, yy + t * 0.15f)
+            chemin.lineTo(x[i] - t * 0.3f, yy + t * 0.05f)
+            chemin.lineTo(x[i], yy + t * 0.25f)
+            chemin.lineTo(x[i] + t * 0.3f, yy + t * 0.05f)
+            chemin.lineTo(x[i] + t * 0.6f, yy + t * 0.15f)
+            chemin.lineTo(x[i] + t, yy - t * aile)
             chemin.close()
             c.drawPath(chemin, p)
         }

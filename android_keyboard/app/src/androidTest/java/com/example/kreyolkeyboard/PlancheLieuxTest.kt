@@ -44,8 +44,8 @@ class PlancheLieuxTest {
         val cases = ArrayList<Pair<String, Bitmap?>>()
         for (lieu in Lieu.values()) for (r in Rarete.values())
             cases += "${lieu.nom} · ${r.name}" to Paysages.rendu(lieu, Heure.de(r, null), L, H)
-        planche("planche_lieux_1", cases.take(32), 4)
-        planche("planche_lieux_2", cases.drop(32), 4)
+        // Huit lieux par planche, à leurs quatre heures.
+        cases.chunked(32).forEachIndexed { i, morceau -> planche("planche_lieux_${i + 1}", morceau, 4) }
     }
 
     @Test

@@ -79,8 +79,8 @@ object Series {
     val NOMBRES: List<Int> = emptyList()
 
     /**
-     * Les soixante cases de l'album des paysages, rangées lieu par lieu, du
-     * matin à la nuit : la grille du carnet en fait quinze rangées de quatre.
+     * Les cent vingt cases de l'album des paysages, rangées lieu par lieu, du
+     * matin à la nuit : la grille du carnet en fait trente rangées de quatre.
      */
     val PAYSAGES: List<String> = Lieu.values().flatMap { l -> Rarete.values().map { r -> cleDePaysage(l, r) } }
 

@@ -3932,7 +3932,8 @@ class CarteOrnee(
         // lieu ajoute sa faune (voir Faune).
         ambiance = Ambiance.pour(
             souvenir, zone, mot.hashCode(), nuit = rarete.ordinal >= Rarete.RARE.ordinal,
-            oiseaux = motif.profondeur, lieu = if (Paysages.LIEUX_DESSINES) Lieu.du(mot) else null
+            oiseaux = motif.profondeur, lieu = if (Paysages.LIEUX_DESSINES) Lieu.du(mot) else null,
+            heure = Heure.de(rarete, blason.champ?.hue)
         )
         oublierLesCouches()
         if (isAttachedToWindow) armerSecousse()
@@ -3993,6 +3994,7 @@ class CarteOrnee(
         else ((maintenant - instantPrecedent) / 1e9f).coerceAtMost(0.05f)
         instantPrecedent = maintenant
         a.orienter(basX, basY)
+        a.regarder(regardX, regardY)
         a.avancer(dt)
         canvas.save()
         canvas.scale(u, u)

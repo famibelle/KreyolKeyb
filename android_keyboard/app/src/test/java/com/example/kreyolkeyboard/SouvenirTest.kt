@@ -49,9 +49,11 @@ class SouvenirTest {
     fun `l'empreinte est figee`() {
         // Changer l'ordre ou le nombre des lieux déplacerait les cartes déjà
         // gagnées : ce test casse avant.
-        assertEquals(15, Lieu.values().size)
-        assertEquals(Lieu.values()[Math.floorMod("lanmè".hashCode(), 15)], Lieu.du("lanmè"))
+        assertEquals(30, Lieu.values().size)
+        assertEquals("8576:", Lieu.GRAINE)
+        assertEquals(Lieu.values()[Math.floorMod("8576:lanmè".hashCode(), 30)], Lieu.du("lanmè"))
         assertEquals(Lieu.GRANDE_ANSE, Lieu.values()[0])
         assertEquals(Lieu.FIGUIER_MAUDIT, Lieu.values()[14])
+        assertEquals(Lieu.MEMORIAL_ACTE, Lieu.values()[29])
     }
 }
