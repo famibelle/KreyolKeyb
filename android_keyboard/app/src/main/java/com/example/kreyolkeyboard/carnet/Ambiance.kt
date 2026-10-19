@@ -69,9 +69,9 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
     companion object {
         /**
          * L'ambiance d'un souvenir, ou `null` sans souvenir. La fête l'emporte
-         * sur la saison ; l'été dépend de l'heure de la carte : des aigrettes
-         * le jour, des lucioles le soir et la nuit ([nuit], les deux paliers
-         * hauts).
+         * sur la saison ; le carême dépend de l'heure de la carte : des
+         * aigrettes le jour, des lucioles le soir et la nuit ([nuit], les deux
+         * paliers hauts). L'hivernage pleut.
          *
          * [oiseaux] : les oiseaux de l'été volent ici plutôt que d'être peints
          * dans le paysage, ce que fait le rendu en plans de la carte ouverte
@@ -80,16 +80,16 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
         fun pour(souvenir: Souvenir?, zone: RectF, graine: Int, nuit: Boolean = false,
                  oiseaux: Boolean = false): Ambiance? =
             when (souvenir?.fete) {
-                Fete.NEIJOERSCHDAG -> FeuxDArtifice(zone, graine, FeuxDArtifice.NOUVEL_AN)
-                Fete.NATIONALFEIERDAG -> FeuxDArtifice(zone, graine, FeuxDArtifice.DRAPEAU)
-                Fete.BUERGBRENNEN -> Braises(zone, graine)
-                Fete.SCHUEBERFOUER -> Tournoyants(zone, graine, Tournoyants.CONFETTIS)
-                Fete.CHRESCHTMAART -> Ensemble(Lumieres(zone, graine), Neige(zone, graine))
+                // Jamais de feu d'artifice : une nuit calme et ses lucioles.
+                Fete.NOUVEL_AN -> Lucioles(zone, graine)
+                Fete.CARNAVAL -> Tournoyants(zone, graine, Tournoyants.CONFETTIS)
+                // Les flambeaux de la veillée : des braises qui montent, rien qui éclate.
+                Fete.VINGT_SEPT_MAI -> Braises(zone, graine)
+                Fete.TOUSSAINT -> Lumieres(zone, graine)
+                Fete.CHANTE_NWEL -> Lumieres(zone, graine)
                 null -> when (souvenir?.saison) {
-                    Saison.WANTER -> Neige(zone, graine)
-                    Saison.HIERSCHT -> Tournoyants(zone, graine, Tournoyants.FEUILLES)
-                    Saison.FREIJOER -> Tournoyants(zone, graine, Tournoyants.PETALES)
-                    Saison.SUMMER -> {
+                    Saison.HIVERNAGE -> Pluie(zone, graine)
+                    Saison.CAREME -> {
                         val air = if (nuit) Lucioles(zone, graine) else Tournoyants(zone, graine, Tournoyants.AIGRETTES)
                         if (oiseaux) Ensemble(Oiseaux(zone, graine, nuit), air) else air
                     }
@@ -309,8 +309,36 @@ private class Neige(zone: RectF, graine: Int) :
 }
 
 /**
+ * L'averse de l'hivernage : des traits fins et rapides, alignés sur la chute.
+ * Rapide exprès, à l'inverse de la neige : c'est la vitesse qui fait lire de
+ * la pluie. Le trait suit le vrai bas, si bien qu'une carte penchée pleut en
+ * biais.
+ */
+private class Pluie(zone: RectF, graine: Int) :
+    Chute(zone, graine, GOUTTES, 70f, 120f, 0.2f, 0.6f, 0.5f, 1.0f) {
+
+    private val longueur = FloatArray(n) { 2.2f + profondeur[it] * 3.2f }
+    private val alpha = IntArray(n) { (70 + profondeur[it] * 110).toInt() }
+
+    override fun dessinerUn(c: Canvas, p: Paint, i: Int, fx: Float, fy: Float) {
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.28f + profondeur[i] * 0.22f
+        p.strokeCap = Paint.Cap.ROUND
+        p.color = TEINTE
+        p.alpha = alpha[i]
+        c.drawLine(fx, fy, fx - dirX * longueur[i], fy - dirY * longueur[i], p)
+        p.style = Paint.Style.FILL
+    }
+
+    private companion object {
+        const val GOUTTES = 60
+        const val TEINTE = 0xFFDCE6F2.toInt()
+    }
+}
+
+/**
  * Ce qui tournoie en tombant : feuilles d'automne, pétales de printemps,
- * aigrettes d'été, confettis de la Schueberfouer. Une même boule à neige, un
+ * aigrettes du carême, confettis du Carnaval. Une même boule à neige, un
  * [Style] par saison.
  *
  * L'élément penche dans le sens où il glisse, et se retourne sur lui-même en
@@ -467,7 +495,7 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
         /**
          * Un confetti : un petit rectangle, tracé point par point. Ajouté
          * d'un bloc par `addRect`, il laissait l'image vide sur un Galaxy
-         * A21s (2026-10-12) : les confettis de la Schueberfouer étaient
+         * A21s (2026-10-12) : les confettis (alors ceux de la Schueberfouer, côté LuxKeyb) étaient
          * invisibles. Toutes les formes d'ici sont donc tracées à la main.
          */
         private fun confetti() = android.graphics.Path().apply {
@@ -597,7 +625,7 @@ private class Lucioles(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /**
- * Les braises du Buergbrennen : elles montent du bas de la fenêtre, contre la
+ * Les braises des flambeaux du 27 mai : elles montent du bas de la fenêtre, contre la
  * pesanteur, en vacillant, et pâlissent en montant. C'est la même boule à
  * neige, à l'envers : une vitesse négative fait remonter vers le haut vrai.
  */
@@ -627,8 +655,8 @@ private class Braises(zone: RectF, graine: Int) :
 }
 
 /**
- * Les lumières du Chrëschtmaart : des points dorés fixes qui scintillent,
- * comme des guirlandes au loin. Posées sous la neige par [Ensemble].
+ * Des points dorés fixes qui scintillent : les bougies de la Toussaint, les
+ * guirlandes des Chanté Nwèl.
  */
 private class Lumieres(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 
@@ -665,7 +693,7 @@ private class Lumieres(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /**
- * Les oiseaux d'un ciel d'été, ceux que [Habillage] peint dans le paysage à
+ * Les oiseaux d'un ciel de carême, ceux que [Habillage] peint dans le paysage à
  * plat (37.4.4) : mêmes traits, même taille, même coin du ciel. Ils battent
  * lentement des ailes, chacun à son rythme, et planent sur place en dérivant
  * à peine. Ils ne traversent pas la fenêtre : on doit les voir vivre, pas
@@ -724,100 +752,5 @@ private class Ensemble(private vararg val parts: Ambiance) : Ambiance(RectF(), 0
     override fun avancer(dt: Float) = parts.forEach { it.avancer(dt) }
     override fun dessiner(c: Canvas, p: Paint) {
         for (a in parts) a.dessiner(c, p)
-    }
-}
-
-/**
- * Des feux d'artifice : une gerbe éclate toutes les secondes et demie environ
- * dans le haut de la fenêtre, ses étincelles retombent vers le vrai bas et
- * s'éteignent. Une secousse en tire une de plus, tout de suite.
- */
-private class FeuxDArtifice(zone: RectF, graine: Int, private val couleurs: IntArray) : Ambiance(zone, graine) {
-
-    private val max = 3 * ETINCELLES
-    private val x = FloatArray(max)
-    private val y = FloatArray(max)
-    private val vx = FloatArray(max)
-    private val vy = FloatArray(max)
-    private val age = FloatArray(max) { VIE }
-    private val teinte = IntArray(max)
-    private var prochaine = 0.4f
-    private var suivante = 0
-    private var basX = 0f
-    private var basY = 1f
-
-    override fun orienter(basX: Float, basY: Float) {
-        val m = sqrt(basX * basX + basY * basY)
-        // À plat, les étincelles retombent quand même, doucement.
-        this.basX = basX
-        this.basY = basY + 0.35f * (1f - m.coerceAtMost(1f))
-    }
-
-    override fun secouer(force: Float) {
-        if (prochaine > 0.25f) prochaine = 0f
-    }
-
-    private fun eclater() {
-        val cx = zone.left + largeur * (0.2f + hasard() * 0.6f)
-        val cy = zone.top + hauteur * (0.18f + hasard() * 0.35f)
-        val couleur = couleurs[(hasard() * couleurs.size).toInt().coerceAtMost(couleurs.size - 1)]
-        val puissance = 22f + hasard() * 14f
-        for (k in 0 until ETINCELLES) {
-            val i = suivante
-            suivante = (suivante + 1) % max
-            val a = k * 2f * PI.toFloat() / ETINCELLES + hasard() * 0.2f
-            val v = puissance * (0.75f + hasard() * 0.25f)
-            x[i] = cx
-            y[i] = cy
-            vx[i] = cos(a) * v
-            vy[i] = sin(a) * v
-            age[i] = 0f
-            teinte[i] = couleur
-        }
-    }
-
-    override fun avancer(dt: Float) {
-        prochaine -= dt
-        if (prochaine <= 0f) {
-            eclater()
-            prochaine = 1.1f + hasard() * 0.8f
-        }
-        val frein = exp(-dt * 1.8f)
-        for (i in 0 until max) {
-            if (age[i] >= VIE) continue
-            age[i] += dt
-            vx[i] = vx[i] * frein + basX * PESANTEUR * dt
-            vy[i] = vy[i] * frein + basY * PESANTEUR * dt
-            x[i] += vx[i] * dt
-            y[i] += vy[i] * dt
-        }
-    }
-
-    override fun dessiner(c: Canvas, p: Paint) {
-        p.shader = null
-        p.style = Paint.Style.FILL
-        for (i in 0 until max) {
-            if (age[i] >= VIE) continue
-            val l = 1f - age[i] / VIE
-            p.color = teinte[i]
-            // Une courte traînée derrière l'étincelle.
-            p.alpha = (110 * l).toInt()
-            c.drawCircle(x[i] - vx[i] * 0.05f, y[i] - vy[i] * 0.05f, 0.55f, p)
-            p.alpha = (255 * l).toInt()
-            c.drawCircle(x[i], y[i], 0.75f, p)
-        }
-        p.alpha = 255
-    }
-
-    companion object {
-        private const val ETINCELLES = 26
-        private const val VIE = 1.4f
-        private const val PESANTEUR = 22f
-
-        /** Or et blanc pour le Nouvel An. */
-        val NOUVEL_AN = intArrayOf(0xFFFFD54F.toInt(), 0xFFFFFFFF.toInt(), 0xFFFFB300.toInt())
-
-        /** Les couleurs du drapeau pour la Fête nationale : rouge, blanc, bleu clair. */
-        val DRAPEAU = intArrayOf(0xFFED2939.toInt(), 0xFFFFFFFF.toInt(), 0xFF00A1DE.toInt())
     }
 }

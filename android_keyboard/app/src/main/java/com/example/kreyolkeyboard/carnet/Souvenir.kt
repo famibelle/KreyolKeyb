@@ -4,33 +4,32 @@ import java.util.Calendar
 import java.util.TimeZone
 
 /**
- * Les quatre saisons, en luxembourgeois.
+ * Les deux saisons de la Guadeloupe : le carême, sec, et l'hivernage, humide
+ * (choix du propriétaire, 2026-10-19).
  *
- * Les noms sont ceux du LOD (WANTER1, FREIJOER1, SUMMER1, HIERSCHT1) et ne se
- * traduisent pas, comme les noms de lieux de [Lieu] : ce sont des noms
- * propres de la carte, pas des libellés d'interface.
+ * Les noms restent en français, comme ceux des lieux de [Lieu] : aucune forme
+ * kréyòl validée n'est disponible dans le dépôt pour l'une ou l'autre.
  */
 enum class Saison(val nom: String) {
-    WANTER("Wanter"),
-    FREIJOER("Fréijoer"),
-    SUMMER("Summer"),
-    HIERSCHT("Hierscht")
+    CAREME("Carême"),
+    HIVERNAGE("Hivernage")
 }
 
 /**
- * Les fêtes du calendrier luxembourgeois qu'une carte peut garder.
+ * Les fêtes qu'une carte peut garder, choisies par le propriétaire
+ * (2026-10-19) : le Nouvel An, les jours gras du Carnaval, le 27 mai,
+ * la Toussaint et ses cimetières illuminés, et la saison des Chanté Nwèl.
  *
- * Toutes attestées au LOD (NEIJOERSCHDAG1, BUERGBRENNEN1, NATIONALFEIERDAG1,
- * SCHUEBERFOUER1, CHRESCHTMAART1). Ce sont des repères civils de l'année, la
- * même ligne que celle de [MotsEcartes], qui garde `Chrëschtdag` et
- * `Ouschteren` pour la même raison.
+ * Le 27 mai commémore l'abolition de l'esclavage en Guadeloupe (1848). Il
+ * est peint en flambeaux, jamais en feu d'artifice : c'est un jour de
+ * mémoire, pas de réjouissance.
  */
 enum class Fete(val nom: String) {
-    NEIJOERSCHDAG("Neijoerschdag"),
-    BUERGBRENNEN("Buergbrennen"),
-    NATIONALFEIERDAG("Nationalfeierdag"),
-    SCHUEBERFOUER("Schueberfouer"),
-    CHRESCHTMAART("Chrëschtmaart")
+    NOUVEL_AN("Nouvel An"),
+    CARNAVAL("Carnaval"),
+    VINGT_SEPT_MAI("27 mai"),
+    TOUSSAINT("Toussaint"),
+    CHANTE_NWEL("Chanté Nwèl")
 }
 
 /**
@@ -40,15 +39,15 @@ enum class Fete(val nom: String) {
  * ## La date est une donnée technique
  *
  * Le carnet garde l'instant de la capture ([CarteMot.premiereFois]) ; la
- * carte n'en montre **jamais** la valeur (propriétaire, 2026-10-11). Ce qui
- * compte, c'est la saison : elle habille le paysage (neige, fleurs, chaleur,
- * feuilles) et le cachet en relief de la carte ouverte porte son nom. Rien
- * d'autre n'entre en jeu, ni météo ni position : la date seule.
+ * carte n'en montre **jamais** la valeur. Ce qui compte, c'est la saison :
+ * elle habille le paysage (herbes sèches du carême, averses de l'hivernage)
+ * et le poinçon de la carte ouverte porte son emblème. Rien d'autre n'entre
+ * en jeu, ni météo ni position : la date seule.
  *
- * Les saisons sont les saisons météorologiques, par mois entiers : décembre à
- * février, mars à mai, juin à août, septembre à novembre. Les bornes
- * astronomiques bougent d'un jour selon l'année et feraient changer de saison
- * une carte du 21 mars d'une année à l'autre.
+ * Les saisons vont par mois entiers, comme on les compte d'ordinaire en
+ * Guadeloupe : le carême de janvier à juin, l'hivernage de juillet à
+ * décembre. La bascule réelle varie d'une année à l'autre ; une borne fixe
+ * garde à une carte la même saison d'une année sur l'autre.
  */
 data class Souvenir(val saison: Saison, val fete: Fete?) {
 
@@ -57,21 +56,16 @@ data class Souvenir(val saison: Saison, val fete: Fete?) {
 
     companion object {
 
-        /**
-         * Les saisons et les fêtes ci-dessous sont celles du Luxembourg,
-         * reprises de LuxKeyb (v23.0.0). Éteintes tant que le calendrier de
-         * Guadeloupe (carême, hivernage, fêtes) n'a pas été choisi : sans
-         * souvenir, une carte n'a ni saison, ni fête, ni ambiance animée.
-         */
-        internal const val CALENDRIER_ACTIF = false
+        /** Le calendrier de Guadeloupe est choisi (2026-10-19) : il est allumé. */
+        internal const val CALENDRIER_ACTIF = true
 
         /**
          * Le souvenir d'un instant, lu dans le fuseau de l'appareil : la carte
-         * gagnée le soir du 31 décembre à Luxembourg n'est pas du Nouvel An.
+         * gagnée le soir du 31 décembre à Pointe-à-Pitre n'est pas du Nouvel An.
          *
          * `null` pour un instant nul ou négatif, qui n'est pas une date de
-         * capture mais un champ absent : un 1er janvier 1970 tirerait un feu
-         * d'artifice sur une carte qui n'a rien vu.
+         * capture mais un champ absent : un 1er janvier 1970 ferait voler les
+         * lucioles du Nouvel An sur une carte qui n'a rien vu.
          */
         fun de(instant: Long, fuseau: TimeZone = TimeZone.getDefault()): Souvenir? {
             if (!CALENDRIER_ACTIF) return null
@@ -83,19 +77,13 @@ data class Souvenir(val saison: Saison, val fete: Fete?) {
 
         /** Le souvenir d'un jour du calendrier, [mois] de 1 à 12. */
         fun du(an: Int, mois: Int, jour: Int): Souvenir {
-            val saison = when (mois) {
-                12, 1, 2 -> Saison.WANTER
-                in 3..5 -> Saison.FREIJOER
-                in 6..8 -> Saison.SUMMER
-                else -> Saison.HIERSCHT
-            }
-            val brandons = buergbrennen(an)
+            val saison = if (mois <= 6) Saison.CAREME else Saison.HIVERNAGE
             val fete = when {
-                mois == 1 && jour == 1 -> Fete.NEIJOERSCHDAG
-                mois == brandons[0] && jour == brandons[1] -> Fete.BUERGBRENNEN
-                mois == 6 && (jour == 22 || jour == 23) -> Fete.NATIONALFEIERDAG
-                (mois == 8 && jour >= 22) || (mois == 9 && jour <= 11) -> Fete.SCHUEBERFOUER
-                (mois == 11 && jour >= 22) || (mois == 12 && jour <= 24) -> Fete.CHRESCHTMAART
+                mois == 1 && jour == 1 -> Fete.NOUVEL_AN
+                joursGras(an).any { it[0] == mois && it[1] == jour } -> Fete.CARNAVAL
+                mois == 5 && jour == 27 -> Fete.VINGT_SEPT_MAI
+                mois == 11 && (jour == 1 || jour == 2) -> Fete.TOUSSAINT
+                mois == 12 && jour <= 24 -> Fete.CHANTE_NWEL
                 else -> null
             }
             return Souvenir(saison, fete)
@@ -123,17 +111,22 @@ data class Souvenir(val saison: Saison, val fete: Fete?) {
         }
 
         /**
-         * Le Buergbrennen, premier dimanche de carême : six semaines avant
-         * Pâques. Compté en jours du calendrier et non en millisecondes, sans
-         * quoi le passage à l'heure d'été le décalait d'un jour.
+         * Les quatre jours gras du Carnaval : dimanche gras, lundi gras, mardi
+         * gras et mercredi des Cendres, où l'on brûle Vaval. Le mercredi des
+         * Cendres tombe 46 jours avant Pâques.
+         *
+         * Comptés en jours du calendrier et non en millisecondes, sans quoi un
+         * changement d'heure les décalerait d'un jour.
          */
-        fun buergbrennen(an: Int): IntArray {
+        fun joursGras(an: Int): List<IntArray> {
             val p = paques(an)
-            val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            cal.clear()
-            cal.set(an, p[0] - 1, p[1])
-            cal.add(Calendar.DAY_OF_MONTH, -42)
-            return intArrayOf(cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+            return (49 downTo 46).map { avant ->
+                val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                cal.clear()
+                cal.set(an, p[0] - 1, p[1])
+                cal.add(Calendar.DAY_OF_MONTH, -avant)
+                intArrayOf(cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+            }
         }
     }
 }

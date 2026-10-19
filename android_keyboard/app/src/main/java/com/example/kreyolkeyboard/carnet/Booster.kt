@@ -424,10 +424,10 @@ object Booster {
                 setLineSpacing(0f, 1.25f)
                 setTextColor(0xFFECEFF1.toInt())
             })
-            // Le feu d'une très rare, une fois : un événement se voit autant
-            // qu'il se lit.
+            // L'éclat d'une très rare, une fois : un événement se voit autant
+            // qu'il se lit. Pas de feu d'artifice (propriétaire, 2026-10-19).
             if (animations && (etape != null || seriesCompletees.isNotEmpty())) {
-                feter(page, Rarete.TRES_RARE, "bilan$etape${seriesCompletees.size}")
+                eclater(page, Rarete.TRES_RARE)
             }
         }
 
@@ -500,7 +500,6 @@ object Booster {
                 if (premiere) expliquer(rarete, anime = false)
                 // `suivre` se tait tout seul quand les animations sont coupées.
                 Inclinaison.suivre(face)
-                if (animations) feter(page, rarete, c.carte.forme)
                 return
             }
 
@@ -648,29 +647,21 @@ object Booster {
                                         Rarete.TRES_RARE -> {
                                             rayonner(page, face, rarete)
                                             eclater(page, rarete)
-                                            // Le coup plein de l'éclat, son
-                                            // rebond, puis le crépitement des
-                                            // feux qui partent.
+                                            // Le coup plein de l'éclat, puis son rebond.
                                             vibrer(page, 1f)
                                             vibrer(page, 0.7f, 170L)
-                                            vibrer(page, 0.15f, 450L)
-                                            vibrer(page, 0.15f, 620L)
-                                            vibrer(page, 0.15f, 850L)
                                         }
                                         else -> {}
                                     }
-                                    feter(page, rarete, c.carte.forme)
                                     annoncer(rarete, anime = true)
                                     if (premiere) {
                                         expliquer(rarete, anime = true)
-                                        // Un second bouquet, d'une autre
-                                        // graine, quand le premier retombe.
-                                        page.postDelayed({
+                                        // Un second éclat pour la première très
+                                        // rare, quand le premier s'éteint.
+                                        if (rarete == Rarete.TRES_RARE) page.postDelayed({
                                             if (abandonnee()) return@postDelayed
-                                            if (rarete == Rarete.TRES_RARE) eclater(page, rarete)
-                                            feter(page, rarete, c.carte.forme + "#premiere")
+                                            eclater(page, rarete)
                                             vibrer(page, 0.6f)
-                                            vibrer(page, 0.15f, 220L)
                                         }, 900L)
                                     }
                                     if (neuve) {
@@ -1048,43 +1039,6 @@ object Booster {
             return
         }
         v.postDelayed({ if (v.isAttachedToWindow) KeyFeedback.onRevelation(v, force) }, delai)
-    }
-
-    /**
-     * Les feux d'artifice qui saluent une carte distinguée.
-     *
-     * Ils partent **chaque fois que la carte se pose** : au retournement qui
-     * la découvre comme au glissement qui y revient. C'est voulu — la rareté
-     * n'est pas une nouvelle qu'on annonce une fois puis qu'on oublie, c'est
-     * une propriété que la carte garde, et parcourir sa pochette doit valoir
-     * le geste. Une commune n'en a pas : c'est de ne pas en avoir qui dit ce
-     * qu'elle est.
-     *
-     * [graine] est la forme du mot. Les gerbes sont tirées au hasard, mais
-     * d'un hasard que la carte fixe : deux passages sur la même carte donnent
-     * le même bouquet, deux cartes voisines n'en donnent jamais deux pareils.
-     * Le hasard sert la variété, jamais l'instabilité.
-     */
-    private fun feter(hote: FrameLayout, rarete: Rarete, graine: String) {
-        if (!rarete.distinguee) return
-        val feu = FeuxArtifice(hote.context, rarete, graine.hashCode().toLong()).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
-            )
-        }
-        hote.addView(feu)
-        ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = if (rarete == Rarete.TRES_RARE) 1250L else 980L
-            addUpdateListener { feu.avancement = it.animatedValue as Float }
-            addListener(object : android.animation.AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: android.animation.Animator) {
-                    (feu.parent as? ViewGroup)?.removeView(feu)
-                }
-            })
-            start()
-        }
     }
 
     /**
@@ -1491,165 +1445,6 @@ class EclatCarte(context: Context, private val rarete: Rarete) : View(context) {
         pinceau.strokeWidth = 1.5f * d
         pinceau.alpha = (reste * 120).toInt().coerceIn(0, 255)
         canvas.drawCircle(cx, cy, portee * (0.30f + 0.62f * avancement), pinceau)
-    }
-}
-
-/**
- * Les feux d'artifice d'une carte distinguée.
- *
- * ## Ce qu'ils font que [EclatCarte] ne fait pas
- *
- * L'éclat est un instant : douze rais réguliers qui partent du centre au
- * moment précis où la carte se pose, et qui disent « voilà ». Les feux, eux,
- * durent une seconde et se répondent — trois ou cinq gerbes décalées dans le
- * temps, ailleurs sur l'écran, qui montent, s'ouvrent et retombent. L'un
- * ponctue le retournement, les autres fêtent la carte. C'est pour cela qu'ils
- * cohabitent sur une très rare, la gerbe reprenant là où l'éclat s'éteint.
- *
- * ## Les quatre décisions
- *
- * - **Un hasard fixé par la carte.** [graine] vient de la forme du mot :
- *   revenir sur une carte redonne exactement son bouquet. Un tirage libre
- *   ferait un décor différent à chaque passage, et ce qui change sans raison
- *   se remarque au lieu de se regarder — c'est la même règle que pour
- *   [EclatCarte], appliquée dans l'autre sens : lui garde des angles réguliers
- *   parce qu'il est bref, eux peuvent se permettre du désordre parce qu'il ne
- *   varie pas d'une fois sur l'autre.
- * - **De la pesanteur.** Les étoiles retombent, en `t²`. Sans elle on n'a
- *   qu'une roue qui s'écarte, et l'œil ne lit pas des feux d'artifice — il lit
- *   un chargement.
- * - **Des traînées, pas des points.** Chaque étoile est un court segment entre
- *   sa position d'avant et celle de maintenant. Un point de deux pixels sur un
- *   écran dense ne se voit pas ; la traînée donne la vitesse, qui est la
- *   moitié de l'effet.
- * - **Elles s'éteignent avant la fin.** L'alpha tombe en `(1 - t)²` : les
- *   dernières étoiles disparaissent bien avant d'atteindre le bord, comme
- *   dans un vrai bouquet, et surtout la carte redevient lisible tout de suite.
- *   Ce qu'on est venu voir, c'est le mot.
- *
- * [avancement] va de 0 à 1 et n'est piloté que par l'animateur de [Booster] :
- * la vue ne connaît pas le temps, elle ne connaît que sa position dedans.
- */
-class FeuxArtifice(
-    context: Context,
-    rarete: Rarete,
-    graine: Long
-) : View(context) {
-
-    var avancement: Float = 0f
-        set(valeur) {
-            field = valeur
-            invalidate()
-        }
-
-    private val pinceau = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeCap = Paint.Cap.ROUND
-    }
-
-    /**
-     * Une gerbe : un point de départ, un moment, une couleur.
-     *
-     * Tout est en fractions de la vue — le tirage a lieu à la construction,
-     * bien avant qu'on connaisse sa taille, et une gerbe placée en pixels
-     * sauterait à la première rotation d'écran.
-     */
-    private class Gerbe(
-        val x: Float,
-        val y: Float,
-        val depart: Float,
-        val duree: Float,
-        val portee: Float,
-        val couleur: Int,
-        val etoiles: Int,
-        val biais: Float
-    )
-
-    private val gerbes: List<Gerbe>
-
-    init {
-        val sort = Random(graine)
-        val nombre = if (rarete == Rarete.TRES_RARE) 5 else 3
-        // Le palier donne la teinte, l'or et le blanc font le reste : une
-        // gerbe monochrome se lit comme un effet, trois teintes comme une fête.
-        val teintes = intArrayOf(
-            eclaircir(rarete.couleur, 0.45f),
-            eclaircir(rarete.couleur, 0.15f),
-            0xFFFFD54F.toInt(),
-            Color.WHITE
-        )
-        gerbes = (0 until nombre).map { i ->
-            Gerbe(
-                // Réparties de part et d'autre de l'axe, sans jamais s'y
-                // poser : une gerbe pile au centre serait cachée par la carte.
-                x = 0.20f + 0.60f * sort.nextFloat(),
-                y = 0.16f + 0.42f * sort.nextFloat(),
-                // Les gerbes se suivent au lieu de partir ensemble : c'est le
-                // décalage qui fait un bouquet plutôt qu'une explosion. La
-                // dernière part avant la moitié, pour avoir le temps de
-                // retomber avant que l'animateur ne s'arrête.
-                depart = (i.toFloat() / nombre) * 0.44f + sort.nextFloat() * 0.06f,
-                duree = 0.42f + 0.16f * sort.nextFloat(),
-                portee = 0.17f + 0.11f * sort.nextFloat(),
-                couleur = teintes[sort.nextInt(teintes.size)],
-                etoiles = 9 + sort.nextInt(5),
-                biais = sort.nextFloat() * 6.283f
-            )
-        }
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        val w = width.toFloat()
-        val h = height.toFloat()
-        if (w <= 0f || h <= 0f || avancement <= 0f) return
-        val d = resources.displayMetrics.density
-        val echelle = minOf(w, h)
-
-        for (g in gerbes) {
-            val t = (avancement - g.depart) / g.duree
-            if (t <= 0f || t >= 1f) continue
-            val reste = 1f - t
-            val cx = g.x * w
-            val cy = g.y * h
-            val portee = g.portee * echelle
-
-            // Le rayon décélère — la gerbe s'ouvre vite puis s'essouffle —
-            // pendant que la pesanteur, elle, accélère.
-            val rayon = portee * (1f - reste * reste)
-            val chute = portee * 0.75f * t * t
-            // La traînée est la distance parcourue depuis l'image d'avant,
-            // approchée par la dérivée : elle s'allonge au départ et se
-            // résorbe à l'arrivée, exactement comme une étincelle qui ralentit.
-            val trainee = portee * 0.34f * reste
-
-            pinceau.color = g.couleur
-            pinceau.strokeWidth = (2.6f - 1.2f * t) * d
-            pinceau.alpha = (reste * reste * 255f).toInt().coerceIn(0, 255)
-
-            for (i in 0 until g.etoiles) {
-                val angle = g.biais + 6.283f * i / g.etoiles
-                val dx = cos(angle)
-                val dy = sin(angle)
-                // Une étoile sur deux part un peu moins loin : un cercle
-                // parfait se lit comme un anneau, pas comme une gerbe.
-                val sien = if (i % 2 == 0) rayon else rayon * 0.72f
-                val queue = (sien - trainee).coerceAtLeast(0f)
-                canvas.drawLine(
-                    cx + dx * queue, cy + dy * queue + chute * (queue / portee),
-                    cx + dx * sien, cy + dy * sien + chute,
-                    pinceau
-                )
-            }
-
-            // Le cœur de la gerbe, qui s'éteint le premier : c'est lui qui
-            // donne l'instant du départ, avant même que les étoiles s'écartent.
-            if (t < 0.35f) {
-                pinceau.style = Paint.Style.FILL
-                pinceau.alpha = ((1f - t / 0.35f) * 200f).toInt().coerceIn(0, 255)
-                canvas.drawCircle(cx, cy, (1f - t / 0.35f) * 5f * d, pinceau)
-                pinceau.style = Paint.Style.STROKE
-            }
-        }
     }
 }
 

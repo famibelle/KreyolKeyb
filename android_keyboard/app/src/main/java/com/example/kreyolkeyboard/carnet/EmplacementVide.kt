@@ -138,13 +138,12 @@ class EmplacementVide(
     private fun lieu(c: Canvas, rayon: Float) {
         val (lieu, rarete) = paysage ?: return
         // Rendu à demi-définition, et gardé par la case : c'est un indice
-        // grisé, pas une illustration, et trente-six cases d'un coup ne
+        // grisé, pas une illustration, et soixante cases d'un coup ne
         // doivent pas vider le cache des cartes.
         val l = (cadre.width() / 2f).toInt()
         val h = (cadre.height() / 2f).toInt()
         val image = this.image?.takeIf { it.width == l && it.height == h } ?: run {
-            val teinte = lieu.champ()?.hue
-            Paysages.rendu(lieu, Heure.de(rarete, teinte), l, h)
+            Paysages.rendu(lieu, Heure.de(rarete, null), l, h)
         }?.also { this.image = it } ?: return
         decoupe.reset()
         decoupe.addRoundRect(cadre, rayon, rayon, Path.Direction.CW)

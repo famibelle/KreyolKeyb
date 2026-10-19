@@ -108,7 +108,6 @@ object ChauffeCartes {
         plein(NuitEtoilee(activity))
         plein(RayonsRarete(activity, Rarete.TRES_RARE).apply { avancement = 0.5f })
         plein(EclatCarte(activity, Rarete.TRES_RARE).apply { avancement = 0.5f })
-        plein(FeuxArtifice(activity, Rarete.TRES_RARE, 1L).apply { avancement = 0.5f })
         plein(EclairCarte(activity, Rarete.TRES_RARE))
         // Sous le contenu : l'écran le recouvre, et le peu qui en paraîtrait
         // est à 1 % d'opacité.

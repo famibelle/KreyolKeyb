@@ -21,44 +21,57 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Le lieu que la fenêtre d'une carte montre : un par champ de sens.
+ * Le lieu que la fenêtre d'une carte montre : quinze lieux de Guadeloupe,
+ * choisis par le propriétaire (2026-10-19).
  *
  * ## Pourquoi un lieu
  *
- * La fenêtre portait une matière teintée, puis le tracé du mot. Huit teintes
- * sur une face désaturée se confondaient à 160 dp, d'où la partition qui
- * doublait la couleur par une forme. Un paysage fait les deux à la fois : la
- * Rout Bréck ne se confond avec aucun autre lieu, en deutéranopie comme en
- * vignette, et c'est une raison de collectionner que la carte n'avait pas.
+ * Un paysage fait deux choses à la fois : il distingue les cartes d'un coup
+ * d'œil, en vignette comme en deutéranopie, et il donne une raison de
+ * collectionner (l'album des paysages, quinze lieux à quatre heures).
  *
- * Les noms sont ceux du pays, en luxembourgeois. Ils restent à faire relire
- * par quelqu'un qui parle la langue ; ils n'apparaissent pour l'instant qu'ici.
+ * ## Quel lieu pour quel mot
+ *
+ * LuxKeyb tire le lieu du champ sémantique du mot ; le kréyòl n'a pas encore
+ * ce classement (`creole_blasons.json`). Le lieu se tire donc **du mot
+ * lui-même**, par une empreinte fixe : un mot montre toujours le même lieu,
+ * sur tous les téléphones et d'une version à l'autre. Mesuré sur les 602 mots
+ * glosés du dictionnaire : chacune des soixante cases de l'album (quinze
+ * lieux, quatre raretés) a au moins un mot qui la remplit.
+ *
+ * **Ne pas réordonner ni retirer d'entrée** : l'ordre fixe l'empreinte, et
+ * changer le nombre de lieux changerait le lieu de presque toutes les cartes
+ * déjà gagnées. Un lieu de plus se paie de la même façon.
+ *
+ * Les noms sont les noms d'usage, en français, comme sur les cartes routières.
  */
 enum class Lieu(val nom: String) {
-    ROUT_BRECK("Rout Bréck"),
-    VEIANEN("Veianen"),
-    ESCH_SAUER("Esch-Sauer"),
-    MUSEL("Musel"),
-    NEIMENSTER("Neimënster"),
-    GELLE_FRA("Gëlle Fra"),
-    FOUER("Schueberfouer"),
-    MELLERDALL("Mëllerdall"),
-    STAD("Stad");
-
-    /** Le champ dont ce lieu est la fenêtre, `null` pour la ville des mots sans champ. */
-    fun champ(): Champ? = Champ.values().firstOrNull { de(it) == this }
+    GRANDE_ANSE("Grande Anse"),
+    LES_SAINTES("Les Saintes"),
+    SOUFRIERE("La Soufrière"),
+    CHUTES_CARBET("Chutes du Carbet"),
+    SOFAIA("Sofaïa"),
+    RAVINE_CHAUDE("Ravine Chaude"),
+    POINTE_CHATEAUX("Pointe des Châteaux"),
+    MARIE_GALANTE("Marie-Galante"),
+    DESIRADE("La Désirade"),
+    BOUILLANTE("Bouillante"),
+    MORNE_A_L_EAU("Morne-à-l'Eau"),
+    ILET_MACOU("Îlet Macou"),
+    ROCHES_GRAVEES("Roches gravées"),
+    PLACE_VICTOIRE("Place de la Victoire"),
+    FIGUIER_MAUDIT("Figuier maudit");
 
     companion object {
-        fun de(champ: Champ?): Lieu = when (champ) {
-            Champ.MOUVEMENT -> ROUT_BRECK
-            Champ.TEMPS -> VEIANEN
-            Champ.TERRITOIRE -> ESCH_SAUER
-            Champ.ECONOMIE -> MUSEL
-            Champ.SAVOIR -> NEIMENSTER
-            Champ.PUBLIC -> GELLE_FRA
-            Champ.SOCIETE -> FOUER
-            Champ.VIE -> MELLERDALL
-            null -> STAD
+        /**
+         * Le lieu d'un mot. `String.hashCode` est fixé par la spécification
+         * de Java, pas par l'implémentation : l'empreinte ne bouge pas d'un
+         * appareil à l'autre. La forme est mise en minuscules et en NFC, pour
+         * qu'un « é » composé et un « é » précomposé tombent au même endroit.
+         */
+        fun du(forme: String): Lieu {
+            val cle = java.text.Normalizer.normalize(forme.lowercase(), java.text.Normalizer.Form.NFC)
+            return values()[Math.floorMod(cle.hashCode(), values().size)]
         }
     }
 }
@@ -169,7 +182,7 @@ class Heure private constructor(
 }
 
 /**
- * Les neuf lieux, dessinés par le code dans une boîte de 100 × 66 unités.
+ * Les quinze lieux, dessinés par le code dans une boîte de 100 × 66 unités.
  *
  * Aucun fichier image : chaque lieu est une suite de plans (crête lointaine,
  * colline, bâti, eau, premier plan) et la même suite se repeint aux quatre
@@ -185,8 +198,8 @@ object Paysages {
     const val HAUTEUR = 66f
 
     /**
-     * Un huitième du tas : un tiroir du carnet montre jusqu'à trente-six
-     * paysages différents (neuf lieux, quatre heures) et chacun pèse un demi
+     * Un huitième du tas : un tiroir du carnet montre jusqu'à soixante
+     * paysages différents (quinze lieux, quatre heures) et chacun pèse un demi
      * mégaoctet en vignette. Un cache plus petit que ce qu'une seule page
      * affiche ne cache plus rien, il redessine tout à chaque trame.
      */
@@ -210,9 +223,9 @@ object Paysages {
      * Le lieu à l'heure dite, rendu à [largeurPx] × [hauteurPx], habillé par
      * la saison de [souvenir] s'il y en a un (voir [Habillage]).
      *
-     * Le souvenir entre dans la clé : neuf lieux, quatre heures, quatre
+     * Le souvenir entre dans la clé : quinze lieux, quatre heures, deux
      * saisons et cinq fêtes, mais un tiroir n'en montre qu'une poignée à la
-     * fois, et deux cartes gagnées le même hiver partagent toujours leur rendu.
+     * fois, et deux cartes gagnées le même carême partagent toujours leur rendu.
      */
     fun image(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
               souvenir: Souvenir? = null): Bitmap? {
@@ -310,7 +323,7 @@ object Paysages {
         val heure = Heure.de(Rarete.COMMUN, null)
         for (saison in Saison.values()) {
             try {
-                rendu(Lieu.MELLERDALL, heure, 136, 102, Souvenir(saison, null))?.recycle()
+                rendu(Lieu.SOFAIA, heure, 136, 102, Souvenir(saison, null))?.recycle()
             } catch (e: OutOfMemoryError) {
                 return
             }
@@ -480,12 +493,10 @@ object Paysages {
     }
 
     /**
-     * Les lieux dessinés ici sont ceux du Luxembourg, repris tels quels de
-     * LuxKeyb (v23.0.0). Ils restent éteints tant que les lieux de Guadeloupe
-     * qui doivent les remplacer n'ont pas été choisis : une carte kréyòl ne
-     * montre alors que le ciel de son heure, qui suffit à lire sa rareté.
+     * Les lieux de Guadeloupe sont dessinés (2026-10-19). Éteint, une carte ne
+     * montrerait que le ciel de son heure et l'album des paysages disparaîtrait.
      */
-    internal const val LIEUX_DESSINES = false
+    internal const val LIEUX_DESSINES = true
 
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1) {
@@ -493,15 +504,21 @@ object Paysages {
         if (ciel) p.ciel()
         if (!lieuAussi || !LIEUX_DESSINES) return
         when (lieu) {
-            Lieu.VEIANEN -> p.veianen()
-            Lieu.ROUT_BRECK -> p.routBreck()
-            Lieu.ESCH_SAUER -> p.eschSauer()
-            Lieu.MUSEL -> p.musel()
-            Lieu.NEIMENSTER -> p.neimenster()
-            Lieu.GELLE_FRA -> p.gelleFra()
-            Lieu.FOUER -> p.fouer()
-            Lieu.MELLERDALL -> p.mellerdall()
-            Lieu.STAD -> p.stad()
+            Lieu.GRANDE_ANSE -> p.grandeAnse()
+            Lieu.LES_SAINTES -> p.lesSaintes()
+            Lieu.SOUFRIERE -> p.soufriere()
+            Lieu.CHUTES_CARBET -> p.chutesCarbet()
+            Lieu.SOFAIA -> p.sofaia()
+            Lieu.RAVINE_CHAUDE -> p.ravineChaude()
+            Lieu.POINTE_CHATEAUX -> p.pointeChateaux()
+            Lieu.MARIE_GALANTE -> p.marieGalante()
+            Lieu.DESIRADE -> p.desirade()
+            Lieu.BOUILLANTE -> p.bouillante()
+            Lieu.MORNE_A_L_EAU -> p.morneALEau()
+            Lieu.ILET_MACOU -> p.iletMacou()
+            Lieu.ROCHES_GRAVEES -> p.rochesGravees()
+            Lieu.PLACE_VICTOIRE -> p.placeVictoire()
+            Lieu.FIGUIER_MAUDIT -> p.figuierMaudit()
         }
     }
 
@@ -744,327 +761,474 @@ object Paysages {
             if (P.allume) for (x in lumieres) rect(x - 0.3f, y + 0.6f, 0.6f, (BAS - y) * 0.7f, P.fenetre, 0.45f)
         }
 
+        // ------------------------------------------------------ outils des îles
+
+        /**
+         * Une couleur de plein jour (sable, calcaire, coque peinte), assombrie
+         * avec l'heure vers le premier plan : la palette de [Heure] n'a ni
+         * sable ni lagon, et une couleur fixe resterait éclairée en pleine nuit.
+         */
+        fun duJour(col: Int): Int = mix(col, P.pres, floatArrayOf(0.04f, 0.14f, 0.42f, 0.72f)[P.rang])
+
+        fun sable() = duJour(0xFFF0D9A6.toInt())
+        fun calcaire() = duJour(0xFFECE4D0.toInt())
+        fun blanc() = if (P.nuit) 0xFF9FB3D8.toInt() else 0xFFFFFFFF.toInt()
+
+        fun ovale(cx: Float, cy: Float, rx: Float, ry: Float, col: Int, o: Float = 1f) {
+            if (!actif) return
+            p.style = Paint.Style.FILL; teinte(col, o)
+            c.drawOval(cx - rx, cy - ry, cx + rx, cy + ry, p)
+        }
+
+        /** Une volute de vapeur qui monte de ([x], [y]) sur [h] unités. */
+        fun vapeur(x: Float, y: Float, h: Float) {
+            val col = if (P.nuit) 0xFFB8C4DC.toInt() else 0xFFFFFFFF.toInt()
+            trait("M$x ${y}Q${x - 2f} ${y - h * 0.3f} $x ${y - h * 0.5f}Q${x + 2.2f} ${y - h * 0.72f} ${x + 0.4f} ${y - h}",
+                col, 1.6f, 0.38f)
+            trait("M${x + 1f} ${y - 1f}Q${x + 2.6f} ${y - h * 0.35f} ${x + 1.2f} ${y - h * 0.6f}", col, 1f, 0.28f)
+        }
+
+        /**
+         * Un balisier : de grandes feuilles en lame dressées, et la hampe rouge
+         * en zigzag. Il remplace la fougère arborescente, dont la couronne se
+         * lisait comme un petit cocotier à cette taille.
+         */
+        fun balisier(x: Float, y: Float, h: Float, col: Int) {
+            for ((dx, hh) in arrayOf(-0.55f to 0.85f, 0.5f to 1f, -0.15f to 0.7f, 0.25f to 0.9f)) {
+                val tx = x + dx * h
+                val ty = y - hh * h
+                forme("M$x ${y}Q${(x + tx) / 2f - h * 0.14f} ${(y + ty) / 2f} $tx ${ty}Q${(x + tx) / 2f + h * 0.14f} ${(y + ty) / 2f} $x ${y}Z", col)
+            }
+            val rouge = duJour(0xFFD63A2A.toInt())
+            val sx = x + h * 0.08f
+            trait("M$sx ${y}L$sx ${y - h * 0.62f}", mix(col, P.sol, 0.3f), 0.35f)
+            for (k in 0 until 4) {
+                val yy = y - h * (0.3f + k * 0.08f)
+                if (k % 2 == 0) triangle(sx, yy, sx + h * 0.16f, yy - h * 0.05f, sx, yy - h * 0.06f, rouge)
+                else triangle(sx, yy, sx - h * 0.16f, yy - h * 0.05f, sx, yy - h * 0.06f, rouge)
+            }
+        }
+
+        /** Un flamboyant : tronc court, branches étalées, couronne plate et rouge. */
+        fun flamboyant(x: Float, y: Float, s: Float) {
+            val bois = mix(P.sol, P.pierre, 0.2f)
+            trait("M$x ${y}Q${x + s * 0.1f} ${y - s * 0.6f} ${x - s * 0.1f} ${y - s}", bois, s * 0.1f)
+            trait("M$x ${y - s * 0.55f}Q${x - s * 0.5f} ${y - s * 0.8f} ${x - s * 1.1f} ${y - s * 0.85f}" +
+                "M$x ${y - s * 0.65f}Q${x + s * 0.5f} ${y - s * 0.9f} ${x + s * 1.1f} ${y - s * 0.95f}", bois, s * 0.06f)
+            val rouge = duJour(0xFFE2502C.toInt())
+            val orange = duJour(0xFFF2873D.toInt())
+            ovale(x, y - s * 1.02f, s * 0.95f, s * 0.36f, rouge)
+            ovale(x - s * 0.72f, y - s * 0.78f, s * 0.48f, s * 0.22f, rouge)
+            ovale(x + s * 0.74f, y - s * 0.86f, s * 0.48f, s * 0.22f, rouge)
+            ovale(x - s * 0.3f, y - s * 1.12f, s * 0.32f, s * 0.13f, orange)
+            ovale(x + s * 0.4f, y - s * 1.06f, s * 0.28f, s * 0.11f, orange)
+        }
+
+        /** Une tombe en damier, comme au cimetière de Morne-à-l'Eau. */
+        fun tombe(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int) {
+            rect(x, y - h, w, h, blanc)
+            val s = w / 4f
+            var yy = y - h
+            var rangee = 0
+            while (yy < y - 0.01f) {
+                val hh = min(s, y - yy)
+                for (k in 0 until 4) if ((k + rangee) % 2 == 0) rect(x + k * s, yy, s, hh, noir)
+                yy += s
+                rangee++
+            }
+            triangle(x - 0.2f, y - h, x + w / 2f, y - h - w * 0.45f, x + w + 0.2f, y - h, noir)
+            rect(x + w / 2f - w * 0.05f, y - h - w * 0.85f, w * 0.1f, w * 0.42f, blanc)
+            rect(x + w / 2f - w * 0.2f, y - h - w * 0.72f, w * 0.4f, w * 0.1f, blanc)
+        }
+
         // ------------------------------------------------------ les lieux
 
-        /** Veianen : le château sur son éperon, la ville basse et l'Our. */
-        fun veianen() {
-            val r = Alea(3)
-            crete(33f, 2.4f, 5, P.loin)
+        /** Grande Anse : la grande plage de Deshaies, les raisiniers, un flamboyant, l'îlet au large. */
+        fun grandeAnse() {
+            crete(30f, 1.2f, 101, P.loin, x0 = 52f)
+            forme("M30 35Q33 31.6 37 31.8Q41 32.2 43 35Z", mix(P.loin, P.milieu, 0.3f))
             plan(1)
-            forme("M0 66L0 45C14 41 30 36 42 32C52 29 66 29 76 32C86 35 94 40 100 42L100 66Z", P.milieu)
-            val pi = P.pierre
-            val om = mix(P.pierre, P.pres, 0.3f)
-            rect(43f, 27f, 36f, 6f, om)
-            var x = 43f
-            while (x < 79f) { rect(x, 25.8f, 1.3f, 1.4f, om); x += 2.4f }
-            rect(52f, 18f, 18f, 10f, pi); triangle(51.4f, 18f, 61f, 10.5f, 70.6f, 18f, P.toit)
-            rect(45.5f, 15f, 5.5f, 13f, pi); triangle(45f, 15f, 48.25f, 7.5f, 51.5f, 15f, P.toit)
-            rect(48.6f, 15f, 2.4f, 13f, om, 0.6f)
-            rect(70f, 13f, 6.5f, 15f, pi); triangle(69.4f, 13f, 73.25f, 5.8f, 77.1f, 13f, P.toit)
-            rect(73.8f, 13f, 2.7f, 15f, om, 0.6f)
-            rect(61.8f, 13.5f, 2.2f, 5f, pi); triangle(61.5f, 13.5f, 62.9f, 9f, 64.3f, 13.5f, P.toit)
-            for (fx in floatArrayOf(54f, 57.5f, 61f, 64.5f, 67f)) fenetre(fx, 21f, 1.3f, 2.2f, r)
-            fenetre(47.4f, 19f, 1.1f, 1.8f, r); fenetre(72.4f, 17f, 1.2f, 2f, r); fenetre(72.4f, 22f, 1.2f, 2f, r)
-            bosquet(30f, 44f, 34.5f, 2.4f, 8, mix(P.milieu, P.pres, 0.4f))
-            bosquet(80f, 100f, 37f, 2.6f, 9, mix(P.milieu, P.pres, 0.4f))
+            eau(35f, 102)
+            forme("M64 66L64 40C70 32 80 26 100 23L100 66Z", P.milieu)
+            val cime = mix(P.milieu, P.pres, 0.3f)
+            rond(76f, 30.5f, 3f, cime); rond(82f, 27.6f, 3.4f, cime); rond(89f, 25.6f, 3.4f, cime); rond(96f, 24.2f, 3.2f, cime)
+            forme("M0 66L0 46Q30 42.5 60 45Q78 46.6 100 45L100 66Z", sable())
+            trait("M0 46Q30 42.5 60 45Q78 46.6 100 45", mix(P.eau, 0xFFFFFFFF.toInt(), 0.6f), 0.5f, 0.8f)
             plan(2)
-            forme("M0 66L0 52C20 48 40 50 60 49C80 48 92 50 100 52L100 66Z", P.pres)
-            x = 14f
-            while (x < 90f) {
-                val h = 3f + r() * 2f
-                maison(x, 50.5f - sin(x * 0.05f) * 0.6f, 3.8f, h, r)
-                x += 5.4f
-            }
-            eau(57f, 12, 17f, 39f, 61f, 82f)
-            rond(2f, 50f, 7f, P.sol); rond(98f, 51f, 6f, P.sol)
+            // Les raisiniers bord de mer, pas de cocotier.
+            bosquet(-2f, 20f, 53f, 3.6f, 103, P.pres)
+            bosquet(2f, 16f, 50f, 2.2f, 104, mix(P.pres, P.milieu, 0.5f))
+            flamboyant(84f, 56f, 14f)
+            forme("M0 66L0 58Q20 55 40 58.5Q60 62 80 57.5Q92 55.5 100 56L100 66Z", mix(sable(), P.sol, 0.3f))
         }
 
-        /** La Rout Bréck : le pont rouge au-dessus de la Pétrusse, le Kirchberg derrière. */
-        fun routBreck() {
-            val r = Alea(4)
-            val fl = mix(P.loin, P.cielBas, 0.25f)
-            val tours = floatArrayOf(8f, 4f, 15f, 13f, 3f, 11f, 18f, 5f, 19f, 26f, 3.4f, 13f, 31f, 4.2f, 16f, 86f, 4f, 12f, 92f, 3f, 9f)
-            var i = 0
-            while (i < tours.size) {
-                val x = tours[i]; val w = tours[i + 1]; val h = tours[i + 2]
-                rect(x, 38f - h, w, h, fl)
-                if (P.allume) {
-                    var y = 40f - h
-                    while (y < 36f) { if (r() < 0.55f) rect(x + 0.8f, y, w - 1.6f, 0.5f, P.fenetre, 0.7f); y += 2.2f }
-                }
-                i += 3
-            }
-            crete(37f, 1.6f, 6, P.loin)
+        /** Les Saintes : la baie, le Pain de Sucre, une saintoise sous voile. */
+        fun lesSaintes() {
+            val r = Alea(111)
+            crete(34f, 1.4f, 112, P.loin, x0 = 60f)
             plan(1)
-            forme("M0 66L0 38C14 40 28 50 42 62L42 66Z", P.milieu)
-            forme("M100 66L100 39C86 41 72 50 58 62L58 66Z", P.milieu)
-            bosquet(0f, 40f, 46f, 2.2f, 7, mix(P.milieu, P.pres, 0.45f))
-            bosquet(60f, 100f, 47f, 2.2f, 8, mix(P.milieu, P.pres, 0.45f))
-            plan(2)
-            rect(0f, 58f, 100f, 8f, P.pres)
-            bosquet(34f, 66f, 60f, 2f, 9, P.sol)
-            val rouge = intArrayOf(0xFFC63A2E.toInt(), 0xFFC2432F.toInt(), 0xFF9C2F33.toInt(), 0xFF6B1F2A.toInt())[P.rang]
-            val rc = mix(rouge, 0xFFFFFFFF.toInt(), 0.25f)
-            for (x in floatArrayOf(17f, 41f, 65f, 89f)) {
-                trait("M${x - 5.5f} 33.5L$x 61L${x + 5.5f} 33.5", rouge, 1.5f)
-                trait("M${x - 0.4f} 33.5L$x 61", mix(rouge, 0xFF000000.toInt(), 0.3f), 0.5f)
+            eau(37f, 113, 22f, 30f, 74f)
+            forme("M0 37.5L0 30C6 27.5 14 29 20 31.5C26 33.5 32 35 38 37.5Z", P.milieu)
+            forme("M46 37.5Q48.5 27 53.5 24.6Q58.5 25.2 61 37.5Z", P.milieu)
+            forme("M53.5 24.6Q58.5 25.2 61 37.5L56 37.5Q56.5 30 53.5 24.6Z", mix(P.milieu, P.pres, 0.35f), 0.7f)
+            forme("M72 37.5C78 32 88 29.5 100 30.5L100 37.5Z", P.milieu)
+            var x = 3f
+            while (x < 34f) {
+                maison(x, 37.6f, 2.4f, 1.8f + r() * 1f, r, toit = 1.3f)
+                x += 3.3f + r() * 1.2f
             }
-            rect(-1f, 30f, 102f, 3.6f, rouge)
-            rect(-1f, 30f, 102f, 0.7f, rc)
-            if (P.allume) { var x = 2f; while (x < 100f) { rond(x, 29.5f, 0.45f, P.fenetre); x += 4f } }
+            plan(2)
+            forme("M14 55Q24 58.6 36 55L34.4 58Q24 60.6 15.6 58Z", duJour(0xFFF4F1EA.toInt()))
+            forme("M15.6 58Q24 60.6 34.4 58L34 59Q24 61.6 16 59Z", duJour(0xFF2F6FA6.toInt()))
+            ligne(25f, 56f, 25f, 41f, P.sol, 0.45f)
+            forme("M25.3 42L33 55L25.3 55Z", duJour(0xFFF5E9D8.toInt()))
+            forme("M24.7 44L18.6 55L24.7 55Z", duJour(0xFFE3B65C.toInt()))
         }
 
-        /** Esch-Sauer : le bourg dans sa boucle, la tour sur l'éperon. */
-        fun eschSauer() {
-            val r = Alea(5)
-            crete(30f, 2.6f, 15, P.loin)
+        /** La Soufrière : le dôme, le soufre au sommet, les fumerolles, la forêt dense. */
+        fun soufriere() {
+            crete(40f, 1.4f, 121, P.loin)
             plan(1)
-            forme("M0 66L0 27C10 25 20 30 28 40C32 46 33 56 31 66Z", P.milieu)
-            forme("M100 66L100 26C90 24 80 30 73 38C69 46 69 56 71 66Z", P.milieu)
-            bosquet(0f, 28f, 30f, 2.4f, 16, mix(P.milieu, P.pres, 0.35f))
-            bosquet(72f, 100f, 30f, 2.4f, 17, mix(P.milieu, P.pres, 0.35f))
-            eau(52f, 18, 44f, 52f, 58f)
+            forme("M0 56Q14 47 28 38Q38 27 44 23.5L56 23.5Q62 27 72 38Q86 47 100 52L100 66L0 66Z", P.milieu)
+            val roc = mix(P.pierre, P.milieu, 0.45f)
+            forme("M44 23.5L56 23.5Q58 25 59 27L41 27Q42 25 44 23.5Z", roc)
+            trait("M46 27L44 34M51 27L50.6 31M55 27L57 33", roc, 0.6f, 0.8f)
+            forme("M48 23.6L53 23.6L52 25L49 25Z", duJour(0xFFD8C467.toInt()), 0.8f)
+            vapeur(49f, 23f, 12f)
+            vapeur(53.5f, 23.5f, 9f)
             plan(2)
-            forme("M30 66C31 54 38 42 50 37C62 42 69 54 70 66Z", mix(P.milieu, P.pres, 0.5f))
-            val om = mix(P.pierre, P.pres, 0.3f)
-            rect(47.5f, 25f, 5f, 12f, om)
-            var x = 47.5f
-            while (x < 52.5f) { rect(x, 23.8f, 0.8f, 1.4f, om); x += 1.4f }
-            fenetre(49.4f, 28f, 1f, 2f, r)
-            val maisons = floatArrayOf(40f, 48f, 4f, 3.5f, 44f, 45f, 3.8f, 3.2f, 48.5f, 43.5f, 4f, 3.4f, 53f, 44.5f, 3.6f, 3.2f,
-                57f, 47f, 4f, 3.4f, 36f, 52f, 4.2f, 3.6f, 61f, 51f, 4f, 3.6f, 45.5f, 50.5f, 4f, 3.6f, 52f, 51f, 4.2f, 3.8f)
-            var i = 0
-            while (i < maisons.size) { maison(maisons[i], maisons[i + 1], maisons[i + 2], maisons[i + 3], r); i += 4 }
-            rect(58.4f, 38f, 2.2f, 6.8f, P.pierre); triangle(58.2f, 38f, 59.5f, 33f, 60.8f, 38f, P.toit)
-            sapins(P.sol, 4f, 66f, 9f, 9f, 66f, 7f, 94f, 66f, 8f, 89f, 66f, 6.5f)
+            bosquet(-2f, 102f, 57f, 3.4f, 122, P.pres)
+            bosquet(-2f, 102f, 61.5f, 3f, 123, mix(P.pres, P.sol, 0.4f))
+            rect(0f, 62f, 100f, 4f, P.sol)
+            balisier(10f, 60f, 10f, mix(P.pres, P.milieu, 0.3f))
+            balisier(90f, 61f, 12f, mix(P.pres, P.milieu, 0.3f))
         }
 
-        /** La Musel : les vignes en terrasses, le village au bord de l'eau. */
-        fun musel() {
-            val r = Alea(6)
-            crete(30f, 2f, 20, P.loin, x0 = 30f)
+        /** Les Chutes du Carbet : la chute dans la paroi, le bassin, les fougères. */
+        fun chutesCarbet() {
+            val r = Alea(131)
+            crete(24f, 2.2f, 132, P.loin)
             plan(1)
-            rect(0f, 40f, 100f, 7f, P.milieu)
-            var x = 52f
-            while (x < 100f) { maison(x, 45f, 3.4f, 2.6f + r() * 1.6f, r); x += 4.2f }
-            rect(76.4f, 34f, 2.4f, 11f, P.pierre); triangle(76.1f, 34f, 77.6f, 27f, 79.1f, 34f, P.toit)
-            fenetre(77.2f, 37f, 0.8f, 1.6f, r)
-            eau(46.5f, 21, 56f, 64f, 77f, 90f)
-            forme("M62 52.6L86 52.6L84 54.4L64 54.4Z", P.sol)
-            rect(80f, 51f, 3.2f, 1.8f, P.sol)
-            if (P.allume) rond(81.6f, 51.9f, 0.4f, P.fenetre)
-            plan(2)
-            val vigne = mix(P.milieu, 0xFF6F8F3E.toInt(), if (P.nuit) 0.1f else 0.35f)
-            forme("M0 66L0 14C18 20 38 34 60 66Z", vigne)
-            val rang = mix(vigne, P.sol, 0.55f)
-            p.pathEffect = android.graphics.DashPathEffect(floatArrayOf(0.7f, 0.9f), 0f)
-            for (k in 0 until 13) {
-                val y = 18f + k * 3.7f
-                val x1 = min(60f, (y - 14f) * 1.12f + (if (y > 40f) (y - 40f) * 0.35f else 0f))
-                trait("M-1 ${y}L$x1 ${y + min(6f, x1 * 0.08f)}", rang, 0.7f)
-            }
-            p.pathEffect = null
-            rect(0f, 62f, 64f, 4f, P.sol)
-        }
-
-        /** Neimënster : l'abbaye au pied du rocher du Bock, le pont du Grund. */
-        fun neimenster() {
-            val r = Alea(7)
-            crete(32f, 1.8f, 23, P.loin, x0 = 30f)
-            plan(1)
-            val roc = mix(P.pierre, P.pres, 0.42f)
-            val roc2 = mix(roc, P.sol, 0.3f)
-            bosquet(80f, 100f, 36f, 2.6f, 24, mix(P.milieu, P.pres, 0.3f))
-            forme("M0 66L0 11L9 9.6L16 12L24 11.4L31 15L37 24L40 36L42 66Z", roc)
-            var y = 16f
-            while (y < 60f) { trait("M0 ${y}L${30f + y * 0.22f} ${y + 0.8f}", roc2, 0.4f, 0.7f); y += 4.5f }
-            val rempart = mix(P.pierre, P.pres, 0.2f)
-            rect(0f, 6.5f, 30f, 4f, rempart)
-            var x = 0f
-            while (x < 30f) { rect(x, 5.4f, 1.2f, 1.3f, rempart); x += 2.2f }
-            rect(21f, 2f, 4.5f, 6f, rempart)
-            plan(2)
-            forme("M37 37.5L93 37.5L91 34L39 34Z", P.toit)
-            rect(38f, 37.5f, 54f, 13f, P.pierre)
-            rect(38f, 47.5f, 54f, 3f, mix(P.pierre, P.pres, 0.25f))
-            x = 40f
-            while (x < 91f) { fenetre(x, 39.4f, 1.3f, 2.2f, r); fenetre(x, 43.6f, 1.3f, 2.2f, r); x += 3.6f }
-            rect(45f, 21f, 6.4f, 29.5f, P.pierre)
-            rect(49f, 21f, 2.4f, 29.5f, mix(P.pierre, P.pres, 0.3f), 0.6f)
-            triangle(44.6f, 21f, 48.2f, 11f, 51.8f, 21f, P.toit)
-            rond(48.2f, 24.5f, 1.3f, mix(P.pierre, P.pres, 0.45f))
-            fenetre(47.5f, 28f, 1.4f, 3f, r)
-            eau(54f, 25, 42f, 52f, 63f, 74f, 85f)
-            forme("M52 52L100 52L100 56.2L97 56.2C97 54 93 54 93 56.2L85 56.2C85 54 81 54 81 56.2L73 56.2C73 54 69 54 69 56.2L61 56.2C61 54 57 54 57 56.2L52 56.2Z",
-                mix(P.pierre, P.pres, 0.15f))
-        }
-
-        /** La Gëlle Fra : l'obélisque et sa statue dorée, le pont Adolphe derrière. */
-        fun gelleFra() {
-            crete(34f, 1.4f, 27, P.loin)
-            plan(1)
-            val pi = mix(P.pierre, P.pres, 0.22f)
-            rect(-1f, 22f, 102f, 2.6f, pi)
-            trait("M6 54Q50 -6 94 54", pi, 3f)
-            var x = 14f
-            while (x <= 86f) {
-                val t = (x - 6f) / 88f
-                val y = (1 - t) * (1 - t) * 54f + 2 * (1 - t) * t * (-6f) + t * t * 54f
-                if (y > 24.5f) rect(x - 0.35f, 24.4f, 0.7f, y - 24.4f, pi)
-                x += 4.5f
-            }
-            if (P.allume) { x = 3f; while (x < 100f) { rond(x, 21.6f, 0.45f, P.fenetre); x += 5f } }
-            plan(2)
-            bosquet(0f, 100f, 50f, 2.8f, 28, P.milieu)
-            bosquet(0f, 100f, 55f, 2.4f, 29, mix(P.milieu, P.pres, 0.5f))
-            rect(0f, 58f, 100f, 8f, P.pres)
-            val ob = P.pierre
-            val obo = mix(P.pierre, P.pres, 0.3f)
-            rect(75f, 52f, 14f, 6.5f, ob); rect(76.5f, 49f, 11f, 3.2f, ob); rect(83f, 49f, 4.5f, 9.5f, obo, 0.5f)
-            forme("M79.2 49L80.4 12L83.6 12L84.8 49Z", ob)
-            forme("M82.4 12L83.6 12L84.8 49L82.6 49Z", obo, 0.55f)
-            triangle(80f, 12f, 82f, 9.6f, 84f, 12f, ob)
-            val or = if (P.nuit) 0xFFFFD36A.toInt() else 0xFFE2AC36.toInt()
-            if (P.allume) rond(82f, 5f, 6f, or, 0.18f)
-            forme("M81.3 9.6L81.6 5.6L82.4 5.6L82.7 9.6Z", or)
-            rond(82f, 4.7f, 0.85f, or)
-            trait("M81.6 6L79.6 2.6M82.4 6L84.4 2.6", or, 0.55f)
-            anneau(82f, 1.8f, 1.5f, or, 0.45f)
-        }
-
-        /** La Schueberfouer : la grande roue, les tentes, les guirlandes. */
-        fun fouer() {
-            crete(42f, 1.4f, 31, P.loin)
-            plan(1)
-            val cx = 67f; val cy = 27f; val R = 19.5f
-            val struct = if (P.nuit || P.rang == 2) mix(P.pierre, P.pres, 0.1f) else mix(0xFFFFFFFF.toInt(), P.pierre, 0.35f)
-            trait("M57 60L$cx ${cy}L77 60M59.5 60L$cx ${cy}L74.5 60", mix(struct, P.pres, 0.35f), 0.9f)
-            for (k in 0 until 16) {
-                val a = k / 16f * PI.toFloat() * 2f
-                ligne(cx, cy, cx + R * cos(a), cy + R * sin(a), struct, 0.35f)
-            }
-            anneau(cx, cy, R, struct, 0.9f)
-            anneau(cx, cy, R - 2.2f, struct, 0.4f)
-            rond(cx, cy, 1.6f, struct)
-            if (P.allume) for (k in 0 until 48) {
-                val a = k / 48f * PI.toFloat() * 2f
-                rond(cx + R * cos(a), cy + R * sin(a), 0.42f, if (k % 2 == 1) P.fenetre else 0xFFFF8FB8.toInt())
-            }
-            val coul = intArrayOf(0xFFD6453A.toInt(), 0xFFE9B02F.toInt(), 0xFF2F9C95.toInt(),
-                0xFF5A6FD1.toInt(), 0xFFD4569A.toInt(), 0xFF3F9A4F.toInt())
-            val noir = 0xFF000000.toInt()
-            for (k in 0 until 12) {
-                val a = k / 12f * PI.toFloat() * 2f + 0.2f
-                val x = cx + R * cos(a); val y = cy + R * sin(a)
-                ligne(x, y, x, y + 1.4f, struct, 0.3f)
-                p.style = Paint.Style.FILL
-                teinte(if (P.nuit) mix(coul[k % 6], noir, 0.25f) else coul[k % 6], 1f)
-                if (actif) c.drawRoundRect(x - 1.5f, y + 1.3f, x + 1.5f, y + 3.7f, 0.6f, 0.6f, p)
-                if (P.allume) rect(x - 0.9f, y + 1.8f, 1.8f, 0.9f, P.fenetre, 0.85f)
-            }
-            plan(2)
-            rect(0f, 58f, 100f, 8f, P.pres)
-            fun tente(x: Float, w: Float, h: Float, col: Int) {
-                val toile = if (P.nuit) mix(0xFFF3ECE0.toInt(), noir, 0.55f) else 0xFFF6EFE2.toInt()
-                triangle(x - w, 59f, x, 59f - h, x + w, 59f, toile)
-                val bande = if (P.nuit) mix(col, noir, 0.45f) else col
-                for (k in intArrayOf(-2, 0, 2)) triangle(x, 59f - h, x + k * w / 3f - w / 6f, 59f, x + k * w / 3f + w / 6f, 59f, bande)
-                ligne(x, 59f - h, x, 59f - h - 2.4f, P.sol, 0.3f)
-                triangle(x, 59f - h - 2.4f, x + 1.8f, 59f - h - 1.9f, x, 59f - h - 1.4f, 0xFFD6453A.toInt())
-            }
-            tente(12f, 9f, 11f, 0xFFD6453A.toInt())
-            tente(31f, 7f, 9f, 0xFF2F6FB0.toInt())
-            tente(46f, 5.5f, 7f, 0xFFD6453A.toInt())
-            trait("M0 40Q14 47 26 43Q38 39 50 45", P.sol, 0.25f)
-            for (k in 0..20) {
-                val t = k / 20f
-                val x = t * 50f
-                val yy = if (t <= 0.52f) {
-                    val u = t / 0.52f
-                    (1 - u) * (1 - u) * 40f + 2 * (1 - u) * u * 47f + u * u * 43f
-                } else {
-                    val u = (t - 0.52f) / 0.48f
-                    (1 - u).pow(2) * 43f + 2 * (1 - u) * u * 39f + u * u * 45f
-                }
-                rond(x, yy + 0.5f, 0.55f, if (P.allume) coul[k % 6] else mix(P.pierre, P.pres, 0.2f), if (P.allume) 0.95f else 1f)
-            }
-        }
-
-        /** Le Mëllerdall : les rochers de grès et la Schéissendëmpel. */
-        fun mellerdall() {
-            val r = Alea(10)
-            crete(30f, 2.2f, 33, P.loin)
-            bosquet(0f, 100f, 34f, 2.2f, 34, mix(P.loin, P.milieu, 0.5f))
-            plan(1)
-            val roc = mix(P.pierre, 0xFFB48A55.toInt(), if (P.nuit) 0.15f else 0.32f)
-            val roco = mix(roc, P.pres, 0.4f)
-            val mousse = mix(P.milieu, 0xFF4F7D3A.toInt(), if (P.nuit) 0.1f else 0.35f)
-            forme("M0 66L0 13C4 9 12 9 16 13L18 30C17 40 20 52 23 66Z", roc)
-            forme("M11 12C14 12 16 13 16 13L18 30C17 40 20 52 23 66L15 66C14 50 13 30 11 12Z", roco, 0.6f)
-            forme("M100 66L100 17C96 11 86 11 82 17L80 33C82 44 78 55 79 66Z", roc)
-            forme("M82 17L80 33C82 44 78 55 79 66L86 66C85 50 86 30 84 15Z", roco, 0.6f)
-            var y = 18f
-            while (y < 64f) {
-                trait("M0 ${y}L${16f + y * 0.08f} ${y + 0.5f}", roco, 0.4f)
-                trait("M${81f - y * 0.02f} ${y}L100 ${y + 0.5f}", roco, 0.4f)
-                y += 4.2f
-            }
-            bosquet(0f, 16f, 12f, 2.2f, 35, mousse)
-            bosquet(83f, 100f, 15f, 2.2f, 36, mousse)
-            plan(2)
-            forme("M36 33L64 33L64 38.5L56 38.5C56 35.6 44 35.6 44 38.5L36 38.5Z", mix(P.pierre, P.pres, 0.2f))
-            val blanc = if (P.nuit) 0xFF9FB3D8.toInt() else 0xFFFFFFFF.toInt()
-            rect(44.6f, 37.5f, 10.8f, 7f, blanc, 0.85f)
-            forme("M38 44.5L62 44.5L64 46.5L36 46.5Z", roco)
-            rect(40f, 46.5f, 20f, 6f, blanc, 0.8f)
-            forme("M32 52.5L68 52.5L70 54.5L30 54.5Z", roco)
-            rect(34f, 54.5f, 32f, 4.5f, blanc, 0.75f)
+            forme("M34 66L34 17C42 15.5 54 15.5 64 17L64 66Z", mix(P.pierre, P.pres, 0.45f))
+            forme("M0 66L0 13C8 11 22 13 36 17L40 66Z", P.milieu)
+            forme("M100 66L100 11C92 9 76 11 62 17L58 66Z", P.milieu)
+            bosquet(-2f, 36f, 14f, 2.8f, 133, mix(P.milieu, P.pres, 0.35f))
+            bosquet(62f, 102f, 13f, 2.8f, 134, mix(P.milieu, P.pres, 0.35f))
+            rect(46f, 16f, 6.4f, 42f, blanc(), 0.85f)
             val ecume = mix(P.eau, 0xFFFFFFFF.toInt(), 0.5f)
-            for (k in 0 until 14) {
-                val x = 40f + r() * 20f
-                rect(x, 38f + r() * 18f, 0.3f, 2f + r() * 3f, ecume, 0.8f)
-            }
-            eau(59f, 37)
-            forme("M0 66C4 58 10 56 16 60C14 62 12 64 12 66Z", mousse)
-            forme("M100 66C96 58 90 56 84 60C86 62 88 64 88 66Z", mousse)
+            for (k in 0 until 16) rect(46.4f + r() * 5.6f, 17f + r() * 38f, 0.3f, 2f + r() * 4f, ecume, 0.8f)
+            plan(2)
+            eau(57f, 135)
+            rond(49f, 57.5f, 6f, blanc(), 0.35f)
+            rond(8f, 64f, 8f, P.sol)
+            rond(93f, 65f, 7f, P.sol)
+            balisier(16f, 60f, 11f, mix(P.pres, P.milieu, 0.3f))
+            balisier(82f, 59f, 13f, mix(P.pres, P.milieu, 0.3f))
         }
 
-        /** La ville vue de la Corniche : les flèches de la cathédrale, les remparts, le Grund. */
-        fun stad() {
-            val r = Alea(11)
-            crete(36f, 1.2f, 39, P.loin)
+        /** Sofaïa : le bassin d'eau chaude en forêt, le bambou qui l'alimente, la vapeur. */
+        fun sofaia() {
+            crete(28f, 2f, 141, P.loin)
+            bosquet(-2f, 102f, 30f, 2.4f, 142, mix(P.loin, P.milieu, 0.5f))
             plan(1)
-            val pi = P.pierre
-            val om = mix(P.pierre, P.pres, 0.3f)
-            var x = 0f
-            while (x < 100f) {
-                val h = 5f + r() * 6f
-                maison(x, 38f, 4.2f, h, r, toit = 2.6f + r() * 2.4f)
-                x += 4.6f
-            }
-            val fleches = floatArrayOf(30f, 3.2f, 8f, 36f, 2.2f, 15f, 42.5f, 2.4f, 16f)
-            var i = 0
-            while (i < fleches.size) {
-                val fx = fleches[i]; val w = fleches[i + 1]; val fy = fleches[i + 2]
-                rect(fx - w / 2f, fy + 8f, w, 30f - fy, pi)
-                triangle(fx - w / 2f - 0.2f, fy + 8f, fx, fy, fx + w / 2f + 0.2f, fy + 8f, P.toit)
-                i += 3
-            }
-            rect(0f, 37f, 100f, 13f, om)
-            x = 0f
-            while (x < 100f) { rect(x, 35.8f, 1.4f, 1.4f, om); x += 2.6f }
-            x = 4f
-            while (x < 100f) {
-                forme("M$x 50L$x 44.5Q${x + 2.4f} 41.5 ${x + 4.8f} 44.5L${x + 4.8f} 50Z", mix(om, P.sol, 0.5f))
-                if (P.allume && r() < 0.5f) rect(x + 1.8f, 45.5f, 1.2f, 1.8f, P.fenetre)
-                x += 9f
-            }
+            forme("M0 66L0 35C20 31 40 37 60 34C80 31 90 35 100 34L100 66Z", P.milieu)
+            bosquet(-2f, 102f, 37f, 3f, 143, mix(P.milieu, P.pres, 0.35f))
             plan(2)
-            bosquet(0f, 100f, 52.5f, 2.4f, 40, P.milieu)
-            rect(0f, 54f, 100f, 12f, P.pres)
-            x = 6f
-            while (x < 96f) { maison(x, 60f, 4.4f, 3.2f + r() * 1.5f, r); x += 6.2f }
-            eau(61.5f, 41, 10f, 30f, 52f, 71f)
+            rect(0f, 49f, 100f, 17f, P.pres)
+            forme("M20 55Q50 45.5 80 55Q50 64.5 20 55Z", P.pierre)
+            forme("M24.5 55Q50 48 75.5 55Q50 62 24.5 55Z", mix(P.eau, 0xFF6FC7B8.toInt(), if (P.nuit) 0.1f else 0.35f))
+            rect(10f, 47.4f, 15f, 1.3f, duJour(0xFFB49A52.toInt()))
+            trait("M25 48.2Q26.4 50 26.8 53.4", blanc(), 0.8f, 0.85f)
+            vapeur(40f, 52f, 11f)
+            vapeur(52f, 50.5f, 13f)
+            vapeur(63f, 52.5f, 9f)
+            bosquet(-2f, 18f, 53f, 3.2f, 144, P.sol)
+            bosquet(82f, 102f, 53f, 3.2f, 145, P.sol)
+        }
+
+        /** Ravine Chaude : la rivière tiède au fond de la ravine, les roches, les fougères. */
+        fun ravineChaude() {
+            val r = Alea(151)
+            crete(24f, 2f, 152, P.loin)
+            plan(1)
+            forme("M0 66L0 22C14 24 26 33 36 47L40 66Z", P.milieu)
+            forme("M100 66L100 20C86 22 72 33 62 47L58 66Z", P.milieu)
+            bosquet(-2f, 30f, 24f, 2.8f, 153, mix(P.milieu, P.pres, 0.35f))
+            bosquet(70f, 102f, 22f, 2.8f, 154, mix(P.milieu, P.pres, 0.35f))
+            plan(2)
+            val riviere = mix(P.eau, 0xFF7FC4B4.toInt(), if (P.nuit) 0.1f else 0.3f)
+            forme("M33 66L45.5 46.4Q50 45.6 54.5 46.4L67 66Z", riviere)
+            val clair = mix(riviere, 0xFFFFFFFF.toInt(), if (P.nuit) 0.18f else 0.45f)
+            for (k in 0 until 8) {
+                val y = 49f + r() * 15f
+                val demi = (y - 46f) * 0.55f
+                rect(50f - demi * 0.6f + r() * demi, y, 1.5f + r() * 3f, 0.3f, clair, 0.7f)
+            }
+            val roc = mix(P.pierre, P.pres, 0.45f)
+            ovale(40f, 61f, 3.4f, 1.8f, roc); ovale(58f, 59.5f, 3f, 1.5f, roc)
+            ovale(49f, 64.6f, 2.6f, 1.2f, roc); ovale(53.5f, 51.5f, 1.6f, 0.8f, roc)
+            vapeur(46f, 52f, 11f)
+            vapeur(53f, 56f, 10f)
+            forme("M0 66L0 56Q10 54 22 58L30 66Z", P.pres)
+            forme("M100 66L100 55Q90 53 78 57L70 66Z", P.pres)
+            balisier(14f, 58f, 13f, mix(P.pres, P.milieu, 0.3f))
+            balisier(86f, 57f, 14f, mix(P.pres, P.milieu, 0.3f))
+        }
+
+        /** La Pointe des Châteaux : les falaises calcaires, la Roche dans l'écume, la croix, la Désirade au loin. */
+        fun pointeChateaux() {
+            forme("M66 33.5L68 31Q72 30 84 30Q93 30.2 95 33.5Z", P.loin)
+            plan(1)
+            eau(33.5f, 161)
+            val calc = calcaire()
+            forme("M28 34L29.5 26L32 22.6L35.4 22L37.6 25L39.5 34Z", calc)
+            forme("M35.4 22L37.6 25L39.5 34L36 34L35.8 26Z", mix(calc, P.pres, 0.35f), 0.7f)
+            forme("M43 34L44 30L46 29.4L47.4 34Z", calc)
+            for (x in floatArrayOf(27f, 38.5f, 42f, 47f)) rect(x, 33.6f, 2.4f, 0.5f, blanc(), 0.8f)
+            plan(2)
+            val lande = mix(P.milieu, calc, 0.3f)
+            forme("M0 66L0 29L7 27.5L15 30.5L22 37L28 46L36 53L50 57.5L70 59.5L100 61L100 66Z", lande)
+            forme("M15 30.5L22 37L28 46L36 53L33.6 54L26 47.4L20 38.6L13.6 31.6Z", calc)
+            bosquet(0f, 14f, 31f, 1.8f, 162, mix(lande, P.pres, 0.4f))
+            val bois = mix(P.sol, P.pierre, 0.2f)
+            rect(6.6f, 16f, 0.9f, 12f, bois)
+            rect(4.6f, 18.6f, 4.9f, 0.9f, bois)
+        }
+
+        /** Marie-Galante : la plaine de canne, le moulin de pierre et ses ailes. */
+        fun marieGalante() {
+            val r = Alea(171)
+            crete(39f, 0.5f, 172, P.loin)
+            plan(1)
+            rect(0f, 40f, 100f, 26f, P.milieu)
+            bosquet(-2f, 30f, 41f, 2f, 173, mix(P.milieu, P.pres, 0.4f))
+            forme("M60 42L61.4 22L67.6 22L69 42Z", P.pierre)
+            forme("M65 22L67.6 22L69 42L66 42Z", mix(P.pierre, P.pres, 0.3f), 0.6f)
+            triangle(60.8f, 22.2f, 64.5f, 17.6f, 68.2f, 22.2f, P.toit)
+            rect(63.6f, 36.5f, 1.8f, 5.5f, mix(P.pres, 0xFF000000.toInt(), 0.3f))
+            val aile = mix(P.sol, P.pierre, 0.3f)
+            for (k in 0 until 4) {
+                val a = PI.toFloat() / 4f + k * PI.toFloat() / 2f
+                val ux = cos(a); val uy = sin(a)
+                val nx = -uy * 1.8f; val ny = ux * 1.8f
+                ligne(64.5f, 24f, 64.5f + ux * 11f, 24f + uy * 11f, aile, 0.5f)
+                ligne(64.5f + ux * 3f + nx, 24f + uy * 3f + ny, 64.5f + ux * 11f + nx, 24f + uy * 11f + ny, aile, 0.3f)
+                for (t in 1..4) {
+                    val f = 3f + t * 2f
+                    ligne(64.5f + ux * f, 24f + uy * f, 64.5f + ux * f + nx, 24f + uy * f + ny, aile, 0.25f)
+                }
+            }
+            rond(64.5f, 24f, 0.8f, aile)
+            plan(2)
+            val canne = mix(P.pres, 0xFF8FA84A.toInt(), if (P.nuit) 0.1f else 0.3f)
+            rect(0f, 56f, 100f, 10f, mix(canne, P.sol, 0.4f))
+            var x = -1f
+            while (x < 101f) {
+                val h = 9f + r() * 6f
+                val y = 66f - h
+                trait("M$x 66L${x + 0.4f} $y", canne, 0.5f)
+                trait("M${x + 0.4f} ${y + 1.5f}Q${x + 2.4f} $y ${x + 3.4f} ${y + 2.4f}", canne, 0.4f)
+                trait("M${x + 0.3f} ${y + 3f}Q${x - 1.6f} ${y + 1.8f} ${x - 2.6f} ${y + 4.4f}", canne, 0.4f)
+                x += 1.5f + r() * 0.6f
+            }
+        }
+
+        /** La Désirade vue de la côte : la longue île en table, un gommier tiré sur le sable. */
+        fun desirade() {
+            val r = Alea(181)
+            plan(1)
+            eau(40f, 182)
+            forme("M6 40.2L12 33.4Q16 30.2 28 29.8L80 29.4Q87 29.8 91 34L95 40.2Z", P.milieu)
+            val face = mix(P.milieu, P.pierre, 0.35f)
+            var x = 14f
+            while (x < 88f) {
+                trait("M$x 33L${x - 0.6f} 39.6", face, 0.4f, 0.7f)
+                x += 3.5f + r() * 2.5f
+            }
+            rect(9f, 39.6f, 84f, 0.6f, calcaire(), 0.9f)
+            plan(2)
+            forme("M0 66L0 55Q30 51.5 60 54.5Q80 56.5 100 53.5L100 66Z", sable())
+            trait("M0 55Q30 51.5 60 54.5Q80 56.5 100 53.5", mix(P.eau, 0xFFFFFFFF.toInt(), 0.6f), 0.5f, 0.8f)
+            forme("M30 58.5Q40 61.6 52 58.2L50.6 60.6Q40 63 31.6 60.6Z", duJour(0xFFE2C33A.toInt()))
+            forme("M31.6 60.6Q40 63 50.6 60.6L50.2 61.3Q40 63.6 32 61.3Z", duJour(0xFF2F8F5A.toInt()))
+            bosquet(80f, 102f, 56f, 3f, 183, P.pres)
+        }
+
+        /** Bouillante : les îlets Pigeon, le pavillon de plongée, la plage sombre qui fume. */
+        fun bouillante() {
+            plan(1)
+            eau(36f, 191)
+            forme("M0 66L0 22C10 22 22 28 32 38L36 66Z", P.milieu)
+            bosquet(-2f, 26f, 25f, 2.8f, 192, mix(P.milieu, P.pres, 0.35f))
+            val ilet = mix(P.milieu, P.pierre, 0.25f)
+            forme("M58 36.2Q60 31 63.5 30.4Q67.5 31 69 36.2Z", ilet)
+            forme("M72 36.2Q73.4 33.4 75.6 33.1Q78 33.4 79 36.2Z", ilet)
+            bosquet(60f, 67f, 31.5f, 1.4f, 193, mix(P.milieu, P.pres, 0.35f))
+            ligne(84f, 44f, 84f, 38f, P.sol, 0.3f)
+            rect(84f, 38f, 3.6f, 2.6f, duJour(0xFFD6352E.toInt()))
+            trait("M84 38L87.6 40.6", duJour(0xFFF4F1EA.toInt()), 0.5f)
+            rond(84f, 44.4f, 0.9f, duJour(0xFFE87A2E.toInt()))
+            plan(2)
+            forme("M0 66L0 53Q40 49 70 52.6Q86 54.6 100 52.4L100 66Z", mix(P.sol, P.pierre, 0.25f))
+            vapeur(40f, 52f, 10f)
+            vapeur(46f, 52.5f, 8f)
+        }
+
+        /** Le cimetière de Morne-à-l'Eau : les tombes en damier noir et blanc, en terrasses. */
+        fun morneALEau() {
+            val r = Alea(201)
+            crete(30f, 1.4f, 202, P.loin)
+            plan(1)
+            forme("M0 66L0 33C30 29 60 29 100 35L100 66Z", P.milieu)
+            plan(2)
+            val noir = mix(0xFF1C1C1E.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
+            val blanc = duJour(0xFFF4F1EA.toInt())
+            val rangs = floatArrayOf(40f, 3f, 49f, 4.2f, 60f, 5.8f)
+            var i = 0
+            while (i < rangs.size) {
+                val y = rangs[i]
+                val w = rangs[i + 1]
+                rect(0f, y, 100f, BAS - y, mix(P.milieu, P.pres, 0.3f + i * 0.08f))
+                var x = -w * r()
+                while (x < 100f) {
+                    tombe(x, y, w, w * (1f + r() * 0.5f), noir, blanc)
+                    x += w * (2.2f + r() * 0.9f)
+                }
+                i += 2
+            }
+        }
+
+        /** L'îlet Macou : le banc de sable, sa mangrove et la chapelle des marins disparus, une yole. */
+        fun iletMacou() {
+            crete(34f, 0.7f, 211, P.loin)
+            plan(1)
+            eau(36f, 212)
+            forme("M10 52Q50 40 90 52Q50 62 10 52Z", mix(P.eau, 0xFF8FE0D2.toInt(), if (P.nuit) 0.08f else 0.4f))
+            forme("M30 48.4Q50 43 70 48.4Q50 51.6 30 48.4Z", sable())
+            var x = 36f
+            while (x < 62f) { trait("M$x 48.2Q${x + 1f} 46 ${x + 2f} 48.2", P.sol, 0.3f); x += 2f }
+            bosquet(34f, 62f, 46.5f, 2.4f, 213, P.milieu)
+            rond(48f, 42f, 3.4f, mix(P.milieu, P.pres, 0.3f))
+            rond(53f, 43f, 2.8f, mix(P.milieu, P.pres, 0.3f))
+            // La chapelle des marins disparus, dans la mangrove.
+            val mur = duJour(0xFFF4F1EA.toInt())
+            rect(56.6f, 44f, 3.6f, 3.6f, mur)
+            triangle(56.2f, 44f, 58.4f, 41.8f, 60.6f, 44f, P.toit)
+            rect(58.2f, 39.8f, 0.4f, 2.2f, mur)
+            rect(57.7f, 40.4f, 1.4f, 0.4f, mur)
+            rect(58f, 45.6f, 0.8f, 2f, mix(P.pres, 0xFF000000.toInt(), 0.3f))
+            plan(2)
+            forme("M70 58Q78 60.4 88 57.6L87 59.6Q78 61.8 71 59.8Z", duJour(0xFFF4F1EA.toInt()))
+            forme("M71 59.8Q78 61.8 87 59.6L86.8 60.3Q78 62.4 71.4 60.5Z", duJour(0xFFD6452E.toInt()))
+            rect(68.4f, 56.6f, 1.6f, 2.6f, P.sol)
+        }
+
+        /** Les Roches gravées : la forêt de Trois-Rivières, les visages taillés dans le rocher. */
+        fun rochesGravees() {
+            crete(24f, 2.2f, 221, P.loin)
+            bosquet(-2f, 102f, 26f, 2.6f, 222, mix(P.loin, P.milieu, 0.5f))
+            plan(1)
+            forme("M0 66L0 32C30 28 70 30 100 32L100 66Z", P.milieu)
+            val tronc = mix(P.sol, P.pierre, 0.2f)
+            for (x in floatArrayOf(8f, 22f, 37f, 90f)) rect(x, 34f, 1.1f, 20f, tronc)
+            bosquet(-2f, 102f, 34f, 3.2f, 223, mix(P.milieu, P.pres, 0.35f))
+            plan(2)
+            rect(0f, 53f, 100f, 13f, P.pres)
+            val roc = mix(P.pierre, P.pres, 0.25f)
+            val grave = mix(roc, P.sol, 0.6f)
+            forme("M14 60Q12 47 26 42.5Q40 40.5 47 48Q51 56 47 61Z", roc)
+            forme("M56 61Q54 51 64 46.6Q78 44.6 84 52Q86.4 58 82 62Z", roc)
+            // Les visages des Roches gravées : un ovale, des yeux cerclés, une
+            // bouche ronde. Pas de sourire : il en ferait un émoji.
+            trait("M31 45.2C35 45.2 35.6 54.8 31 54.8C26.4 54.8 27 45.2 31 45.2Z", grave, 0.55f)
+            anneau(29.4f, 48.8f, 0.9f, grave, 0.45f); anneau(32.6f, 48.8f, 0.9f, grave, 0.45f)
+            anneau(31f, 52.4f, 0.8f, grave, 0.45f)
+            trait("M31 45.2L31 43.2M28.4 46.4L27.2 44.8M33.6 46.4L34.8 44.8", grave, 0.45f)
+            anneau(70f, 53f, 3.2f, grave, 0.5f)
+            anneau(68.8f, 52.4f, 0.6f, grave, 0.4f); anneau(71.2f, 52.4f, 0.6f, grave, 0.4f); anneau(70f, 54.6f, 0.5f, grave, 0.4f)
+            for (k in 0 until 7) {
+                val a = PI.toFloat() * (1.05f + k * 0.15f)
+                ligne(70f + cos(a) * 3.6f, 53f + sin(a) * 3.6f, 70f + cos(a) * 5.4f, 53f + sin(a) * 5.4f, grave, 0.45f)
+            }
+            bosquet(10f, 20f, 61f, 2f, 224, mix(P.pres, P.milieu, 0.4f))
+            bosquet(84f, 96f, 62f, 2f, 225, mix(P.pres, P.milieu, 0.4f))
+        }
+
+        /** La place de la Victoire : les maisons à balcons, les sabliers, la statue de Vélo et son ka. */
+        fun placeVictoire() {
+            val r = Alea(231)
+            plan(1)
+            val pastels = intArrayOf(0xFFF2D8A7.toInt(), 0xFFBFDCCF.toInt(), 0xFFF0C2B0.toInt(), 0xFFC9D6EC.toInt())
+            val balcon = mix(P.pierre, P.pres, 0.55f)
+            var x = -2f
+            var k = 0
+            while (x < 100f) {
+                val w = 9f + r() * 3f
+                val h = 13f + r() * 4f
+                rect(x, 40f - h, w, h, mix(P.pierre, pastels[k % 4], if (P.nuit) 0.12f else 0.45f))
+                forme("M${x - 0.6f} ${40f - h}L${x + w + 0.6f} ${40f - h}L${x + w - 1f} ${37.6f - h}L${x + 1f} ${37.6f - h}Z", P.toit)
+                rect(x, 40f - h * 0.55f, w, 0.5f, balcon)
+                var b = x + 0.4f
+                while (b < x + w) { rect(b, 40f - h * 0.55f - 1.6f, 0.2f, 1.6f, balcon); b += 1f }
+                var f = x + 1.2f
+                while (f < x + w - 1.4f) {
+                    fenetre(f, 40f - h * 0.85f, 1.3f, 2.6f, r)
+                    fenetre(f, 40f - h * 0.4f, 1.3f, 3f, r)
+                    f += 2.8f
+                }
+                x += w + 0.4f
+                k++
+            }
+            bosquet(-2f, 102f, 42f, 4.2f, 232, P.milieu)
+            plan(2)
+            rect(0f, 48f, 100f, 18f, mix(P.pierre, P.sol, 0.45f))
+            val socle = mix(P.pierre, P.pres, 0.15f)
+            rect(66f, 49f, 14f, 8f, socle)
+            rect(65f, 56.5f, 16f, 1.6f, mix(socle, P.pres, 0.3f))
+            rect(65.4f, 48.4f, 15.2f, 1f, mix(socle, 0xFFFFFFFF.toInt(), 0.2f))
+            // La statue de Vélo, Marcel Lollia, le tambouyé : assis à
+            // califourchon sur son ka couché, les mains sur la peau.
+            val bronze = mix(0xFF4A3A2A.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
+            val reflet = mix(bronze, 0xFFFFFFFF.toInt(), 0.18f)
+            forme("M68.6 45.2Q72 43 75.8 43L76.6 47.6Q72.6 48.6 69.2 48.4Z", bronze)
+            ovale(76.2f, 45.3f, 1.1f, 2.3f, reflet)
+            trait("M70.6 44.6L70.8 48.4M73.4 43.8L73.6 48.2", reflet, 0.3f)
+            trait("M71.4 44.4L71.6 38.6", bronze, 2.4f)
+            rond(71.9f, 36.9f, 1.5f, bronze)
+            trait("M72.2 39.6Q74.8 40.6 75.8 43.6M71.6 40Q73.4 42.2 75.4 44.4", bronze, 0.8f)
+            trait("M70.8 45.2L69.8 48.2L71.4 48.4", bronze, 0.9f)
+            for (lx in floatArrayOf(12f, 40f, 92f)) {
+                rect(lx, 38f, 0.5f, 12f, P.sol)
+                if (P.allume) rond(lx + 0.25f, 37.6f, 3f, P.fenetre, 0.25f)
+                rond(lx + 0.25f, 37.6f, 0.9f, if (P.allume) P.fenetre else mix(P.pierre, P.pres, 0.3f))
+            }
+        }
+
+        /** Un figuier maudit : les racines devenues tronc, les racines aériennes qui pendent. */
+        fun figuierMaudit() {
+            val r = Alea(241)
+            crete(34f, 1.8f, 242, P.loin)
+            plan(1)
+            forme("M0 66L0 42C24 38 50 41 76 38C88 37 96 39 100 40L100 66Z", P.milieu)
+            plan(2)
+            rect(0f, 58f, 100f, 8f, P.pres)
+            val bois = mix(P.pierre, P.sol, 0.55f)
+            val clair = mix(bois, P.pierre, 0.35f)
+            for (k in 0 until 7) {
+                val x0 = 40f + k * 3.2f + r() * 1.2f
+                val x1 = 47f + k * 1.2f
+                trait("M$x0 60Q${x0 + (r() - 0.5f) * 8f} 45 $x1 30", if (k % 2 == 0) bois else clair, 1.6f)
+            }
+            forme("M34 61Q40 55 44 52L56 52Q60 55 66 61Z", bois)
+            trait("M50 32Q40 26 24 24M51 31Q62 24 78 22M50 30Q50 22 46 14", bois, 1.4f)
+            bosquet(14f, 86f, 22f, 4.6f, 243, P.pres)
+            bosquet(22f, 78f, 15f, 4f, 244, mix(P.pres, P.milieu, 0.35f))
+            bosquet(34f, 66f, 10f, 3.4f, 245, mix(P.pres, P.milieu, 0.2f))
+            val liane = mix(bois, P.pres, 0.2f)
+            for (k in 0 until 14) {
+                val x = 24f + k * 4f + r() * 2f
+                ligne(x, 22f + r() * 4f, x + (r() - 0.5f) * 1.2f, 42f + r() * 16f, liane, 0.35f)
+            }
         }
     }
 }

@@ -57,6 +57,7 @@ android {
         applicationId "com.potomitan.kreyolkeyboard"
         minSdk = 24
         targetSdk = 36
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         versionCode = 230000
         versionName "23.0.0"
         

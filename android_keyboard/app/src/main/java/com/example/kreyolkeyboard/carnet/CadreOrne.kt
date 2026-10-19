@@ -2562,7 +2562,7 @@ object Ornement {
     }
     /**
      * Le poinçon de la saison où la carte a été gagnée : l'emblème de la
-     * saison (flocon, fleur, soleil, feuille) dans un petit cartouche, **gravé
+     * saison (soleil du carême, nuage de l'hivernage) dans un petit cartouche, **gravé
      * dans le métal de la marge basse**, juste après le numéro de série, sur
      * la carte ouverte comme sur la vignette.
      *
@@ -2628,38 +2628,16 @@ object Ornement {
         return RectF(POINCON_X - POINCON_L / 2f, cy - POINCON_H / 2f, POINCON_X + POINCON_L / 2f, cy + POINCON_H / 2f)
     }
 
-    /** L'emblème d'une saison, dans un rayon de 7,5 unités, repris de la maquette. */
+    /**
+     * L'emblème d'une saison, dans un rayon de 7,5 unités. [clair] servait
+     * aux réserves des emblèmes luxembourgeois (cœur de fleur, nervure) ;
+     * gardé pour que la signature suive celle de LuxKeyb.
+     */
+    @Suppress("UNUSED_PARAMETER")
     private fun emblemeDeSaison(c: Canvas, p: Paint, saison: Saison, encre: Int, clair: Int) {
         p.color = encre
         when (saison) {
-            Saison.WANTER -> {
-                p.style = Paint.Style.STROKE
-                p.strokeWidth = 1.3f
-                p.strokeCap = Paint.Cap.ROUND
-                p.strokeJoin = Paint.Join.ROUND
-                for (a in floatArrayOf(0f, 60f, 120f)) {
-                    c.save()
-                    c.rotate(a)
-                    c.drawLine(0f, -7f, 0f, 7f, p)
-                    val pointes = Path()
-                    pointes.moveTo(-2f, -5f); pointes.lineTo(0f, -3f); pointes.lineTo(2f, -5f)
-                    pointes.moveTo(-2f, 5f); pointes.lineTo(0f, 3f); pointes.lineTo(2f, 5f)
-                    c.drawPath(pointes, p)
-                    c.restore()
-                }
-            }
-            Saison.FREIJOER -> {
-                p.style = Paint.Style.FILL
-                for (k in 0 until 5) {
-                    c.save()
-                    c.rotate(k * 72f)
-                    c.drawOval(RectF(-2.3f, -3.6f - 3.2f, 2.3f, -3.6f + 3.2f), p)
-                    c.restore()
-                }
-                p.color = clair
-                c.drawCircle(0f, 0f, 1.8f, p)
-            }
-            Saison.SUMMER -> {
+            Saison.CAREME -> {
                 p.style = Paint.Style.FILL
                 c.drawCircle(0f, 0f, 3.4f, p)
                 p.style = Paint.Style.STROKE
@@ -2672,27 +2650,21 @@ object Ornement {
                     c.restore()
                 }
             }
-            Saison.HIERSCHT -> {
+            Saison.HIVERNAGE -> {
+                // Un nuage et trois gouttes en biais.
                 p.style = Paint.Style.FILL
-                c.drawPath(FEUILLE, p)
+                c.drawCircle(-2.6f, -1.6f, 3f, p)
+                c.drawCircle(1.4f, -2.8f, 3.6f, p)
+                c.drawCircle(4.2f, -0.6f, 2.4f, p)
+                c.drawRoundRect(RectF(-5.6f, -1.4f, 6.6f, 1.8f), 1.6f, 1.6f, p)
                 p.style = Paint.Style.STROKE
-                p.strokeWidth = 0.7f
-                p.color = clair
-                c.drawLine(0f, -5f, 0f, 7.6f, p)
+                p.strokeWidth = 1.1f
+                p.strokeCap = Paint.Cap.ROUND
+                for (x in floatArrayOf(-3f, 0.6f, 4.2f)) c.drawLine(x, 3.6f, x - 1.2f, 6.8f, p)
             }
         }
         p.style = Paint.Style.FILL
     }
-
-    private val FEUILLE: Path = Path().apply {
-        moveTo(0f, -7.5f)
-        cubicTo(4.5f, -5f, 6f, -1f, 4.4f, 2.6f)
-        cubicTo(3.2f, 5.2f, 1f, 6f, 0f, 7f)
-        cubicTo(-1f, 6f, -3.2f, 5.2f, -4.4f, 2.6f)
-        cubicTo(-6f, -1f, -4.5f, -5f, 0f, -7.5f)
-        close()
-    }
-
 
     /**
      * Le sceau de cire d'une carte apprise : posé sur l'angle bas droit de
@@ -4301,7 +4273,7 @@ class Motif(
 ) {
 
     private val teinteChamp: Float? = blason.champ?.hue
-    private val lieu = Lieu.de(blason.champ)
+    private val lieu = Lieu.du(mot)
     private val heure = Heure.de(rarete, teinteChamp)
     /**
      * La part de la fenêtre qu'on voit vraiment. Sur la carte ouverte, la

@@ -23,14 +23,21 @@ import kotlin.math.sin
  * Deux passes, reprises de la maquette validée (artefact « Cartes à
  * collectionner ») :
  *
- * - **le fond** change la matière du lieu, pixel par pixel : l'hiver
- *   désature et blanchit la végétation puis pose la neige sur les crêtes et
- *   les toits ; le printemps verdit et sème des fleurs ; l'été réchauffe ;
- *   l'automne roussit le feuillage par taches ;
- * - **le dessus** passe devant : flocons, pétales, oiseaux, brume et
- *   feuilles, puis la fête du jour s'il y en a une (feu d'artifice, fanions
- *   aux couleurs du drapeau, guirlandes de la Fouer, lumières du marché de
- *   Noël, feu du Buergbrennen).
+ * - **le fond** change la matière du lieu, pixel par pixel : le carême
+ *   réchauffe la lumière et jaunit l'herbe par taches, comme une savane
+ *   sèche ; l'hivernage reverdit la végétation et voile le reste d'un gris
+ *   de pluie ;
+ * - **le dessus** passe devant : les oiseaux du carême, les nuages et
+ *   l'averse de l'hivernage, puis la fête du jour s'il y en a une (lucioles
+ *   du Nouvel An, fanions et confettis du Carnaval, flambeaux du 27 mai,
+ *   bougies de la Toussaint, guirlandes des Chanté Nwèl).
+ *
+ * **Jamais de feu d'artifice** (propriétaire, 2026-10-19) : il ne respecte pas
+ * les sons de la nature. Le Nouvel An est une nuit calme, avec ses lucioles.
+ *
+ * La mécanique (masque du lieu, végétation lue sur la palette, bruit lissé)
+ * vient de LuxKeyb, qui peignait quatre saisons européennes ; les deux
+ * saisons et les cinq fêtes sont celles de la Guadeloupe (2026-10-19).
  *
  * ## La végétation se reconnaît à la palette de l'heure
  *
@@ -80,12 +87,10 @@ internal object Habillage {
      * La même chose sur les trois calques de [Paysages.plans], chacun avec
      * son propre masque et sa propre échelle ([ks]).
      *
-     * La matière change plan par plan, et les fleurs du printemps restent sur
-     * le plan qui les porte. La neige se pose sur le haut de chaque plan, si
-     * bien que les toits du milieu en prennent aussi quand ils passent devant
-     * une colline. Ce qui flotte (flocons, pétales, feuilles, oiseaux) va sur
-     * le calque proche, par-dessus tout, comme sur le rendu à plat. Jamais de
-     * fête ici : voir [Paysages.plans].
+     * La matière change plan par plan. Les nuages de l'hivernage vont sur le
+     * calque proche, par-dessus tout ; l'averse et les oiseaux du carême n'y
+     * sont pas peints, ils bougent dans l'ambiance (voir [Ambiance]). Jamais
+     * de fête ici : voir [Paysages.plans].
      */
     fun appliquerPlans(
         couches: Array<Bitmap>, masques: Array<Bitmap>, lieu: Lieu, heure: Heure, s: Souvenir, ks: Array<FloatArray>
@@ -158,8 +163,8 @@ internal object Habillage {
                 h = (h + 1) and (TABLE - 1)
             }
         }
-        val rouille = arrayOf(intArrayOf(214, 118, 38), intArrayOf(186, 64, 36), intArrayOf(230, 176, 58), intArrayOf(160, 92, 40))
-        // Les taches de l'automne mesurent deux unités et demie de la boîte,
+        val paille = arrayOf(intArrayOf(196, 170, 92), intArrayOf(176, 150, 74), intArrayOf(214, 190, 112), intArrayOf(158, 138, 70))
+        // Les taches du carême mesurent deux unités et demie de la boîte,
         // quelle que soit la taille du rendu : des blocs de quelques pixels se
         // lisaient en hachures sur la carte et en confettis sur la vignette.
         val tache = max(3f, 12f * u)
@@ -169,63 +174,40 @@ internal object Habillage {
         // 2026-10-18). Le résultat est le même au bit près.
         val grilleX = ((w - 1) / tache).toInt() + 2
         val grilleY = ((h - 1) / tache).toInt() + 2
-        val bruit17 = if (saison == Saison.HIERSCHT) noeuds(grilleX, grilleY, 17) else FloatArray(0)
-        val bruit71 = if (saison == Saison.HIERSCHT) noeuds(grilleX, grilleY, 71) else FloatArray(0)
-        // Le printemps et l'automne ne touchent que la végétation : le reste
-        // du paysage, ciel compris, se saute sans rien recalculer.
-        val vegetationSeule = saison == Saison.FREIJOER || saison == Saison.HIERSCHT
-        // La densité des fleurs se règle sur la surface : sans cela, un rendu
-        // deux fois plus grand en porterait quatre fois plus, deux fois plus gros.
-        val probaFleur = 0.009f / (u * u).coerceAtLeast(0.25f)
+        val bruit17 = if (saison == Saison.CAREME) noeuds(grilleX, grilleY, 17) else FloatArray(0)
+        val bruit71 = if (saison == Saison.CAREME) noeuds(grilleX, grilleY, 71) else FloatArray(0)
         val fleurs = ArrayList<Float>()
         for (y in 0 until h) for (x in 0 until w) {
             val i = y * w + x
             val c = px[i]
             val veg = objet(mk, i) && vegetal(c)
-            if (vegetationSeule && !veg) continue
             var rr = r(c).toFloat(); var gg = g(c).toFloat(); var bb = bl(c).toFloat()
             when (saison) {
-                Saison.WANTER -> {
-                    val m = (rr + gg + bb) / 3f
-                    rr = m + (rr - m) * 0.65f; gg = m + (gg - m) * 0.65f; bb = m + (bb - m) * 0.65f + 10f
+                Saison.CAREME -> {
+                    // La lumière sèche : un peu plus chaude partout.
+                    rr += 9f; gg += 3f; bb -= 8f
                     if (veg) {
-                        val t = 0.62f * nuit
-                        rr += (238f - rr) * t; gg += (243f - gg) * t; bb += (250f - bb) * t
+                        // L'herbe qui jaunit, par taches, sans tout griller.
+                        val n = bruitGrille(bruit17, grilleX, x / tache, y / tache) * 3f
+                        val a = paille[n.toInt().coerceIn(0, 2)]
+                        val b = paille[(n.toInt() + 1).coerceIn(0, 3)]
+                        val f = n - n.toInt()
+                        val t = (0.05f + 0.08f * bruitGrille(bruit71, grilleX, x / tache, y / tache)) * nuit
+                        rr += (a[0] + (b[0] - a[0]) * f - rr) * t
+                        gg += (a[1] + (b[1] - a[1]) * f - gg) * t
+                        bb += (a[2] + (b[2] - a[2]) * f - bb) * t
                     }
                 }
-                Saison.FREIJOER -> if (veg) {
-                    gg *= 1.07f
-                    if (alea() < probaFleur) { fleurs.add(x.toFloat()); fleurs.add(y.toFloat()) }
-                }
-                Saison.SUMMER -> { rr += 9f; gg += 3f; bb -= 8f }
-                Saison.HIERSCHT -> if (veg) {
-                    val n = bruitGrille(bruit17, grilleX, x / tache, y / tache) * 3f
-                    val a = rouille[n.toInt().coerceIn(0, 2)]
-                    val b = rouille[(n.toInt() + 1).coerceIn(0, 3)]
-                    val f = n - n.toInt()
-                    val t = 0.38f + 0.2f * bruitGrille(bruit71, grilleX, x / tache, y / tache)
-                    rr += (a[0] + (b[0] - a[0]) * f - rr) * t
-                    gg += (a[1] + (b[1] - a[1]) * f - gg) * t
-                    bb += (a[2] + (b[2] - a[2]) * f - bb) * t
+                Saison.HIVERNAGE -> if (veg) {
+                    // Le vert gorgé d'eau.
+                    rr *= 0.93f; gg *= 1.06f; bb *= 0.97f
+                } else {
+                    // Le reste sous un ciel couvert : un peu de gris, un peu de bleu.
+                    val m = (rr + gg + bb) / 3f
+                    rr = m + (rr - m) * 0.85f; gg = m + (gg - m) * 0.85f; bb = m + (bb - m) * 0.85f + 5f
                 }
             }
             px[i] = (c and 0xFF000000.toInt()) or (canal(rr) shl 16) or (canal(gg) shl 8) or canal(bb)
-        }
-        // La neige se pose sur les crêtes et les toits : là où un objet
-        // commence, sous le ciel.
-        if (saison == Saison.WANTER) {
-            val blanc = if (P.nuit) 0xFFBECCE4.toInt() else 0xFFFAFCFF.toInt()
-            for (x in 0 until w) {
-                var avant = false
-                for (y in 1 until h) {
-                    val a = objet(mk, y * w + x)
-                    if (a && !avant) {
-                        val ep = max(1, ((3f + (alea() * 2f).roundToInt()) * u).roundToInt())
-                        for (k in 0 until min(ep, h - y)) px[(y + k) * w + x] = blanc
-                    }
-                    avant = a
-                }
-            }
         }
         return fleurs.toFloatArray()
     }
@@ -238,26 +220,7 @@ internal object Habillage {
     ) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         when (saison) {
-            Saison.WANTER -> {
-                p.shader = LinearGradient(
-                    0f, H * 0.86f, 0f, H, 0x00FFFFFF,
-                    if (P.nuit) argb(0.75f, 200, 212, 236) else argb(0.9f, 255, 255, 255), Shader.TileMode.CLAMP
-                )
-                c.drawRect(0f, H * 0.86f, W, H, p)
-                p.shader = null
-                repeat(90) {
-                    val o = 0.55f + alea() * 0.45f
-                    val x = alea() * W; val y = alea() * H; val rr = (0.7f + alea() * 1.8f) * u
-                    p.color = argb(o, 255, 255, 255)
-                    c.drawCircle(x, y, rr, p)
-                }
-            }
-            Saison.FREIJOER -> {
-                fleurir(c, p, u, alea, fleurs)
-                p.color = argb(0.85f, 0xFF, 0xB8, 0xD6)
-                repeat(22) { ellipse(c, p, alea() * W, alea() * H * 0.8f, 2.6f * u, 1.3f * u, alea() * PI.toFloat()) }
-            }
-            Saison.SUMMER -> if (oiseaux) {
+            Saison.CAREME -> if (oiseaux) {
                 p.style = Paint.Style.STROKE
                 p.strokeWidth = 1.3f * u
                 p.strokeCap = Paint.Cap.ROUND
@@ -271,18 +234,31 @@ internal object Habillage {
                     c.drawPath(oiseau, p)
                 }
             }
-            Saison.HIERSCHT -> {
+            Saison.HIVERNAGE -> {
+                // Le plafond de nuages, puis l'averse en biais.
                 p.shader = LinearGradient(
-                    0f, H * 0.55f, 0f, H * 0.8f,
-                    intArrayOf(0x00FFFFFF, argb(if (P.nuit) 0.1f else 0.22f, 255, 250, 240), 0x00FFFFFF),
-                    floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP
+                    0f, 0f, 0f, H * 0.4f,
+                    if (P.nuit) argb(0.45f, 20, 24, 36) else argb(0.42f, 96, 104, 118), 0x00000000,
+                    Shader.TileMode.CLAMP
                 )
-                c.drawRect(0f, H * 0.55f, W, H * 0.8f, p)
+                c.drawRect(0f, 0f, W, H * 0.4f, p)
                 p.shader = null
-                val tons = intArrayOf(0xE2862F, 0xC9452B, 0xF2B544, 0xA85A2A)
-                for (k in 0 until 26) {
-                    p.color = (0xEB shl 24) or tons[k % 4]
-                    ellipse(c, p, alea() * W, alea() * H * 0.85f, 3.4f * u, 1.7f * u, alea() * PI.toFloat())
+                p.color = if (P.nuit) argb(0.3f, 170, 180, 200) else argb(0.32f, 236, 242, 250)
+                repeat(9) {
+                    val cx = alea() * W; val cy = H * (0.02f + alea() * 0.14f)
+                    ellipse(c, p, cx, cy, (18f + alea() * 22f) * u, (5f + alea() * 4f) * u, 0f)
+                }
+                // Sur la carte en plans, l'averse tombe vraiment (voir Ambiance).
+                if (oiseaux) {
+                    p.style = Paint.Style.STROKE
+                    p.strokeWidth = 0.7f * u
+                    p.strokeCap = Paint.Cap.ROUND
+                    p.color = if (P.nuit) argb(0.35f, 200, 210, 230) else argb(0.45f, 236, 242, 250)
+                    repeat(80) {
+                        val x = alea() * W; val y = alea() * H; val l = (6f + alea() * 8f) * u
+                        c.drawLine(x, y, x - l * 0.25f, y + l, p)
+                    }
+                    p.style = Paint.Style.FILL
                 }
             }
         }
@@ -306,18 +282,19 @@ internal object Habillage {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         val soir = P.rang >= 2
         when (f) {
-            Fete.NEIJOERSCHDAG -> feuDArtifice(c, W, H, u, alea, true)
-            Fete.NATIONALFEIERDAG -> {
-                if (soir) feuDArtifice(c, W, H, u, alea, true)
-                val drapeau = intArrayOf(0xFFED2939.toInt(), 0xFFFFFFFF.toInt(), 0xFF00A1DE.toInt())
-                chainette(c, p, W, u, H * 0.07f, 14f * u) { x, y, j -> fanion(c, p, x, y, 6f * u, 14f * u, drapeau[j % 3]) }
-            }
-            Fete.SCHUEBERFOUER -> {
+            Fete.NOUVEL_AN -> lucioles(c, p, W, H, u, alea)
+            Fete.CARNAVAL -> {
                 val coul = intArrayOf(0xFFD6453A.toInt(), 0xFFE9B02F.toInt(), 0xFF2F9C95.toInt(),
                     0xFF5A6FD1.toInt(), 0xFFD4569A.toInt(), 0xFF3F9A4F.toInt())
                 chainette(c, p, W, u, H * 0.06f, 16f * u) { x, y, j -> fanion(c, p, x, y, 6f * u, 13f * u, coul[j % 6]) }
+                repeat(60) { k ->
+                    p.color = coul[k % 6]
+                    ellipse(c, p, alea() * W, H * (0.2f + alea() * 0.75f), 1.6f * u, 0.9f * u, alea() * PI.toFloat())
+                }
             }
-            Fete.CHRESCHTMAART -> for ((y0, fl) in arrayOf(0.06f to 12f, 0.16f to 18f)) {
+            Fete.VINGT_SEPT_MAI -> flambeaux(c, p, W, H, u, P, alea)
+            Fete.TOUSSAINT -> bougies(c, p, w, h, u, mk, alea)
+            Fete.CHANTE_NWEL -> for ((y0, fl) in arrayOf(0.06f to 12f, 0.16f to 18f)) {
                 chainette(c, p, W, u, H * y0, fl * u) { x, y, _ ->
                     val r = 9f * u
                     p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
@@ -330,7 +307,6 @@ internal object Habillage {
                     c.drawCircle(x, y + 3f * u, 1.8f * u, p)
                 }
             }
-            Fete.BUERGBRENNEN -> buergbrennen(c, p, w, h, u, P, mk, alea)
         }
     }
 
@@ -364,94 +340,93 @@ internal object Habillage {
         }
     }
 
-    private fun feuDArtifice(c: Canvas, W: Float, H: Float, u: Float, alea: Paysages.Alea, fort: Boolean) {
-        val couleurs = intArrayOf(0xFF5A7A, 0xFFD45A, 0x7AE0FF, 0xB98CFF, 0x8CFFB0, 0xFFFFFF)
-        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+    /** Les lucioles du Nouvel An : des points vert-jaune et leur halo, dans le bas du paysage. */
+    private fun lucioles(c: Canvas, p: Paint, W: Float, H: Float, u: Float, alea: Paysages.Alea) {
+        p.style = Paint.Style.FILL
+        repeat(22) {
+            val x = alea() * W
+            val y = H * (0.35f + alea() * 0.6f)
+            val l = 0.5f + alea() * 0.5f
+            p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
+            p.shader = RadialGradient(x, y, 9f * u,
+                argb(0.45f * l, 212, 225, 87), argb(0f, 212, 225, 87), Shader.TileMode.CLAMP)
+            c.drawRect(x - 9f * u, y - 9f * u, x + 9f * u, y + 9f * u, p)
+            p.shader = null
+            p.xfermode = null
+            p.color = argb(l, 255, 249, 196)
+            c.drawCircle(x, y, 1.4f * u, p)
+        }
+    }
+
+    /**
+     * Les flambeaux de la veillée du 27 mai, en rang au premier plan : un
+     * manche, une flamme, un halo. Un jour de mémoire : pas de couleur vive,
+     * rien qui éclate.
+     */
+    private fun flambeaux(c: Canvas, p: Paint, W: Float, H: Float, u: Float, P: Heure, alea: Paysages.Alea) {
+        val lueur = if (P.rang >= 2) 1f else 0.5f
+        p.style = Paint.Style.FILL
         p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
-        val gerbes = arrayOf(floatArrayOf(0.22f, 0.2f, 44f), floatArrayOf(0.55f, 0.12f, 56f), floatArrayOf(0.82f, 0.24f, 38f))
-        gerbes.forEachIndexed { j, (fx, fy, rayon) ->
-            val cx = fx * W; val cy = fy * H; val R = rayon * u
-            val col = couleurs[(j * 2 + 1) % couleurs.size]
-            val opaque = (0xFF shl 24) or col
-            val a = (if (fort) 0.9f else 0.5f)
-            for (k in 0 until 28) {
-                val ang = k / 28f * PI.toFloat() * 2f + alea() * 0.1f
-                val r = R * (0.75f + alea() * 0.3f)
-                val ex = cx + cos(ang) * r; val ey = cy + sin(ang) * r
-                p.style = Paint.Style.STROKE
-                p.strokeWidth = 1.3f * u
-                p.color = 0xFF000000.toInt()
-                p.alpha = (a * 255f).roundToInt()
-                p.shader = LinearGradient(cx, cy, ex, ey, 0x00FFFFFF, opaque, Shader.TileMode.CLAMP)
-                c.drawLine(cx + cos(ang) * r * 0.25f, cy + sin(ang) * r * 0.25f, ex, ey, p)
-                p.shader = null
-                p.style = Paint.Style.FILL
-                p.color = opaque
-                p.alpha = (a * 255f).roundToInt()
-                c.drawCircle(ex, ey + 2f * u, 1.6f * u, p)
-            }
-            p.color = 0xFF000000.toInt()
-            p.alpha = ((if (fort) 0.25f else 0.12f) * 255f).roundToInt()
-            p.shader = RadialGradient(cx, cy, R * 1.2f, opaque, 0x00000000, Shader.TileMode.CLAMP)
-            c.drawRect(cx - R * 1.3f, cy - R * 1.3f, cx + R * 1.3f, cy + R * 1.3f, p)
+        p.shader = LinearGradient(0f, H, 0f, H * 0.4f, argb(0.2f * lueur, 255, 130, 50), argb(0f, 255, 130, 50), Shader.TileMode.CLAMP)
+        c.drawRect(0f, H * 0.4f, W, H, p)
+        p.shader = null
+        val n = 7
+        val haut = 34f * u
+        for (k in 0 until n) {
+            val x = W * (0.08f + k * 0.84f / (n - 1)) + (alea() - 0.5f) * 6f * u
+            val pied = H * (0.93f - 0.04f * alea())
+            val tete = pied - haut
+            p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
+            p.shader = RadialGradient(x, tete - 4f * u, 26f * u,
+                argb(0.7f * lueur, 255, 170, 70), argb(0f, 255, 110, 30), Shader.TileMode.CLAMP)
+            c.drawRect(x - 28f * u, tete - 32f * u, x + 28f * u, tete + 24f * u, p)
+            p.shader = null
+            p.xfermode = null
+            p.color = 0xFF3A2A20.toInt()
+            c.drawRect(x - 1.1f * u, tete, x + 1.1f * u, pied, p)
+            p.color = 0xFF5A4030.toInt()
+            c.drawRect(x - 2f * u, tete - 1f * u, x + 2f * u, tete + 2f * u, p)
+            val hh = (11f + alea() * 5f) * u
+            p.shader = LinearGradient(0f, tete, 0f, tete - hh,
+                intArrayOf(0xFFFFF2B0.toInt(), 0xFFFF9A2A.toInt(), argb(0f, 220, 40, 10)),
+                floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+            val flamme = Path()
+            flamme.moveTo(x - 3.2f * u, tete - 0.5f * u)
+            flamme.quadTo(x - 2.4f * u, tete - hh * 0.6f, x + (alea() * 2f - 1f) * u, tete - hh)
+            flamme.quadTo(x + 2.4f * u, tete - hh * 0.6f, x + 3.2f * u, tete - 0.5f * u)
+            c.drawPath(flamme, p)
             p.shader = null
         }
     }
 
-    /** Le grand feu du premier dimanche de carême, sur la ligne d'horizon, à gauche. */
-    private fun buergbrennen(c: Canvas, p: Paint, w: Int, h: Int, u: Float, P: Heure, mk: IntArray, alea: Paysages.Alea) {
-        val W = w.toFloat(); val H = h.toFloat()
-        // Le feu se pose sur l'horizon du tiers gauche, au point le plus bas de
-        // la ligne de crête sans descendre sous les trois quarts : un feu
-        // posé à une abscisse fixe tombait au Mëllerdall sur le haut d'un
-        // rocher, et flottait devant la paroi une fois abaissé.
-        var xi = (W * 0.16f).roundToInt().coerceIn(0, w - 1)
-        var y0 = -1f
-        val pas = max(1, w / 120)
-        var x = (W * 0.08f).toInt()
-        while (x < (W * 0.42f).toInt()) {
-            var y = 0
-            while (y < h && !objet(mk, y * w + x)) y++
-            if (y < H * 0.75f && y > y0) { y0 = y.toFloat(); xi = x }
-            x += pas
-        }
-        if (y0 < 0f) y0 = H * 0.5f
-        // En plein jour le halo additif blanchit un ciel déjà clair : il ne
-        // garde sa force que le soir et la nuit.
-        val lueur = if (P.rang >= 2) 1f else 0.45f
-        val x0 = xi.toFloat()
-        p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
+    /**
+     * Les bougies de la Toussaint : des flammes posées sur ce que le lieu a de
+     * solide dans sa moitié basse, chacune avec son halo. C'est le masque du
+     * lieu qui dit où l'on peut en poser, pas une bande fixe : sans lui, les
+     * bougies flottaient sur la mer.
+     */
+    private fun bougies(c: Canvas, p: Paint, w: Int, h: Int, u: Float, mk: IntArray, alea: Paysages.Alea) {
         p.style = Paint.Style.FILL
-        p.shader = LinearGradient(0f, H, 0f, 0f, argb(0.22f * lueur, 255, 120, 40), argb(0f, 255, 120, 40), Shader.TileMode.CLAMP)
-        c.drawRect(0f, 0f, W, H, p)
-        p.shader = RadialGradient(x0, y0 - 20f * u, 120f * u, argb(0.75f * lueur, 255, 170, 60), argb(0f, 255, 90, 20), Shader.TileMode.CLAMP)
-        c.drawRect(x0 - 130f * u, y0 - 150f * u, x0 + 130f * u, y0 + 110f * u, p)
-        // Les flammes en mélange normal : additives, elles viraient au blanc
-        // sur un ciel de matin et le feu disparaissait.
-        p.xfermode = null
-        for (k in 0 until 7) {
-            val dx = (k - 3) * 7f * u
-            val hh = (42f + alea() * 38f) * u
-            p.shader = LinearGradient(0f, y0, 0f, y0 - hh,
-                intArrayOf(0xFFFFF2B0.toInt(), 0xFFFF9A2A.toInt(), argb(0f, 220, 40, 10)),
-                floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
-            val flamme = Path()
-            flamme.moveTo(x0 + dx - 10f * u, y0)
-            flamme.quadTo(x0 + dx - 6f * u, y0 - hh * 0.6f, x0 + dx + (alea() * 4f - 2f) * u, y0 - hh)
-            flamme.quadTo(x0 + dx + 6f * u, y0 - hh * 0.6f, x0 + dx + 10f * u, y0)
-            c.drawPath(flamme, p)
+        var posees = 0
+        var essais = 0
+        while (posees < 46 && essais < 400) {
+            essais++
+            val x = (alea() * (w - 1)).toInt()
+            val y = (h * (0.55f + alea() * 0.42f)).toInt().coerceIn(0, h - 1)
+            if (!objet(mk, y * w + x)) continue
+            posees++
+            val fx = x.toFloat(); val fy = y.toFloat()
+            p.xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
+            p.shader = RadialGradient(fx, fy - 2f * u, 7f * u,
+                argb(0.6f, 255, 200, 110), argb(0f, 255, 160, 60), Shader.TileMode.CLAMP)
+            c.drawRect(fx - 7f * u, fy - 9f * u, fx + 7f * u, fy + 5f * u, p)
+            p.shader = null
+            p.xfermode = null
+            p.color = 0xFFF4EEDF.toInt()
+            c.drawRect(fx - 0.7f * u, fy - 1.2f * u, fx + 0.7f * u, fy + 1.4f * u, p)
+            p.color = 0xFFFFE08A.toInt()
+            ellipse(c, p, fx, fy - 2.4f * u, 0.8f * u, 1.4f * u, 0f)
         }
-        p.shader = null
-        // Le bûcher, sombre, sous les flammes.
-        p.color = 0xFF3A2A20.toInt()
-        ellipse(c, p, x0, y0 + 1.5f * u, 14f * u, 4f * u, 0f)
-        p.color = argb(0.9f, 255, 210, 120)
-        repeat(30) {
-            val x = x0 + (alea() - 0.5f) * 50f * u
-            val y = y0 - 20f * u - alea() * 70f * u
-            c.drawCircle(x, y, (0.6f + alea()) * u, p)
-        }
-        p.xfermode = null
     }
 
     // ------------------------------------------------------------ outils
