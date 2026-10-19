@@ -5,6 +5,27 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.2.0] - 2026-10-19
+
+Le ciel des cartes vit : la pluie tombe et les étoiles scintillent, et le cimetière de Morne-à-l'Eau ressemble enfin au vrai.
+
+### ✨ Ajouté
+
+- **Les étoiles scintillent** : sur une carte ouverte de nuit, chaque étoile
+  vacille à son rythme et glisse avec le fond quand on penche le téléphone.
+
+### 🎨 Modifié
+
+- **Le cimetière de Morne-à-l'Eau redessiné** : le morne couvert de gradins
+  de caveaux blancs carrelés de damier noir et blanc, à pignon et croix, une
+  dalle en damier au premier plan et des bougies le soir.
+
+### 🔧 Corrigé
+
+- **La pluie tombe aussi les jours de fête** : sur une carte gagnée à la
+  Toussaint ou pendant les Chanté Nwèl, en hivernage, les gouttes restaient
+  figées ; elles tombent maintenant devant les lumières.
+
 ## [23.1.1] - 2026-10-19
 
 ### 🔧 Corrigé
