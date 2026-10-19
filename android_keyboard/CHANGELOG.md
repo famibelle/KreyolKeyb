@@ -5,6 +5,44 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.1.0] - 2026-10-19
+
+Les cartes du carnet s'ouvrent sur trente lieux de Guadeloupe, gardent la saison et la fête du jour où on les a gagnées, et leur faune s'anime.
+
+### ✨ Ajouté
+
+- **Trente lieux de Guadeloupe dans la fenêtre des cartes** : Grande Anse,
+  Les Saintes, la Soufrière, les Chutes du Carbet, Sofaïa, la Ravine Chaude,
+  la Pointe des Châteaux, Marie-Galante, la Désirade, Bouillante, le
+  cimetière de Morne-à-l'Eau, l'îlet Macou, les Roches gravées, la place de
+  la Victoire et la statue de Vélo, un figuier maudit, le Grand Étang, les
+  Bains Jaunes, la Cascade aux Écrevisses, le Saut de la Lézarde, la Pointe
+  de la Grande Vigie, la Porte d'Enfer, Petite-Terre, l'îlet du Gosier, le
+  Grand Cul-de-Sac Marin, Gueule Grand Gouffre, la route de la Traversée,
+  l'habitation La Grivelière, la stèle de Delgrès à Matouba, le fort Delgrès
+  et le Mémorial ACTe. Un mot montre toujours le même lieu, à l'heure de sa
+  rareté : le matin pour une carte commune, la nuit pour une très rare.
+- **L'album des paysages** compte cent vingt cases, trente lieux à quatre
+  heures.
+- **La carte garde le jour où vous l'avez gagnée** : les herbes sèches du
+  carême ou les averses de l'hivernage, et cinq fêtes, les lucioles du
+  Nouvel An, les fanions des jours gras, les flambeaux du 27 mai, les
+  bougies de la Toussaint et les guirlandes du Chanté Nwèl.
+- **La faune et la flore de Guadeloupe habitent les paysages** : frégates
+  qui tournent au-dessus de la mer, colibri qui butine les balisiers,
+  molosses qui chassent la nuit, hérons garde-bœufs qui rentrent au dortoir,
+  touloulous sur les plages, iguane de Petite-Terre, agouti sur la route de
+  la Traversée, baleine à bosse au large de la Grande Vigie, anthuriums,
+  raisiniers et caféiers. Sur la carte ouverte, chaque bête bouge à sa
+  façon.
+- **Le paysage prend du relief** : sur la carte ouverte, ses trois plans
+  glissent quand on penche le téléphone.
+
+### 🔄 Changé
+
+- **Les cérémonies de rareté n'ont plus de feux d'artifice**, par respect
+  des sons de la nature : une gerbe de rayons les remplace.
+
 ## [23.0.0] - 2026-10-19
 
 Le clavier rattrape les fautes de frappe, l'application passe à Android 15 et aux tablettes, et le carnet devient un album qu'on complète, qu'on partage et qu'on échange.

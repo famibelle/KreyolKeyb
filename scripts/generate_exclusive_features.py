@@ -40,6 +40,70 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.1.0": [
+        {
+            "emoji": "🗺️",
+            "title": "Trente lieux de Guadeloupe dans vos cartes",
+            "description": (
+                "Chaque carte du carnet s'ouvre sur un lieu de Guadeloupe : "
+                "la Soufrière dans ses nuages, la Porte d'Enfer, la stèle de "
+                "Delgrès à Matouba, la statue de Vélo place de la Victoire, "
+                "le Mémorial ACTe et vingt-cinq autres. Un mot montre "
+                "toujours le même lieu, à l'heure de sa rareté : le matin "
+                "pour une carte commune, la nuit pour une très rare. "
+                "L'album des paysages compte cent vingt cases."
+            ),
+            "image": "Screenshots/nouveaute_23.1.0_lieux.png",
+            "image_alt": (
+                "La grille du carnet Sanblé, six cartes : « jalou » de nuit "
+                "aux Chutes du Carbet, « chofè » à l'îlet du Gosier, « liv » "
+                "devant la stèle de Delgrès à Matouba, « kréyol » au pied de "
+                "la Soufrière, « krab » à la Porte d'Enfer et « lanmè » à "
+                "Grande Anse."
+            ),
+        },
+        {
+            "emoji": "🦀",
+            "title": "Les bêtes de Guadeloupe s'animent",
+            "description": (
+                "Sur la carte ouverte, la faune bouge comme elle bouge "
+                "vraiment : les frégates tournent au-dessus de la mer, le "
+                "colibri butine les balisiers, les molosses chassent la "
+                "nuit, les touloulous filent de côté sur la plage, l'agouti "
+                "traverse la route de la Traversée et la baleine à bosse "
+                "souffle au large de la Grande Vigie. Le paysage glisse sur "
+                "trois plans quand on penche le téléphone."
+            ),
+            "image": "Screenshots/nouveaute_23.1.0_faune.png",
+            "image_alt": (
+                "La carte « krab » ouverte : deux frégates en vol au-dessus "
+                "de la Porte d'Enfer, le lagon entre les falaises, un "
+                "amandier et deux touloulous rouges sur la plage. Dessous, "
+                "la glose « crabe » et une phrase du corpus."
+            ),
+        },
+        {
+            "emoji": "🕯️",
+            "title": "Chaque carte garde son jour",
+            "description": (
+                "Une carte se souvient du jour où vous l'avez gagnée : les "
+                "herbes sèches du carême ou les averses de l'hivernage, et "
+                "cinq fêtes, les lucioles du Nouvel An, les fanions des "
+                "jours gras, les flambeaux du 27 mai, les bougies de la "
+                "Toussaint et les guirlandes du Chanté Nwèl."
+            ),
+            "image": "Screenshots/nouveaute_23.1.0_fetes.png",
+            "image_alt": (
+                "La grille du carnet Sanblé, six cartes gagnées des jours "
+                "différents : « manman » et ses lucioles du Nouvel An, "
+                "« jou » sous l'averse de l'hivernage, « mitan » sous les "
+                "guirlandes du Chanté Nwèl, « parasòl » sous les fanions du "
+                "Carnaval, « pyé » entre les flambeaux du 27 mai, « ègzisté » "
+                "et les bougies de la Toussaint au cimetière de "
+                "Morne-à-l'Eau."
+            ),
+        },
+    ],
     "23.0.0": [
         {
             "emoji": "⌨️",
