@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Aperçu de partage · Nouveautés</title>
+<link rel="stylesheet" href="../fredoka-embed.css">
+<style>
+/* Visuel d'aperçu de partage de la page Nouveautés (og:image, 1200 x 630),
+   sur le gabarit de partage.html (l'accueil) : l'accroche à gauche sur fond
+   sombre, la preuve à droite, ici la capture des cartes du carnet de la
+   nouveauté 23.1.0 (Screenshots/nouveaute_23.1.0_lieux.png), non retouchée,
+   dont on ne montre que les deux premières rangées. Les textes ne nomment
+   pas de version, pour que l'image ne vieillisse pas à chaque release.
+
+   Palette de communication en version sombre (docs/assets/theme.css), écrite
+   en dur : le visuel doit sortir identique quel que soit le thème du
+   navigateur qui le rend. Ne jamais y mêler la palette publicitaire, cf.
+   docs/charte-graphique.html.
+
+   Rendu : google-chrome --headless --hide-scrollbars --force-device-scale-factor=1
+   --window-size=1200,717 --screenshot=partage-nouveautes.png partage-nouveautes.html, puis recadrer
+   à 1200x630 (Chrome laisse 87 px vides en bas) et passer
+   scripts/tag_assets.py dessus. */
+:root {
+  --paper:#101817; --ink:#EDEAE1; --ink-soft:#A7B3AC;
+  --sea:#0E6E76; --sea-clair:#5FC7CE; --hibiscus:#C94A3B; --sun:#E3AE5E;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  width:1200px; height:630px; overflow:hidden; position:relative;
+  background:var(--paper); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue","Noto Sans","DejaVu Sans",Arial,sans-serif;
+}
+.filet {
+  position:absolute; left:0; top:0; bottom:0; width:14px;
+  background:linear-gradient(180deg, var(--sea) 0 40%, var(--sun) 40% 70%, var(--hibiscus) 70% 100%);
+}
+.texte { position:absolute; left:60px; top:40px; width:560px; }
+.marque { display:flex; align-items:center; gap:14px; margin-bottom:30px; }
+.marque img { width:52px; height:52px; border-radius:12px; display:block; }
+.marque span { font-family:'Fredoka',sans-serif; font-weight:600; font-size:26px; }
+h1 {
+  font-family:'Fredoka',sans-serif; font-weight:700;
+  font-size:62px; line-height:1.02; margin-bottom:18px;
+}
+h1 em { font-style:normal; color:var(--sun); }
+.accroche { font-size:27px; line-height:1.33; color:var(--ink-soft); margin-bottom:24px; }
+.pastille {
+  display:inline-flex; align-items:center; height:46px; padding:0 22px;
+  border-radius:99px; background:var(--sea); color:#fff;
+  font-weight:700; font-size:22px; margin-bottom:12px;
+}
+.bouton {
+  position:absolute; left:60px; top:492px;
+  display:inline-flex; align-items:center; height:56px; padding:0 30px;
+  border-radius:99px; background:var(--sun); color:var(--paper);
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:28px;
+}
+.pied {
+  position:absolute; left:60px; bottom:26px;
+  font-size:19px; color:var(--ink-soft);
+}
+.preuve {
+  position:absolute; right:40px; top:57px; width:520px; height:515px;
+  border-radius:24px; overflow:hidden; background:#F5F2EA;
+}
+/* La capture fait 692 x 1040 et porte six cartes : à 520 px de large, ses
+   deux premières rangées tiennent dans 515 px. */
+.preuve img { display:block; width:520px; }
+</style>
+</head>
+<body>
+<div class="filet"></div>
+<div class="texte">
+  <div class="marque"><img src="../logo/klavye-logo-512.png" alt=""><span>Klavyé Kréyòl Karukera</span></div>
+  <h1>Les nouveautés,<br>en <em>exclusivité</em></h1>
+  <p class="accroche">Le clavier évolue chaque semaine, et vous en profitez avant le Play Store.</p>
+  <div class="pastille">Les mots gagnés deviennent des cartes</div><br>
+  <div class="pastille">Trente lieux de Guadeloupe</div>
+</div>
+<div class="bouton">Découvrir les nouveautés</div>
+<p class="pied">Open source · Zéro publicité · 100 % hors ligne · Potomitan™</p>
+<div class="preuve"><img src="../../Screenshots/nouveaute_23.1.0_lieux.png" alt=""></div>
+</body>
+</html>
