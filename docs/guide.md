@@ -431,6 +431,7 @@ Une question qui n'est pas couverte ici ? Écrivez à
       <a href="guide.html" aria-current="page">Guide d'installation</a>
       <a href="faq.html">Questions fréquentes</a>
       <a href="nouveautes.html">Nouveautés</a>
+      <a href="newsletter/">Newsletters</a>
     </div>
     <div>
       <strong>Le projet</strong>

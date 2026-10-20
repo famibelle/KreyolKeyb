@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Aperçu de partage · Newsletter octobre 2026</title>
+<link rel="stylesheet" href="../../assets/fredoka-embed.css">
+<style>
+/* Vignette de partage de l'édition d'octobre 2026 (og:image, 1200 x 630),
+   sur le gabarit de docs/assets/og/partage-nouveautes.html : l'accroche à
+   gauche sur fond sombre, la preuve à droite, ici la carte entière de la
+   nouveauté 23.2.2 (Screenshots/nouveaute_23.2.2_lucioles.png), non retouchée.
+
+   Rendu : google-chrome --headless --hide-scrollbars --force-device-scale-factor=1
+   --window-size=1200,717 --screenshot=partage.png partage.html, puis recadrer
+   à 1200x630 et passer scripts/tag_assets.py dessus. */
+:root {
+  --paper:#101817; --ink:#EDEAE1; --ink-soft:#A7B3AC;
+  --sea:#0E6E76; --hibiscus:#C94A3B; --sun:#E3AE5E;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  width:1200px; height:630px; overflow:hidden; position:relative;
+  background:var(--paper); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue","Noto Sans","DejaVu Sans",Arial,sans-serif;
+}
+.filet {
+  position:absolute; left:0; top:0; bottom:0; width:14px;
+  background:linear-gradient(180deg, var(--sea) 0 40%, var(--sun) 40% 70%, var(--hibiscus) 70% 100%);
+}
+.texte { position:absolute; left:60px; top:40px; width:640px; }
+.marque { display:flex; align-items:center; gap:14px; margin-bottom:26px; }
+.marque img { width:52px; height:52px; border-radius:12px; display:block; }
+.marque span { font-family:'Fredoka',sans-serif; font-weight:600; font-size:26px; }
+.edition {
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:20px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--sun); margin-bottom:14px;
+}
+h1 {
+  font-family:'Fredoka',sans-serif; font-weight:700;
+  font-size:70px; line-height:1.02; margin-bottom:22px;
+}
+h1 em { font-style:normal; color:var(--sun); }
+.accroche { font-size:27px; line-height:1.36; color:var(--ink-soft); width:600px; }
+.bouton {
+  position:absolute; left:60px; top:478px;
+  display:inline-flex; align-items:center; height:56px; padding:0 30px;
+  border-radius:99px; background:var(--sun); color:var(--paper);
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:28px;
+}
+.pied {
+  position:absolute; left:60px; bottom:26px;
+  font-size:19px; color:var(--ink-soft);
+}
+/* La capture fait 692 x 1019 : à 382 px de large, la carte entière tient
+   dans 562 px de haut. */
+.preuve {
+  position:absolute; right:58px; top:34px; width:382px;
+  transform:rotate(3deg);
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));
+}
+.preuve img { display:block; width:382px; }
+</style>
+</head>
+<body>
+<div class="filet"></div>
+<div class="texte">
+  <div class="marque"><img src="../../assets/logo/klavye-logo-512.png" alt=""><span>Klavyé Kréyòl Karukera</span></div>
+  <p class="edition">La newsletter · octobre 2026</p>
+  <h1>Des lucioles<br>dans la <em>nuit<br>des forêts</em></h1>
+  <p class="accroche">Le ciel des cartes s'anime, et un avis change l'accueil.</p>
+</div>
+<div class="bouton">Lire la lettre</div>
+<p class="pied">Gratuit · Open source · Zéro publicité · 100 % hors ligne · Potomitan™</p>
+<div class="preuve"><img src="../../Screenshots/nouveaute_23.2.2_lucioles.png" alt=""></div>
+</body>
+</html>

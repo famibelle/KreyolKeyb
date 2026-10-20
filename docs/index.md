@@ -287,6 +287,7 @@ Le code source est ouvert et public sur
       <a href="guide.html">Guide d'installation</a>
       <a href="faq.html">Questions fréquentes</a>
       <a href="nouveautes.html">Nouveautés</a>
+      <a href="newsletter/">Newsletters</a>
     </div>
     <div>
       <strong>Le projet</strong>

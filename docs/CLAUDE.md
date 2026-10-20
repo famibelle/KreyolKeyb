@@ -16,3 +16,7 @@ Note the three palettes are deliberately distinct and must not be mixed inside o
 - Run `scripts/tag_assets.py` over the new file (Potomitan™ metadata) before committing.
 - A nouveauté that does not photograph (a speed gain, a haptic return, a system setting) stays with no `image`: do not force a capture that shows nothing. A genuine before/after needs the old version rebuilt, as for `nouveaute_10.14.2_graisse_touches.png`; leave it unillustrated rather than faking the "before".
 - `image_alt` describes what is on screen in French, factually, and names the kréyòl words visible so the entry still reads without the image.
+
+## Newsletter (`newsletter/`)
+
+`newsletter/index.html` is the archive, newest edition first; each edition is `newsletter/AAAA-MM.html`, in French only, with its share image `newsletter/AAAA-MM/partage.png` rendered from the `partage.html` next to it. Editions reference the existing captures through `../Screenshots/` rather than copying them. The `substack` skill (`.claude/skills/substack/`) writes both the Substack post and the site edition; the footer links the archive as « Newsletters ».
