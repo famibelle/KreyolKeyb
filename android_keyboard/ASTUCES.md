@@ -6,7 +6,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
 
 ## Fonctionnement
 
-- Les 41 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
+- Les 42 astuces vivent dans `WEEKLY_TIPS` (`SettingsActivity.kt:89`), et nulle
   part ailleurs : ce fichier documente et source cette liste, il n'est pas lu
   par l'application.
 - `getTipOfTheWeek()` (`SettingsActivity.kt:3516`) prend le numéro de semaine
@@ -14,7 +14,7 @@ Contenu de la carte « Astuce de la semaine », affichée dans l'onglet
   seedé sur la date (contrairement à `getWordOfTheDay()`,
   `SettingsActivity.kt:3525`) : la liste est parcourue en entier et deux
   semaines de suite ne retombent jamais sur la même astuce. Le cycle complet
-  dure donc 41 semaines, soit un peu plus de neuf mois.
+  dure donc 42 semaines, soit un peu plus de neuf mois.
 - Le décalage de fuseau est ajouté au timestamp pour que le changement d'astuce
   ait lieu à minuit local, pas à minuit UTC. Le `+3` du calcul cale la bascule
   sur le lundi, le jour 0 de l'ère Unix étant un jeudi.
@@ -35,7 +35,7 @@ onglets) sont repris tels quels de l'application ou du dictionnaire.
 
 ---
 
-## Les 41 astuces
+## Les 42 astuces
 
 Les numéros correspondent à l'ordre dans `WEEKLY_TIPS`, donc à l'ordre de
 passage : l'astuce n° 1 s'affiche la semaine où le compteur repart à zéro, puis
@@ -61,6 +61,7 @@ une par semaine dans cet ordre.
 | 27 | La touche Entrée s'adapte au champ : Rechercher, Envoyer, ou retour à la ligne. | `handleEnter()` (`InputProcessor.kt:209`) |
 | 41 | Les propositions sont rangées de gauche à droite, la première étant la plus probable. | Ordre produit par `SuggestionEngine.calculateDictionaryScore()` et rendu par la seule position depuis la 19.0.0 : la couleur de la puce dit la langue, `addSuggestionChip()` |
 | 39 | Glisser le doigt le long de la barre d'espace promène le curseur lettre par lettre. | `setupSpaceLongPress()` (`KeyboardLayoutManager.kt`), seuil `scaledTouchSlop` puis un cran tous les `SPACE_CURSOR_STEP_DP` (10 dp) ; `InputProcessor.moveCursorBy()`. Depuis la 14.0.0 |
+| 42 | Le son et la vibration des touches se coupent dans l'application, pas dans les réglages du téléphone. | Carte « Retour de frappe » de `KeyboardSettingsActivity` (`KeyboardPreferences.hapticEnabled` / `soundEnabled`, depuis la 10.11.7), atteinte par `ligneReglagesClavier()` sur l'accueil et par l'engrenage du bandeau. Sur One UI, « Vibration au toucher » ne pilote que le clavier Samsung (`KeyboardPreferences.kt`). Ajoutée après un avis Play Store du 19/10/2026 |
 
 ### Suggestions
 

@@ -286,7 +286,8 @@ class SettingsActivity : AppCompatActivity() {
             "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez « maison ». Les jeux, eux, vous disent maintenant ce que veut dire le mot qu'ils vous font chercher.",
             "Glissez le doigt le long de la barre d'espace pour promener le curseur lettre par lettre : plus besoin de viser entre deux caractères pour corriger un mot.",
             "Le panneau emoji s'ouvre sur ceux que vous venez d'employer : les 30 derniers vous attendent dans le premier onglet.",
-            "Les propositions sont rangées de gauche à droite : la première est celle que le clavier juge la plus probable."
+            "Les propositions sont rangées de gauche à droite : la première est celle que le clavier juge la plus probable.",
+            "Le son et la vibration des touches se coupent dans l'application, par la ligne « Réglages du clavier » de l'onglet Dékolaj ou l'engrenage en haut à droite, et non dans les réglages du téléphone."
         )
     }
     
@@ -1344,6 +1345,7 @@ class SettingsActivity : AppCompatActivity() {
                 mainLayout.addView(carteCorrecteurAccueil())
             }
             mainLayout.addView(createSpacing(8))
+            mainLayout.addView(ligneReglagesClavier())
             mainLayout.addView(ligneConfiguration(cible))
             mainLayout.addView(cible)
             mainLayout.addView(createSpacing(16))
@@ -1356,6 +1358,7 @@ class SettingsActivity : AppCompatActivity() {
         if (isEnabled && isSelected) {
             cible.addView(createReadyBanner(aEcritUnMot()))
             cible.addView(createSpacing(12))
+            if (!modeDuJour) cible.addView(ligneReglagesClavier())
         }
 
         // Carte de configuration, isolée dans son propre conteneur : déplier
@@ -1914,6 +1917,40 @@ class SettingsActivity : AppCompatActivity() {
      * La ligne qui remplace, sur l'accueil du jour, toute la configuration :
      * elle la déplie et la replie sur place.
      */
+    /**
+     * Accès aux réglages du clavier depuis l'accueil, en clair.
+     *
+     * L'engrenage du bandeau ne suffisait pas : un avis Play Store du 19/10/2026
+     * demandait s'il était possible de couper le son et la vibration, réglages
+     * qui existaient depuis la 10.11.7. Le premier réflexe est de les chercher
+     * dans les réglages du téléphone, qui ne gouvernent le plus souvent que le
+     * clavier du constructeur ; la ligne nomme donc ces deux-là d'abord.
+     */
+    private fun ligneReglagesClavier(): LinearLayout =
+        carteAccueil(Color.WHITE).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            contentDescription = "Réglages du clavier : son, vibration, thème, suggestions"
+            addView(ImageView(this@SettingsActivity).apply {
+                setImageResource(R.drawable.ic_settings_gear)
+                setColorFilter(Color.parseColor("#0080FF"))
+                layoutParams = LinearLayout.LayoutParams(enDp(24), enDp(24)).apply {
+                    marginEnd = enDp(12)
+                }
+            })
+            addView(LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                addView(texteAccueil("Réglages du clavier", 16f, Color.parseColor("#1C1C1C"), gras = true))
+                addView(texteAccueil("Son et vibration des touches, thème, suggestions", 13f,
+                    Color.parseColor("#6B6B6B")))
+            })
+            addView(texteAccueil("›", 22f, Color.parseColor("#6B6B6B")))
+            setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, KeyboardSettingsActivity::class.java))
+            }
+        }
+
     private fun ligneConfiguration(volet: LinearLayout): LinearLayout {
         val fleche = texteAccueil("›", 22f, Color.parseColor("#6B6B6B"))
         return carteAccueil(Color.WHITE).apply {

@@ -5,6 +5,18 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.2.1] - 2026-10-20
+
+Le son et la vibration des touches se trouvent du premier coup d'œil.
+
+### ✨ Ajouté
+
+- **Une ligne « Réglages du clavier » sur l'accueil** : juste au-dessus de
+  « Clavier installé », elle mène au son et à la vibration des touches, au
+  thème et aux suggestions, sans passer par l'engrenage du bandeau.
+- **Une astuce de la semaine** rappelle que le son et la vibration se règlent
+  dans l'application, et non dans les réglages du téléphone.
+
 ## [23.2.0] - 2026-10-19
 
 Le ciel des cartes vit : la pluie tombe et les étoiles scintillent, et le cimetière de Morne-à-l'Eau ressemble enfin au vrai.
