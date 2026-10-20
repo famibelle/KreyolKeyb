@@ -1,6 +1,10 @@
 ---
 title: "Clavier Créole Guadeloupéen pour Android : Klavyé Kréyòl Karukera"
 description: "Le clavier Android intelligent pour écrire en kréyòl guadeloupéen : suggestions bilingues créole/français, accents par appui long, 100 % hors ligne et gratuit."
+image:
+  path: /assets/og/partage.png
+  width: 1200
+  height: 630
 lang: fr
 ---
 

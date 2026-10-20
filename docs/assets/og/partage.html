@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Aperçu de partage · Accueil</title>
+<link rel="stylesheet" href="../fredoka-embed.css">
+<style>
+/* Visuel d'aperçu de partage de l'accueil (og:image, 1200 x 630), sur le
+   modèle de celui de LuxKeyb : l'accroche à gauche sur fond sombre, la preuve
+   à droite, une vraie capture du clavier dans Google Messages, non retouchée.
+
+   Palette de communication en version sombre (docs/assets/theme.css), écrite
+   en dur : le visuel doit sortir identique quel que soit le thème du
+   navigateur qui le rend. Ne jamais y mêler la palette publicitaire, cf.
+   docs/charte-graphique.html.
+
+   Rendu : google-chrome --headless --hide-scrollbars --force-device-scale-factor=1
+   --window-size=1200,717 --screenshot=partage.png partage.html, puis recadrer
+   à 1200x630 (Chrome laisse 87 px vides en bas) et passer
+   scripts/tag_assets.py dessus. */
+:root {
+  --paper:#101817; --ink:#EDEAE1; --ink-soft:#A7B3AC;
+  --sea:#0E6E76; --sea-clair:#5FC7CE; --hibiscus:#C94A3B; --sun:#E3AE5E;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  width:1200px; height:630px; overflow:hidden; position:relative;
+  background:var(--paper); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue","Noto Sans","DejaVu Sans",Arial,sans-serif;
+}
+.filet {
+  position:absolute; left:0; top:0; bottom:0; width:14px;
+  background:linear-gradient(180deg, var(--sea) 0 40%, var(--sun) 40% 70%, var(--hibiscus) 70% 100%);
+}
+.texte { position:absolute; left:60px; top:40px; width:560px; }
+.marque { display:flex; align-items:center; gap:14px; margin-bottom:40px; }
+.marque img { width:52px; height:52px; border-radius:12px; display:block; }
+.marque span { font-family:'Fredoka',sans-serif; font-weight:600; font-size:26px; }
+h1 {
+  font-family:'Fredoka',sans-serif; font-weight:700;
+  font-size:68px; line-height:1; margin-bottom:22px; white-space:nowrap;
+}
+h1 em { font-style:normal; color:var(--sun); }
+.accroche { font-size:27px; line-height:1.33; color:var(--ink-soft); margin-bottom:24px; }
+.pastille {
+  display:inline-flex; align-items:center; height:46px; padding:0 22px;
+  border-radius:99px; background:var(--sea); color:#fff;
+  font-weight:700; font-size:22px; margin-bottom:12px;
+}
+.bouton {
+  position:absolute; left:60px; top:478px;
+  display:inline-flex; align-items:center; height:56px; padding:0 30px;
+  border-radius:99px; background:var(--sun); color:var(--paper);
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:28px;
+}
+.pied {
+  position:absolute; left:60px; bottom:26px;
+  font-size:19px; color:var(--ink-soft);
+}
+.preuve {
+  position:absolute; right:40px; top:41px; width:520px; height:548px;
+  border-radius:30px; overflow:hidden; background:#fff;
+}
+/* La capture fait 1080 x 1300 ; on en ôte l'heure du haut (90 px) en la
+   décalant, sans toucher aux pixels. */
+.preuve img { display:block; width:520px; margin-top:-40px; }
+</style>
+</head>
+<body>
+<div class="filet"></div>
+<div class="texte">
+  <div class="marque"><img src="../logo/klavye-logo-512.png" alt=""><span>Klavyé Kréyòl Karukera</span></div>
+  <h1>Osez le <em>Kréyòl.</em></h1>
+  <p class="accroche">Écrivez votre kréyòl comme vous le parlez, sans qu'il soit corrigé en français.</p>
+  <div class="pastille">Les mots en kréyòl et en français</div><br>
+  <div class="pastille">Les accents par appui long</div>
+</div>
+<div class="bouton">Gratuit sur Google Play</div>
+<p class="pied">Open source · Zéro publicité · 100 % hors ligne · Potomitan™</p>
+<div class="preuve"><img src="../../../KreyolKeybPlayStore/graphics/captures-emulateur-pixel9/08-clavier-suggestions-messages-recadre.png" alt=""></div>
+</body>
+</html>
