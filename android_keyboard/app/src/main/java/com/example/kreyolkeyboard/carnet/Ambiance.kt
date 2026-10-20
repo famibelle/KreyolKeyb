@@ -91,10 +91,15 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             val betes = if (oiseaux && lieu != null && heure != null && souvenir?.fete == null &&
                 Paysages.BETES[lieu] != null) BetesDuLieu(zone, lieu, heure) else null
             val volants = lieu?.let { Faune.de(it, zone, graine, nuit) }
+            // Les lucioles de la forêt la nuit ne s'ajoutent pas à celles que
+            // le Nouvel An ou le carême de nuit apportent déjà : un seul essaim.
+            val lucioles = souvenir?.fete == Fete.NOUVEL_AN ||
+                (souvenir?.fete == null && souvenir?.saison == Saison.CAREME && nuit)
+            val essaim = if (lucioles && volants is Lucioles) null else volants
             val faune = when {
-                betes == null -> volants
-                volants == null -> betes
-                else -> Ensemble(betes, volants)
+                betes == null -> essaim
+                essaim == null -> betes
+                else -> Ensemble(betes, essaim)
             }
             val fete = when (souvenir?.fete) {
                 // Jamais de feu d'artifice : une nuit calme et ses lucioles.
@@ -869,8 +874,10 @@ private class Ensemble(private vararg val parts: Ambiance) : Ambiance(RectF(), 0
  * - **la frégate superbe** plane au-dessus des lieux de mer, le jour ;
  * - **le colibri** butine les balisiers des lieux de forêt, le jour : c'est
  *   lui qui pollinise le balisier, et le dessin met les deux ensemble ;
- * - **le molosse**, une chauve-souris insectivore, les remplace la nuit en
- *   forêt : il chasse les insectes en zigzag au-dessus des arbres.
+ * - **les lucioles** les remplacent la nuit en forêt, lentes, leur lumière
+ *   qui s'allume et s'éteint. Ce furent des molosses, des chauves-souris en
+ *   zigzag, jusqu'à ce que le propriétaire y voie des cordes d'Halloween
+ *   (2026-10-20) : ne pas les remettre.
  *
  * Les lieux de terre ouverte (Marie-Galante, Morne-à-l'Eau, la place de la
  * Victoire) n'en ont pas : leur saison suffit.
@@ -888,7 +895,7 @@ internal object Faune {
     fun de(lieu: Lieu, zone: RectF, graine: Int, nuit: Boolean): Ambiance? = when {
         lieu in MER && !nuit -> Fregates(zone, graine)
         lieu in FORET && !nuit -> Colibri(zone, graine)
-        lieu in FORET -> ChauvesSouris(zone, graine)
+        lieu in FORET -> Lucioles(zone, graine)
         else -> null
     }
 }
@@ -1078,71 +1085,3 @@ private class Colibri(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     }
 }
 
-/**
- * Les molosses de la nuit en forêt, des chauves-souris qui chassent les
- * insectes : un vol rapide et brisé, des battements rapides, dans le haut de
- * la fenêtre. C'est le vol de l'insectivore ; une frugivore volerait plus
- * droit, d'arbre en arbre, d'où le choix de l'espèce.
- */
-private class ChauvesSouris(zone: RectF, graine: Int) : Ambiance(zone, graine) {
-    private val u = largeur / 100f
-    private val n = 3
-    private val x = FloatArray(n) { zone.left + hasard() * largeur }
-    private val y = FloatArray(n) { zone.top + hauteur * (0.1f + hasard() * 0.3f) }
-    private val cap = FloatArray(n) { hasard() * 6.28f }
-    private val phase = FloatArray(n) { hasard() * 6.28f }
-    private val vitesse = FloatArray(n) { (20f + hasard() * 10f) * u }
-    private val virage = FloatArray(n) { hasard() * 0.4f }
-    private val chemin = android.graphics.Path()
-    private var temps = 0f
-
-    /**
-     * Le vol d'une chauve-souris : vite, et en zigzag. Toutes les 0,15 à 0,6 s
-     * elle casse sa trajectoire d'un coup, jusqu'à 75° d'un côté ou de
-     * l'autre, comme lorsqu'elle chasse (propriétaire, 2026-10-19). Avant,
-     * elle tournait en courbes douces, à la vitesse d'un oiseau.
-     */
-    override fun avancer(dt: Float) {
-        temps += dt
-        for (i in 0 until n) {
-            virage[i] -= dt
-            if (virage[i] <= 0f) {
-                cap[i] += (hasard() - 0.5f) * 2.6f
-                virage[i] = 0.15f + hasard() * 0.45f
-            }
-            x[i] += cos(cap[i]) * vitesse[i] * dt
-            y[i] += sin(cap[i]) * vitesse[i] * 0.6f * dt
-            if (x[i] < zone.left + 2f * u || x[i] > zone.right - 2f * u) cap[i] = PI.toFloat() - cap[i]
-            if (y[i] < zone.top + 2f * u || y[i] > zone.top + hauteur * 0.5f) cap[i] = -cap[i]
-            x[i] = x[i].coerceIn(zone.left + 2f * u, zone.right - 2f * u)
-            y[i] = y[i].coerceIn(zone.top + 2f * u, zone.top + hauteur * 0.5f)
-        }
-    }
-
-    override fun dessiner(c: Canvas, p: Paint) {
-        p.shader = null
-        p.style = Paint.Style.FILL
-        p.color = COULEUR
-        for (i in 0 until n) {
-            val t = 2.4f * u
-            // Des battements rapides, et le petit sursaut qui va avec.
-            val aile = sin(temps * 46f + phase[i]) * 0.7f
-            val yy = y[i] + sin(temps * 23f + phase[i]) * 0.35f * u
-            chemin.rewind()
-            chemin.moveTo(x[i], yy)
-            chemin.lineTo(x[i] - t, yy - t * aile)
-            chemin.lineTo(x[i] - t * 0.6f, yy + t * 0.15f)
-            chemin.lineTo(x[i] - t * 0.3f, yy + t * 0.05f)
-            chemin.lineTo(x[i], yy + t * 0.25f)
-            chemin.lineTo(x[i] + t * 0.3f, yy + t * 0.05f)
-            chemin.lineTo(x[i] + t * 0.6f, yy + t * 0.15f)
-            chemin.lineTo(x[i] + t, yy - t * aile)
-            chemin.close()
-            c.drawPath(chemin, p)
-        }
-    }
-
-    private companion object {
-        const val COULEUR = 0xE6080A12.toInt()
-    }
-}

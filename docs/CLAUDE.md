@@ -10,6 +10,7 @@ Note the three palettes are deliberately distinct and must not be mixed inside o
 
 **Every nouveauté in `exclusive_features.json` carries a screenshot of the feature** (`image` + `image_alt`), on the model of the « Un onglet Dictionnaire » entry. The rule holds for any new entry: the capture goes in with the text, not later.
 
+- **Write the entry in `CURATED` in `scripts/generate_exclusive_features.py`, never only in the JSON.** A daily workflow regenerates the JSON from the CHANGELOG plus `CURATED`: an entry written only in the JSON is replaced the next morning by a truncated CHANGELOG extract titled « Ajouté », with no image (it happened to 23.2.0 on 2026-10-20). Then run the script to write the JSON.
 - The file lives in `docs/Screenshots/`, named `nouveaute_<version>_<sujet>.png`.
 - Frame on the useful content: no status bar, no navigation bar, no phone chrome. The page's `.feature .shot` rule adds the border and rounded corners itself, and paints a white ground behind the image.
 - Run `scripts/tag_assets.py` over the new file (Potomitan™ metadata) before committing.

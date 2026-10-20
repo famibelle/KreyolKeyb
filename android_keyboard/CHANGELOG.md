@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.2.2] - 2026-10-20
+
+Des lucioles dans la nuit des forêts.
+
+### 🎨 Modifié
+
+- **Des lucioles dans la nuit des forêts** : le soir et la nuit, dans les
+  treize lieux de forêt du carnet, des lucioles volent lentement au-dessus
+  des arbres, et leur lumière s'allume puis s'éteint, chacune à son rythme.
+
 ## [23.2.1] - 2026-10-20
 
 Le son et la vibration des touches se trouvent du premier coup d'œil.

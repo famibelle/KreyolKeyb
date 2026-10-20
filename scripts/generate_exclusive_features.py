@@ -40,6 +40,40 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.2.2": [
+        {
+            "emoji": "🌙",
+            "title": "Des lucioles dans la nuit des forêts",
+            "description": "Le soir et la nuit, dans les treize lieux de forêt, des lucioles volent lentement au-dessus des arbres, et leur lumière s'allume puis s'éteint, chacune à son rythme. Elles volent aussi sous la pluie de l'hivernage.",
+            "image": "Screenshots/nouveaute_23.2.2_lucioles.png",
+            "image_alt": "La carte rare « konésans » ouverte, le soir à La Soufrière sous la pluie : des lucioles vert-jaune au-dessus de la forêt. Dessous, la glose « connaissance » et une phrase du corpus.",
+        },
+    ],
+    "23.2.1": [
+        {
+            "emoji": "⚙️",
+            "title": "Les réglages du clavier en un geste",
+            "description": "Une ligne « Réglages du clavier » sur l'accueil, juste au-dessus de « Clavier installé », mène au son et à la vibration des touches, au thème et aux suggestions, sans passer par l'engrenage du bandeau.",
+            "image": "Screenshots/nouveaute_23.2.1_reglages_accueil.png",
+            "image_alt": "L'accueil de l'application : la ligne « Réglages du clavier », avec l'engrenage bleu et le sous-titre « Son et vibration des touches, thème, suggestions », au-dessus de la ligne « Clavier installé ».",
+        },
+    ],
+    "23.2.0": [
+        {
+            "emoji": "✨",
+            "title": "Le ciel des cartes vit",
+            "description": "Sur une carte ouverte de nuit, les étoiles scintillent, chacune à son rythme, et glissent avec le ciel quand on penche le téléphone. La pluie de l'hivernage tombe aussi sur les cartes gagnées à la Toussaint ou pendant les Chanté Nwèl, devant les bougies et les guirlandes.",
+            "image": "Screenshots/nouveaute_23.2.0_etoiles.png",
+            "image_alt": "La carte très rare « balkon » ouverte, de nuit à la Pointe de la Grande Vigie : un ciel étoilé et un croissant de lune, le sceau « Appris ». Dessous, la glose « balcon, balcuni » et une phrase d'Alain Rutil.",
+        },
+        {
+            "emoji": "🪦",
+            "title": "Le cimetière de Morne-à-l'Eau redessiné",
+            "description": "Le cimetière ressemble enfin au vrai : le morne couvert de gradins de caveaux blancs carrelés de damier noir et blanc, chacun avec son pignon et sa croix, une dalle en damier au premier plan, et des bougies qui s'allument le soir.",
+            "image": "Screenshots/nouveaute_23.2.0_morne_a_l_eau.png",
+            "image_alt": "La carte « lanmou » ouverte : le cimetière de Morne-à-l'Eau dans la lumière de l'après-midi, des rangées de caveaux à damier noir et blanc qui montent le morne, une dalle en damier devant. Dessous, la glose « amour » et une phrase de Jobi Bernabé.",
+        },
+    ],
     "23.1.0": [
         {
             "emoji": "🗺️",
@@ -68,8 +102,8 @@ CURATED: dict[str, list[dict[str, str]]] = {
             "description": (
                 "Sur la carte ouverte, la faune bouge comme elle bouge "
                 "vraiment : les frégates tournent au-dessus de la mer, le "
-                "colibri butine les balisiers, les molosses chassent la "
-                "nuit, les touloulous filent de côté sur la plage, l'agouti "
+                "colibri butine les balisiers, les touloulous filent de "
+                "côté sur la plage, l'agouti "
                 "traverse la route de la Traversée et la baleine à bosse "
                 "souffle au large de la Grande Vigie. Le paysage glisse sur "
                 "trois plans quand on penche le téléphone."
