@@ -1,27 +1,23 @@
 {
   "production_version": "22.3.0",
-  "latest_version": "23.2.0",
-  "as_of": "2026-10-19",
+  "latest_version": "23.2.1",
+  "as_of": "2026-10-20",
   "features": [
     {
-      "version": "23.2.0",
+      "version": "23.2.1",
       "emoji": "✨",
-      "title": "Le ciel des cartes vit",
-      "description": "Sur une carte ouverte de nuit, les étoiles scintillent, chacune à son rythme, et glissent avec le ciel quand on penche le téléphone. La pluie de l'hivernage tombe aussi sur les cartes gagnées à la Toussaint ou pendant les Chanté Nwèl, devant les bougies et les guirlandes.",
-      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v23.2.0",
-      "curated": true,
-      "image": "Screenshots/nouveaute_23.2.0_etoiles.png",
-      "image_alt": "La carte très rare « balkon » ouverte, de nuit à la Pointe de la Grande Vigie : un ciel étoilé et un croissant de lune, le sceau « Appris ». Dessous, la glose « balcon, balcuni » et une phrase d'Alain Rutil."
+      "title": "Ajouté",
+      "description": "Une ligne « Réglages du clavier » sur l'accueil : juste au-dessus de",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v23.2.1",
+      "curated": false
     },
     {
       "version": "23.2.0",
-      "emoji": "🪦",
-      "title": "Le cimetière de Morne-à-l'Eau redessiné",
-      "description": "Le cimetière ressemble enfin au vrai : le morne couvert de gradins de caveaux blancs carrelés de damier noir et blanc, chacun avec son pignon et sa croix, une dalle en damier au premier plan, et des bougies qui s'allument le soir.",
+      "emoji": "✨",
+      "title": "Ajouté",
+      "description": "Les étoiles scintillent : sur une carte ouverte de nuit, chaque étoile",
       "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v23.2.0",
-      "curated": true,
-      "image": "Screenshots/nouveaute_23.2.0_morne_a_l_eau.png",
-      "image_alt": "La carte « lanmou » ouverte : le cimetière de Morne-à-l'Eau dans la lumière de l'après-midi, des rangées de caveaux à damier noir et blanc qui montent le morne, une dalle en damier devant. Dessous, la glose « amour » et une phrase de Jobi Bernabé."
+      "curated": false
     },
     {
       "version": "23.1.0",
