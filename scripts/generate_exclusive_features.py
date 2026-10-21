@@ -45,8 +45,20 @@ CURATED: dict[str, list[dict[str, str]]] = {
             "emoji": "🤝",
             "title": "Donner une carte, étape par étape",
             "description": "La visite des cartes prend le temps d'expliquer l'échange d'une carte entre deux téléphones : une petite animation montre les deux écrans côte à côte, et quatre temps numérotés disent qui touche quoi. Elle explique aussi comment recevoir une carte et à quoi sert l'appareil photo, qui lit seulement le code, sans internet.",
-            "image": "Screenshots/nouveaute_23.3.3_echange.png",
-            "image_alt": "La bulle « Donner, étape par étape » de la visite des cartes : deux téléphones côte à côte, « Vous » avec une carte et « L'autre personne » avec un code que vise votre téléphone, les pastilles 1 à 4 avec la 2 allumée, puis les quatre étapes de l'échange.",
+            "image": "Screenshots/gif_visite_guidee.gif",
+            "image_alt": (
+                "Animation : la visite guidée, lancée depuis la ligne "
+                "« Visite guidée » de l'accueil. Une bulle présente "
+                "tour à tour Dékolaj, les réglages du clavier, Jé, la "
+                "bannière Sanblé, le Dictionnaire, Kréyòl an mwen et "
+                "le clavier en trois gestes. Puis le carnet Sanblé "
+                "s'ouvre, la carte « soup » se présente zone par zone "
+                "(le paysage, le mot, son sens, ses compteurs, son "
+                "numéro), puis les boutons Partager et Céder. Une "
+                "animation montre deux téléphones qui s'échangent une "
+                "carte par leurs codes, et la visite finit sur "
+                "Recevoir et l'appareil photo."
+            ),
         },
     ],
     "23.3.2": [
@@ -56,24 +68,6 @@ CURATED: dict[str, list[dict[str, str]]] = {
             "description": "Le « Guide d'utilisation », au pied de l'accueil, explique maintenant toute l'application avec des mots simples : les trois gestes du clavier, les réglages et les aides à l'écriture, la recherche dans le Dictionnaire, les six jeux, les cartes de Sanblé, la révision Sonjé, et comment partager, céder ou recevoir une carte.",
             "image": "Screenshots/nouveaute_23.3.2_guide.png",
             "image_alt": "Le guide d'utilisation ouvert sur deux sections : « Revoir ses cartes avec Sonjé », avec les boutons « Retourner la carte », « Je savais » et « Pas su », puis « Partager, céder, recevoir une carte ».",
-            "images_suite": [
-                {
-                    "image": "Screenshots/gif_visite_guidee.gif",
-                    "image_alt": (
-                        "Animation : la visite guidée, lancée depuis la ligne "
-                        "« Visite guidée » de l'accueil. Une bulle présente "
-                        "tour à tour Dékolaj, les réglages du clavier, Jé, la "
-                        "bannière Sanblé, le Dictionnaire, Kréyòl an mwen et "
-                        "le clavier en trois gestes. Puis le carnet Sanblé "
-                        "s'ouvre, la carte « soup » se présente zone par zone "
-                        "(le paysage, le mot, son sens, ses compteurs, son "
-                        "numéro), puis les boutons Partager et Céder. Une "
-                        "animation montre deux téléphones qui s'échangent une "
-                        "carte par leurs codes, et la visite finit sur "
-                        "Recevoir et l'appareil photo."
-                    ),
-                },
-            ],
         },
     ],
     "23.3.1": [
