@@ -40,6 +40,22 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.3.0": [
+        {
+            "emoji": "🧭",
+            "title": "Une visite guidée de l'application",
+            "description": "À la première ouverture de l'accueil, une bulle présente chaque onglet, la ligne « Réglages du clavier », le carnet Sanblé et les trois gestes du clavier. On avance d'un toucher, on la passe quand on veut, et la ligne « Visite guidée », au pied de l'accueil, la relance.",
+            "image": "Screenshots/nouveaute_23.3.0_visite_application.png",
+            "image_alt": "L'écran assombri, l'onglet Jé entouré d'un halo jaune, et une bulle « 3 / 7 · Jé, les jeux » avec les boutons « Passer » et « Suivant ».",
+        },
+        {
+            "emoji": "🃏",
+            "title": "Une visite guidée des cartes",
+            "description": "À la première ouverture de Sanblé, une carte s'ouvre et se présente zone par zone : le paysage, le mot, son sens, ses compteurs, son numéro. Puis les boutons Partager, Céder et Recevoir, avec le déroulé de l'échange de la main à la main.",
+            "image": "Screenshots/nouveaute_23.3.0_visite_carnet.png",
+            "image_alt": "La carte « soup » ouverte, sa plaque et le chiffre 4 du coin entourés d'un halo jaune, et une bulle « 3 / 9 · Le mot » : « Gravé sur sa plaque. Le chiffre en haut à gauche donne son nombre de lettres. »",
+        },
+    ],
     "23.2.2": [
         {
             "emoji": "🌙",

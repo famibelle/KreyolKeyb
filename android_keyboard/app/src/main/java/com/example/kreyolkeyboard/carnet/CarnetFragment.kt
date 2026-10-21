@@ -25,6 +25,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.kreyolkeyboard.TranslationDictionary
+import com.example.kreyolkeyboard.VisiteGuidee
 import com.example.kreyolkeyboard.applicatifDansLaLangue
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -189,6 +190,12 @@ class CarnetFragment : DialogFragment() {
 
     private var vueCession: VueCession? = null
 
+    /** La visite du carnet (23.3.0) : voir [proposerVisite]. */
+    private var visite: VisiteGuidee.Voile? = null
+    private var boutonRecevoir: View? = null
+    /** La première vignette de la grille et sa carte : la visite l'ouvre pour la montrer. */
+    private var premiereVignette: Pair<View, ContenuCarte>? = null
+
     private val lanceurScan = registerForActivityResult(ScanContract()) { resultat ->
         resultat.contents?.let { surScan(it) }
     }
@@ -268,6 +275,7 @@ class CarnetFragment : DialogFragment() {
                 }
                 isClickable = true
                 setOnClickListener { montrerDemande() }
+                boutonRecevoir = this
             })
             addView(TextView(ctx).apply {
                 text = "✕"
@@ -489,6 +497,7 @@ class CarnetFragment : DialogFragment() {
                 remplirGrille()
                 majARemettre()
                 ouvrir?.let { f -> prets.firstOrNull { it.carte.forme == f }?.let { montrerCarte(it) } }
+                if (ouvrir == null) racine.postDelayed({ proposerVisite() }, 600L)
             }
         }.start()
     }
@@ -741,6 +750,7 @@ class CarnetFragment : DialogFragment() {
         val d = resources.displayMetrics.density
         conteneurGrille.removeAllViews()
         generationGrille++
+        premiereVignette = null
 
         if (contenus.isEmpty()) {
             tvResume.text = getString(R.string.carnet_vide)
@@ -1398,6 +1408,7 @@ class CarnetFragment : DialogFragment() {
                 ).apply { if (posColonne != colonnes - 1) rightMargin = gouttiere }
                 isClickable = true
                 setOnClickListener { montrerCarte(c, ordre) }
+                if (premiereVignette == null && hote === conteneurGrille) premiereVignette = this to c
             })
         }
     }
@@ -1436,6 +1447,70 @@ class CarnetFragment : DialogFragment() {
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    /**
+     * La visite du carnet, une fois, dès qu'il porte une carte : la collection,
+     * puis une carte ouverte zone par zone (paysage, mot, sens, compteurs,
+     * numéro), ses deux gestes (partager, céder) et, carte refermée, la façon
+     * d'en recevoir une. Pas quand le carnet s'ouvre sur une carte reçue.
+     */
+    private fun proposerVisite() {
+        val ctx = context ?: return
+        if (!isAdded || visite != null) return
+        val prefs = ctx.getSharedPreferences(VisiteGuidee.PREFS, Context.MODE_PRIVATE)
+        val occupe = lecteur?.ouvert == true || vueCession?.ouverte == true
+        if (!VisiteGuidee.carnetDoitSeLancer(
+                prefs.getBoolean(VisiteGuidee.VISITE_CARNET, false), contenus.size, occupe
+            )) return
+
+        val exemple = premiereVignette?.second ?: contenus.first()
+        fun zone(vararg zones: android.graphics.RectF): () -> android.graphics.RectF? = {
+            val l = lecteur
+            val carte = l?.carteMontree
+            if (l == null || !l.posee) null
+            else VisiteGuidee.rectDe(carte)?.let { r ->
+                VisiteGuidee.zoneDeCarte(VisiteGuidee.reunion(*zones), r.left, r.top, r.width(), Ornement.LARGEUR)
+            }
+        }
+        val carteOuverte: (() -> Unit) -> Unit = { suite ->
+            if (lecteur?.ouvert != true) montrerCarte(exemple)
+            VisiteGuidee.attendre({ lecteur?.posee == true }, delaiMs = 4000L, puis = suite)
+        }
+        fun etape(titre: Int, texte: Int, preparer: (() -> Unit) -> Unit, cible: () -> android.graphics.RectF?) =
+            VisiteGuidee.Etape(getString(titre), getString(texte), preparer, cible)
+
+        val etapes = listOf(
+            etape(R.string.visite_collection_titre, R.string.visite_collection_texte, { it() }) {
+                VisiteGuidee.rectDe(premiereVignette?.first)
+                    ?: VisiteGuidee.rectDe(if (zoneAlbum.visibility == View.VISIBLE) zoneAlbum else defilementGrille)
+            },
+            etape(R.string.visite_paysage_titre, R.string.visite_paysage_texte, carteOuverte, zone(Ornement.FENETRE)),
+            VisiteGuidee.Etape(getString(R.string.visite_mot_titre), getString(R.string.visite_mot_texte), carteOuverte,
+                zone(Ornement.PLAQUE)) { listOfNotNull(zone(Ornement.GEMME)()) },
+            etape(R.string.visite_sens_titre, R.string.visite_sens_texte, carteOuverte,
+                zone(Ornement.NATURE, android.graphics.RectF(Ornement.PANNEAU.left, Ornement.PANNEAU.top, Ornement.PANNEAU.right, Ornement.ECU_G.top))),
+            etape(R.string.visite_compteurs_titre, R.string.visite_compteurs_texte, carteOuverte,
+                zone(Ornement.ECU_G, Ornement.ECU_D, Ornement.PROVENANCE)),
+            etape(R.string.visite_numero_titre, R.string.visite_numero_texte, carteOuverte,
+                zone(Ornement.SERIE_G, Ornement.SERIE_D)),
+            etape(R.string.visite_partager_titre, R.string.visite_partager_texte, carteOuverte) {
+                VisiteGuidee.rectDe(lecteur?.boutonPartager)
+            },
+            etape(R.string.visite_ceder_titre, R.string.visite_ceder_texte, carteOuverte) {
+                VisiteGuidee.rectDe(lecteur?.boutonCeder)
+            },
+            etape(R.string.visite_recevoir_titre, R.string.visite_recevoir_texte, { suite ->
+                fermerCarte()
+                VisiteGuidee.attendre({ lecteur?.ouvert != true }, puis = { racine.postDelayed(suite, 250L) })
+            }) { VisiteGuidee.rectDe(boutonRecevoir) }
+        )
+        visite = VisiteGuidee.Voile(racine, etapes) { _ ->
+            prefs.edit().putBoolean(VisiteGuidee.VISITE_CARNET, true).apply()
+            visite = null
+            // Passée au milieu, la carte ouverte pour l'exemple se referme.
+            fermerCarte()
+        }.also { it.ouvrir() }
     }
 
     private fun cession(): VueCession = vueCession ?: VueCession(racine).also { vueCession = it }
@@ -1623,6 +1698,7 @@ class CarnetFragment : DialogFragment() {
             d.onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     when {
+                        visite != null -> visite?.passer()
                         vueCession?.ouverte == true -> {
                             // Une remise fermée reste sous « À remettre ».
                             vueCession?.fermer()

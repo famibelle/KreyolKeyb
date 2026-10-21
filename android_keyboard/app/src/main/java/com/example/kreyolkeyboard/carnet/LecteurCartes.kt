@@ -50,6 +50,16 @@ internal class LecteurCartes(
 
     val ouvert: Boolean get() = voile != null
 
+    /** La carte montrée, et vrai une fois retournée et posée : la visite du carnet l'éclaire par zones. */
+    var carteMontree: View? = null
+        private set
+    var posee = false
+        private set
+    var boutonPartager: View? = null
+        private set
+    var boutonCeder: View? = null
+        private set
+
     fun ouvrir() {
         val v = VoileGlissable(ctx) { sensX, sensY ->
             if (sensX != 0 && cartes.size > 1) feuilleter(-sensX) else fermer(sensX, sensY)
@@ -90,10 +100,11 @@ internal class LecteurCartes(
         }
         boutons.addView(pastille(ctx.getString(R.string.carte_partager)) {
             PartageCarte.partager(ctx, cartes[rang])
-        })
+        }.also { boutonPartager = it })
         surCeder?.let { ceder ->
             boutons.addView(pastille(ctx.getString(R.string.carte_ceder)) { ceder(cartes[rang]) }.apply {
                 (layoutParams as LinearLayout.LayoutParams).marginStart = (12 * d).toInt()
+                boutonCeder = this
             })
         }
         v.addView(boutons)
@@ -171,6 +182,8 @@ internal class LecteurCartes(
         voile?.background?.alpha = 255
 
         val carte = CarteCarnet.complete(ctx, c)
+        carteMontree = carte
+        posee = false
         (carte as? Carton)?.ajusteALaHauteur = true
         (carte as? CarteOrnee)?.avecAmbiance()
         // La carte ne ferme pas : on peut la lire.
@@ -195,6 +208,7 @@ internal class LecteurCartes(
             // pour ne pas écrire dans `rotationY` pendant le retournement.
             Inclinaison.suivre(carte)
             (carte as? Carton)?.sensibleAuDoigt = true
+            posee = true
         }
         val lancer = {
             if (sens == 0) {

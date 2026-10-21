@@ -194,4 +194,43 @@
     <string name="tri_rarete">Rareté</string>
     <string name="tri_recent">Récent</string>
     <string name="tri_series">Séries</string>
+    <!-- Visite guidée (23.3.0) : voir VisiteGuidee.kt. Les mots kréyòl sont
+         des noms de l'application, aucune phrase n'est composée ici. -->
+    <string name="visite_passer">Passer</string>
+    <string name="visite_suivant">Suivant  ›</string>
+    <string name="visite_terminer">Terminer</string>
+    <string name="visite_revoir">Visite guidée</string>
+    <string name="visite_revoir_resume">Les onglets, les cartes et le clavier, pas à pas</string>
+    <string name="visite_accueil_titre">Dékolaj, votre accueil</string>
+    <string name="visite_accueil_texte">Chaque jour, vous y trouvez le mot du jour, les cartes à revoir, votre dernier jeu et vos progrès.</string>
+    <string name="visite_reglages_titre">Les réglages du clavier</string>
+    <string name="visite_reglages_texte">Le son et la vibration des touches, le thème clair ou sombre, les suggestions : tout se règle ici, et non dans les réglages du téléphone.</string>
+    <string name="visite_jeux_titre">Jé, les jeux</string>
+    <string name="visite_jeux_texte">De petits jeux de mots en kréyòl : mots mêlés, mots croisés, phrases à trous… Touchez un jeu pour y jouer.</string>
+    <string name="visite_sanble_titre">Sanblé, vos cartes</string>
+    <string name="visite_sanble_texte">Chaque mot trouvé dans un jeu devient une carte, rangée ici. Touchez « Ouvrir » : une visite des cartes vous y attend.</string>
+    <string name="visite_dico_titre">Le dictionnaire</string>
+    <string name="visite_dico_texte">Cherchez un mot, en kréyòl ou en français, et lisez ce qu\'il veut dire.</string>
+    <string name="visite_progres_titre">Kréyòl an mwen, vos progrès</string>
+    <string name="visite_progres_texte">Chaque mot kréyòl que vous tapez avec le clavier compte. Vous montez de niveau, de Pipirit à Potomitan.</string>
+    <string name="visite_gestes_titre">Le clavier en trois gestes</string>
+    <string name="visite_gestes_texte">1. Touchez un mot proposé au-dessus des lettres : il s\'écrit en entier.\n2. Appuyez longtemps sur une lettre pour ses accents : é, è, ò…\n3. Glissez le doigt sur la barre d\'espace pour déplacer le curseur.</string>
+    <string name="visite_collection_titre">Votre collection</string>
+    <string name="visite_collection_texte">Chaque mot gagné dans un jeu devient une carte. Touchez une carte pour l\'ouvrir en grand : ouvrons celle-ci.</string>
+    <string name="visite_paysage_titre">Le paysage</string>
+    <string name="visite_paysage_texte">Un lieu de Guadeloupe. L\'heure dit la rareté du mot : le matin pour un mot courant, la nuit pour un mot très rare. Le décor garde la saison où vous l\'avez gagné.</string>
+    <string name="visite_mot_titre">Le mot</string>
+    <string name="visite_mot_texte">Gravé sur sa plaque. Le chiffre en haut à gauche donne son nombre de lettres.</string>
+    <string name="visite_sens_titre">Son sens</string>
+    <string name="visite_sens_texte">Le sens en français, et d\'où il vient (Kreyolopedia ou Wiktionnaire). Dessous, quand il y en a une, une phrase d\'un auteur où le mot apparaît, avec son nom.</string>
+    <string name="visite_compteurs_titre">Ses compteurs</string>
+    <string name="visite_compteurs_texte">VUES : combien de fois vous avez trouvé ce mot. Au milieu, le jeu qui vous l\'a donné. NIVEAU : sa place dans la révision Sonjé, et un ✓ quand il est appris.</string>
+    <string name="visite_numero_titre">Son numéro</string>
+    <string name="visite_numero_texte">Le numéro de la carte dans votre carnet, sa rareté, et son rang parmi les mots kréyòl les plus courants.</string>
+    <string name="visite_partager_titre">Partager</string>
+    <string name="visite_partager_texte">Envoyez une image de la carte par message ou sur les réseaux, avec le lien pour installer le clavier. La carte reste dans votre carnet.</string>
+    <string name="visite_ceder_titre">Céder</string>
+    <string name="visite_ceder_texte">Donnez la carte à quelqu\'un, de la main à la main, les deux téléphones côte à côte : vous scannez le code de l\'autre personne, puis elle scanne le vôtre. La carte quitte votre carnet pour le sien.</string>
+    <string name="visite_recevoir_titre">Recevoir</string>
+    <string name="visite_recevoir_texte">Pour recevoir une carte, touchez « Recevoir » : votre téléphone affiche un code, que la personne qui donne scanne. Scannez ensuite le code qu\'elle affiche.</string>
 </resources>

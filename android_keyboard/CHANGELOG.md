@@ -5,6 +5,22 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.3.0] - 2026-10-21
+
+Une visite guidée présente l'application et les cartes, pas à pas.
+
+### ✨ Ajouté
+
+- **Une visite guidée de l'application** : à la première ouverture de
+  l'accueil, une bulle présente chaque onglet (Dékolaj, Jé, Dictionnaire,
+  Kréyòl an mwen), la ligne « Réglages du clavier », le carnet Sanblé et les
+  trois gestes du clavier. On avance d'un toucher, on la passe quand on veut,
+  et la ligne « Visite guidée », au pied de l'accueil, la relance.
+- **Une visite guidée des cartes** : à la première ouverture de Sanblé, une
+  carte s'ouvre et se présente zone par zone (le paysage, le mot, son sens,
+  ses compteurs, son numéro), puis les boutons Partager, Céder et Recevoir,
+  avec le déroulé de l'échange de la main à la main.
+
 ## [23.2.2] - 2026-10-20
 
 Des lucioles dans la nuit des forêts.

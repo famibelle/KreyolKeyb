@@ -110,6 +110,12 @@ class SettingsActivity : AppCompatActivity() {
      */
     internal var jeuOuvert = -1
 
+    /** La visite guidée à l'écran, s'il y en a une : voir [lancerVisite]. */
+    private var visite: VisiteGuidee.Voile? = null
+    private val retourVisite = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { visite?.passer() }
+    }
+
     /**
      * Un écran qui sait recevoir les touches d'un clavier physique (v23.0.0,
      * repris de LuxKeyb 34.2.0) : Mokwaré s'écrit au clavier, la Boîte de
@@ -441,6 +447,93 @@ class SettingsActivity : AppCompatActivity() {
             maybeAskForNotificationPermission()
         }
         maybeOfferUpdate()
+
+        onBackPressedDispatcher.addCallback(this, retourVisite)
+        // Une tablette tournée pendant la visite la reprend à la même étape.
+        savedInstanceState?.getInt("visiteEtape", -1)?.takeIf { it >= 0 }?.let { etape ->
+            window.decorView.post { lancerVisite(etape) }
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // Visite guidée (23.3.0)
+    // ────────────────────────────────────────────────────────────────────
+
+    /**
+     * Propose la visite de l'application, une seule fois, quand l'accueil du
+     * jour est à l'écran et que rien ne le couvre : ni la pochette de
+     * bienvenue, ni un jeu, ni un écran ouvert par-dessus. Les félicitations
+     * d'activation passent d'abord ; la pochette rappelle ceci en se fermant.
+     */
+    private fun proposerVisite() {
+        if (visite != null || isFinishing || isDestroyed) return
+        val prefs = onboardingPrefs()
+        val accueilDuJour = AccueilDuJour.mode(
+            prefs.getBoolean("onboarding_completed", false), isKeyboardEnabled(), isKeyboardSelected()
+        ) == ModeAccueil.DU_JOUR
+        val autreChose = pochetteAccueilOuverte || currentTab != 0 || jeuOuvert != -1 ||
+            !prefs.getBoolean("activation_success_card_shown", false) ||
+            supportFragmentManager.fragments.any { it is androidx.fragment.app.DialogFragment }
+        if (!VisiteGuidee.doitSeLancer(
+                prefs.getBoolean(VisiteGuidee.VISITE_APPLICATION, false), accueilDuJour, autreChose
+            )) return
+        lancerVisite()
+    }
+
+    /**
+     * La visite de l'application : les quatre onglets, la ligne des réglages,
+     * le bandeau du carnet et les trois gestes du clavier. Rien n'est ouvert à
+     * la place de l'utilisateur : chaque étape amène l'onglet, puis l'éclaire.
+     */
+    fun lancerVisite(depart: Int = 0) {
+        if (visite != null) return
+        val racine = findViewById<FrameLayout>(android.R.id.content) ?: return
+        val accueilDuJour = AccueilDuJour.mode(
+            onboardingPrefs().getBoolean("onboarding_completed", false), isKeyboardEnabled(), isKeyboardSelected()
+        ) == ModeAccueil.DU_JOUR
+        fun onglet(i: Int) = { VisiteGuidee.rectDe(VisiteGuidee.vueVisible(racine, "visite_onglet_$i")) }
+        fun aller(i: Int): (() -> Unit) -> Unit = { suite ->
+            allerAOnglet(i)
+            VisiteGuidee.attendre({ currentTab == i && onglet(i)() != null }, puis = suite)
+        }
+        val etapes = buildList {
+            add(VisiteGuidee.Etape(getString(R.string.visite_accueil_titre), getString(R.string.visite_accueil_texte),
+                preparer = aller(0), cible = onglet(0)))
+            if (accueilDuJour) {
+                val reglages = { VisiteGuidee.rectDe(VisiteGuidee.vueVisible(racine, "visite_reglages")) }
+                add(VisiteGuidee.Etape(getString(R.string.visite_reglages_titre), getString(R.string.visite_reglages_texte),
+                    preparer = { suite ->
+                        allerAOnglet(0)
+                        // La ligne est souvent sous le pli : l'accueil défile
+                        // jusqu'à elle avant qu'on l'éclaire.
+                        VisiteGuidee.attendre({ VisiteGuidee.vueDeLaPage(racine, "visite_reglages") != null }) {
+                            VisiteGuidee.vueDeLaPage(racine, "visite_reglages")?.let {
+                                it.requestRectangleOnScreen(android.graphics.Rect(0, 0, it.width, it.height + enDp(120)), true)
+                            }
+                            VisiteGuidee.attendre({ reglages() != null }, delaiMs = 1200L) { racine.postDelayed(suite, 200L) }
+                        }
+                    }, cible = reglages))
+            }
+            add(VisiteGuidee.Etape(getString(R.string.visite_jeux_titre), getString(R.string.visite_jeux_texte),
+                preparer = aller(TAB_JEUX), cible = onglet(TAB_JEUX)))
+            add(VisiteGuidee.Etape(getString(R.string.visite_sanble_titre), getString(R.string.visite_sanble_texte),
+                preparer = aller(TAB_JEUX),
+                cible = { VisiteGuidee.rectDe(VisiteGuidee.vueVisible(racine, "visite_sanble")) }))
+            add(VisiteGuidee.Etape(getString(R.string.visite_dico_titre), getString(R.string.visite_dico_texte),
+                preparer = aller(TAB_DICO), cible = onglet(TAB_DICO)))
+            add(VisiteGuidee.Etape(getString(R.string.visite_progres_titre), getString(R.string.visite_progres_texte),
+                preparer = aller(TAB_STATS), cible = onglet(TAB_STATS)))
+            add(VisiteGuidee.Etape(getString(R.string.visite_gestes_titre), getString(R.string.visite_gestes_texte),
+                preparer = aller(0)))
+        }
+        retourVisite.isEnabled = true
+        visite = VisiteGuidee.Voile(racine, etapes, depart) { _ ->
+            // Passée ou finie, elle ne revient pas d'elle-même : « Visite
+            // guidée », au pied de Dékolaj, la relance.
+            onboardingPrefs().edit().putBoolean(VisiteGuidee.VISITE_APPLICATION, true).apply()
+            visite = null
+            retourVisite.isEnabled = false
+        }.also { it.ouvrir() }
     }
 
     // ────────────────────────────────────────────────────────────────────
@@ -762,6 +855,7 @@ class SettingsActivity : AppCompatActivity() {
                     surFin = {
                         pochetteAccueilOuverte = false
                         reporterPartage()
+                        window.decorView.postDelayed({ proposerVisite() }, 600L)
                     }
                 )
             }
@@ -866,6 +960,9 @@ class SettingsActivity : AppCompatActivity() {
         // sur un écran immobile, et non au retournement de la première carte.
         com.example.kreyolkeyboard.carnet.ChauffeCartes.planifier(this)
 
+        // Laisse l'accueil se poser avant de proposer la visite.
+        window.decorView.postDelayed({ proposerVisite() }, 900L)
+
         if (::tabBar.isInitialized && hasPendingLevelBadge() != levelBadgeDrawn) {
             Log.d("SettingsActivity", "🔄 Pastille de niveau à rafraîchir au retour au premier plan")
             updateTabBar()
@@ -889,6 +986,7 @@ class SettingsActivity : AppCompatActivity() {
         // Sauvegarder l'onglet actif avant que l'activité soit recréée
         outState.putInt("currentTab", currentTab)
         outState.putInt("jeuOuvert", jeuOuvert)
+        visite?.let { outState.putInt("visiteEtape", it.etapeCourante) }
         Log.d("SettingsActivity", "💾 Sauvegarde de l'onglet actif: $currentTab")
     }
     
@@ -1125,6 +1223,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun createTab(tabIndex: Int, emoji: String, label: String): LinearLayout {
         Log.d("SettingsActivity", "Création onglet $tabIndex: $emoji $label")
         return LinearLayout(this).apply {
+            tag = "visite_onglet_$tabIndex"
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(8, 10, 8, 8)
@@ -1617,6 +1716,17 @@ class SettingsActivity : AppCompatActivity() {
             "Version, sources des données, licences",
             SheetFragment.PAGE_A_PROPOS
         ))
+        // La visite se relance d'ici, et celle du carnet avec elle : elle se
+        // représentera à la prochaine ouverture de Sanblé.
+        mainLayout.addView(createSpacing(8))
+        mainLayout.addView(createReferenceLink(
+            "🧭", getString(R.string.visite_revoir),
+            getString(R.string.visite_revoir_resume),
+            page = null
+        ) {
+            onboardingPrefs().edit().putBoolean(VisiteGuidee.VISITE_CARNET, false).apply()
+            lancerVisite()
+        })
         mainLayout.addView(createSpacing(16))
 
         return mainLayout
@@ -1928,6 +2038,7 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun ligneReglagesClavier(): LinearLayout =
         carteAccueil(Color.WHITE).apply {
+            tag = "visite_reglages"
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             contentDescription = "Réglages du clavier : son, vibration, thème, suggestions"
@@ -1984,7 +2095,8 @@ class SettingsActivity : AppCompatActivity() {
         emoji: String,
         titre: String,
         resume: String,
-        page: String
+        page: String?,
+        action: (() -> Unit)? = null
     ): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
@@ -2025,7 +2137,8 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         setOnClickListener {
-            SheetFragment.pour(page).show(supportFragmentManager, "sheet_$page")
+            if (page != null) SheetFragment.pour(page).show(supportFragmentManager, "sheet_$page")
+            else action?.invoke()
         }
     }
 
@@ -8552,6 +8665,7 @@ class SettingsActivity : AppCompatActivity() {
             val accent = Carnet.COULEUR
 
             return LinearLayout(activity).apply {
+                tag = "visite_sanble"
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(16f), dp(16f), dp(16f), dp(16f))
