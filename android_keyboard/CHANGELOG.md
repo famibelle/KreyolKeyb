@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.3.2] - 2026-10-21
+
+Le guide d'utilisation présente maintenant toute l'application.
+
+### ✨ Ajouté
+
+- **Un guide d'utilisation complet** : en plus de l'installation et de la
+  frappe, il explique les trois gestes du clavier, les réglages et les aides
+  à l'écriture, la recherche dans le Dictionnaire, les six jeux, les cartes
+  de Sanblé, la révision Sonjé, et comment partager, céder ou recevoir une
+  carte. Ses questions fréquentes disent comment revoir la visite guidée et
+  couper le son des touches.
+
 ## [23.3.1] - 2026-10-21
 
 La visite guidée se revoit chapitre par chapitre, là où on en a besoin.

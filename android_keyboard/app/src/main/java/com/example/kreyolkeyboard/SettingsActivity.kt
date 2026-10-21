@@ -3583,13 +3583,13 @@ class SettingsActivity : AppCompatActivity() {
             mainLayout, "#E3F2FD", "📲 Installation et activation",
             "Le clavier doit être activé puis sélectionné avant de pouvoir l'utiliser, comme " +
                     "n'importe quel clavier tiers sur Android. Ces étapes interactives sont aussi " +
-                    "disponibles dans l'onglet « Dékolaj » ; voici à quoi elles ressemblent."
+                    "disponibles dans l'onglet « Dékolaj » ; voici à quoi elles ressemblent."
         )
 
         addGuideSection(
             mainLayout, "#FFFFFF", "1️⃣ Ouvrir les paramètres de clavier",
-            "Depuis l'onglet Dékolaj, le bouton « Ouvrir les réglages Android » mène directement " +
-                    "à l'écran système « Clavier à l'écran », où « Klavyé Kréyòl Karukéra » apparaît " +
+            "Depuis l'onglet Dékolaj, le bouton « Ouvrir les réglages Android » mène directement " +
+                    "à l'écran système « Clavier à l'écran », où « Klavyé Kréyòl Karukéra » apparaît " +
                     "à côté des autres claviers installés, interrupteur éteint."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_install_settings, "Écran système listant les claviers, interrupteur à activer")
@@ -3598,7 +3598,7 @@ class SettingsActivity : AppCompatActivity() {
             mainLayout, "#FFF8E1", "2️⃣ Valider les avertissements Android",
             "En activant l'interrupteur, Android affiche un avertissement générique montré pour " +
                     "tous les claviers tiers, suivi d'une seconde note sur le redémarrage du téléphone. " +
-                    "Klavyé Kréyòl ne collecte aucune donnée : appuyez sur OK aux deux pour continuer, " +
+                    "Klavyé Kréyòl ne collecte aucune donnée : appuyez sur OK aux deux pour continuer, " +
                     "puis revenez à l'application avec le bouton retour."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_install_warning, "Avertissement système affiché pour tout clavier tiers")
@@ -3606,8 +3606,8 @@ class SettingsActivity : AppCompatActivity() {
         addGuideSection(
             mainLayout, "#FFFFFF", "3️⃣ Sélectionner le clavier",
             "De retour dans l'application, l'étape 1 est cochée automatiquement et l'étape 2 se " +
-                    "débloque. Le bouton « Ouvrir le sélecteur de claviers » ouvre la liste des claviers " +
-                    "actifs : touchez « Klavyé Kréyòl Karukéra » pour en faire le clavier utilisé."
+                    "débloque. Le bouton « Ouvrir le sélecteur de claviers » ouvre la liste des claviers " +
+                    "actifs : touchez « Klavyé Kréyòl Karukéra » pour en faire le clavier utilisé."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_install_picker, "Sélecteur système de mode de saisie")
 
@@ -3620,56 +3620,131 @@ class SettingsActivity : AppCompatActivity() {
         addGuideImage(mainLayout, R.drawable.guide_screenshot_install_done, "Les trois étapes cochées, clavier actif dans le champ d'essai")
 
         addGuideSection(
-            mainLayout, "#FFFFFF", "✍️ Écrire en Kréyòl",
-            "Le clavier démarre en mode alphabétique. La première lettre de chaque " +
-                    "message prend automatiquement une majuscule, comme sur un clavier classique."
+            mainLayout, "#FFFFFF", "✍️ Le clavier en trois gestes",
+            "Le clavier démarre sur les lettres, et la première lettre d'un message prend " +
+                    "d'elle-même une majuscule. Trois gestes suffisent ensuite :\n" +
+                    "1. Touchez un mot proposé au-dessus des lettres : il s'écrit en entier, " +
+                    "espace compris.\n" +
+                    "2. Appuyez longtemps sur une lettre pour ses accents : é, è, ò…\n" +
+                    "3. Glissez le doigt sur la barre d'espace, vers la gauche ou la droite, " +
+                    "pour déplacer le curseur et reprendre un mot plus haut."
         )
 
         addGuideSection(
             mainLayout, "#F0F8E8", "🔤 Accents et caractères spéciaux",
             "Appuyez longuement sur une lettre pour faire apparaître ses variantes accentuées " +
                     "(é, è, à, ò...) et caractères spéciaux du kréyòl. La fenêtre reste ouverte quand " +
-                    "vous relâchez : touchez l'accent voulu pour l'insérer."
+                    "vous relâchez : touchez l'accent voulu pour l'insérer."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_accents, "Popup d'accents sur la lettre e")
 
         addGuideSection(
-            mainLayout, "#FFFFFF", "💡 Suggestions et autocomplétion",
-            "Une barre de suggestions apparaît au-dessus du clavier dès que vous tapez. " +
-                    "Les mots en Kréyòl sont prioritaires ; le français prend le relais à partir de " +
-                    "3 lettres si aucun mot créole ne correspond. Touchez un mot suggéré pour le compléter " +
-                    "instantanément, espace inclus."
+            mainLayout, "#FFFFFF", "💡 Les mots proposés",
+            "Dès que vous tapez, le clavier propose des mots au-dessus des lettres. Les mots " +
+                    "kréyòl sont en vert. À partir de trois lettres, une seconde rangée en bleu " +
+                    "propose aussi des mots français. Le mot le plus probable est à gauche. " +
+                    "Une petite faute de frappe, deux lettres inversées ou une touche voisine, " +
+                    "n'empêche pas le bon mot d'être proposé."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_suggestions, "Barre de suggestions active")
 
         addGuideSection(
-            mainLayout, "#F0F8E8", "✅ Correction orthographique partout",
-            "Activez le correcteur Kréyòl dans les paramètres système : onglet Dékolaj, " +
-                    "« Clavier installé », carte « Corriger l'orthographe partout », sous « Pou ay pli lwen ». Vos mots créoles " +
+            mainLayout, "#F0F8E8", "⚙️ Les réglages du clavier",
+            "La roue dentée en haut de l'écran, ou la ligne « Réglages du clavier » de " +
+                    "l'accueil, ouvre tout ce qui touche à la frappe : le son et la vibration " +
+                    "des touches, le thème clair ou sombre, les mots français. Ces réglages sont " +
+                    "dans l'application, et non dans ceux du téléphone.\n\n" +
+                    "Vous y trouvez aussi trois aides à l'écriture, que vous pouvez couper :\n" +
+                    "• « Rétablir les accents » : un mot tapé sans accent (« pale ») reçoit ses " +
+                    "accents (« palé »). Le clavier ne remplace jamais un mot par un autre, et " +
+                    "un retour arrière juste après rend le mot tel que vous l'aviez tapé.\n" +
+                    "• « Deux espaces posent un point » en fin de phrase.\n" +
+                    "• « Ponctuation collée au mot » : une virgule ou un point tapé juste " +
+                    "après un mot proposé se colle à ce mot."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "✅ Correction orthographique partout",
+            "Activez le correcteur Kréyòl dans les paramètres système : onglet Dékolaj, " +
+                    "« Clavier installé », carte « Corriger l'orthographe partout », sous « Pou ay pli lwen ». Vos mots créoles " +
                     "et français cessent alors d'être soulignés en rouge dans Messages, Notes et " +
                     "les autres applications."
         )
 
         addGuideSection(
-            mainLayout, "#FFFFFF", "🔢 Chiffres et symboles",
-            "Le bouton « 123 » en bas à gauche du clavier bascule vers les chiffres et symboles usuels. " +
+            mainLayout, "#F0F8E8", "🔢 Chiffres et symboles",
+            "Le bouton « 123 » en bas à gauche du clavier bascule vers les chiffres et symboles usuels. " +
                     "La ponctuation de base (virgule, point, apostrophe) reste accessible directement " +
                     "sur le clavier alphabétique."
         )
         addGuideImage(mainLayout, R.drawable.guide_screenshot_numeric, "Mode chiffres et symboles")
 
         addGuideSection(
-            mainLayout, "#F0F8E8", "🎮 Jeux de vocabulaire",
-            "Cinq jeux (« Mots Mêlés », « Mots Mélangés », « Mo an Karénaj », " +
-                    "« Fraz a twou » et « Mokwaré ») sont réunis sous l'onglet « Jé ». Ils " +
-                    "font revoir du vocabulaire créole en s'amusant, à partir des mots déjà " +
-                    "présents dans le dictionnaire du clavier."
+            mainLayout, "#FFFFFF", "📚 Chercher un mot",
+            "L'onglet « Dictionnaire » cherche dans les deux sens : tapez « kaz » ou tapez " +
+                    "« maison ». Touchez un mot pour lire sa fiche : son sens en français et, " +
+                    "quand il y en a, des phrases d'auteurs où il apparaît. Un appui long sur " +
+                    "un mot de la liste le copie."
         )
 
         addGuideSection(
-            mainLayout, "#FFFFFF", "🏆 Progression",
+            mainLayout, "#F0F8E8", "🎮 Jouer avec les mots",
+            "L'onglet « Jé » réunit six jeux de mots en kréyòl :\n" +
+                    "• Mots Mêlés : retrouvez les mots cachés dans la grille.\n" +
+                    "• Mots Mélangés : remettez les lettres dans l'ordre.\n" +
+                    "• Mo an Karénaj : devinez le mot de 5 lettres en 6 essais.\n" +
+                    "• Fraz a twou : complétez la phrase à laquelle il manque un mot.\n" +
+                    "• Mokwaré : écrivez les mots dans la grille, d'après leur sens.\n" +
+                    "• Mo an plas : casez les mots donnés dans la grille vide. Celui-là se " +
+                    "joue même sans connaître le kréyòl, puisque les mots vous sont donnés.\n\n" +
+                    "Chaque jeu vous dit ce que veut dire le mot trouvé."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "🃏 Vos cartes, dans Sanblé",
+            "Chaque mot gagné dans un jeu devient une carte. Pour les voir, touchez « Ouvrir » " +
+                    "sur le bandeau Sanblé, en haut de l'onglet « Jé ». Touchez une carte pour " +
+                    "l'ouvrir en grand.\n\n" +
+                    "Une carte montre un lieu de Guadeloupe, le mot gravé sur sa plaque, son sens " +
+                    "en français et, souvent, la phrase d'un auteur où il apparaît. L'heure du " +
+                    "paysage dit la rareté du mot : le matin pour un mot courant, la nuit pour un " +
+                    "mot très rare. Le décor garde la saison où vous l'avez gagné.\n\n" +
+                    "Le bouton « ? » en haut de Sanblé vous fait visiter une carte, partie par partie."
+        )
+
+        addGuideSection(
+            mainLayout, "#F0F8E8", "🔁 Revoir ses cartes avec Sonjé",
+            "« Sonjé », le premier jeu de l'onglet « Jé », vous fait revoir vos cartes de temps " +
+                    "en temps, pour que les mots restent. Vous voyez le mot et cherchez son sens, " +
+                    "puis vous touchez « Retourner la carte » et répondez « Je savais » ou « Pas su ». " +
+                    "Une carte bien sue revient de plus en plus tard, jusqu'à être apprise. " +
+                    "L'accueil vous dit chaque jour combien de cartes sont à revoir.\n\n" +
+                    "Un mot que vous avez écrit vous-même avec le clavier compte comme su : " +
+                    "sa carte avance sans question."
+        )
+
+        addGuideSection(
+            mainLayout, "#FFFFFF", "🤝 Partager, céder, recevoir une carte",
+            "Sur une carte ouverte :\n" +
+                    "• « 📤 Partager » envoie une image de la carte par message ou sur les réseaux, " +
+                    "avec le lien pour installer le clavier. La carte reste dans votre carnet.\n" +
+                    "• « 🤝 Céder » la donne à quelqu'un, de la main à la main. La carte quitte " +
+                    "votre carnet pour le sien, définitivement ; ce que vous en avez appris reste " +
+                    "avec vous.\n\n" +
+                    "Pour donner une carte, les deux téléphones côte à côte :\n" +
+                    "1. La personne qui reçoit touche « 🎁 Recevoir » en haut de son carnet : son " +
+                    "téléphone affiche un code.\n" +
+                    "2. La personne qui donne ouvre la carte, touche « Céder », puis « Scanner son " +
+                    "code », et vise ce code.\n" +
+                    "3. Son téléphone affiche à son tour un code, que l'autre scanne. C'est fait.\n\n" +
+                    "La première fois, le téléphone demande l'accès à l'appareil photo : il ne " +
+                    "sert qu'à lire ces codes. Rien ne passe par internet."
+        )
+
+        addGuideSection(
+            mainLayout, "#F0F8E8", "🏆 Progression",
             "Chaque mot que vous tapez fait progresser votre maîtrise du kréyòl, visible dans l'onglet " +
-                    "« Kréyòl an mwen ». Sept niveaux culturels jalonnent le parcours : Pipirit, Ti moun, " +
+                    "« Kréyòl an mwen ». Sept niveaux culturels jalonnent le parcours : Pipirit, Ti moun, " +
                     "Débrouya, An mitan, Kompè Lapen, Kompè Zamba, Potomitan. Un huitième existe, " +
                     "à vous de le trouver."
         )
@@ -3683,17 +3758,28 @@ class SettingsActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 12)
         }
         val faqText = TextView(this).apply {
-            text = "Le clavier créole n'apparaît pas quand je tape ?\n" +
-                    "→ Vérifiez qu'il est bien sélectionné (pas seulement activé) : onglet Dékolaj, " +
+            text = "Comment revoir la visite guidée ?\n" +
+                    "→ En bas de l'onglet Dékolaj, touchez « Visite guidée » et choisissez un " +
+                    "chapitre : les onglets et les réglages, le clavier en trois gestes, les " +
+                    "cartes, partager et échanger une carte. Dans Sanblé, le bouton « ? » " +
+                    "présente les cartes à tout moment.\n\n" +
+                    "Comment couper le son ou la vibration des touches ?\n" +
+                    "→ Roue dentée en haut de l'écran, ou ligne « Réglages du clavier » de " +
+                    "l'accueil. Les réglages du téléphone ne gouvernent souvent que le clavier " +
+                    "du constructeur.\n\n" +
+                    "Le clavier créole n'apparaît pas quand je tape ?\n" +
+                    "→ Vérifiez qu'il est bien sélectionné (pas seulement activé) : onglet Dékolaj, " +
                     "étape 2, ou touchez l'icône de clavier de la barre de navigation, en bas de " +
                     "l'écran, pendant que vous écrivez.\n\n" +
-                    "Comment revenir à un autre clavier ponctuellement ?\n" +
+                    "Comment revenir à un autre clavier ponctuellement ?\n" +
                     "→ Appui long sur la barre d'espace du clavier créole, puis choisissez un autre " +
                     "clavier dans la liste. Le retour au kréyòl passe par l'icône de clavier de la " +
-                    "barre de navigation : sur les autres claviers, l'appui long sur la barre " +
+                    "barre de navigation : sur les autres claviers, l'appui long sur la barre " +
                     "d'espace ne change que leur propre langue.\n\n" +
-                    "Mes données sont-elles envoyées quelque part ?\n" +
-                    "→ Non : le clavier fonctionne entièrement en local."
+                    "Mes données sont-elles envoyées quelque part ?\n" +
+                    "→ Non : le clavier fonctionne entièrement en local, sans accès à internet. " +
+                    "Vos cartes restent dans le téléphone ; une image de carte ne part que si " +
+                    "vous la partagez vous-même."
             textSize = 14f
             setTextColor(Color.parseColor("#5D4037"))
             setLineSpacing(0f, 1.3f)

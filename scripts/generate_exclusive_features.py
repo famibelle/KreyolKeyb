@@ -40,6 +40,15 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.3.2": [
+        {
+            "emoji": "📖",
+            "title": "Un guide d'utilisation complet",
+            "description": "Le « Guide d'utilisation », au pied de l'accueil, explique maintenant toute l'application avec des mots simples : les trois gestes du clavier, les réglages et les aides à l'écriture, la recherche dans le Dictionnaire, les six jeux, les cartes de Sanblé, la révision Sonjé, et comment partager, céder ou recevoir une carte.",
+            "image": "Screenshots/nouveaute_23.3.2_guide.png",
+            "image_alt": "Le guide d'utilisation ouvert sur deux sections : « Revoir ses cartes avec Sonjé », avec les boutons « Retourner la carte », « Je savais » et « Pas su », puis « Partager, céder, recevoir une carte ».",
+        },
+    ],
     "23.3.1": [
         {
             "emoji": "🧭",
