@@ -1502,7 +1502,8 @@ class CarnetFragment : DialogFragment() {
     /**
      * La visite du carnet : la collection, puis une carte ouverte zone par
      * zone (paysage, mot, sens, compteurs, numéro), ses deux gestes (partager,
-     * céder) et, carte refermée, la façon d'en recevoir une. [cle] est
+     * céder), l'échange pas à pas et, carte refermée, la façon d'en recevoir
+     * une et l'appareil photo. [cle] est
      * l'étape où entrer : voir [VISITE_PARTAGE].
      */
     private fun lancerVisite(cle: String? = null) {
@@ -1556,10 +1557,19 @@ class CarnetFragment : DialogFragment() {
             etape(R.string.visite_ceder_titre, R.string.visite_ceder_texte, "ceder") {
                 VisiteGuidee.rectDe(lecteur?.boutonCeder)
             },
+            // L'échange numéroté, sans découpe : il se passe sur deux téléphones,
+            // que l'animation montre côte à côte.
+            VisiteGuidee.Etape(
+                getString(R.string.visite_echange_titre), getString(R.string.visite_echange_texte), "echange",
+                carteOuverte, illustration = { AnimationEchange(it) }
+            ),
             etape(R.string.visite_recevoir_titre, R.string.visite_recevoir_texte, "recevoir", { suite ->
                 fermerCarte()
                 VisiteGuidee.attendre({ lecteur?.ouvert != true }, puis = { racine.postDelayed(suite, 250L) })
-            }) { VisiteGuidee.rectDe(boutonRecevoir) }
+            }) { VisiteGuidee.rectDe(boutonRecevoir) },
+            etape(R.string.visite_camera_titre, R.string.visite_camera_texte, "camera", { it() }) {
+                VisiteGuidee.rectDe(boutonRecevoir)
+            }
         )
         val depart = VisiteGuidee.departPour(etapes.map { it.cle }, cle)
         visite = VisiteGuidee.Voile(racine, etapes, depart) { _ ->

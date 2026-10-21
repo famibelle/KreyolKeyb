@@ -236,7 +236,13 @@
     <string name="visite_partager_titre">Partager</string>
     <string name="visite_partager_texte">Envoyez une image de la carte par message ou sur les réseaux, avec le lien pour installer le clavier. La carte reste dans votre carnet.</string>
     <string name="visite_ceder_titre">Céder</string>
-    <string name="visite_ceder_texte">Donnez la carte à quelqu\'un, de la main à la main, les deux téléphones côte à côte : vous scannez le code de l\'autre personne, puis elle scanne le vôtre. La carte quitte votre carnet pour le sien.</string>
+    <string name="visite_ceder_texte">Pour donner cette carte à quelqu\'un, mettez vos deux téléphones côte à côte. Elle quittera votre carnet pour le sien. Son apprentissage et sa plume restent avec vous.</string>
+    <string name="visite_echange_titre">Donner, étape par étape</string>
+    <string name="visite_echange_texte">1. La personne qui reçoit touche « Recevoir » dans son carnet : un code s\'affiche sur son téléphone.\n2. Vous touchez « Céder », puis « Scanner son code », et vous visez ce code.\n3. La carte quitte votre carnet, et un code s\'affiche à son tour sur votre téléphone.\n4. L\'autre personne le scanne : la carte arrive chez elle.</string>
+    <string name="echange_vous">Vous</string>
+    <string name="echange_autre">L\'autre personne</string>
     <string name="visite_recevoir_titre">Recevoir</string>
-    <string name="visite_recevoir_texte">Pour recevoir une carte, touchez « Recevoir » : votre téléphone affiche un code, que la personne qui donne scanne. Scannez ensuite le code qu\'elle affiche.</string>
+    <string name="visite_recevoir_texte">Pour recevoir une carte, touchez « Recevoir » : un code s\'affiche. Quand la personne qui donne l\'a scanné, touchez « Scanner la carte » et visez le code qu\'elle affiche.</string>
+    <string name="visite_camera_titre">L\'appareil photo</string>
+    <string name="visite_camera_texte">La première fois, le téléphone demande l\'accès à l\'appareil photo : acceptez, il sert seulement à lire le code. Tout se passe entre les deux téléphones, sans internet. Si vous fermez l\'écran avant la fin, le code reste en haut de votre carnet.</string>
 </resources>

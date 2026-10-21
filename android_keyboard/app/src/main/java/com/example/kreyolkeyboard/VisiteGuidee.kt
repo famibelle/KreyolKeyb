@@ -107,6 +107,8 @@ object VisiteGuidee {
      * du coin, réunis en un seul rectangle, éclairaient aussi tout le paysage.
      * [cle] nomme l'étape où l'on peut entrer directement (23.3.1) : « Revoir
      * la visite » ouvre le chapitre voulu sans rejouer ce qui le précède.
+     * [illustration] fabrique une vue posée entre le titre et le texte
+     * (23.3.3) : l'échange de cartes entre deux téléphones, mimé.
      */
     class Etape(
         val titre: String,
@@ -114,7 +116,8 @@ object VisiteGuidee {
         val cle: String? = null,
         val preparer: (suite: () -> Unit) -> Unit = { it() },
         val cible: () -> RectF? = { null },
-        val autres: () -> List<RectF> = { emptyList() }
+        val autres: () -> List<RectF> = { emptyList() },
+        val illustration: ((Context) -> View)? = null
     )
 
     /** Le rectangle d'une vue en coordonnées de fenêtre, ou `null` si elle n'est pas à l'écran. */
@@ -202,6 +205,7 @@ object VisiteGuidee {
         private val texte: TextView
         private val suivant: TextView
         private val bulle: LinearLayout
+        private val cadreIllustration: FrameLayout
 
         private val suivi = ViewTreeObserver.OnPreDrawListener {
             recalculerTrou(repositionner = false)
@@ -267,8 +271,13 @@ object VisiteGuidee {
                 isFocusable = true
                 setOnClickListener { avancer() }
             }
+            cadreIllustration = FrameLayout(context).apply {
+                setPadding(0, dp(2f), 0, dp(8f))
+                visibility = GONE
+            }
             bulle.addView(compteur)
             bulle.addView(titre)
+            bulle.addView(cadreIllustration)
             bulle.addView(texte)
             bulle.addView(LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -311,6 +320,10 @@ object VisiteGuidee {
                 compteur.text = compteur(deroule.index, etapes.size)
                 titre.text = e.titre
                 texte.text = e.texte
+                cadreIllustration.removeAllViews()
+                val illustration = e.illustration?.invoke(context)
+                if (illustration != null) cadreIllustration.addView(illustration)
+                cadreIllustration.visibility = if (illustration != null) VISIBLE else GONE
                 suivant.text = context.getString(
                     if (deroule.derniere) R.string.visite_terminer else R.string.visite_suivant
                 )

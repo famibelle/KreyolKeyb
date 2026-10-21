@@ -40,6 +40,15 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.3.3": [
+        {
+            "emoji": "🤝",
+            "title": "Donner une carte, étape par étape",
+            "description": "La visite des cartes prend le temps d'expliquer l'échange d'une carte entre deux téléphones : une petite animation montre les deux écrans côte à côte, et quatre temps numérotés disent qui touche quoi. Elle explique aussi comment recevoir une carte et à quoi sert l'appareil photo, qui lit seulement le code, sans internet.",
+            "image": "Screenshots/nouveaute_23.3.3_echange.png",
+            "image_alt": "La bulle « Donner, étape par étape » de la visite des cartes : deux téléphones côte à côte, « Vous » avec une carte et « L'autre personne » avec un code que vise votre téléphone, les pastilles 1 à 4 avec la 2 allumée, puis les quatre étapes de l'échange.",
+        },
+    ],
     "23.3.2": [
         {
             "emoji": "📖",
@@ -58,8 +67,10 @@ CURATED: dict[str, list[dict[str, str]]] = {
                         "le clavier en trois gestes. Puis le carnet Sanblé "
                         "s'ouvre, la carte « soup » se présente zone par zone "
                         "(le paysage, le mot, son sens, ses compteurs, son "
-                        "numéro), et la visite finit sur les boutons Partager, "
-                        "Céder et Recevoir."
+                        "numéro), puis les boutons Partager et Céder. Une "
+                        "animation montre deux téléphones qui s'échangent une "
+                        "carte par leurs codes, et la visite finit sur "
+                        "Recevoir et l'appareil photo."
                     ),
                 },
             ],

@@ -5,6 +5,18 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.3.3] - 2026-10-21
+
+La visite des cartes prend le temps d'expliquer l'échange d'une carte.
+
+### ✨ Ajouté
+
+- **Donner une carte, étape par étape** : la visite des cartes détaille
+  maintenant l'échange entre deux téléphones en quatre temps numérotés, avec
+  une petite animation des deux écrans côte à côte, puis explique comment
+  recevoir une carte et à quoi sert l'appareil photo, qui lit seulement le
+  code, sans internet.
+
 ## [23.3.2] - 2026-10-21
 
 Le guide d'utilisation présente maintenant toute l'application.
