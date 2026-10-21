@@ -528,6 +528,11 @@ class SettingsActivity : AppCompatActivity() {
                 preparer = aller(TAB_STATS), cible = onglet(TAB_STATS)))
             add(VisiteGuidee.Etape(getString(R.string.visite_gestes_titre), getString(R.string.visite_gestes_texte),
                 cle = VISITE_GESTES, preparer = aller(0)))
+            // Le « ? » du bandeau en dernier : la visite finit sur le moyen de
+            // la revoir, là où la mère du propriétaire l'avait cherché.
+            add(VisiteGuidee.Etape(getString(R.string.visite_aide_titre), getString(R.string.visite_aide_texte),
+                cle = "aide", preparer = aller(0),
+                cible = { VisiteGuidee.rectDe(VisiteGuidee.vueVisible(racine, "visite_aide")) }))
         }
         val debut = cle?.let { VisiteGuidee.departPour(etapes.map { it.cle }, it) } ?: depart
         retourVisite.isEnabled = true
@@ -1090,7 +1095,7 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun navigationLaterale(): Boolean = DeuxColonnes.actives(this)
 
-    /** Le bandeau bleu : titre et engrenage des réglages du clavier. */
+    /** Le bandeau bleu : « ? » de la visite guidée, titre, engrenage des réglages du clavier. */
     private fun createAppHeader(): LinearLayout {
         val appHeader = LinearLayout(this@SettingsActivity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1141,12 +1146,32 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Cale de la largeur de l'engrenage, à gauche : sans elle le titre,
-        // centré dans la place restante, se décale visiblement vers la gauche.
-        appHeader.addView(View(this@SettingsActivity).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                (48 * densite).toInt(), 1
-            )
+        // Le « ? » de la visite guidée, en haut à gauche (23.4.0) : demandé par
+        // la mère du propriétaire, qui cherchait l'aide là où la placent la
+        // plupart des applications plutôt qu'au pied de Dékolaj. Il ouvre le
+        // même menu de chapitres que la ligne « Visite guidée ». Il a la
+        // largeur de l'engrenage, ce qui garde le titre centré sur le bandeau.
+        // Même rond que le « ? » de Sanblé, 34 dp dessiné dans 48 dp de zone.
+        appHeader.addView(FrameLayout(this@SettingsActivity).apply {
+            tag = "visite_aide"
+            layoutParams = LinearLayout.LayoutParams((48 * densite).toInt(), (48 * densite).toInt())
+            contentDescription = getString(R.string.visite_revoir)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { menuVisite() }
+            addView(TextView(this@SettingsActivity).apply {
+                text = "?"
+                textSize = 17f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setStroke((1.5f * densite).toInt(), 0xAAFFFFFF.toInt())
+                }
+                layoutParams = FrameLayout.LayoutParams((34 * densite).toInt(), (34 * densite).toInt(), Gravity.CENTER)
+            })
         })
         appHeader.addView(appTitle)
         appHeader.addView(settingsButton)
@@ -3761,7 +3786,8 @@ class SettingsActivity : AppCompatActivity() {
             text = "Comment revoir la visite guidée ?\n" +
                     "→ En bas de l'onglet Dékolaj, touchez « Visite guidée » et choisissez un " +
                     "chapitre : les onglets et les réglages, le clavier en trois gestes, les " +
-                    "cartes, partager et échanger une carte. Dans Sanblé, le bouton « ? » " +
+                    "cartes, partager et échanger une carte. Le « ? » en haut à gauche de " +
+                    "l'écran ouvre le même choix. Dans Sanblé, le bouton « ? » " +
                     "présente les cartes à tout moment.\n\n" +
                     "Comment couper le son ou la vibration des touches ?\n" +
                     "→ Roue dentée en haut de l'écran, ou ligne « Réglages du clavier » de " +

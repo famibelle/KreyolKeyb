@@ -5,6 +5,16 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.4.0] - 2026-10-22
+
+La visite guidée s'ouvre d'un « ? » en haut de l'écran.
+
+### ✨ Ajouté
+
+- **Un « ? » en haut à gauche** : il ouvre à tout moment le menu de la visite
+  guidée, pour revoir les onglets, le clavier, les cartes ou l'échange d'une
+  carte. La visite de l'application finit en le montrant.
+
 ## [23.3.3] - 2026-10-21
 
 La visite des cartes prend le temps d'expliquer l'échange d'une carte.

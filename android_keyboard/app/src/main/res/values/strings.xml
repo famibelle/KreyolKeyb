@@ -211,6 +211,8 @@
     <string name="visite_accueil_texte">Chaque jour, vous y trouvez le mot du jour, les cartes à revoir, votre dernier jeu et vos progrès.</string>
     <string name="visite_reglages_titre">Les réglages du clavier</string>
     <string name="visite_reglages_texte">Le son et la vibration des touches, le thème clair ou sombre, les suggestions : tout se règle ici, et non dans les réglages du téléphone.</string>
+    <string name="visite_aide_titre">Revoir la visite</string>
+    <string name="visite_aide_texte">Touchez ce « ? » à tout moment pour revoir un chapitre de cette visite : les onglets, le clavier, les cartes ou l\'échange d\'une carte.</string>
     <string name="visite_jeux_titre">Jé, les jeux</string>
     <string name="visite_jeux_texte">De petits jeux de mots en kréyòl : mots mêlés, mots croisés, phrases à trous… Touchez un jeu pour y jouer.</string>
     <string name="visite_sanble_titre">Sanblé, vos cartes</string>

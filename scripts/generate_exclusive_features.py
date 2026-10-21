@@ -40,6 +40,15 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.4.0": [
+        {
+            "emoji": "❓",
+            "title": "Un « ? » pour revoir la visite guidée",
+            "description": "Un « ? » en haut à gauche de l'écran ouvre à tout moment le menu de la visite guidée : les onglets et les réglages, le clavier en trois gestes, les cartes, ou l'échange d'une carte. La visite de l'application finit en le montrant.",
+            "image": "Screenshots/nouveaute_23.4.0_bouton_aide.png",
+            "image_alt": "L'accueil de l'application avec la dernière bulle de la visite, « Revoir la visite », qui éclaire le « ? » en haut à gauche du bandeau bleu.",
+        },
+    ],
     "23.3.3": [
         {
             "emoji": "🤝",
