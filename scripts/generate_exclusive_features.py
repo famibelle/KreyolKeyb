@@ -47,6 +47,22 @@ CURATED: dict[str, list[dict[str, str]]] = {
             "description": "Le « Guide d'utilisation », au pied de l'accueil, explique maintenant toute l'application avec des mots simples : les trois gestes du clavier, les réglages et les aides à l'écriture, la recherche dans le Dictionnaire, les six jeux, les cartes de Sanblé, la révision Sonjé, et comment partager, céder ou recevoir une carte.",
             "image": "Screenshots/nouveaute_23.3.2_guide.png",
             "image_alt": "Le guide d'utilisation ouvert sur deux sections : « Revoir ses cartes avec Sonjé », avec les boutons « Retourner la carte », « Je savais » et « Pas su », puis « Partager, céder, recevoir une carte ».",
+            "images_suite": [
+                {
+                    "image": "Screenshots/gif_visite_guidee.gif",
+                    "image_alt": (
+                        "Animation : la visite guidée, lancée depuis la ligne "
+                        "« Visite guidée » de l'accueil. Une bulle présente "
+                        "tour à tour Dékolaj, les réglages du clavier, Jé, la "
+                        "bannière Sanblé, le Dictionnaire, Kréyòl an mwen et "
+                        "le clavier en trois gestes. Puis le carnet Sanblé "
+                        "s'ouvre, la carte « soup » se présente zone par zone "
+                        "(le paysage, le mot, son sens, ses compteurs, son "
+                        "numéro), et la visite finit sur les boutons Partager, "
+                        "Céder et Recevoir."
+                    ),
+                },
+            ],
         },
     ],
     "23.3.1": [
