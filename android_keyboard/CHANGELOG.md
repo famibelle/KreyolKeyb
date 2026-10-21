@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [23.3.1] - 2026-10-21
+
+La visite guidée se revoit chapitre par chapitre, là où on en a besoin.
+
+### ✨ Ajouté
+
+- **Revoir un chapitre de la visite** : la ligne « Visite guidée », au pied
+  de l'accueil, propose maintenant quatre chapitres (les onglets et les
+  réglages, le clavier en trois gestes, les cartes, partager et échanger une
+  carte), et chacun s'ouvre directement à la bonne étape.
+- **Un bouton « ? » dans Sanblé** : à côté de « Recevoir », il lance la
+  visite des cartes à tout moment.
+
 ## [23.3.0] - 2026-10-21
 
 Une visite guidée présente l'application et les cartes, pas à pas.

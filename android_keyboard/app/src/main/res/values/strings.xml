@@ -201,6 +201,12 @@
     <string name="visite_terminer">Terminer</string>
     <string name="visite_revoir">Visite guidée</string>
     <string name="visite_revoir_resume">Les onglets, les cartes et le clavier, pas à pas</string>
+    <string name="visite_chapitre_onglets">Les onglets et les réglages</string>
+    <string name="visite_chapitre_gestes">Le clavier en trois gestes</string>
+    <string name="visite_chapitre_cartes">Les cartes</string>
+    <string name="visite_chapitre_echange">Partager et échanger une carte</string>
+    <string name="visite_carnet_bouton">Visite guidée des cartes</string>
+    <string name="visite_carnet_vide">La visite des cartes commence avec votre première carte : gagnez un mot dans un jeu.</string>
     <string name="visite_accueil_titre">Dékolaj, votre accueil</string>
     <string name="visite_accueil_texte">Chaque jour, vous y trouvez le mot du jour, les cartes à revoir, votre dernier jeu et vos progrès.</string>
     <string name="visite_reglages_titre">Les réglages du clavier</string>

@@ -1,8 +1,18 @@
 {
   "production_version": "22.3.0",
-  "latest_version": "23.3.0",
+  "latest_version": "23.3.1",
   "as_of": "2026-10-21",
   "features": [
+    {
+      "version": "23.3.1",
+      "emoji": "🧭",
+      "title": "Revoir la visite guidée, chapitre par chapitre",
+      "description": "La ligne « Visite guidée », au pied de l'accueil, propose quatre chapitres : les onglets et les réglages, le clavier en trois gestes, les cartes, partager et échanger une carte. Chacun s'ouvre directement à la bonne étape. Dans Sanblé, un bouton « ? » lance la visite des cartes à tout moment.",
+      "release_url": "https://github.com/famibelle/KreyolKeyb/releases/tag/v23.3.1",
+      "curated": true,
+      "image": "Screenshots/nouveaute_23.3.1_revoir_visite.png",
+      "image_alt": "L'accueil de l'application, avec la fenêtre « Visite guidée » et ses quatre chapitres : « Les onglets et les réglages », « Le clavier en trois gestes », « Les cartes », « Partager et échanger une carte »."
+    },
     {
       "version": "23.3.0",
       "emoji": "🧭",

@@ -58,8 +58,8 @@ android {
         minSdk = 24
         targetSdk = 36
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        versionCode = 230300
-        versionName "23.3.0"
+        versionCode = 230301
+        versionName "23.3.1"
         
         // Améliorer la compatibilité Samsung ULTRA
         multiDexEnabled true

@@ -209,6 +209,8 @@ class SettingsActivity : AppCompatActivity() {
         /** Partage de l'activation à proposer à la prochaine ouverture. */
         private const val PREF_PARTAGE_EN_ATTENTE = "partage_activation_en_attente"
         const val TAB_JEUX = 1
+        /** Le chapitre des trois gestes du clavier, dans la visite de l'application. */
+        private const val VISITE_GESTES = "gestes"
         const val TAB_DICO = 2
         const val TAB_STATS = 3
 
@@ -484,8 +486,9 @@ class SettingsActivity : AppCompatActivity() {
      * La visite de l'application : les quatre onglets, la ligne des réglages,
      * le bandeau du carnet et les trois gestes du clavier. Rien n'est ouvert à
      * la place de l'utilisateur : chaque étape amène l'onglet, puis l'éclaire.
+     * [cle] entre directement à un chapitre (« gestes ») : voir [menuVisite].
      */
-    fun lancerVisite(depart: Int = 0) {
+    fun lancerVisite(depart: Int = 0, cle: String? = null) {
         if (visite != null) return
         val racine = findViewById<FrameLayout>(android.R.id.content) ?: return
         val accueilDuJour = AccueilDuJour.mode(
@@ -524,16 +527,44 @@ class SettingsActivity : AppCompatActivity() {
             add(VisiteGuidee.Etape(getString(R.string.visite_progres_titre), getString(R.string.visite_progres_texte),
                 preparer = aller(TAB_STATS), cible = onglet(TAB_STATS)))
             add(VisiteGuidee.Etape(getString(R.string.visite_gestes_titre), getString(R.string.visite_gestes_texte),
-                preparer = aller(0)))
+                cle = VISITE_GESTES, preparer = aller(0)))
         }
+        val debut = cle?.let { VisiteGuidee.departPour(etapes.map { it.cle }, it) } ?: depart
         retourVisite.isEnabled = true
-        visite = VisiteGuidee.Voile(racine, etapes, depart) { _ ->
+        visite = VisiteGuidee.Voile(racine, etapes, debut) { _ ->
             // Passée ou finie, elle ne revient pas d'elle-même : « Visite
             // guidée », au pied de Dékolaj, la relance.
             onboardingPrefs().edit().putBoolean(VisiteGuidee.VISITE_APPLICATION, true).apply()
             visite = null
             retourVisite.isEnabled = false
         }.also { it.ouvrir() }
+    }
+
+    /**
+     * « Revoir la visite » (23.3.1) : un chapitre au choix plutôt que tout
+     * rejouer. Pour revoir l'échange de cartes, repasser les sept étapes de
+     * l'application puis penser à ouvrir Sanblé, c'était trop demander. Les
+     * chapitres des cartes ouvrent le carnet sur sa visite.
+     */
+    private fun menuVisite() {
+        val chapitres = arrayOf(
+            getString(R.string.visite_chapitre_onglets),
+            getString(R.string.visite_chapitre_gestes),
+            getString(R.string.visite_chapitre_cartes),
+            getString(R.string.visite_chapitre_echange)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.visite_revoir)
+            .setItems(chapitres) { _, choix ->
+                when (choix) {
+                    0 -> lancerVisite()
+                    1 -> lancerVisite(cle = VISITE_GESTES)
+                    2 -> CarnetFragment.avecVisite(CarnetFragment.VISITE_COLLECTION).show(supportFragmentManager, "carnet")
+                    else -> CarnetFragment.avecVisite(CarnetFragment.VISITE_PARTAGE).show(supportFragmentManager, "carnet")
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     // ────────────────────────────────────────────────────────────────────
@@ -1716,17 +1747,13 @@ class SettingsActivity : AppCompatActivity() {
             "Version, sources des données, licences",
             SheetFragment.PAGE_A_PROPOS
         ))
-        // La visite se relance d'ici, et celle du carnet avec elle : elle se
-        // représentera à la prochaine ouverture de Sanblé.
+        // La visite se revoit d'ici, chapitre par chapitre : voir [menuVisite].
         mainLayout.addView(createSpacing(8))
         mainLayout.addView(createReferenceLink(
             "🧭", getString(R.string.visite_revoir),
             getString(R.string.visite_revoir_resume),
             page = null
-        ) {
-            onboardingPrefs().edit().putBoolean(VisiteGuidee.VISITE_CARNET, false).apply()
-            lancerVisite()
-        })
+        ) { menuVisite() })
         mainLayout.addView(createSpacing(16))
 
         return mainLayout

@@ -51,6 +51,16 @@ class VisiteGuideeTest {
     }
 
     @Test
+    fun `un chapitre entre a son etape, et la premiere si elle manque`() {
+        val cles = listOf("collection", "paysage", null, "partager", "recevoir")
+        assertEquals(3, VisiteGuidee.departPour(cles, "partager"))
+        assertEquals(0, VisiteGuidee.departPour(cles, null))
+        // Une étape absente (les réglages hors de l'accueil du jour) ne fait
+        // pas échouer le chapitre : la visite part du début
+        assertEquals(0, VisiteGuidee.departPour(cles, "reglages"))
+    }
+
+    @Test
     fun `le compteur part de un`() {
         assertEquals("1 / 7", VisiteGuidee.compteur(0, 7))
         assertEquals("7 / 7", VisiteGuidee.compteur(6, 7))

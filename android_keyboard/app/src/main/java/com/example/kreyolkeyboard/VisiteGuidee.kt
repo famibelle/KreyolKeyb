@@ -88,6 +88,14 @@ object VisiteGuidee {
         }
     }
 
+    /**
+     * L'étape où entrer pour [cle], d'après les clés des étapes dans l'ordre :
+     * la première si la clé manque (une étape absente, comme les réglages hors
+     * de l'accueil du jour, ne doit pas faire échouer le chapitre).
+     */
+    fun departPour(cles: List<String?>, cle: String?): Int =
+        cle?.let { cles.indexOf(it) }?.takeIf { it >= 0 } ?: 0
+
     /** « 2 / 6 ». */
     fun compteur(rang: Int, montrees: Int): String = "${rang + 1} / $montrees"
 
@@ -97,10 +105,13 @@ object VisiteGuidee {
      * coordonnées de fenêtre, ou `null` pour une bulle seule au centre.
      * [autres] ajoute des découpes séparées : la plaque du mot et le chiffre
      * du coin, réunis en un seul rectangle, éclairaient aussi tout le paysage.
+     * [cle] nomme l'étape où l'on peut entrer directement (23.3.1) : « Revoir
+     * la visite » ouvre le chapitre voulu sans rejouer ce qui le précède.
      */
     class Etape(
         val titre: String,
         val texte: String,
+        val cle: String? = null,
         val preparer: (suite: () -> Unit) -> Unit = { it() },
         val cible: () -> RectF? = { null },
         val autres: () -> List<RectF> = { emptyList() }

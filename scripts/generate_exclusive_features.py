@@ -40,6 +40,15 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "23.3.1": [
+        {
+            "emoji": "🧭",
+            "title": "Revoir la visite guidée, chapitre par chapitre",
+            "description": "La ligne « Visite guidée », au pied de l'accueil, propose quatre chapitres : les onglets et les réglages, le clavier en trois gestes, les cartes, partager et échanger une carte. Chacun s'ouvre directement à la bonne étape. Dans Sanblé, un bouton « ? » lance la visite des cartes à tout moment.",
+            "image": "Screenshots/nouveaute_23.3.1_revoir_visite.png",
+            "image_alt": "L'accueil de l'application, avec la fenêtre « Visite guidée » et ses quatre chapitres : « Les onglets et les réglages », « Le clavier en trois gestes », « Les cartes », « Partager et échanger une carte ».",
+        },
+    ],
     "23.3.0": [
         {
             "emoji": "🧭",
