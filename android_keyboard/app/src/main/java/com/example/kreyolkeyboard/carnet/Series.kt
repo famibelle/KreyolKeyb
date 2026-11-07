@@ -20,9 +20,9 @@ import org.json.JSONObject
  *   n'a pas de jeu de nombres : la série est vide, et le carnet ne l'affiche
  *   pas ;
  * - [ENLUMINURES] : les dessins dont un mot sort d'un jeu, lus dans
- *   `creole_series.json`. Cet actif n'existe pas encore : il suppose la
- *   classification des blasons (`creole_blasons.json`), pas faite pour le
- *   kréyòl. Absent, la série est vide et le carnet ne l'affiche pas ;
+ *   `creole_series.json`, que `Dictionnaires/generate_blasons.py` écrit à
+ *   côté de `creole_blasons.json` (24.0.0). Absent, la série est vide et le
+ *   carnet ne l'affiche pas ;
  * - [JEUX] : une carte de chacun des six jeux ;
  * - [PAYSAGES] : chaque lieu des cartes à chacune de ses quatre heures.
  *

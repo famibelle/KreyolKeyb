@@ -8,14 +8,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 /**
  * Les séries du carnet : finies, complétables, et comptées par emplacement.
  *
  * Une série qu'on ne peut pas finir ne casse rien à l'écran : elle affiche
  * simplement un emplacement qui reste vide pour toujours. C'est pour cela que
- * la preuve est ici, et pas dans un essai à la main.
+ * la preuve est ici, et pas dans un essai à la main. La série des
+ * enluminures, elle, se vérifie sur son actif dans `BlasonsAssetTest`.
  */
 class SeriesTest {
 
@@ -55,17 +55,6 @@ class SeriesTest {
         val a = Series.avancement(Serie.JEUX, cartes, { it }, { null }, emptyList())
         assertEquals(6, a.total)
         assertEquals(0, a.remplis)
-    }
-
-    /**
-     * Sans actif des enluminures (il suppose la classification des blasons,
-     * pas faite pour le kréyòl), la série est vide et le carnet ne l'affiche
-     * pas. Le jour où l'actif arrive, ce test tombe et rappelle d'écrire celui
-     * qui vérifie sa cohérence, comme côté LuxKeyb.
-     */
-    @Test
-    fun pasDActifDesEnluminuresPourLInstant() {
-        assertFalse(File("src/main/assets/creole_series.json").exists())
     }
 
     /** Une étape se fête une fois, et seulement la plus haute franchie d'un coup. */
