@@ -20,7 +20,6 @@ import android.util.LruCache
 import java.util.concurrent.Executors
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
@@ -455,7 +454,7 @@ object Paysages {
      * rareté se dit par l'heure, le métal et la plaque, qu'on voit sans
      * pencher la carte.
      */
-    fun nombreDePlans(heure: Heure): Int = if (PAPIER || heure.rang >= Rarete.RARE.ordinal) 6 else 5
+    fun nombreDePlans(heure: Heure): Int = if (PAPIER) 5 else if (heure.rang >= Rarete.RARE.ordinal) 6 else 5
 
     /**
      * Le lieu en cinq calques, six pour une rare ([nombreDePlans]), pour la
@@ -875,8 +874,9 @@ object Paysages {
 
     /**
      * Maquette du papier découpé en couches (skill `direction-artistique`,
-     * référence du propriétaire du 2026-11-07) : papier opaque, ombres
-     * douces, arche de feuilles sur toutes les cartes, Grand Étang redessiné.
+     * référence du propriétaire du 2026-11-07) : papier opaque, grain,
+     * tranche de kraft, ombres douces, Grand Étang redessiné. Sans arche ni
+     * coulisses (l'arche de feuilles n'a pas plu, 2026-11-07).
      * Faux pour retrouver la gouache.
      */
     internal const val PAPIER = true
@@ -1313,7 +1313,7 @@ object Paysages {
                 gouache.style = Paint.Style.FILL
                 if (plein && ombre > 0f) {
                     c.save()
-                    c.translate(0.12f, 0.28f)
+                    c.translate(0.18f, 0.4f)
                     gouache.color = kraft
                     c.drawPath(chemin, gouache)
                     c.restore()
@@ -1592,7 +1592,6 @@ object Paysages {
          * théâtre de papier vu à contre-jour.
          */
         fun coulisses() {
-            if (PAPIER) { arche(fond = false); return }
             val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.25f else 0.38f)
             val tronc = mix(P.sol, 0xFF000000.toInt(), 0.3f)
             for (droite in booleanArrayOf(false, true)) {
@@ -1629,7 +1628,6 @@ object Paysages {
          * lieu d'un seul : c'est la boîte d'un théâtre, pas un cadre.
          */
         fun coulissesDuFond() {
-            if (PAPIER) { arche(fond = true); return }
             val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.12f else 0.22f)
             val tronc = mix(P.sol, 0xFF000000.toInt(), 0.15f)
             for (droite in booleanArrayOf(false, true)) {
@@ -2773,92 +2771,114 @@ object Paysages {
         }
 
         /**
-         * L'arche de feuilles qui encadre la scène, partie des deux bords bas
-         * et refermée en voûte en haut. [fond] : la rangée claire, un pas en
-         * retrait, collée au carton du proche ; sinon la rangée sombre de
-         * devant, avec ses deux troncs.
+         * Un houppier rond de papier, en couches emboîtées de deux tons,
+         * posé sur son tronc fin : l'arbre coloré de la référence, sans cône.
          */
-        fun arche(fond: Boolean) {
-            val r = Alea(if (fond) 802 else 801)
-            val cols = if (fond) intArrayOf(MENTHE, LIME, VERT_D_EAU, SAUGE, MENTHE, MOUTARDE)
-            else intArrayOf(VERT_PROFOND, SARCELLE, TURQUOISE, BLEU_PROFOND, SARCELLE, PRUNE)
-            if (!fond) for (droite in booleanArrayOf(false, true)) {
-                fun x(v: Float) = if (droite) LARGEUR - v else v
-                val tronc = Path()
-                tronc.moveTo(x(-0.5f), BAS + 2f)
-                tronc.quadTo(x(5f), 34f, x(9f), 3f)
-                tronc.lineTo(x(10.6f), 3.6f)
-                tronc.quadTo(x(7.4f), 34f, x(3.4f), BAS + 2f)
-                tronc.close()
-                piece(tronc, papier(TERRE))
-                val branche = Path()
-                branche.moveTo(x(6f), 28f)
-                branche.quadTo(x(11f), 22f, x(15f), 17f)
-                branche.lineTo(x(15.4f), 17.8f)
-                branche.quadTo(x(11.4f), 23.5f, x(6.6f), 30f)
-                branche.close()
-                piece(branche, papier(TERRE), 0.7f)
+        fun houppier(x: Float, y: Float, w: Float, h: Float, col: Int, tronc: Int) {
+            val t = Path()
+            t.addRoundRect(RectF(x - 0.35f, y - h * 0.3f, x + 0.35f, y + h * 0.55f), 0.3f, 0.3f, Path.Direction.CW)
+            piece(t, tronc, 0.6f)
+            for (i in 0 until 4) {
+                val k = 1f - i * 0.21f
+                val cx = x
+                val bas = y - h * 0.15f * i
+                val ww = w * k
+                val hh = h * k
+                val o = Path()
+                o.moveTo(cx, bas)
+                o.cubicTo(cx - ww * 0.62f, bas, cx - ww * 0.55f, bas - hh * 0.75f, cx, bas - hh)
+                o.cubicTo(cx + ww * 0.55f, bas - hh * 0.75f, cx + ww * 0.62f, bas, cx, bas)
+                o.close()
+                val c = if (i % 2 == 0) mix(col, 0xFF000000.toInt(), 0.1f - i * 0.02f) else mix(col, 0xFFFFFFFF.toInt(), 0.14f)
+                piece(o, c, if (i == 0) 0.8f else 0.5f)
             }
-            val (dmin, dmax) = if (fond) 4f to 12f else 0f to 8f
-            val feuilles = ArrayList<FloatArray>()
-            var essais = 0
-            val voulu = if (fond) 100 else 150
-            while (feuilles.size < voulu && essais < 6000) {
-                essais++
-                val x = r() * 104f - 2f
-                val y = r() * 68f - 2f
-                val d = min(min(x, LARGEUR - x), y * 1.7f)
-                if (d < dmin || d > dmax) continue
-                feuilles.add(floatArrayOf(x, y, d, r(), r(), r()))
-            }
-            // Du dedans vers le bord : la feuille la plus au bord est devant.
-            feuilles.sortByDescending { it[2] }
-            for (f in feuilles) {
-                val x = f[0]; val y = f[1]; val d = f[2]
-                val vers = Math.toDegrees(atan2((32f - y).toDouble(), (50f - x).toDouble())).toFloat()
-                val angle = vers + (f[3] - 0.5f) * 90f
-                val l = min((if (fond) 4f else 5.5f) + f[4] * 3.5f, (if (fond) 16f else 12f) - d + 2f).coerceAtLeast(2.5f)
-                feuillePliee(x, y, l, angle, papier(cols[min((f[5] * cols.size).toInt(), cols.size - 1)]))
-            }
+            val n = Path()
+            n.moveTo(x - 0.15f, y - h * 0.1f)
+            n.lineTo(x, y - h * 0.85f)
+            n.lineTo(x + 0.15f, y - h * 0.1f)
+            n.close()
+            piece(n, mix(col, 0xFFFFFFFF.toInt(), 0.35f), 0f)
         }
 
         /**
-         * Grand Étang en papier découpé : les mornes au loin en lignes de
-         * niveau, l'étang en lanières de turquoise entre deux mornes boisés,
-         * des buttes, des herbes, deux balisiers et un anthurium devant.
+         * Grand Étang en papier découpé, d'après la référence du propriétaire
+         * (2026-11-07) transposée sous les tropiques : les mornes au loin,
+         * l'étang en lanières qui s'élargit vers soi entre deux rives en
+         * lignes de niveau, des houppiers colorés sur les berges, des buttes
+         * devant. Sans voûte : tout tient dans l'empilement des plans.
          */
         fun grandEtangPapier() {
-            bandes(20f, 3f, 4, 2.8f, 700, mix(P.loin, P.cielBas, 0.45f), mix(P.loin, P.milieu, 0.2f), f1 = 0.06f)
+            // Le lointain : deux rangs de mornes pointus, puis des collines en bandes.
+            for ((i, sommets) in arrayOf(
+                floatArrayOf(-2f, 30f, 14f, 21f, 30f, 26f, 47f, 18f, 62f, 25f, 80f, 19f, 102f, 27f),
+                floatArrayOf(-2f, 31f, 20f, 25f, 38f, 29f, 56f, 23f, 72f, 28f, 88f, 24f, 102f, 30f)
+            ).withIndex()) {
+                val t = Path()
+                t.moveTo(-2f, BAS)
+                var k = 0
+                while (k < sommets.size) { t.lineTo(sommets[k], sommets[k + 1]); k += 2 }
+                t.lineTo(102f, BAS)
+                t.close()
+                piece(t, mix(papier(if (i == 0) 0xFF7FB8A8.toInt() else 0xFF5FA88A.toInt()), P.cielBas, if (i == 0) 0.35f else 0.18f), 0.8f)
+            }
+            bandes(27.5f, 1.6f, 4, 1.6f, 700, papier(0xFF8FD99A.toInt()), papier(0xFF3FA86A.toInt()), f1 = 0.09f)
             plan(1)
-            piece(Path().apply { addOval(RectF(8f, 38f, 92f, 58f), Path.Direction.CW) }, papier(SARCELLE))
-            lanieres(10f, 90f, 40.5f, 55f, 8, 710,
-                intArrayOf(papier(TURQUOISE), papier(VERT_D_EAU), papier(EAU_CLAIRE), papier(0xFF20B298.toInt())))
-            val verts = intArrayOf(papier(MENTHE), papier(SAUGE), papier(SARCELLE), papier(VERT_PROFOND))
-            for (k in 0 until 3) {
-                val g = pente(true, 25f + k * 5f, 43f + k * 3f, 30f - k * 7f, 720 + k, mix(verts[k], verts[k + 1], 0.3f))
-                val d = pente(false, 27f + k * 5f, 42.5f + k * 3f, 70f + k * 7f, 730 + k, mix(verts[k], verts[k + 1], 0.5f))
-                if (k == 0) {
-                    // Des houppiers sur la crête du fond, de feuilles en grappe.
-                    val r = Alea(740)
-                    for (x in floatArrayOf(3f, 9f, 15f, 21f, 85f, 91f, 97f)) {
-                        val y = if (x < 50f) g(x) else d(x)
-                        for (j in 0 until 5) {
-                            feuillePliee(x + (r() - 0.5f) * 3f, y + 1f, 3f + r() * 1.5f, -90f + (r() - 0.5f) * 120f,
-                                verts[min((r() * 3f).toInt() + 1, 3)])
-                        }
-                    }
+            // L'étang, qui naît à l'horizon et s'élargit jusqu'au premier plan.
+            fun gauche(y: Float) = 41f - (y - 32f) / 28f * 22f
+            fun droite(y: Float) = 59f + (y - 32f) / 28f * 22f
+            val eau = Path()
+            eau.moveTo(gauche(32f) - 2f, 32f); eau.lineTo(droite(32f) + 2f, 32f)
+            eau.lineTo(droite(66f) + 4f, BAS); eau.lineTo(gauche(66f) - 4f, BAS); eau.close()
+            piece(eau, papier(SARCELLE), 0.3f)
+            val reflets = intArrayOf(papier(TURQUOISE), papier(VERT_D_EAU), papier(EAU_CLAIRE), papier(0xFF20B298.toInt()))
+            val r = Alea(710)
+            var y = 32.6f
+            while (y < 62f) {
+                val p = (y - 32f) / 28f
+                val e = 0.35f + 0.9f * p
+                var x = gauche(y) - 2f + r() * 2f
+                while (x < droite(y) + 2f) {
+                    val l = (3f + r() * 7f) * (0.6f + p)
+                    val t = Path()
+                    t.addRoundRect(RectF(x, y, min(x + l, droite(y) + 2f), y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, reflets[min((r() * 4f).toInt(), 3)], 0.4f)
+                    x += l + 0.5f + r() * 2f * (0.5f + p)
+                }
+                y += e + 0.35f + 0.6f * p
+            }
+            // Les rives en lignes de niveau, qui descendent jusqu'à l'eau.
+            val rives = intArrayOf(papier(0xFF2E9E6E.toInt()), papier(0xFF6FCB8A.toInt()), papier(SARCELLE),
+                papier(LIME), papier(0xFF4FB06A.toInt()), papier(MENTHE))
+            for (k in 0 until 6) {
+                val bas = 33.5f + k * 4.6f
+                pente(true, 27f + k * 4f, bas, gauche(bas), 720 + k, rives[k])
+                pente(false, 28f + k * 4f, bas + 0.5f, droite(bas + 0.5f), 730 + k, rives[(k + 2) % 6])
+                if (k == 1) {
+                    // Les houppiers colorés des berges, serrés, à la place des sapins de la référence.
+                    val tronc = papier(TERRE)
+                    houppier(4f, 40f, 9f, 13f, papier(MOUTARDE), tronc)
+                    houppier(11f, 41f, 8f, 12f, papier(0xFFF3EEE4.toInt()), tronc)
+                    houppier(18f, 40.5f, 7f, 10f, papier(PRUNE), tronc)
+                    houppier(24f, 40f, 5.5f, 8f, papier(0xFFD9447A.toInt()), tronc)
+                    houppier(77f, 40f, 5.5f, 8f, papier(MOUTARDE), tronc)
+                    houppier(84f, 41f, 7.5f, 11f, papier(0xFFF3EEE4.toInt()), tronc)
+                    houppier(92f, 40.5f, 9f, 13f, papier(PRUNE), tronc)
                 }
             }
+            herbes(0f, 24f, 48f, 741, intArrayOf(SARCELLE, LIME, MOUTARDE))
+            herbes(76f, 100f, 48f, 742, intArrayOf(SARCELLE, LIME, PRUNE))
             plan(2)
-            butte(6f, 70f, 24f, 12f, papier(TURQUOISE))
-            butte(94f, 70f, 26f, 12f, papier(LIME))
-            butte(30f, 72f, 16f, 9f, papier(BLEU_PROFOND))
-            butte(72f, 72f, 15f, 8f, papier(MENTHE))
-            herbes(0f, 22f, 61f, 750, intArrayOf(SARCELLE, LIME, VERT_PROFOND))
-            herbes(78f, 100f, 61f, 751, intArrayOf(SARCELLE, MENTHE, PRUNE))
-            balisier(13f, 62f, 11f, papier(SARCELLE))
-            balisier(88f, 63f, 12f, papier(VERT_PROFOND))
-            anthurium(25f, 62f)
+            // Les buttes du premier plan.
+            butte(4f, 72f, 26f, 13f, papier(TURQUOISE))
+            butte(28f, 74f, 18f, 10f, papier(BLEU_PROFOND))
+            butte(96f, 71f, 26f, 13f, papier(LIME))
+            butte(72f, 74f, 17f, 9f, papier(MENTHE))
+            herbes(0f, 20f, 61f, 750, intArrayOf(0xFFE8743B.toInt(), PRUNE, LIME))
+            herbes(80f, 100f, 61f, 751, intArrayOf(0xFFE8743B.toInt(), SARCELLE, PRUNE))
+            houppier(8f, 62f, 9f, 14f, papier(PRUNE), papier(TERRE))
+            houppier(93f, 62f, 8.5f, 14f, papier(LAVANDE), papier(TERRE))
+            balisier(19f, 63f, 9f, papier(SARCELLE))
+            anthurium(83f, 63f)
         }
 
         /** Le Grand Étang : le lac dans sa cuvette de forêt, les mornes, une libellule. */
