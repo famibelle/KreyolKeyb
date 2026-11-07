@@ -133,7 +133,9 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             // La nuit, les étoiles de la carte ouverte scintillent, fête ou
             // non : le ciel peint pour elle n'en porte pas (Paysages.rendu).
             val ciel = if (oiseaux && heure?.nuit == true) Etoiles(zone, graine) else null
-            return listOfNotNull(ciel, faune, temps).let {
+            // L'eau des douches de Sofaïa tombe quand le lieu est rendu en plans.
+            val eau = if (oiseaux && lieu == Lieu.SOFAIA && souvenir?.fete == null && Paysages.PAPIER) Douches(zone, graine) else null
+            return listOfNotNull(ciel, eau, faune, temps).let {
                 when (it.size) {
                     0 -> null
                     1 -> it[0]
@@ -942,6 +944,64 @@ internal object Faune {
         lieu in FORET && !nuit -> Colibri(zone, graine)
         lieu in FORET -> Lucioles(zone, graine)
         else -> null
+    }
+}
+
+/**
+ * L'eau chaude qui tombe des douches de Sofaïa : sur chaque filet peint
+ * ([Paysages.DOUCHES]), des gouttes claires qui accélèrent en tombant, et à
+ * leur pied des ronds qui s'élargissent et s'effacent sur l'eau sombre. Le
+ * bassin est sur le plan de devant : l'eau glisse avec lui quand on penche.
+ */
+private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = Paysages.DOUCHES.size
+    private val periode = FloatArray(n) { 0.55f + hasard() * 0.25f }
+    private val phase = FloatArray(n) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        val haut = Paysages.DOUCHE_HAUT
+        Paysages.DOUCHES.forEachIndexed { i, (x, bas) ->
+            val chute = bas - haut
+            // Trois gouttes par filet, également espacées dans le cycle.
+            for (k in 0 until 3) {
+                val t = ((temps / periode[i] + phase[i] + k / 3f) % 1f)
+                val y = haut + chute * t * t
+                val l = 0.6f + 1.6f * t
+                p.strokeWidth = 0.42f
+                p.color = 0xE6FFFFFF.toInt()
+                c.drawLine(x, (y - l).coerceAtLeast(haut), x, y, p)
+            }
+            // Deux ronds par filet, décalés d'un demi-cycle.
+            for (k in 0 until 2) {
+                val t = ((temps / (periode[i] * 1.6f) + phase[i] + k / 2f) % 1f)
+                val r = 0.5f + 2.2f * t
+                p.strokeWidth = 0.22f
+                p.color = (((1f - t) * 170f).toInt() shl 24) or 0xDDEEEA
+                c.drawOval(x - r, bas + 0.5f - r * 0.32f, x + r, bas + 0.5f + r * 0.32f, p)
+            }
+        }
+        p.style = Paint.Style.FILL
+        c.restore()
     }
 }
 

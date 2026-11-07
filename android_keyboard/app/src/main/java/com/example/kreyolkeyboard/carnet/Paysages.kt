@@ -950,6 +950,14 @@ object Paysages {
      */
     internal const val PAPIER = true
 
+    /**
+     * Les douches de Sofaïa : où chaque filet d'eau quitte le mur du fond
+     * ([DOUCHE_HAUT]), son x et l'endroit où il touche l'eau. Le dessin les
+     * peint, [Ambiance] y fait tomber les gouttes sur la carte ouverte.
+     */
+    internal const val DOUCHE_HAUT = 41.8f
+    internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
+
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
@@ -2644,8 +2652,111 @@ object Paysages {
             balisier(82f, 59f, 13f, mix(P.pres, P.milieu, 0.3f))
         }
 
+        // ------------------------------------------- Sofaïa en papier
+
+        /** Une pièce droite et mince de [a] à [b], épaisse de [e] : un barreau, une lisse, un filet d'eau. */
+        private fun barre(ax: Float, ay: Float, bx: Float, by: Float, e: Float, col: Int, ombre: Float = 0.3f) {
+            val dx = bx - ax; val dy = by - ay
+            val n = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(0.01f)
+            val nx = -dy / n * e / 2f; val ny = dx / n * e / 2f
+            pieceD("M${ax + nx} ${ay + ny}L${bx + nx} ${by + ny}L${bx - nx} ${by - ny}L${ax - nx} ${ay - ny}Z", col, ombre)
+        }
+
+        /** Une rambarde de [a] à [b], haute de [h] : poteaux, lisse haute, lisse basse et barreaux. */
+        private fun rambarde(ax: Float, ay: Float, bx: Float, by: Float, h: Float, poteaux: Int, barreaux: Int, col: Int, e: Float) {
+            val sombre = mix(col, 0xFF000000.toInt(), 0.18f)
+            for (k in 0..barreaux) {
+                val u = k / barreaux.toFloat()
+                val x = ax + (bx - ax) * u; val y = ay + (by - ay) * u
+                barre(x, y - h * 0.15f, x, y - h * 0.85f, e * 0.45f, sombre, 0.2f)
+            }
+            barre(ax, ay - h * 0.15f, bx, by - h * 0.15f, e * 0.7f, col)
+            barre(ax, ay - h * 0.85f, bx, by - h * 0.85f, e * 0.7f, col)
+            for (k in 0..poteaux) {
+                val u = k / poteaux.toFloat()
+                val x = ax + (bx - ax) * u; val y = ay + (by - ay) * u
+                barre(x, y, x, y - h, e, col, 0.5f)
+            }
+            barre(ax, ay - h, bx, by - h, e, col, 0.5f)
+        }
+
+        /**
+         * Sofaïa en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07) : le bassin carré creusé dans la dalle de béton, l'eau
+         * chaude qui y tombe en filets du mur du fond, l'escalier, la
+         * rambarde de bois à gauche et au fond, la rambarde blanche à droite
+         * et son ombre en barreaux sur le béton, la poutre en travers ; derrière,
+         * la pelouse au soleil et la forêt.
+         */
+        fun sofaiaPapier() {
+            morneBoise(14f, 2.5f, 1300, papier(0xFF2E5E36.toInt()), 3.2f)
+            morneBoise(22f, 1.8f, 1301, papier(0xFF3E7A3A.toInt()), 3f)
+            plan(1)
+            morneBoise(25f, 1.6f, 1303, papier(0xFF2A5530.toInt()), 2.6f)
+            for ((ax, ar) in arrayOf(4f to 3.6f, 15f to 3f, 88f to 3.2f, 98f to 3.8f)) arbreRond(ax, 31f, ar, papier(0xFF3F7A36.toInt()), papier(0xFF4A3A2E.toInt()))
+            // La pelouse, ses taches de soleil et d'ombre.
+            pieceD("M-2 31Q30 28.5 60 30Q82 31 102 29L102 68L-2 68Z", papier(0xFF5DA03A.toInt()), 0.5f)
+            val r = Alea(1302)
+            repeat(10) {
+                val x = -2f + r() * 104f; val y = 31.5f + r() * 7f; val l = 4f + r() * 9f
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 1.2f} ${x + l} ${y}Q${x + l / 2f} ${y + 1.2f} $x ${y}Z",
+                    papier(if (r() < 0.6f) 0xFF9CCF52.toInt() else 0xFF3F7F35.toInt()), 0f)
+            }
+            // Les murets de béton à gauche et à droite.
+            pieceD("M-2 35L14 34L15 44L-2 46Z", papier(0xFFA9A598.toInt()))
+            pieceD("M-2 35L14 34L14.4 35.6L-2 36.8Z", papier(0xFFCFCBC0.toInt()), 0.2f)
+            pieceD("M90 33L102 32.5L102 44L91 43Z", papier(0xFFA9A598.toInt()))
+            plan(2)
+            // La dalle de béton, puis le trou du bassin.
+            val beton = papier(0xFFBDB8AC.toInt())
+            pieceD("M-2 41Q50 37.5 102 40L102 68L-2 68Z", beton, 0.5f)
+            pieceD("M-2 41Q50 37.5 102 40L102 41.4Q50 39 -2 42.6Z", papier(0xFFD6D2C6.toInt()), 0.2f)
+            pieceD("M22 41L76 41L88 64L10 64Z", papier(0xFF3A3C38.toInt()), 0.2f)
+            // Le mur du fond, ses marches à gauche.
+            pieceD("M23 41.6L75.4 41.6L74.6 49.4L23.8 49.4Z", papier(0xFF5A5852.toInt()), 0f)
+            for (k in 0 until 3) {
+                val y = 42.4f + k * 2.4f
+                pieceD("M23.6 ${y}L${30f + k * 2.6f} ${y}L${30f + k * 2.6f} ${y + 1.2f}L23.6 ${y + 1.2f}Z", papier(0xFF7C7A72.toInt()), 0.2f)
+            }
+            // L'eau sombre, ses reflets, le petit bloc immergé.
+            pieceD("M23.8 49.4L74.6 49.4L87 63.6L11 63.6Z", papier(0xFF26403A.toInt()), 0f)
+            for ((x, y, l) in arrayOf(Triple(30f, 53f, 9f), Triple(48f, 56f, 12f), Triple(24f, 59f, 8f), Triple(62f, 60f, 10f), Triple(40f, 61.5f, 7f)))
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.4f} $x ${y}Z", papier(0xFF4E6E64.toInt()), 0f)
+            pieceD("M52 50.6L56.4 50.2L56.8 53.4L52.4 53.8Z", papier(0xFF9A9A94.toInt()), 0.3f)
+            // Les filets d'eau chaude qui tombent du mur du fond.
+            val filet = papier(0xFFDCEAE8.toInt())
+            for ((x, y1) in DOUCHES) {
+                var y = DOUCHE_HAUT
+                while (y < y1) {
+                    val l = min(1.2f + r() * 1.6f, y1 - y)
+                    val dx = sin(y * 1.7f + x) * 0.15f
+                    barre(x + dx, y, x + dx + 0.05f, y + l, 0.22f + r() * 0.12f, filet, 0f)
+                    y += l + 0.3f + r() * 0.5f
+                }
+                pieceD("M${x - 1.6f} ${y1 + 0.5f}Q${x + 0.2f} ${y1 - 0.3f} ${x + 1.8f} ${y1 + 0.5f}Q${x + 0.2f} ${y1 + 1f} ${x - 1.6f} ${y1 + 0.5f}Z",
+                    papier(0xFF6F928A.toInt()), 0f)
+            }
+            // L'ombre des barreaux de la rambarde blanche, en travers du béton à droite.
+            val ombreBeton = papier(0xFF8F8A80.toInt())
+            for (k in 0 until 6) {
+                val x = 84f + k * 3f
+                pieceD("M$x ${43f + k * 2f}L${x + 1f} ${43f + k * 2f}L${x + 9f} ${50f + k * 2.6f}L${x + 8f} ${50f + k * 2.6f}Z", ombreBeton, 0f)
+            }
+            // La conduite grise qui longe le bord gauche.
+            barre(-2f, 55f, 14f, 52.4f, 1.6f, papier(0xFF9C9E9A.toInt()), 0.5f)
+            // Les rambardes : bois au fond et à gauche, la poutre en travers, métal blanc à droite.
+            val bois = papier(0xFF8C5E3C.toInt())
+            rambarde(50f, 41.2f, 76f, 41.2f, 6.5f, 3, 12, bois, 0.9f)
+            rambarde(22f, 41.2f, 10f, 64f, 8f, 3, 10, bois, 1.1f)
+            barre(8f, 60f, 70f, 36f, 1.5f, papier(0xFFCBAA7C.toInt()), 0.7f)
+            rambarde(76f, 41.2f, 89f, 64.5f, 9.5f, 4, 14, papier(0xFFE4E6E2.toInt()), 0.9f)
+            balisier(5f, 67f, 13f, feuille())
+            balisier(96f, 67f, 13f, feuille())
+        }
+
         /** Sofaïa : le bassin d'eau chaude en forêt, le bambou qui l'alimente, la vapeur. */
         fun sofaia() {
+            if (PAPIER) { sofaiaPapier(); return }
             crete(28f, 2f, 141, P.loin)
             bosquet(-2f, 102f, 30f, 2.4f, 142, mix(P.loin, P.milieu, 0.5f))
             plan(1)
