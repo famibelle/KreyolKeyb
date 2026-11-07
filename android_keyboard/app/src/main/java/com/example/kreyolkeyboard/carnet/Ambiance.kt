@@ -145,6 +145,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
+                enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1330,6 +1331,68 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
     private companion object {
         /** Un tour du faisceau, en secondes. */
         const val TOUR_PHARE = 9f
+    }
+}
+
+/**
+ * L'eau calme de l'anse de Bouillante ([Paysages.REFLETS_BOUILLANTE], plan du
+ * milieu) : des éclats de soleil qui s'allument et s'éteignent, plus serrés
+ * du côté du soleil, à gauche, comme sur la photo ; et de longues rides qui
+ * glissent lentement. La nuit, les éclats sont rares et pâles.
+ */
+private class Reflets(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val nEclats = if (nuit) 10 else 34
+    private val force = if (nuit) 110f else 230f
+    private val xEclat = FloatArray(nEclats) { val u = hasard(); u * u }
+    private val yEclat = FloatArray(nEclats) { hasard() }
+    private val rythme = FloatArray(nEclats) { 1.2f + hasard() * 1.8f }
+    private val phase = FloatArray(nEclats) { hasard() }
+    private val nRides = 6
+    private val yRide = FloatArray(nRides) { hasard() }
+    private val vitesse = FloatArray(nRides) { 1.2f + hasard() * 1.2f }
+    private val depart = FloatArray(nRides) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        val (x0, x1, y0, y1) = Paysages.REFLETS_BOUILLANTE
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        for (k in 0 until nRides) {
+            val u = ((depart[k] + temps * vitesse[k] / 60f) % 1f + 1f) % 1f
+            val y = y0 + 1f + (y1 - y0 - 2f) * yRide[k]
+            val pres = (y - y0) / (y1 - y0)
+            val x = x0 + (x1 - x0 + 10f) * u - 5f
+            val rx = 4f + 5f * pres
+            p.color = ((sin(PI.toFloat() * u) * 70f).toInt() shl 24) or 0xFFFFFF
+            c.drawOval(x - rx, y - 0.18f - 0.12f * pres, x + rx, y + 0.18f + 0.12f * pres, p)
+        }
+        for (k in 0 until nEclats) {
+            val t = (temps / rythme[k] + phase[k]) % 1f
+            val vif = sin(PI.toFloat() * t).let { it * it }
+            val y = y0 + (y1 - y0) * yEclat[k]
+            val pres = (y - y0) / (y1 - y0)
+            val x = x0 + (x1 - x0) * xEclat[k]
+            val rx = (0.5f + 0.9f * pres) * (0.6f + 0.4f * vif)
+            p.color = ((vif * force).toInt() shl 24) or 0xFFFFFF
+            c.drawOval(x - rx, y - 0.2f - 0.1f * pres, x + rx, y + 0.2f + 0.1f * pres, p)
+        }
+        c.restore()
     }
 }
 

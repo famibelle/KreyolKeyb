@@ -979,6 +979,12 @@ object Paysages {
     /** Où la mer de la Désirade frappe le pied du morne, sur le plan du milieu : (x, y) de chaque gerbe. */
     internal val GERBES_DESIRADE = arrayOf(5f to 45f, 15f to 44.8f, 27f to 44.3f, 37f to 43.3f, 46f to 42.2f)
 
+    /** Le ponton de Bouillante, sur le plan du milieu : du bateau (x0, y0) au rivage (x1, y1). */
+    internal val PONTON_BOUILLANTE = floatArrayOf(13f, 46.2f, 88f, 46.6f)
+
+    /** L'eau de Bouillante qui scintille, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val REFLETS_BOUILLANTE = floatArrayOf(-2f, 84f, 48f, 64f)
+
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
 
@@ -3415,8 +3421,132 @@ object Paysages {
             bosquet(80f, 102f, 56f, 3f, 183, P.pres)
         }
 
+        // ------------------------------------------- Bouillante en papier
+
+        /**
+         * Bouillante en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07), l'anse de Malendure : la pointe basse et boisée à
+         * gauche et ses maisons aux toits rouges, le grand morne couvert de
+         * forêt à droite, la plage de sable sombre et ses kayaks à son pied,
+         * la mer calme, le long ponton et le bateau de plongée amarré au bout,
+         * à gauche du mot ; devant, les roches et un flamboyant en fleurs qui
+         * entre par le bord droit. Les cocotiers de la plage deviennent des
+         * houppiers ronds, et personne sur le ponton. L'eau scintille sur la
+         * carte ouverte (`Reflets` dans [Ambiance]), la tortue y nage.
+         */
+        fun bouillantePapier() {
+            cumulus(-8f, 30f, 34f, 1800)
+            cumulus(20f, 27f, 22f, 1801)
+            cumulus(56f, 10f, 16f, 1802)
+            // La mer jusqu'au large, et la pointe basse de gauche, ses maisons.
+            pieceD("M-2 35.6L102 35.6L102 68L-2 68Z", papier(0xFF6E9CB4.toInt()), 0f)
+            val pointe = brisee(-2f, 36f, 3f, 35.2f, 10f, 32.4f, 20f, 30.6f, 32f, 29f, 42f, 27.6f, 52f, 27f, 60f, 28f)
+            val p0 = sousLaCrete(-2f, 60f, pointe)
+            p0.op(bosses(4f, 60f, { x -> pointe(x) + 0.4f }, 0.9f, 1.6f, Alea(1803)), Path.Op.UNION)
+            piece(p0, papier(0xFF4C7E3A.toInt()))
+            taches(6f, 58f, 35f, 12, 1804, papier(0xFF3A6A2E.toInt()), pointe)
+            val murs = papier(0xFFF0E8DA.toInt())
+            val tuiles = papier(0xFFB4483A.toInt())
+            for ((hx, hy) in arrayOf(24f to 31.4f, 29f to 30.4f, 34f to 31.2f, 38.6f to 29.6f, 43f to 30.6f, 47f to 29.4f, 40f to 32.6f)) {
+                pieceD("M$hx ${hy}L${hx + 2f} ${hy}L${hx + 2f} ${hy + 1.2f}L$hx ${hy + 1.2f}Z", murs, 0.2f)
+                pieceD("M${hx - 0.3f} ${hy}L${hx + 1f} ${hy - 0.8f}L${hx + 2.3f} ${hy}Z", tuiles, 0f)
+            }
+            plan(1)
+            // Le grand morne de droite, sa forêt, la plage sombre à son pied.
+            val morne = brisee(44f, 40f, 50f, 30f, 58f, 24f, 66f, 19.6f, 76f, 15.6f, 86f, 13.4f, 96f, 12f, 102f, 11.6f)
+            val m = sousLaCrete(44f, 102f, morne)
+            m.op(bosses(46f, 103f, { x -> morne(x) + 0.5f }, 1.2f, 2.2f, Alea(1805)), Path.Op.UNION)
+            piece(m, papier(0xFF2E6A2A.toInt()))
+            // La forêt du morne en lisières de houppiers, de plus en plus
+            // claires vers le pied : des lignes de niveau, pas des pois.
+            for ((k, col) in listOf(0xFF3A7A30, 0xFF468A36, 0xFF2A6226).withIndex()) {
+                val dy = 5f + k * 6.5f
+                val lis = { x: Float -> morne(x) + dy + sin(x * 0.4f + k) * 0.8f }
+                val bande = sousLaCrete(48f + k * 4f, 102f, lis)
+                bande.op(bosses(48f + k * 4f, 103f, lis, 1f, 1.8f, Alea(1806 + k)), Path.Op.UNION)
+                piece(bande, papier(col.toInt()), 0.5f)
+            }
+            for ((ax, ay, ar) in arrayOf(Triple(60f, 41.4f, 2f), Triple(66f, 42.2f, 2.4f), Triple(73f, 43.2f, 2.2f), Triple(80f, 44f, 2.6f)))
+                arbreRond(ax, ay, ar, papier(0xFF3E8A36.toInt()), papier(0xFF5A4636.toInt()))
+            pieceD("M44 40.2Q60 40.4 72 42.4Q84 44.4 102 45.6L102 47.2Q84 46.4 72 44.6Q58 42.2 44 41.6Z", papier(0xFF6A5C50.toInt()), 0.4f)
+            for ((kx, ky, kc) in arrayOf(Triple(62f, 42f, 0xFFE8742E), Triple(66.4f, 42.6f, 0xFFD8332C), Triple(70.6f, 43.4f, 0xFFF0C030), Triple(75f, 44.2f, 0xFFE8742E)))
+                pieceD("M$kx ${ky}Q${kx + 1.2f} ${ky - 0.4f} ${kx + 2.4f} ${ky}Q${kx + 1.2f} ${ky + 0.3f} $kx ${ky}Z", papier(kc.toInt()), 0.2f)
+            pieceD("M64.4 41.6L65 40L67.6 40L68.2 41.6Z", papier(0xFFF4F1EA.toInt()), 0.3f)
+            pieceD("M68.8 42.2L69 40.8L72.2 40.8L72.6 42.2Z", papier(0xFFE07890.toInt()), 0.3f)
+            // L'eau de l'anse, calme, en lanières claires.
+            val gris = intArrayOf(papier(0xFF7FA8BE.toInt()), papier(0xFF6890A8.toInt()), papier(0xFF94B6C6.toInt()), papier(0xFF5E86A0.toInt()))
+            pieceD("M-2 47.6L102 47.6L102 68L-2 68Z", papier(0xFF6A94AC.toInt()), 0f)
+            pieceD("M44 41.6Q58 42.2 72 44.6Q84 46.4 102 47.2L102 48L-2 48L-2 41.6Z", papier(0xFF7AA4BA.toInt()), 0f)
+            lanieresMer(48.6f, 64f, 1808, gris)
+            // Le ponton, du bateau au rivage, ses pneus et ses pieds.
+            val (j0, jy0, j1, jy1) = PONTON_BOUILLANTE
+            val deck = papier(0xFF8E8678.toInt())
+            val pied = papier(0xFF4A443C.toInt())
+            var px = j0 + 1f
+            while (px < j1) {
+                val py = jy0 + (jy1 - jy0) * (px - j0) / (j1 - j0)
+                barre(px, py, px, py + 1.4f, 0.3f, pied, 0f)
+                if (px < 54f) piece(disque(px + 1.2f, py + 0.6f, 0.45f), papier(0xFF2A2622.toInt()), 0f)
+                px += 2.6f
+            }
+            barre(j0, jy0, j1, jy1, 0.8f, deck, 0.5f)
+            barre(j0, jy0 - 0.35f, j1, jy1 - 0.35f, 0.18f, papier(0xFFB4AC9C.toInt()), 0f)
+            // Le bateau de plongée amarré au bout : coque rouge, cabine blanche.
+            pieceD("M0.4 44.6L14.6 44.6L13.4 48.4Q8 49.2 2 48.4Z", papier(0xFFB8322C.toInt()), 0.6f)
+            pieceD("M0.4 44.6L14.6 44.6L14.4 45.4L0.6 45.4Z", papier(0xFFF4F1EA.toInt()), 0f)
+            pieceD("M2 44.6L2.4 40.8L10.2 40.8L10.6 44.6Z", papier(0xFFF2EFE8.toInt()), 0.5f)
+            pieceD("M1.6 41L10.8 41L10.6 40.2L1.8 40.2Z", papier(0xFF3A3A3A.toInt()), 0f)
+            for (k in 0 until 4) pieceD("M${3f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 43L${3f + k * 1.8f} 43Z", papier(0xFF3C4450.toInt()), 0f)
+            barre(11.6f, 44.6f, 12.4f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            barre(12.4f, 40.6f, 14.6f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            pieceD("M37 44.2Q39 43.4 41.6 44.2Q39.4 44.9 37 44.2Z", papier(0xFFF0C030.toInt()), 0.2f)
+            plan(2)
+            // Les roches et l'herbe du bord, le flamboyant en fleurs à droite.
+            val bord = brisee(66f, 66f, 72f, 61.4f, 80f, 59f, 90f, 57f, 102f, 55.6f)
+            val roches = sousLaCrete(66f, 102f, bord)
+            piece(roches, papier(0xFF3A3028.toInt()))
+            for ((gx, gy, gr) in arrayOf(Triple(70f, 62.6f, 1.8f), Triple(74.4f, 60.6f, 2f), Triple(79f, 59.6f, 1.6f), Triple(83.6f, 59.2f, 2.2f), Triple(76f, 64f, 2.2f)))
+                galet(gx, gy, gr, papier(0xFF6E5444.toInt()))
+            pieceD("M84 66Q88 60.4 102 58.4L102 68L84 68Z", papier(0xFF5E9E3A.toInt()), 0.4f)
+            // Le flamboyant : un tronc qui monte des roches et s'ouvre en
+            // branches, un houppier en parasol, large, plat dessous et bombé
+            // dessus, qui entre par le coin haut droit ; le dessous sombre et
+            // festonné, le dessus semé de grappes rouges.
+            val brun = papier(0xFF4E3C2E.toInt())
+            pieceD("M97 64Q95.4 52 92.6 42.6L94.4 42Q97.6 50 100.4 56L102 64Z", brun, 0.6f)
+            barre(93.4f, 43f, 84f, 35.4f, 0.8f, brun, 0.4f)
+            barre(94f, 43f, 99f, 33f, 0.8f, brun, 0.4f)
+            barre(90f, 39.6f, 90.6f, 34f, 0.5f, brun, 0.3f)
+            val rf = Alea(1809)
+            val dessus = { x: Float -> 26f - ((x - 96f) / 20f).let { 1f - it * it } * 9f }
+            val dessous = { x: Float -> 34.6f + (x - 78f) * 0.06f + sin(x * 1.3f) * 0.3f }
+            val houppier = Path()
+            houppier.moveTo(76f, dessous(76f))
+            var hx = 76f
+            while (hx < 104f) { houppier.lineTo(hx, dessus(hx)); hx += 1f }
+            houppier.lineTo(104f, dessous(104f))
+            houppier.close()
+            houppier.op(bosses(76f, 104f, dessus, 1.4f, 2.4f, rf), Path.Op.UNION)
+            val festons = Path(houppier).apply { op(bosses(77f, 104f, dessous, 1f, 1.5f, rf), Path.Op.UNION) }
+            piece(festons, papier(0xFF2E6A22.toInt()), 0.7f)
+            piece(houppier, papier(0xFF4E9E2E.toInt()), 0f)
+            piece(bosses(78f, 104f, { x -> dessus(x) + 0.4f }, 1f, 1.6f, rf), papier(0xFF72BE40.toInt()), 0f)
+            pieceD("M80 ${dessous(80f) - 2.4f}Q92 ${dessous(92f) - 3.6f} 104 ${dessous(104f) - 2.6f}L104 ${dessous(104f) - 1.4f}Q92 ${dessous(92f) - 2.2f} 80 ${dessous(80f) - 1.2f}Z",
+                papier(0xFF3A8228.toInt()), 0f)
+            val rouges = intArrayOf(papier(0xFFE8401E.toInt()), papier(0xFFF26A2A.toInt()), papier(0xFFC8301C.toInt()))
+            repeat(14) {
+                val cx = 79f + rf() * 24f
+                val cy = dessus(cx) + 1f + rf() * (dessous(cx) - dessus(cx) - 3f)
+                repeat(6) {
+                    piece(disque(cx + (rf() - 0.5f) * 2.8f, cy + (rf() - 0.5f) * 1.4f, 0.45f + rf() * 0.45f),
+                        rouges[(rf() * 3f).toInt().coerceAtMost(2)], 0.2f)
+                }
+            }
+        }
+
         /** Bouillante : les îlets Pigeon, une tortue verte, le pavillon de plongée, la plage sombre qui fume. */
         fun bouillante() {
+            if (PAPIER) { bouillantePapier(); return }
             plan(1)
             eau(36f, 191)
             forme("M0 66L0 22C10 22 22 28 32 38L36 66Z", P.milieu)
