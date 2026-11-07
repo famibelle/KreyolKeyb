@@ -133,8 +133,15 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             // La nuit, les étoiles de la carte ouverte scintillent, fête ou
             // non : le ciel peint pour elle n'en porte pas (Paysages.rendu).
             val ciel = if (oiseaux && heure?.nuit == true) Etoiles(zone, graine) else null
-            // L'eau des douches de Sofaïa tombe quand le lieu est rendu en plans.
-            val eau = if (oiseaux && lieu == Lieu.SOFAIA && souvenir?.fete == null && Paysages.PAPIER) Douches(zone, graine) else null
+            // L'eau des douches de Sofaïa et de la chute du Carbet tombe quand
+            // le lieu est rendu en plans.
+            val enPlans = oiseaux && souvenir?.fete == null && Paysages.PAPIER
+            val eau = when {
+                enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
+                enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
+                enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
+                else -> null
+            }
             return listOfNotNull(ciel, eau, faune, temps).let {
                 when (it.size) {
                     0 -> null
@@ -1001,6 +1008,134 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
             }
         }
         p.style = Paint.Style.FILL
+        c.restore()
+    }
+}
+
+/**
+ * L'eau de la chute du Carbet ([Paysages.CHUTE_CARBET]) : des traînées
+ * blanches qui dévalent le rideau peint en accélérant et s'écartent un peu
+ * vers le pied, où l'écume bouillonne en bouffées qui gonflent et
+ * s'effacent. La chute est sur le plan du milieu et glisse avec lui.
+ */
+private class Cascade(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = 22
+    private val voie = FloatArray(n) { hasard() - 0.5f }
+    private val periode = FloatArray(n) { 0.7f + hasard() * 0.5f }
+    private val phase = FloatArray(n) { hasard() }
+    private val epaisseur = FloatArray(n) { 0.3f + hasard() * 0.35f }
+    private val bouffees = 6
+    private val decalage = FloatArray(bouffees) { hasard() - 0.5f }
+    private val rythme = FloatArray(bouffees) { 0.9f + hasard() * 0.6f }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val (x, haut, bas, w) = Paysages.CHUTE_CARBET
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        val chute = bas - haut
+        for (i in 0 until n) {
+            val t = (temps / periode[i] + phase[i]) % 1f
+            val v = t * t * 0.6f + t * 0.4f
+            val y = haut + chute * v
+            val l = 1.5f + 3.5f * v
+            // Dans le rideau peint, qui va de 0,7 à 1,1 fois la largeur.
+            val ecart = w * (0.7f + 0.4f * v)
+            val fx = x + voie[i] * ecart * 0.6f
+            // Fondu à l'entrée (sous la brume) et au pied (dans l'écume).
+            val alpha = (minOf(t / 0.15f, (1f - t) / 0.2f, 1f) * 220f).toInt().coerceIn(0, 255)
+            // Sur un rideau blanc, une traînée blanche ne se voit pas : deux
+            // sur trois sont d'un bleu d'eau, la troisième d'un blanc d'écume.
+            p.strokeWidth = epaisseur[i]
+            p.color = (alpha shl 24) or (if (i % 3 == 0) 0xFFFFFF else 0x7DB8B2)
+            c.drawLine(fx, (y - l).coerceAtLeast(haut), fx, y, p)
+        }
+        p.style = Paint.Style.FILL
+        for (j in 0 until bouffees) {
+            val t = (temps / rythme[j] + j / bouffees.toFloat()) % 1f
+            val r = w * (0.25f + 0.4f * t)
+            p.color = (((1f - t) * 200f).toInt() shl 24) or 0xFFFFFF
+            c.drawCircle(x + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f, r, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * La vapeur du bassin de Ravine Chaude ([Paysages.VAPEURS_RAVINE]) : par-dessus
+ * chaque fumée peinte, des bouffées pâles montent lentement en grossissant,
+ * ondulent un peu et s'effacent ; et au ras de l'eau, des nappes glissent
+ * d'un bord à l'autre du bassin. Les nappes comptent le plus : le dessin du
+ * mot, devant, cache presque toujours le haut des fumées, jamais l'eau sous
+ * lui. Doux exprès : une eau tiède qui fume, pas une marmite.
+ */
+private class Vapeurs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val parSource = 5
+    private val periode = FloatArray(Paysages.VAPEURS_RAVINE.size * parSource) { 3.2f + hasard() * 1.6f }
+    private val onde = FloatArray(periode.size) { hasard() * 6.28f }
+    private val nappes = 6
+    private val vitesse = FloatArray(nappes) { (0.9f + hasard() * 0.9f) * (if (hasard() < 0.5f) -1f else 1f) }
+    private val depart = FloatArray(nappes) { hasard() }
+    private val ligne = FloatArray(nappes) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        Paysages.VAPEURS_RAVINE.forEachIndexed { s, (x, pied, haut, w, derive) ->
+            for (k in 0 until parSource) {
+                val i = s * parSource + k
+                val t = (temps / periode[i] + k / parSource.toFloat()) % 1f
+                val y = pied - (pied - haut) * 1.3f * t
+                val bx = x + derive * t * t + sin(temps * 1.1f + onde[i]) * 1.1f * t
+                val r = w * (0.5f + 1.3f * t)
+                p.color = ((sin(PI.toFloat() * t) * 150f).toInt() shl 24) or 0xFFFFFF
+                c.drawCircle(bx, y, r, p)
+            }
+        }
+        // Les nappes, dans l'ovale du bassin (centre 48, 59 ; 22 sur 3,6).
+        for (k in 0 until nappes) {
+            val u = ((depart[k] + temps * vitesse[k] / 40f) % 1f + 1f) % 1f
+            val nx = 30f + 36f * u
+            val ny = 57.2f + ligne[k] * 4f - sin(PI.toFloat() * u) * 1.2f
+            val alpha = (sin(PI.toFloat() * u) * 130f).toInt()
+            p.color = (alpha shl 24) or 0xFFFFFF
+            val rx = 4f + 2.5f * ligne[k]
+            c.drawOval(nx - rx, ny - 0.9f, nx + rx, ny + 0.9f, p)
+        }
         c.restore()
     }
 }

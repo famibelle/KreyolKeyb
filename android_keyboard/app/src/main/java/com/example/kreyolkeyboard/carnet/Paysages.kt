@@ -956,6 +956,12 @@ object Paysages {
      * peint, [Ambiance] y fait tomber les gouttes sur la carte ouverte.
      */
     internal const val DOUCHE_HAUT = 41.8f
+
+    /** Les fumées du bassin de Ravine Chaude, sur le plan de devant : x, pied, haut, largeur et dérive de chacune. */
+    internal val VAPEURS_RAVINE = arrayOf(floatArrayOf(40f, 57f, 49f, 1.4f, -2f), floatArrayOf(58f, 58f, 51f, 1.2f, 2f))
+
+    /** La chute du Carbet, sur le plan du milieu : son x, son haut, son pied et sa largeur. */
+    internal val CHUTE_CARBET = floatArrayOf(80f, 12f, 47f, 4.6f)
     internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
 
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
@@ -2616,7 +2622,7 @@ object Paysages {
             paroi.lineTo(90f, 13f); paroi.cubicTo(92f, 26f, 93f, 40f, 92f, 50f); paroi.close()
             piece(paroi, roche(), 0.6f)
             mousses(66f, 92f, 16f, 48f, 14, 906)
-            cascade(80f, 12f, 47f, 4.6f, 903)
+            cascade(CHUTE_CARBET[0], CHUTE_CARBET[1], CHUTE_CARBET[2], CHUTE_CARBET[3], 903)
             brumePapier(56f, 102f, 11f, 4.5f, 904)
             val verts = intArrayOf(papier(VERT_PROFOND), papier(0xFF2E9E6E.toInt()), papier(0xFF3FA86A.toInt()), papier(SARCELLE))
             for (k in 0 until 4) rive(true, 14f + k * 6f, 40f + k * 4f, 48f - k * 7f, 905 + k, verts[k], 4.5f + k * 0.6f)
@@ -2777,8 +2783,128 @@ object Paysages {
             balisier(88f, 60f, 12f, mix(P.pres, P.milieu, 0.3f))
         }
 
+        // ------------------------------------------- Ravine Chaude en papier
+
+        /** Une case de bois vue de trois quarts : le pignon à droite, le long pan à gauche, la tôle claire. */
+        private fun caseBois(x: Float, y: Float, l: Float, p: Float, h: Float, mur: Int, pignon: Int, tole: Int, portes: Int) {
+            val fuite = l * 0.22f
+            val faite = h * 0.75f
+            // Le long pan : de (x, y) à (x + l, y + fuite) au sol.
+            pieceD("M$x ${y - h}L${x + l} ${y + fuite - h}L${x + l} ${y + fuite}L$x ${y}Z", mur, 0.6f)
+            for (k in 0 until 6) {
+                val u = (k + 0.5f) / 6f
+                barre(x + l * u, y + fuite * u - h * 0.98f, x + l * u, y + fuite * u - 0.1f, 0.12f, mix(mur, 0xFF000000.toInt(), 0.2f), 0f)
+            }
+            for (k in 0 until portes) {
+                val u = 0.18f + k * 0.62f / max(1, portes - 1)
+                val px = x + l * u; val py = y + fuite * u
+                pieceD("M$px ${py - h * 0.7f}L${px + l * 0.1f} ${py + fuite * 0.1f - h * 0.7f}L${px + l * 0.1f} ${py + fuite * 0.1f - 0.2f}L$px ${py - 0.2f}Z",
+                    papier(0xFF2E2620.toInt()), 0f)
+            }
+            // Le pignon : de (x + l, y + fuite) à (x + l + p, y + fuite - p * 0.35).
+            val gx = x + l; val gy = y + fuite; val dx = p; val dy = -p * 0.35f
+            pieceD("M$gx ${gy - h}L${gx + dx / 2f} ${gy + dy / 2f - h - faite}L${gx + dx} ${gy + dy - h}L${gx + dx} ${gy + dy}L$gx ${gy}Z", pignon, 0.6f)
+            pieceD("M${gx + dx * 0.4f} ${gy + dy * 0.4f - h * 0.68f}L${gx + dx * 0.62f} ${gy + dy * 0.62f - h * 0.68f}L${gx + dx * 0.62f} ${gy + dy * 0.62f - 0.1f}L${gx + dx * 0.4f} ${gy + dy * 0.4f - 0.1f}Z",
+                papier(0xFF2E2620.toInt()), 0f)
+            // La tôle : du bord du long pan jusqu'au faîtage, avec un peu de débord.
+            val ax = x - 0.8f; val ay = y - h - 0.3f; val bx = gx + 0.6f; val by = gy - h - 0.2f
+            val fx = gx + dx / 2f + 0.6f; val fy = gy + dy / 2f - h - faite - 0.3f
+            val rx = fx - (bx - ax); val ry = fy - (by - ay)
+            pieceD("M$ax ${ay}L$bx ${by}L$fx ${fy}L$rx ${ry}Z", tole, 0.9f)
+            for (k in 1 until 8) {
+                val u = k / 8f
+                barre(ax + (bx - ax) * u, ay + (by - ay) * u, rx + (fx - rx) * u, ry + (fy - ry) * u, 0.1f, mix(tole, 0xFF000000.toInt(), 0.12f), 0f)
+            }
+            barre(ax, ay, bx, by, 0.35f, mix(tole, 0xFF000000.toInt(), 0.25f), 0f)
+        }
+
+        /** Une touffe de bambous : des chaumes qui s'arquent vers [sens], leurs feuilles fines au bout. */
+        private fun bambous(x: Float, y: Float, h: Float, sens: Float, graine: Int) {
+            val r = Alea(graine)
+            val chaume = papier(0xFF7A9436.toInt())
+            val feuilles = intArrayOf(papier(0xFF4E8030.toInt()), papier(0xFF6E9E3C.toInt()), papier(0xFF3E6E2C.toInt()))
+            for (k in 0 until 9) {
+                val bx = x + (r() - 0.5f) * 4f
+                val penche = sens * (3f + k * 1.6f + r() * 2f)
+                val hk = h * (0.7f + r() * 0.3f)
+                var px = bx; var py = y
+                for (s in 1..6) {
+                    val u = s / 6f
+                    val nx = bx + penche * u * u; val ny = y - hk * u * (1f - 0.22f * u)
+                    barre(px, py, nx, ny, 0.5f - u * 0.25f, chaume, 0.3f)
+                    // Les feuilles retombent, du côté où le chaume s'arque.
+                    if (s >= 3) repeat(4) {
+                        val a = if (sens < 0) 115f + r() * 55f else 10f + r() * 55f
+                        feuillePliee(nx, ny, 2f + r() * 1.6f, a, feuilles[(r() * 3f).toInt().coerceAtMost(2)], 0.2f)
+                    }
+                    px = nx; py = ny
+                }
+            }
+        }
+
+        /**
+         * Ravine Chaude en papier découpé, d'après une carte postale d'époque
+         * du propriétaire, passée en couleur (2026-11-07) : l'établissement
+         * thermal, sa case de bois à toit de tôle claire, le bassin d'eau
+         * chaude à côté, les deux cases sur le morne derrière, la forêt, et
+         * la touffe de bambous à droite. Les cocotiers de la carte postale
+         * deviennent de grands arbres à houppier rond (pas de cocotier).
+         */
+        fun ravineChaudePapier() {
+            morneBoise(15f, 2.2f, 1400, papier(0xFF2F5E36.toInt()), 3f)
+            // La forêt du haut, serrée : les houppiers se recouvrent, on n'y voit pas de clairière.
+            val rf = Alea(1408)
+            for (rang in 0 until 2) {
+                var ax = -2f + rang * 3.5f
+                while (ax < 104f) {
+                    val ar = 3.4f + rf() * 1.4f
+                    arbreRond(ax, 22f + rang * 4f - ax * 0.05f + rf() * 1.5f, ar,
+                        papier(if (rang == 0) 0xFF356A36.toInt() else 0xFF417E3A.toInt()), papier(0xFF5A4636.toInt()))
+                    ax += 6f + rf() * 2.5f
+                }
+            }
+            // Le sous-bois cache les troncs : une forêt, pas un verger.
+            val sousBois = { x: Float -> 20f - x * 0.05f + sin(x * 0.4f) * 0.5f }
+            val sb = sousLaCrete(-2f, 102f, sousBois)
+            sb.op(bosses(-2f, 102f, sousBois, 1.6f, 2.4f, Alea(1409)), Path.Op.UNION)
+            piece(sb, papier(0xFF2E5A30.toInt()))
+            plan(1)
+            // Le morne en herbe, les deux cases du haut, et les grands arbres de gauche.
+            val herbe = brisee(-2f, 40f, 20f, 36f, 40f, 31f, 60f, 27.5f, 80f, 25f, 102f, 23f)
+            val t = sousLaCrete(-2f, 102f, herbe)
+            t.op(bosses(-2f, 102f, { x -> herbe(x) + 0.6f }, 0.7f, 1.2f, Alea(1401)), Path.Op.UNION)
+            piece(t, papier(0xFF7DAE48.toInt()))
+            taches(-2f, 102f, 50f, 10, 1402, papier(0xFF5E9238.toInt()), herbe)
+            val creme = papier(0xFFE6DCC4.toInt())
+            caseBois(84f, 28.5f, 7f, 4f, 3.6f, papier(0xFFD2C6AA.toInt()), creme, papier(0xFF8E8A84.toInt()), 1)
+            caseBois(67f, 35.5f, 6f, 3.4f, 3.2f, papier(0xFFC8B896.toInt()), creme, papier(0xFF8E8A84.toInt()), 1)
+            for ((ax, ay, ar) in arrayOf(Triple(3f, 44f, 5.2f), Triple(13f, 42f, 4.4f), Triple(24f, 40f, 3.8f)))
+                arbreRond(ax, ay, ar, papier(0xFF46843C.toInt()), papier(0xFF6A5442.toInt()))
+            plan(2)
+            // Le bas du morne, sombre de végétation, puis la case du bain et son bassin.
+            val bas = brisee(-2f, 50f, 24f, 51.5f, 50f, 52f, 76f, 50.5f, 102f, 49f)
+            val b = sousLaCrete(-2f, 102f, bas)
+            b.op(bosses(-2f, 102f, { x -> bas(x) + 0.5f }, 0.9f, 1.6f, Alea(1403)), Path.Op.UNION)
+            piece(b, papier(0xFF4E7E38.toInt()))
+            pieceD("M24 60.5Q24 54.4 48 54.2Q72 54.4 72 59Q72 63.6 48 63.8Q24 63.6 24 60.5Z", papier(0xFFA9A496.toInt()), 0.6f)
+            pieceD("M26 60.2Q26 55.6 48 55.4Q70 55.6 70 59Q70 62.6 48 62.8Q26 62.6 26 60.2Z", papier(0xFF86C2B0.toInt()), 0.2f)
+            for ((x, y, l) in arrayOf(Triple(32f, 58f, 8f), Triple(46f, 57f, 11f), Triple(56f, 60.4f, 9f), Triple(38f, 61.2f, 7f)))
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.4f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.35f} $x ${y}Z", papier(0xFFB8E0D2.toInt()), 0f)
+            VAPEURS_RAVINE.forEachIndexed { i, (x, pied, haut, w, derive) -> panache(x, pied, haut, w, derive, 1404 + i) }
+            caseBois(1f, 55f, 17f, 8f, 9f, papier(0xFF8A6A4A.toInt()), papier(0xFF735638.toInt()), papier(0xFFD0CCC2.toInt()), 3)
+            // La touffe de bambous à droite, la végétation devant, les balisiers du colibri.
+            bambous(96f, 60f, 34f, -1f, 1406)
+            val devant = brisee(-2f, 63f, 14f, 62.5f, 28f, 64.5f, 70f, 65f, 86f, 62f, 102f, 61f)
+            val d = sousLaCrete(-2f, 102f, devant)
+            d.op(bosses(-2f, 102f, { x -> devant(x) + 0.4f }, 0.8f, 1.4f, Alea(1407)), Path.Op.UNION)
+            piece(d, papier(0xFF35602C.toInt()))
+            balisier(8f, 67f, 13f, feuille())
+            balisier(88f, 67f, 13f, feuille())
+        }
+
         /** Ravine Chaude : la rivière tiède au fond de la ravine, les roches, les fougères. */
         fun ravineChaude() {
+            if (PAPIER) { ravineChaudePapier(); return }
             val r = Alea(151)
             crete(24f, 2f, 152, P.loin)
             plan(1)
