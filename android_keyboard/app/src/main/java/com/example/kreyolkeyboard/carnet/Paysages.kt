@@ -20,6 +20,7 @@ import android.util.LruCache
 import java.util.concurrent.Executors
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
@@ -454,7 +455,7 @@ object Paysages {
      * rareté se dit par l'heure, le métal et la plaque, qu'on voit sans
      * pencher la carte.
      */
-    fun nombreDePlans(heure: Heure): Int = if (heure.rang >= Rarete.RARE.ordinal) 6 else 5
+    fun nombreDePlans(heure: Heure): Int = if (PAPIER || heure.rang >= Rarete.RARE.ordinal) 6 else 5
 
     /**
      * Le lieu en cinq calques, six pour une rare ([nombreDePlans]), pour la
@@ -594,7 +595,46 @@ object Paysages {
             trancher(plans[devant], forme, unite, heure, force = if (devant == 2) 0.6f else 1f)
         }
         silhouettes.forEach { it?.recycle() }
+        if (PAPIER) plans.forEach { Grain.poser(it) }
         return plans
+    }
+
+    /**
+     * Le grain du papier, posé une fois sur chaque calque rendu, au pixel :
+     * une tuile de bruit clair et sombre très léger, et quelques fibres.
+     */
+    private object Grain {
+        private var tuile: Bitmap? = null
+
+        @Synchronized
+        private fun tuile(): Bitmap = tuile ?: run {
+            val n = 160
+            val b = Bitmap.createBitmap(n, n, Bitmap.Config.ARGB_8888)
+            val r = Alea(97)
+            val px = IntArray(n * n)
+            for (i in px.indices) {
+                val v = r()
+                val a = (r() * 20f).toInt()
+                px[i] = if (v < 0.5f) (a shl 24) else ((a + 4) shl 24) or 0xFFFFFF
+            }
+            b.setPixels(px, 0, n, 0, 0, n, n)
+            val c = Canvas(b)
+            val f = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeWidth = 0.8f; style = Paint.Style.STROKE }
+            repeat(70) {
+                val x = r() * n; val y = r() * n; val l = 3f + r() * 9f; val a = r() * 6.3f
+                f.color = if (r() < 0.6f) 0x1EFFFFFF else 0x14000000
+                c.drawLine(x, y, x + cos(a) * l, y + sin(a) * l, f)
+            }
+            b.also { tuile = it }
+        }
+
+        fun poser(b: Bitmap) {
+            val p = Paint().apply {
+                shader = BitmapShader(tuile(), Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+                xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+            }
+            Canvas(b).drawRect(0f, 0f, b.width.toFloat(), b.height.toFloat(), p)
+        }
     }
 
     /**
@@ -673,9 +713,9 @@ object Paysages {
      * liseré blanc. C'est le vide qu'on voit derrière chaque découpe qui fait
      * le théâtre de papier.
      */
-    private const val OMBRE_MONTEE = 1f
-    private const val OMBRE_COTE = 0.55f
-    private const val OMBRE_FLOU = 0.22f
+    private val OMBRE_MONTEE = if (PAPIER) 0.35f else 1f
+    private val OMBRE_COTE = if (PAPIER) 0.15f else 0.55f
+    private val OMBRE_FLOU = if (PAPIER) 0.55f else 0.22f
 
     /**
      * Mélange [b] vers [vers] de la part [t], là où la silhouette [forme] (de
@@ -713,7 +753,7 @@ object Paysages {
         val ombre = forme.extractAlpha(flou, ou)
         val p = Paint(Paint.FILTER_BITMAP_FLAG).apply {
             color = OMBRE
-            alpha = ((if (heure.nuit) 0.7f else 0.5f) * force * 255f).roundToInt()
+            alpha = ((if (heure.nuit) 0.7f else 0.5f) * (if (PAPIER) 0.7f else 1f) * force * 255f).roundToInt()
             xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
         }
         Canvas(derriere).drawBitmap(
@@ -833,11 +873,19 @@ object Paysages {
      */
     internal const val LIEUX_DESSINES = true
 
+    /**
+     * Maquette du papier découpé en couches (skill `direction-artistique`,
+     * référence du propriétaire du 2026-11-07) : papier opaque, ombres
+     * douces, arche de feuilles sur toutes les cartes, Grand Étang redessiné.
+     * Faux pour retrouver la gouache.
+     */
+    internal const val PAPIER = true
+
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
         val p = Peintre(c, heure, seul, facture, echelle, releve)
-        if (ciel) { if (facture == Facture.GOUACHE) p.cielPeint(etoiles) else p.ciel(etoiles) }
+        if (ciel) { if (PAPIER) p.cielPapier() else if (facture == Facture.GOUACHE) p.cielPeint(etoiles) else p.ciel(etoiles) }
         if (!lieuAussi || !LIEUX_DESSINES) return
         when (lieu) {
             Lieu.GRANDE_ANSE -> p.grandeAnse()
@@ -855,7 +903,7 @@ object Paysages {
             Lieu.ROCHES_GRAVEES -> p.rochesGravees()
             Lieu.PLACE_VICTOIRE -> p.placeVictoire()
             Lieu.FIGUIER_MAUDIT -> p.figuierMaudit()
-            Lieu.GRAND_ETANG -> p.grandEtang()
+            Lieu.GRAND_ETANG -> if (PAPIER) p.grandEtangPapier() else p.grandEtang()
             Lieu.BAINS_JAUNES -> p.bainsJaunes()
             Lieu.CASCADE_ECREVISSES -> p.cascadeEcrevisses()
             Lieu.SAUT_LEZARDE -> p.sautLezarde()
@@ -1128,6 +1176,22 @@ object Paysages {
             /** Le siffleur des montagnes, gris ardoise ; la paruline caféiette, vert olive. */
             const val COULEUR_SIFFLEUR = 0xFF4E5560.toInt()
             const val COULEUR_PARULINE = 0xFF8C8A3A.toInt()
+
+            // La palette de la référence papier découpé (skill `direction-artistique`).
+            const val CREME = 0xFFFCF5EC.toInt()
+            const val TURQUOISE = 0xFF00AEA9.toInt()
+            const val VERT_D_EAU = 0xFF30D5AD.toInt()
+            const val EAU_CLAIRE = 0xFFC6F2D2.toInt()
+            const val MENTHE = 0xFF91E1AF.toInt()
+            const val SAUGE = 0xFF9FAD7A.toInt()
+            const val LIME = 0xFFB9CF7D.toInt()
+            const val SARCELLE = 0xFF1E8E7A.toInt()
+            const val VERT_PROFOND = 0xFF214C40.toInt()
+            const val PRUNE = 0xFF793437.toInt()
+            const val TERRE = 0xFF935E4C.toInt()
+            const val BLEU_PROFOND = 0xFF00446F.toInt()
+            const val LAVANDE = 0xFF767DB2.toInt()
+            const val MOUTARDE = 0xFFD9A93A.toInt()
         }
 
         /** Une opacité de plus sur tout ce qui se peint : une bête qui paraît ou s'efface. */
@@ -1241,6 +1305,23 @@ object Paysages {
             if (!actif) return
             relever(col, 1f) { r, rp -> r.drawPath(chemin, rp) }
             val plein = facture == Facture.GOUACHE
+            if (PAPIER) {
+                // Le papier découpé : une feuille opaque, son ombre douce, et
+                // dessous une fine tranche de kraft qui dépasse en bas à droite.
+                if (plein && ombre > 0f) ombrerPapier(chemin, ombre)
+                gouache.shader = null
+                gouache.style = Paint.Style.FILL
+                if (plein && ombre > 0f) {
+                    c.save()
+                    c.translate(0.12f, 0.28f)
+                    gouache.color = kraft
+                    c.drawPath(chemin, gouache)
+                    c.restore()
+                }
+                gouache.color = col
+                c.drawPath(chemin, gouache)
+                return
+            }
             if (plein) ombrer(chemin, ombre)
             gouache.shader = null
             gouache.style = Paint.Style.FILL
@@ -1290,6 +1371,24 @@ object Paysages {
             ombreCarton.maskFilter = BlurMaskFilter(max(0.5f, (sigma - 0.5f) / 0.57735f), BlurMaskFilter.Blur.NORMAL)
             ombreCarton.color = OMBRE
             ombreCarton.alpha = ((if (P.nuit) 0.5f else 0.32f) * force * 255f).roundToInt()
+            c.save()
+            c.setMatrix(versPixels)
+            c.drawPath(enPixels, ombreCarton)
+            c.restore()
+        }
+
+        /**
+         * L'ombre d'une feuille de papier sur ce qui est derrière elle : à
+         * peine décalée vers le bas, douce, dense contre le bord découpé.
+         */
+        @Suppress("DEPRECATION")
+        private fun ombrerPapier(chemin: Path, force: Float) {
+            val enPixels = Path(chemin)
+            enPixels.transform(c.matrix)
+            enPixels.offset(0f, 0.2f * echelle)
+            ombreCarton.maskFilter = BlurMaskFilter(max(0.5f, 0.5f * echelle), BlurMaskFilter.Blur.NORMAL)
+            ombreCarton.color = OMBRE
+            ombreCarton.alpha = ((if (P.nuit) 0.55f else 0.4f) * force * 255f).roundToInt().coerceAtMost(255)
             c.save()
             c.setMatrix(versPixels)
             c.drawPath(enPixels, ombreCarton)
@@ -1493,6 +1592,7 @@ object Paysages {
          * théâtre de papier vu à contre-jour.
          */
         fun coulisses() {
+            if (PAPIER) { arche(fond = false); return }
             val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.25f else 0.38f)
             val tronc = mix(P.sol, 0xFF000000.toInt(), 0.3f)
             for (droite in booleanArrayOf(false, true)) {
@@ -1529,6 +1629,7 @@ object Paysages {
          * lieu d'un seul : c'est la boîte d'un théâtre, pas un cadre.
          */
         fun coulissesDuFond() {
+            if (PAPIER) { arche(fond = true); return }
             val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.12f else 0.22f)
             val tronc = mix(P.sol, 0xFF000000.toInt(), 0.15f)
             for (droite in booleanArrayOf(false, true)) {
@@ -2538,6 +2639,227 @@ object Paysages {
         }
 
         // ------------------------------------------------------ les quinze lieux de la deuxième vague
+
+        // ------------------------------------------------- maquette papier découpé
+
+        /** Une couleur de la référence, à l'heure de la carte. */
+        fun papier(col: Int): Int = duJour(col)
+
+        /** Une pièce de papier découpé, quelle que soit sa taille : une feuille, une lanière. */
+        fun piece(t: Path, col: Int, ombre: Float = 1f) {
+            if (!actif) return
+            if (!decoupe || aplats > 0) { forme(t, col); return }
+            t.computeBounds(boite, true)
+            peint(t, col, 0f, boite, ombre)
+        }
+
+        private fun disque(cx: Float, cy: Float, r: Float) = Path().apply { addCircle(cx, cy, r, Path.Direction.CW) }
+
+        private val pose = Matrix()
+
+        /**
+         * Une feuille en amande pliée sur sa nervure, de [l] unités, posée
+         * par sa base en ([x], [y]) et tournée de [angle] degrés : deux
+         * moitiés de deux tons, la claire par-dessus.
+         */
+        fun feuillePliee(x: Float, y: Float, l: Float, angle: Float, col: Int, large: Float = 0.5f) {
+            val w = l * large
+            val haut = Path().apply { moveTo(0f, 0f); quadTo(l * 0.45f, -w, l, 0f); close() }
+            val bas = Path().apply { moveTo(0f, 0f); quadTo(l * 0.45f, w, l, 0f); close() }
+            pose.setRotate(angle)
+            pose.postTranslate(x, y)
+            haut.transform(pose)
+            bas.transform(pose)
+            piece(bas, mix(col, 0xFF000000.toInt(), 0.14f), 0.8f)
+            piece(haut, mix(col, 0xFFFFFFFF.toInt(), 0.1f), 0f)
+        }
+
+        /** Un relief en lignes de niveau : [n] bandes découpées, de la plus haute (derrière) à la plus basse. */
+        fun bandes(y0: Float, pas: Float, n: Int, amp: Float, graine: Int, de: Int, a: Int, f1: Float = 0.07f) {
+            for (i in 0 until n) {
+                crete(y0 + i * pas, amp * (1f - 0.12f * i), graine + i, mix(de, a, if (n == 1) 0f else i / (n - 1f)), -2f, 102f, f1)
+            }
+        }
+
+        private fun profil(gauche: Boolean, haut: Float, bas: Float, fin: Float, ph: Float, x: Float): Float {
+            val u = (if (gauche) x / fin else (LARGEUR - x) / (LARGEUR - fin)).coerceIn(0f, 1f)
+            return haut + (bas - haut) * u * u * (3f - 2f * u) + sin(x * 0.3f + ph) * 0.6f + sin(x * 0.11f + 2f * ph) * 0.9f
+        }
+
+        /** Un morne qui descend du bord de la fenêtre vers l'eau, et finit à [fin] au niveau [bas]. */
+        fun pente(gauche: Boolean, haut: Float, bas: Float, fin: Float, graine: Int, col: Int): (Float) -> Float {
+            val ph = Alea(graine)() * 6f
+            val sens = if (gauche) 1f else -1f
+            val t = Path()
+            var x = if (gauche) -2f else LARGEUR + 2f
+            t.moveTo(x, BAS + 2f)
+            while ((x - fin) * sens < 0f) { t.lineTo(x, profil(gauche, haut, bas, fin, ph, x)); x += 1.5f * sens }
+            t.lineTo(fin, profil(gauche, haut, bas, fin, ph, fin))
+            t.quadTo(fin + 3f * sens, bas + 1f, fin + 2f * sens, bas + 5f)
+            t.lineTo(fin, BAS + 2f)
+            t.close()
+            piece(t, col)
+            return { v -> profil(gauche, haut, bas, fin, ph, v) }
+        }
+
+        /** Une eau en lanières de papier, rangée par rangée, avec des jours entre elles. */
+        fun lanieres(x0: Float, x1: Float, y0: Float, y1: Float, n: Int, graine: Int, cols: IntArray) {
+            val r = Alea(graine)
+            for (i in 0 until n) {
+                val y = y0 + (y1 - y0) * i / n
+                var x = x0 + r() * 3f
+                while (x < x1) {
+                    val l = 4f + r() * 10f
+                    val e = 0.7f + r() * 0.6f
+                    val t = Path()
+                    t.addRoundRect(RectF(x, y, min(x + l, x1), y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, cols[min((r() * cols.size).toInt(), cols.size - 1)], 0.5f)
+                    x += l + 0.6f + r() * 2.4f
+                }
+            }
+        }
+
+        /** Un brin d'herbe en lanière, de [h] unités, penché de [penche]. */
+        fun brin(x: Float, y: Float, h: Float, penche: Float, col: Int) {
+            val t = Path()
+            t.moveTo(x - 0.4f, y)
+            t.quadTo(x + penche * 0.3f, y - h * 0.6f, x + penche, y - h)
+            t.quadTo(x + penche * 0.3f + 0.45f, y - h * 0.55f, x + 0.4f, y)
+            t.close()
+            piece(t, col, 0.5f)
+        }
+
+        fun herbes(x0: Float, x1: Float, y: Float, graine: Int, cols: IntArray) {
+            val r = Alea(graine)
+            var x = x0
+            while (x < x1) {
+                brin(x, y + r() * 1.5f, 3f + r() * 4f, (r() - 0.5f) * 4f, papier(cols[min((r() * cols.size).toInt(), cols.size - 1)]))
+                x += 0.5f + r() * 0.9f
+            }
+        }
+
+        fun butte(cx: Float, cy: Float, rx: Float, ry: Float, col: Int) {
+            piece(Path().apply { addOval(RectF(cx - rx, cy - ry, cx + rx, cy + ry), Path.Direction.CW) }, col)
+        }
+
+        /** Le ciel en feuilles de papier crème, du zénith vers l'horizon, et l'astre en disque de papier. */
+        fun cielPapier() {
+            val fond = if (P.nuit) P.cielBas else mix(P.cielBas, CREME, 0.6f)
+            p.shader = null
+            p.style = Paint.Style.FILL
+            teinte(fond, 1f)
+            if (actif) c.drawRect(-2f, -2f, LARGEUR + 2f, BAS + 2f, p)
+            val bords = floatArrayOf(34f, 24f, 15f, 7f)
+            for ((i, y) in bords.withIndex()) {
+                val t = i / 3f
+                val col = mix(mix(P.cielBas, P.cielHaut, 0.3f + 0.7f * t), CREME, if (P.nuit) 0.04f else 0.45f - 0.3f * t)
+                val ph = Alea(40 + i)() * 6f
+                val bande = Path()
+                bande.moveTo(-2f, -2f)
+                bande.lineTo(LARGEUR + 2f, -2f)
+                var x = LARGEUR + 2f
+                while (x >= -2f) { bande.lineTo(x, y + sin(x * 0.09f + ph) * 1.6f + sin(x * 0.23f + ph) * 0.6f); x -= 2f }
+                bande.close()
+                piece(bande, col, 0.6f)
+            }
+            if (P.nuit) {
+                piece(disque(P.astreX, P.astreY, P.astreR * 1.8f), mix(P.cielHaut, P.astre, 0.22f), 0.5f)
+                piece(disque(P.astreX, P.astreY, P.astreR), P.astre, 0.6f)
+                piece(disque(P.astreX + 1.9f, P.astreY - 1.1f, P.astreR * 0.92f), mix(P.cielHaut, P.astre, 0.22f), 0.6f)
+            } else {
+                piece(disque(P.astreX, P.astreY, P.astreR * 1.9f), mix(P.astre, CREME, 0.55f), 0.5f)
+                piece(disque(P.astreX, P.astreY, P.astreR), P.astre, 0.6f)
+            }
+        }
+
+        /**
+         * L'arche de feuilles qui encadre la scène, partie des deux bords bas
+         * et refermée en voûte en haut. [fond] : la rangée claire, un pas en
+         * retrait, collée au carton du proche ; sinon la rangée sombre de
+         * devant, avec ses deux troncs.
+         */
+        fun arche(fond: Boolean) {
+            val r = Alea(if (fond) 802 else 801)
+            val cols = if (fond) intArrayOf(MENTHE, LIME, VERT_D_EAU, SAUGE, MENTHE, MOUTARDE)
+            else intArrayOf(VERT_PROFOND, SARCELLE, TURQUOISE, BLEU_PROFOND, SARCELLE, PRUNE)
+            if (!fond) for (droite in booleanArrayOf(false, true)) {
+                fun x(v: Float) = if (droite) LARGEUR - v else v
+                val tronc = Path()
+                tronc.moveTo(x(-0.5f), BAS + 2f)
+                tronc.quadTo(x(5f), 34f, x(9f), 3f)
+                tronc.lineTo(x(10.6f), 3.6f)
+                tronc.quadTo(x(7.4f), 34f, x(3.4f), BAS + 2f)
+                tronc.close()
+                piece(tronc, papier(TERRE))
+                val branche = Path()
+                branche.moveTo(x(6f), 28f)
+                branche.quadTo(x(11f), 22f, x(15f), 17f)
+                branche.lineTo(x(15.4f), 17.8f)
+                branche.quadTo(x(11.4f), 23.5f, x(6.6f), 30f)
+                branche.close()
+                piece(branche, papier(TERRE), 0.7f)
+            }
+            val (dmin, dmax) = if (fond) 4f to 12f else 0f to 8f
+            val feuilles = ArrayList<FloatArray>()
+            var essais = 0
+            val voulu = if (fond) 100 else 150
+            while (feuilles.size < voulu && essais < 6000) {
+                essais++
+                val x = r() * 104f - 2f
+                val y = r() * 68f - 2f
+                val d = min(min(x, LARGEUR - x), y * 1.7f)
+                if (d < dmin || d > dmax) continue
+                feuilles.add(floatArrayOf(x, y, d, r(), r(), r()))
+            }
+            // Du dedans vers le bord : la feuille la plus au bord est devant.
+            feuilles.sortByDescending { it[2] }
+            for (f in feuilles) {
+                val x = f[0]; val y = f[1]; val d = f[2]
+                val vers = Math.toDegrees(atan2((32f - y).toDouble(), (50f - x).toDouble())).toFloat()
+                val angle = vers + (f[3] - 0.5f) * 90f
+                val l = min((if (fond) 4f else 5.5f) + f[4] * 3.5f, (if (fond) 16f else 12f) - d + 2f).coerceAtLeast(2.5f)
+                feuillePliee(x, y, l, angle, papier(cols[min((f[5] * cols.size).toInt(), cols.size - 1)]))
+            }
+        }
+
+        /**
+         * Grand Étang en papier découpé : les mornes au loin en lignes de
+         * niveau, l'étang en lanières de turquoise entre deux mornes boisés,
+         * des buttes, des herbes, deux balisiers et un anthurium devant.
+         */
+        fun grandEtangPapier() {
+            bandes(20f, 3f, 4, 2.8f, 700, mix(P.loin, P.cielBas, 0.45f), mix(P.loin, P.milieu, 0.2f), f1 = 0.06f)
+            plan(1)
+            piece(Path().apply { addOval(RectF(8f, 38f, 92f, 58f), Path.Direction.CW) }, papier(SARCELLE))
+            lanieres(10f, 90f, 40.5f, 55f, 8, 710,
+                intArrayOf(papier(TURQUOISE), papier(VERT_D_EAU), papier(EAU_CLAIRE), papier(0xFF20B298.toInt())))
+            val verts = intArrayOf(papier(MENTHE), papier(SAUGE), papier(SARCELLE), papier(VERT_PROFOND))
+            for (k in 0 until 3) {
+                val g = pente(true, 25f + k * 5f, 43f + k * 3f, 30f - k * 7f, 720 + k, mix(verts[k], verts[k + 1], 0.3f))
+                val d = pente(false, 27f + k * 5f, 42.5f + k * 3f, 70f + k * 7f, 730 + k, mix(verts[k], verts[k + 1], 0.5f))
+                if (k == 0) {
+                    // Des houppiers sur la crête du fond, de feuilles en grappe.
+                    val r = Alea(740)
+                    for (x in floatArrayOf(3f, 9f, 15f, 21f, 85f, 91f, 97f)) {
+                        val y = if (x < 50f) g(x) else d(x)
+                        for (j in 0 until 5) {
+                            feuillePliee(x + (r() - 0.5f) * 3f, y + 1f, 3f + r() * 1.5f, -90f + (r() - 0.5f) * 120f,
+                                verts[min((r() * 3f).toInt() + 1, 3)])
+                        }
+                    }
+                }
+            }
+            plan(2)
+            butte(6f, 70f, 24f, 12f, papier(TURQUOISE))
+            butte(94f, 70f, 26f, 12f, papier(LIME))
+            butte(30f, 72f, 16f, 9f, papier(BLEU_PROFOND))
+            butte(72f, 72f, 15f, 8f, papier(MENTHE))
+            herbes(0f, 22f, 61f, 750, intArrayOf(SARCELLE, LIME, VERT_PROFOND))
+            herbes(78f, 100f, 61f, 751, intArrayOf(SARCELLE, MENTHE, PRUNE))
+            balisier(13f, 62f, 11f, papier(SARCELLE))
+            balisier(88f, 63f, 12f, papier(VERT_PROFOND))
+            anthurium(25f, 62f)
+        }
 
         /** Le Grand Étang : le lac dans sa cuvette de forêt, les mornes, une libellule. */
         fun grandEtang() {
