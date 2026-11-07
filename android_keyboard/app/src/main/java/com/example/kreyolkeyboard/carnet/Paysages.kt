@@ -3945,8 +3945,295 @@ object Paysages {
             pieceD("M91.6 56L92.4 56L92.5 63L91.5 63Z", papier(0xFF5E4C3E.toInt()), 0.5f)
         }
 
+        // ------------------------------------------- les Roches gravées en papier
+
+        /** Un sillon gravé en anneau : le creux sombre, et sa lèvre basse éclairée. */
+        private fun anneauGrave(cx: Float, cy: Float, r: Float, e: Float, creux: Int, levre: Int) {
+            val anneau = disque(cx, cy, r).apply { op(disque(cx, cy, r - e), Path.Op.DIFFERENCE) }
+            piece(Path(anneau).apply { offset(0.18f, 0.28f) }, levre, 0f)
+            piece(anneau, creux, 0f)
+        }
+
+        /** Un sillon gravé en arc de cercle, de [debut] sur [balayage] degrés. */
+        private fun arcGrave(cx: Float, cy: Float, r: Float, e: Float, debut: Float, balayage: Float, creux: Int, levre: Int) {
+            val coin = Path().apply {
+                moveTo(cx, cy)
+                arcTo(RectF(cx - r - 1f, cy - r - 1f, cx + r + 1f, cy + r + 1f), debut, balayage)
+                close()
+            }
+            val arc = disque(cx, cy, r).apply { op(disque(cx, cy, r - e), Path.Op.DIFFERENCE); op(coin, Path.Op.INTERSECT) }
+            piece(Path(arc).apply { offset(0.18f, 0.28f) }, levre, 0f)
+            piece(arc, creux, 0f)
+        }
+
+        /**
+         * Les Roches gravées en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : dans la forêt de Trois-Rivières, peinte
+         * de l'intérieur, un gros rocher gris taché de lichen porte à droite
+         * du mot le visage gravé : la tête ronde, les yeux, la bouche, les
+         * volutes de chaque côté, les rayons au-dessus et les deux spirales
+         * dessous ; à gauche un rocher plus petit garde un visage effacé.
+         * Balisiers pour le colibri.
+         */
+        fun rochesGraveesPapier() {
+            // La forêt de l'intérieur : la voûte, des troncs à contreforts, des lianes.
+            val voute = brisee(-2f, 14f, 20f, 18f, 40f, 12f, 60f, 16f, 80f, 10f, 102f, 13f)
+            val v = Path().apply { addRect(-4f, -4f, 104f, 6f, Path.Direction.CW) }
+            v.op(bosses(-2f, 102f, voute, 2.4f, 3.6f, Alea(2201)), Path.Op.UNION)
+            v.op(chemin("M-4 -4L104 -4L104 ${voute(102f)}L-4 ${voute(-2f)}Z"), Path.Op.UNION)
+            val feuillage = papier(0xFF2E5E2A.toInt())
+            val tronc = papier(0xFF5E5448.toInt())
+            for ((tx, w) in arrayOf(26f to 2.2f, 44f to 1.6f, 58f to 2.6f)) {
+                pieceD("M${tx - w * 1.8f} 52Q${tx - w * 0.5f} 46 ${tx - w / 2f} 30L${tx - w / 2f} 0L${tx + w / 2f} 0L${tx + w / 2f} 30Q${tx + w * 0.5f} 46 ${tx + w * 1.8f} 52Z",
+                    tronc, 0.5f)
+            }
+            piece(v, feuillage, 0.6f)
+            for ((k, col) in listOf(0xFF3C7232, 0xFF4E8A3A).withIndex()) {
+                piece(bosses(-2f, 102f, { x -> voute(x) - 2f - k * 2.4f }, 1.8f, 2.8f, Alea(2202 + k)), papier(col.toInt()), 0.2f)
+            }
+            val liane = papier(0xFF4E5A34.toInt())
+            for ((lx, ly) in arrayOf(34f to 30f, 38f to 24f, 52f to 34f, 66f to 26f, 18f to 28f))
+                pieceD("M$lx ${voute(lx)}Q${lx + 1.6f} ${(voute(lx) + ly) / 2f} $lx ${ly}L${lx + 0.35f} ${ly}Q${lx + 1.95f} ${(voute(lx) + ly) / 2f} ${lx + 0.35f} ${voute(lx)}Z", liane, 0f)
+            plan(1)
+            // Le sol de la forêt, des fougères basses.
+            pieceD("M-2 50Q30 47.6 60 49Q80 50 102 48L102 68L-2 68Z", papier(0xFF3E4A2A.toInt()), 0.5f)
+            val rf = Alea(2204)
+            repeat(16) { feuillePliee(rf() * 100f, 50f + rf() * 4f, 2.4f + rf() * 1.4f, -150f + rf() * 120f, papier(0xFF4E7A34.toInt()), 0.32f) }
+            plan(2)
+            // Le gros rocher à droite, son ombre, son lichen, sa mousse.
+            val roc = papier(0xFF8E8C84.toInt())
+            pieceD("M62 64Q60 46 66 32Q72 20 86 18Q100 17 104 22L104 66L62 66Z", roc, 0.9f)
+            pieceD("M62 64Q61 50 65.6 38Q68 46 74 51Q70 58 72 65Z", papier(0xFF6A6862.toInt()), 0f)
+            pieceD("M96 18Q101 18.4 104 22L104 50Q98 40 97 28Z", papier(0xFF5E7A3A.toInt()), 0f)
+            taches(64f, 102f, 62f, 12, 2205, papier(0xFFC4CCB6.toInt()), { x -> 20f + (x - 86f).let { it * it } * 0.04f })
+            // Le visage gravé : la tête, les yeux, la bouche, les volutes, les rayons, les deux spirales.
+            val creux = papier(0xFF4E4C48.toInt())
+            val levre = papier(0xFFB8B6AE.toInt())
+            val (fx, fy) = 86f to 34f
+            anneauGrave(fx, fy, 3.2f, 0.5f, creux, levre)
+            piece(disque(fx - 1.1f, fy - 0.5f, 0.5f), creux, 0f)
+            piece(disque(fx + 1.1f, fy - 0.5f, 0.5f), creux, 0f)
+            piece(Path().apply { addOval(RectF(fx - 0.7f, fy + 1f, fx + 0.7f, fy + 1.8f), Path.Direction.CW) }, creux, 0f)
+            arcGrave(fx - 4.6f, fy - 1f, 1.8f, 0.45f, 90f, 270f, creux, levre)
+            arcGrave(fx + 4.6f, fy - 1f, 1.8f, 0.45f, 180f, 270f, creux, levre)
+            for (k in 0 until 7) {
+                val a = PI.toFloat() * (1.2f + k * 0.1f)
+                barre(fx + cos(a) * 3.9f, fy + sin(a) * 3.9f, fx + cos(a) * 6.4f, fy + sin(a) * 6.4f, 0.4f, creux, 0f)
+            }
+            anneauGrave(fx - 2.6f, fy + 7.4f, 2.1f, 0.45f, creux, levre)
+            anneauGrave(fx + 2.6f, fy + 7.4f, 2.1f, 0.45f, creux, levre)
+            arcGrave(fx - 2.6f, fy + 7.4f, 1f, 0.4f, 0f, 270f, creux, levre)
+            arcGrave(fx + 2.6f, fy + 7.4f, 1f, 0.4f, 270f, 270f, creux, levre)
+            // Le petit rocher de gauche et son visage effacé.
+            pieceD("M-2 66L-2 46Q6 42 14 44Q20 48 20 58Q20 63 18 66Z", papier(0xFF7E7C76.toInt()), 0.8f)
+            taches(-2f, 18f, 62f, 5, 2206, papier(0xFFB8C0A8.toInt()), { 46f })
+            anneauGrave(8f, 53f, 2.2f, 0.4f, creux, levre)
+            piece(disque(7.2f, 52.6f, 0.4f), creux, 0f)
+            piece(disque(8.8f, 52.6f, 0.4f), creux, 0f)
+            balisier(12f, 64f, 13f, feuille())
+            balisier(88f, 64f, 13f, feuille())
+        }
+
+        // ------------------------------------------- la place de la Victoire en papier
+
+        /**
+         * La statue de Vélo, place de la Victoire, en papier découpé, d'après
+         * la photo du propriétaire (2026-11-08) : Marcel Lollia, le
+         * tambouyé, en bronze, assis sur son tabouret, les deux mains sur la
+         * peau de son ka debout devant lui, sur son socle de pierre ; à
+         * droite du mot. Derrière, la façade blanche aux auvents rouges et
+         * le poteau rouge, des fanions tendus en haut, les pavés et le
+         * passage piéton devant. Ni voiture ni enseigne lisible.
+         */
+        fun placeVictoirePapier() {
+            // La façade : l'étage et ses fenêtres à volets, les vitrines, les auvents rouges.
+            pieceD("M-4 -4L104 -4L104 46L-4 46Z", papier(0xFFF0EDE6.toInt()), 0.3f)
+            pieceD("M-4 -4L104 -4L104 1.6L-4 1.6Z", papier(0xFFA84038.toInt()), 0.3f)
+            val volet = papier(0xFF6E8C9A.toInt())
+            for (fx in floatArrayOf(6f, 22f, 40f, 58f)) {
+                pieceD("M$fx 4L${fx + 5f} 4L${fx + 5f} 12L$fx 12Z", papier(0xFF3C4450.toInt()), 0.3f)
+                pieceD("M${fx - 2f} 4L$fx 4L$fx 12L${fx - 2f} 12Z", volet, 0.2f)
+                pieceD("M${fx + 5f} 4L${fx + 7f} 4L${fx + 7f} 12L${fx + 5f} 12Z", volet, 0.2f)
+            }
+            pieceD("M76 6.6L80 6.6L80 9.2L76 9.2Z", papier(0xFF2A5AA8.toInt()), 0.2f)
+            val rouge = papier(0xFFC23A30.toInt())
+            for ((ax, al) in arrayOf(-4f to 30f, 34f to 30f, 68f to 36f)) {
+                pieceD("M${ax + 1f} 23.6L${ax + al - 1f} 23.6L${ax + al - 0.6f} 26.4L$ax 26.4Z", papier(0xFF3A4048.toInt()), 0.2f)
+                pieceD("M$ax 15.6L${ax + al} 15.6L${ax + al + 1.4f} 20.6L${ax - 1.4f} 20.6Z", rouge, 0.6f)
+                pieceD("M${ax - 1.4f} 20.6L${ax + al + 1.4f} 20.6L${ax + al + 1.4f} 21.4L${ax - 1.4f} 21.4Z", papier(0xFF9A2C26.toInt()), 0f)
+                pieceD("M${ax + 1f} 23.4L${ax + al - 1f} 23.4L${ax + al - 1f} 44L${ax + 1f} 44Z", papier(0xFF4A5662.toInt()), 0.3f)
+                var mx = ax + 1f + al / 3f
+                while (mx < ax + al - 2f) { barre(mx, 23.4f, mx, 44f, 0.5f, papier(0xFFE8E4DC.toInt()), 0f); mx += al / 3f }
+            }
+            if (P.allume) for ((ax, al) in arrayOf(-4f to 30f, 34f to 30f, 68f to 36f))
+                pieceD("M${ax + 2f} 25L${ax + al - 2f} 25L${ax + al - 2f} 42L${ax + 2f} 42Z", (0x60 shl 24) or (P.fenetre and 0xFFFFFF), 0f)
+            // Les fanions tendus en haut, d'un bord à l'autre.
+            val fanions = intArrayOf(papier(0xFFD8402E.toInt()), papier(0xFF3A9A4A.toInt()), papier(0xFFF0C030.toInt()), papier(0xFF2A6AB8.toInt()))
+            val corde = { x: Float -> 3f + ((x - 50f) / 52f).let { 1f - it * it } * 4f }
+            var fx = -2f
+            var k = 0
+            while (fx < 102f) {
+                val y = corde(fx)
+                pieceD("M$fx ${y}L${fx + 2.4f} ${corde(fx + 2.4f)}L${fx + 1.3f} ${y + 2.8f}Z", fanions[k % 4], 0.3f)
+                fx += 3.4f; k++
+            }
+            plan(1)
+            // Le poteau rouge et les pavés.
+            barre(31f, 14f, 31f, 50f, 1.4f, rouge, 0.6f)
+            pieceD("M-4 44.6L104 44.6L104 68L-4 68Z", papier(0xFF9C9890.toInt()), 0.6f)
+            pieceD("M-4 44.6L104 44.6L104 46L-4 46Z", papier(0xFFC8C4BA.toInt()), 0.3f)
+            val rp = Alea(2301)
+            repeat(40) {
+                val x = -2f + rp() * 104f
+                val y = 47f + rp() * 18f
+                val l = 1.4f + (y - 46f) * 0.08f
+                pieceD("M$x ${y}L${x + l} ${y}L${x + l} ${y + l * 0.5f}L$x ${y + l * 0.5f}Z", papier(0xFFB2AEA6.toInt()), 0f)
+            }
+            for (k2 in 0 until 4) pieceD("M${-4f + k2 * 7f} 66L${1.4f + k2 * 7f} 66L${4.4f + k2 * 7f} 58L${-1f + k2 * 7f} 58Z", papier(0xFFF0EEE8.toInt()), 0f)
+            plan(2)
+            // Le socle, le tabouret, le ka, Vélo.
+            pieceD("M70 60L98 60L98 54L70 54Z", papier(0xFF6E6A64.toInt()), 0.8f)
+            pieceD("M70 54L98 54L97 52.6L71 52.6Z", papier(0xFF8E8A84.toInt()), 0.3f)
+            pieceD("M72.6 52.6L96 52.6L96 49.4L72.6 49.4Z", papier(0xFF5A4A3A.toInt()), 0.6f)
+            val bronze = papier(0xFF9C7440.toInt())
+            val sombre = papier(0xFF5E4426.toInt())
+            val clair = papier(0xFFCCA466.toInt())
+            pieceD("M89.6 49.4L89.6 40.4L96 40.4L96 49.4L94.6 49.4L94.6 44L91 44L91 49.4Z", sombre, 0.5f)
+            // Le ka : le fût, les cercles, les cordes en zigzag, la peau.
+            pieceD("M74.4 49.4Q73.2 41 74.4 32.6L83.4 32.6Q84.6 41 83.4 49.4Z", bronze, 0.7f)
+            pieceD("M74.4 32.6L83.4 32.6L83.6 34.4L74.2 34.4Z", sombre, 0f)
+            pieceD("M74.2 47.6L83.6 47.6L83.4 49.4L74.4 49.4Z", sombre, 0f)
+            for (k2 in 0 until 4) {
+                val x0 = 75.4f + k2 * 2.2f
+                barre(x0, 34.6f, x0 + 1.1f, 47.4f, 0.25f, clair, 0f)
+                barre(x0 + 1.1f, 34.6f, x0, 47.4f, 0.25f, clair, 0f)
+            }
+            piece(Path().apply { addOval(RectF(74.2f, 31.6f, 83.6f, 33.6f), Path.Direction.CW) }, clair, 0.3f)
+            // Vélo, tourné vers la gauche : la jambe et le pied, le short
+            // roulé, le dos rond aux épaules larges, la tête penchée sur le
+            // ka, les bras qui descendent jusqu'à la peau. La lumière vient
+            // de droite, comme sur la photo.
+            pieceD("M83.8 40.8Q83.4 45 84.4 48.8L86 48.8Q85.6 45 85.8 41.4Z", bronze, 0.4f)
+            pieceD("M82.8 50.2Q83.2 48.6 85.8 48.6L86.6 50.2Z", bronze, 0.2f)
+            pieceD("M90.4 38Q86 37.8 83.6 39.8Q83.4 41.6 84.6 42.4Q87.6 41.6 91.8 42.6Z", sombre, 0.4f)
+            pieceD("M86.4 40.6Q85.2 34 86.2 29Q87 26 89.6 25.4Q92.8 25.2 93.6 28Q94.6 33 93.4 40.6Z", bronze, 0.7f)
+            pieceD("M86.4 40.6Q85.2 34 86.2 29Q86.8 27 88.2 26Q87.2 30 87.4 34Q87.6 38 88.6 40.6Z", sombre, 0f)
+            pieceD("M91.4 26Q93.4 26.4 93.8 29Q94.4 34 93 40L92 40Q93 33 91.4 26Z", clair, 0f)
+            pieceD("M88.4 24.4L90.4 24.6L90.6 26.4L88.2 26.6Z", bronze, 0.2f)
+            piece(Path().apply { addOval(RectF(87.2f, 20.1f, 91f, 24.7f), Path.Direction.CW) }, bronze, 0.5f)
+            piece(Path().apply { addOval(RectF(88.8f, 20.4f, 90.8f, 22.6f), Path.Direction.CW) }, clair, 0f)
+            piece(disque(90.3f, 22.6f, 0.42f), sombre, 0f)
+            pieceD("M89.4 27.4Q86 27.4 84.2 31L85.6 31.8Q87 29.4 90 29.2Z", clair, 0.3f)
+            pieceD("M84.2 31Q82 31.6 79.6 31.8L79.8 33Q82.4 33 85.6 31.8Z", bronze, 0.3f)
+            pieceD("M88.4 27Q85.6 27 84.4 29.8L85.4 30.4Q86.6 28.4 88.8 28.4Z", bronze, 0.2f)
+            piece(Path().apply { addOval(RectF(78.2f, 31.6f, 81.2f, 33.2f), Path.Direction.CW) }, clair, 0.2f)
+            piece(Path().apply { addOval(RectF(80.4f, 31.4f, 83.2f, 32.8f), Path.Direction.CW) }, bronze, 0.2f)
+        }
+
+        // ------------------------------------------- le Figuier maudit en papier
+
+        /**
+         * Une racine de figuier qui coule de ([x0], [y0]) vers ([x1], [y1]) en
+         * S, plus épaisse en haut, avec un liseré clair sur son flanc droit.
+         */
+        private fun coulee(x0: Float, y0: Float, x1: Float, y1: Float, e: Float, onde: Float, col: Int) {
+            val c1x = x0 + onde; val c1y = y0 + (y1 - y0) * 0.33f
+            val c2x = x1 - onde; val c2y = y0 + (y1 - y0) * 0.66f
+            pieceD("M${x0 - e / 2f} ${y0}C${c1x - e / 2f} $c1y ${c2x - e * 0.4f} $c2y ${x1 - e * 0.3f} ${y1}" +
+                "L${x1 + e * 0.3f} ${y1}C${c2x + e * 0.4f} $c2y ${c1x + e / 2f} $c1y ${x0 + e / 2f} ${y0}Z", col, 0.5f)
+            val l = e * 0.22f
+            pieceD("M${x0 + e * 0.2f} ${y0}C${c1x + e * 0.2f} $c1y ${c2x + e * 0.15f} $c2y ${x1 + e * 0.1f} ${y1}" +
+                "L${x1 + e * 0.1f + l} ${y1}C${c2x + e * 0.15f + l} $c2y ${c1x + e * 0.2f + l} $c1y ${x0 + e * 0.2f + l} ${y0}Z",
+                mix(col, 0xFFFFFFFF.toInt(), 0.3f), 0f)
+        }
+
+        /**
+         * Le Figuier maudit en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : les murs d'une ruine de pierre enduite,
+         * mangés par les racines d'un figuier étrangleur qui coulent sur eux ;
+         * à gauche la porte cintrée, au fond la forêt claire, à droite un
+         * second pan de mur et une grosse racine qui descend en biais ; le
+         * sol de feuilles mortes et de pierres moussues que les racines
+         * traversent. Balisiers pour le colibri.
+         */
+        fun figuierMauditPapier() {
+            // La forêt claire au fond, ses troncs fins.
+            pieceD("M-4 -4L104 -4L104 40L-4 40Z", papier(0xFF7AB04E.toInt()), 0f)
+            val rf = Alea(2401)
+            val fonds = Path()
+            repeat(24) { fonds.op(disque(rf() * 104f - 2f, rf() * 24f, 3f + rf() * 3f), Path.Op.UNION) }
+            piece(fonds, papier(0xFF4E8A36.toInt()), 0.3f)
+            for (tx in floatArrayOf(46f, 54f, 64f, 72f)) barre(tx, 40f, tx + (rf() - 0.5f) * 3f, 0f, 0.6f, papier(0xFF8A8270.toInt()), 0.2f)
+            plan(1)
+            // La ruine : le mur de gauche et sa porte cintrée, le pan de droite.
+            val enduit = papier(0xFF6A6650.toInt())
+            val mur = Path().apply { op(chemin("M-4 4L44 8L46 18L42 56L-4 56Z"), Path.Op.UNION) }
+            mur.op(chemin("M14 56L14 34Q20 26 26 34L26 56Z"), Path.Op.DIFFERENCE)
+            piece(mur, enduit, 0.7f)
+            taches(-2f, 44f, 54f, 10, 2402, papier(0xFF6E7A50.toInt()), { 10f })
+            pieceD("M14 56L14 34Q20 26 26 34L26 56Z", papier(0xFF6E6A58.toInt()), 0f)
+            pieceD("M16.4 48L16.4 38Q20 33.6 23.6 38L23.6 48Z", papier(0xFFC8C2A6.toInt()), 0f)
+            pieceD("M15 56Q20 48 25 56Z", papier(0xFF8E7656.toInt()), 0f)
+            pieceD("M70 56L72 26L84 22L92 30L104 26L104 56Z", papier(0xFF7A765C.toInt()), 0.7f)
+            pieceD("M80 56L80 40Q83 36.6 86 40L86 56Z", papier(0xFF3E3E32.toInt()), 0f)
+            taches(72f, 102f, 54f, 7, 2403, papier(0xFF6E7A50.toInt()), { 28f })
+            // Les racines qui coulent sur les murs, claires et grises.
+            val racines = intArrayOf(papier(0xFFB8B4A2.toInt()), papier(0xFF9C9684.toInt()), papier(0xFFCCC8B6.toInt()))
+            for ((x0, x1, e) in arrayOf(Triple(2f, 4f, 2.6f), Triple(8f, 11f, 1.6f), Triple(12f, 13.4f, 2.2f), Triple(28f, 27f, 2.6f),
+                    Triple(33f, 36f, 1.8f), Triple(38f, 41f, 2.8f), Triple(6f, 2f, 1.2f), Triple(24f, 30f, 1f)))
+            {
+                val col = racines[(rf() * 3f).toInt().coerceAtMost(2)]
+                val y0 = 2f + rf() * 6f
+                coulee(x0, y0, x1, 56f, e, (rf() - 0.5f) * 10f, col)
+                // Une ou deux racines filles qui s'en écartent en biais, comme une coulée qui se divise.
+                repeat(1 + (rf() * 2f).toInt()) {
+                    val yb = 14f + rf() * 26f
+                    val xb = x0 + (x1 - x0) * (yb - y0) / (56f - y0)
+                    coulee(xb, yb, xb + (rf() - 0.5f) * 16f, 56f, e * 0.5f, (rf() - 0.5f) * 6f, col)
+                }
+            }
+            for ((x0, x1) in arrayOf(74f to 76f, 90f to 88f, 97f to 100f)) coulee(x0, 24f, x1, 56f, 1.4f, (rf() - 0.5f) * 4f, racines[1])
+            plan(2)
+            // Le sol de feuilles mortes, les pierres moussues, les racines qui le traversent.
+            pieceD("M-4 55L104 54L104 68L-4 68Z", papier(0xFF7A6448.toInt()), 0.5f)
+            repeat(40) {
+                val x = rf() * 104f - 2f
+                val y = 56f + rf() * 10f
+                feuillePliee(x, y, 1f + rf() * 0.6f, rf() * 360f, papier(if (rf() < 0.5f) 0xFF9A7A50.toInt() else 0xFF6A5236.toInt()), 0.45f)
+            }
+            for ((gx, gy, gr) in arrayOf(Triple(84f, 58f, 2.6f), Triple(92f, 61f, 2.2f), Triple(4f, 62f, 2f)))
+                galet(gx, gy, gr, papier(0xFF7E8A5A.toInt()))
+            // La grosse racine qui descend en biais à droite puis serpente au sol.
+            val grosse = papier(0xFF9A8268.toInt())
+            // Un tronc-racine noueux : des disques le long d'une courbe, de
+            // rayon inégal, et un liseré clair sur le flanc éclairé. D'une
+            // seule bande droite, il se lisait comme une planche.
+            val noueux = Path()
+            val lumiere = Path()
+            val pts = floatArrayOf(72f, 10f, 70f, 30f, 90f, 38f, 93f, 50f)
+            var u = 0f
+            while (u <= 1f) {
+                val a = 1f - u
+                val x = a * a * a * pts[0] + 3f * a * a * u * pts[2] + 3f * a * u * u * pts[4] + u * u * u * pts[6]
+                val y = a * a * a * pts[1] + 3f * a * a * u * pts[3] + 3f * a * u * u * pts[5] + u * u * u * pts[7]
+                val r = 2.2f + u * 0.8f + sin(u * 23f) * 0.5f
+                noueux.op(disque(x, y, r), Path.Op.UNION)
+                lumiere.op(disque(x + r * 0.45f, y - r * 0.2f, r * 0.4f), Path.Op.UNION)
+                u += 0.025f
+            }
+            piece(noueux, grosse, 0.8f)
+            piece(lumiere, mix(grosse, 0xFFFFFFFF.toInt(), 0.25f), 0f)
+            coulee(92f, 49f, 104f, 60f, 3.6f, 2f, grosse)
+            for ((x0, y0, x1, y1) in arrayOf(floatArrayOf(90f, 50f, 70f, 63f), floatArrayOf(93f, 52f, 99f, 66f), floatArrayOf(30f, 57f, 4f, 64f),
+                    floatArrayOf(28f, 57f, 46f, 66f), floatArrayOf(40f, 56f, 60f, 60f)))
+                coulee(x0, y0, x1, y1, 1.6f, (rf() - 0.5f) * 4f, grosse)
+            balisier(10f, 63f, 13f, feuille())
+            balisier(92f, 63f, 12f, feuille())
+        }
+
         /** Les Roches gravées : la forêt de Trois-Rivières, les visages taillés dans le rocher. */
         fun rochesGravees() {
+            if (PAPIER) { rochesGraveesPapier(); return }
             crete(24f, 2.2f, 221, P.loin)
             bosquet(-2f, 102f, 26f, 2.6f, 222, mix(P.loin, P.milieu, 0.5f))
             plan(1)
@@ -3980,6 +4267,7 @@ object Paysages {
 
         /** La place de la Victoire : les maisons à balcons, les sabliers, la statue de Vélo et son ka. */
         fun placeVictoire() {
+            if (PAPIER) { placeVictoirePapier(); return }
             val r = Alea(231)
             plan(1)
             val pastels = intArrayOf(0xFFF2D8A7.toInt(), 0xFFBFDCCF.toInt(), 0xFFF0C2B0.toInt(), 0xFFC9D6EC.toInt())
@@ -4030,6 +4318,7 @@ object Paysages {
 
         /** Un figuier maudit : les racines devenues tronc, les racines aériennes qui pendent. */
         fun figuierMaudit() {
+            if (PAPIER) { figuierMauditPapier(); return }
             val r = Alea(241)
             crete(34f, 1.8f, 242, P.loin)
             plan(1)
