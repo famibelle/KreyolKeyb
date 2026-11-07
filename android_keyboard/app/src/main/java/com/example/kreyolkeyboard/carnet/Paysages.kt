@@ -1027,6 +1027,9 @@ object Paysages {
         } + listOf(floatArrayOf(82f, 52.2f, 2f), floatArrayOf(88f, 51.8f, 2f), floatArrayOf(10f, 55.4f, 2f), floatArrayOf(20f, 55f, 2f))
     }
 
+    /** L'eau de la mangrove de l'Îlet Macou, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val EAU_MACOU = floatArrayOf(-2f, 102f, 48f, 64f)
+
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
 
@@ -3788,6 +3791,7 @@ object Paysages {
 
         /** L'îlet Macou : le banc de sable, sa mangrove et la chapelle des marins disparus, une yole, un pélican. */
         fun iletMacou() {
+            if (PAPIER) { iletMacouPapier(); return }
             crete(34f, 0.7f, 211, P.loin)
             plan(1)
             eau(36f, 212)
@@ -3810,6 +3814,135 @@ object Paysages {
             forme("M71 59.8Q78 61.8 87 59.6L86.8 60.3Q78 62.4 71.4 60.5Z", duJour(0xFFD6452E.toInt()))
             rect(68.4f, 56.6f, 1.6f, 2.6f, P.sol)
             pieu(92f, 56f)
+        }
+
+        // ------------------------------------------- l'Îlet Macou en papier
+
+        /** Une racine-échasse de palétuvier : un arc de ([x0], [y0]) à ([x1], [y1]) qui monte de [h], épais de [e]. */
+        private fun racine(x0: Float, y0: Float, x1: Float, y1: Float, h: Float, e: Float, col: Int) {
+            val cx = (x0 + x1) / 2f + (x1 - x0) * 0.15f
+            val cy = min(y0, y1) - h
+            pieceD("M$x0 ${y0}Q$cx $cy $x1 ${y1}L${x1 + e} ${y1}Q${cx + e * 0.4f} ${cy + e * 1.6f} ${x0 + e} ${y0}Z", col, 0.25f)
+        }
+
+        /**
+         * Deux ou trois feuilles de palétuvier près de ([x], [y]), chacune
+         * dans son sens : posées en étoile, cinq feuilles se lisent comme un
+         * astérisque.
+         */
+        private fun rosette(x: Float, y: Float, l: Float, col: Int, r: Alea) {
+            repeat(2 + (r() * 2f).toInt()) {
+                feuillePliee(x + (r() - 0.5f) * l * 1.6f, y + (r() - 0.5f) * l, l * (0.8f + r() * 0.5f), -150f + r() * 120f, col, 0.45f)
+            }
+        }
+
+        /**
+         * L'Îlet Macou en papier découpé, d'après la photo du propriétaire
+         * (2026-11-08) : la mangrove du Grand Cul-de-Sac, ses palétuviers
+         * rouges posés sur leurs racines-échasses arquées au ras de l'eau, le
+         * feuillage jaune-vert à gauche, sombre au fond, un tronc clair qui
+         * monte en biais à droite, à côté du mot, et derrière lui la petite
+         * chapelle blanche des marins disparus (demandée par le propriétaire,
+         * absente de la photo) ; l'eau calme et brune qui reflète le tout. Une trouée de ciel au-dessus du mot garde le
+         * centre clair. Le pélican se pose sur son pieu devant, l'eau bouge
+         * sur la carte ouverte (`Reflets` dans [Ambiance]).
+         */
+        fun iletMacouPapier() {
+            // Le fond de la mangrove : une masse sombre en lisières, une
+            // trouée de ciel au-dessus du mot, des troncs fins qui se croisent.
+            val fond = brisee(-2f, 4f, 22f, 8f, 36f, 13f, 50f, 15.6f, 64f, 12f, 80f, 6f, 102f, 3f)
+            val f = sousLaCrete(-2f, 102f, fond)
+            f.op(bosses(-2f, 102f, { x -> fond(x) + 0.4f }, 1.6f, 2.6f, Alea(2101)), Path.Op.UNION)
+            piece(f, papier(0xFF1E3E22.toInt()))
+            for ((k, col) in listOf(0xFF2A5228, 0xFF24482A).withIndex()) {
+                val lis = { x: Float -> fond(x) + 7f + k * 8f + sin(x * 0.3f + k) * 1f }
+                val b = sousLaCrete(-2f, 102f, lis)
+                b.op(bosses(-2f, 102f, lis, 1.4f, 2.4f, Alea(2102 + k)), Path.Op.UNION)
+                piece(b, papier(col.toInt()), 0.5f)
+            }
+            val gris = papier(0xFF8A7A66.toInt())
+            barre(38f, 44f, 43f, 22f, 0.6f, gris, 0.3f)
+            barre(43f, 22f, 40f, 15f, 0.35f, gris, 0f)
+            barre(48f, 44f, 53f, 18f, 0.55f, gris, 0.3f)
+            barre(51f, 28f, 57f, 22f, 0.3f, gris, 0f)
+            barre(62f, 44f, 58f, 24f, 0.5f, gris, 0.3f)
+            val rf = Alea(2104)
+            repeat(14) { rosette(30f + rf() * 40f, fond(50f) + 6f + rf() * 20f, 1.6f, papier(0xFF3A6A30.toInt()), rf) }
+            plan(1)
+            // Les racines-échasses du fond, sombres, puis l'eau.
+            val brunRouge = papier(0xFF6E4634.toInt())
+            var rx = -4f
+            while (rx < 102f) {
+                val l = 6f + rf() * 9f
+                racine(rx, 46.6f, rx + l, 46.4f + rf() * 0.6f, 5f + rf() * 4f, 0.45f + rf() * 0.2f, brunRouge)
+                rx += 2f + rf() * 3f
+            }
+            // L'eau calme et sombre : le reflet rouge des racines au bord, le
+            // reflet vert de la mangrove dessous, quelques longs filets clairs.
+            pieceD("M-2 46.2L102 46.2L102 68L-2 68Z", papier(0xFF3E4430.toInt()), 0.3f)
+            pieceD("M-2 47Q30 47.6 60 47.2Q80 47 102 47.4L102 51Q70 50.2 40 51Q20 51.4 -2 50.6Z", papier(0xFF5A4232.toInt()), 0f)
+            pieceD("M-2 53Q30 52.4 60 53.6Q80 54 102 53L102 56Q70 57 40 56Q20 55.6 -2 56.4Z", papier(0xFF34402A.toInt()), 0f)
+            for ((y, x0, l) in arrayOf(Triple(49f, 6f, 18f), Triple(51.6f, 40f, 26f), Triple(54.6f, 12f, 22f), Triple(57.4f, 56f, 30f),
+                    Triple(60.4f, 2f, 26f), Triple(62.8f, 44f, 34f), Triple(52.6f, 78f, 18f)))
+                pieceD("M$x0 ${y}Q${x0 + l / 2f} ${y - 0.3f} ${x0 + l} ${y}Q${x0 + l / 2f} ${y + 0.5f} $x0 ${y}Z", papier(0xFF7A7458.toInt()), 0f)
+            // Les reflets, d'une seule pièce chacun, au bord ondulé : le
+            // feuillage jaune-vert de gauche, le tronc clair de droite.
+            val ondes = Alea(2106)
+            val bordFeuillage = StringBuilder("M-2 50.4")
+            var oy = 50.4f
+            while (oy < 61f) { bordFeuillage.append("L${17f - (oy - 50f) * 1.1f + ondes() * 4f} $oy"); oy += 0.9f }
+            bordFeuillage.append("L-2 61Z")
+            pieceD(bordFeuillage.toString(), papier(0xFF627A34.toInt()), 0f)
+            val reflet = Path()
+            reflet.moveTo(84.6f, 47f)
+            oy = 47f
+            var sens = 1f
+            while (oy < 58f) { reflet.quadTo(84.6f + sens * 0.7f, oy + 1.2f, 84.8f, oy + 2.4f); oy += 2.4f; sens = -sens }
+            reflet.lineTo(85.8f, 59.4f)
+            reflet.lineTo(86.6f, oy)
+            while (oy > 47.5f) { reflet.quadTo(86.6f + sens * 0.7f, oy - 1.2f, 86.4f, oy - 2.4f); oy -= 2.4f; sens = -sens }
+            reflet.close()
+            piece(reflet, papier(0xFF8A7E62.toInt()), 0f)
+            // Le feuillage jaune-vert de gauche et ses rosettes.
+            val gauche = Path()
+            repeat(18) { gauche.op(disque(-4f + rf() * 24f, 2f + rf() * 38f, 3.2f + rf() * 2.8f), Path.Op.UNION) }
+            piece(gauche, papier(0xFF5E8A2A.toInt()))
+            repeat(34) { rosette(-3f + rf() * 24f, 2f + rf() * 38f, 1.7f, papier(if (rf() < 0.6f) 0xFFA8C440.toInt() else 0xFF7EA634.toInt()), rf) }
+            // Le tronc clair qui monte en biais à droite, son feuillage, ses racines.
+            val droite = Path()
+            repeat(16) { droite.op(disque(74f + rf() * 30f, -2f + rf() * 34f, 3f + rf() * 2.6f), Path.Op.UNION) }
+            piece(droite, papier(0xFF3A6A2C.toInt()))
+            repeat(26) { rosette(74f + rf() * 28f, -1f + rf() * 33f, 1.6f, papier(if (rf() < 0.5f) 0xFF6E9E36.toInt() else 0xFF8AB23E.toInt()), rf) }
+            // La chapelle des marins disparus, petite et blanche entre les
+            // palétuviers, à droite du tronc clair : pignon face à nous, toit
+            // gris, porte cintrée, croix au faîte.
+            val chaux = papier(0xFFF4F1EA.toInt())
+            pieceD("M84 46.6Q86 42.6 91 42.4Q96 42.6 99 46.6Z", papier(0xFF4A3E30.toInt()), 0.4f)
+            pieceD("M87.4 43L87.4 36.8L95.4 36.8L95.4 43Z", chaux, 0.6f)
+            pieceD("M93.8 43L93.8 36.8L95.4 36.8L95.4 43Z", papier(0xFFD8D4CA.toInt()), 0f)
+            pieceD("M86.6 37.2L91.4 32.4L96.2 37.2Z", papier(0xFF8E8A84.toInt()), 0.5f)
+            pieceD("M88 36.8L91.4 33.4L94.8 36.8Z", chaux, 0f)
+            pieceD("M90.4 43L90.4 39.8Q91.4 38.6 92.4 39.8L92.4 43Z", papier(0xFF3A3430.toInt()), 0.2f)
+            barre(91.4f, 32.6f, 91.4f, 29.6f, 0.35f, chaux, 0.3f)
+            barre(90.4f, 30.6f, 92.4f, 30.6f, 0.35f, chaux, 0f)
+            val clair = papier(0xFFCDB89C.toInt())
+            pieceD("M84.6 42Q87.6 24 80.4 -2L82.6 -2Q90 24 86.8 42Z", clair, 0.6f)
+            for ((x1, h) in arrayOf(76f to 5f, 80f to 4f, 92f to 4.6f, 95f to 3.6f, 72f to 6f))
+                racine(85.6f, 41f, x1, 47f, h, 0.45f, clair)
+            // Les racines-échasses du devant, rouges et claires, au ras de l'eau.
+            val racines = intArrayOf(papier(0xFFA8684A.toInt()), papier(0xFFD2B49A.toInt()), papier(0xFF8A5038.toInt()))
+            rx = -4f
+            while (rx < 102f) {
+                val l = 5f + rf() * 11f
+                val y0 = 47f + rf() * 0.8f
+                racine(rx, y0, rx + l, y0 + (rf() - 0.5f) * 0.8f, 4f + rf() * 6f, 0.55f + rf() * 0.35f, racines[(rf() * 3f).toInt().coerceAtMost(2)])
+                rx += 1.4f + rf() * 2.6f
+            }
+            plan(2)
+            // Des racines qui entrent par le bas à gauche, et le pieu du pélican.
+            for ((x0, x1, h) in arrayOf(Triple(-3f, 9f, 8f), Triple(2f, 15f, 6f), Triple(-2f, 6f, 10f)))
+                racine(x0, 64f, x1, 63.4f, h, 0.8f, racines[2])
+            pieceD("M91.6 56L92.4 56L92.5 63L91.5 63Z", papier(0xFF5E4C3E.toInt()), 0.5f)
         }
 
         /** Les Roches gravées : la forêt de Trois-Rivières, les visages taillés dans le rocher. */
