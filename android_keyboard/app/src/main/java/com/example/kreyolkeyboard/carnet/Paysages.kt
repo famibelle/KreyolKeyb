@@ -2108,8 +2108,156 @@ object Paysages {
             forme("M0 66L0 58Q20 55 40 58.5Q60 62 80 57.5Q92 55.5 100 56L100 66Z", mix(sable(), P.sol, 0.3f))
         }
 
+        // ------------------------------------------- Les Saintes en papier
+
+        /** Une pièce de papier écrite comme en SVG. */
+        private fun pieceD(d: String, col: Int, ombre: Float = 1f) = piece(chemin(d), col, ombre)
+
+        /**
+         * Une saintoise tirée au sec, vue de trois quarts et d'un peu haut :
+         * l'intérieur orangé et ses bancs entre les deux plats-bords, la coque
+         * blanche qui se relève vers l'étrave, le liston vert et son filet
+         * rouge. [versDroite] : l'étrave à droite. Longue de [l], posée sur [y].
+         */
+        fun saintoise(x: Float, y: Float, l: Float, versDroite: Boolean) {
+            fun X(u: Float) = if (versDroite) x + u * l else x + l - u * l
+            val h = l * 0.14f
+            val n = 24
+            fun pres(u: Float) = y - h * (1f + 0.6f * u * u * u)
+            fun loin(u: Float) = pres(u) - h * 0.55f * (1f - u.pow(2.5f)) * (0.5f + 0.5f * sin(PI.toFloat() * u))
+            fun quille(u: Float) = y - h * 0.05f - h * 1.45f * u.pow(4)
+            fun bande(haut: (Float) -> Float, bas: (Float) -> Float, u1: Float = 1f): Path {
+                val p = Path()
+                for (k in 0..n) { val u = u1 * k / n; if (k == 0) p.moveTo(X(u), haut(u)) else p.lineTo(X(u), haut(u)) }
+                for (k in n downTo 0) { val u = u1 * k / n; p.lineTo(X(u), bas(u)) }
+                p.close(); return p
+            }
+            piece(bande(::loin, ::pres), papier(0xFFE07A3E.toInt()), 0.3f)
+            for (b in floatArrayOf(0.3f, 0.5f, 0.7f)) {
+                val p = Path()
+                p.moveTo(X(b), loin(b)); p.lineTo(X(b + 0.03f), loin(b + 0.03f))
+                p.lineTo(X(b + 0.045f), pres(b + 0.045f)); p.lineTo(X(b + 0.015f), pres(b + 0.015f)); p.close()
+                piece(p, papier(0xFFA9512C.toInt()), 0f)
+            }
+            piece(bande({ u -> loin(u) - h * 0.1f }, ::loin), papier(0xFF2E8E6A.toInt()), 0f)
+            val coque = bande(::pres, ::quille)
+            coque.op(Path().apply {
+                moveTo(X(0.97f), pres(0.97f)); lineTo(X(1.04f), pres(1f) - h * 0.08f); lineTo(X(0.99f), quille(0.99f)); close()
+            }, Path.Op.UNION)
+            piece(coque, papier(0xFFF4F1EA.toInt()))
+            piece(bande(::pres, { u -> min(pres(u) + h * 0.24f, quille(u)) }), papier(0xFF2E8E6A.toInt()), 0.2f)
+            piece(bande({ u -> min(pres(u) + h * 0.24f, quille(u)) }, { u -> min(pres(u) + h * 0.33f, quille(u)) }),
+                papier(0xFFC0392B.toInt()), 0f)
+        }
+
+        /**
+         * Un amandier pays qui entre par le bord droit : le tronc contre le
+         * bord, ses branches en étages plats qui s'avancent au-dessus du bourg.
+         */
+        fun amandierPays(x: Float, sol: Float) {
+            val brun = papier(0xFF6A4A35.toInt())
+            val etages = floatArrayOf(4f, 12f, 19.5f)
+            val bouts = floatArrayOf(74f, 79f, 87f)
+            for ((k, ey) in etages.withIndex()) {
+                pieceD("M$x ${ey + 1.6f}Q${(x + bouts[k]) / 2f} ${ey + 0.6f} ${bouts[k] + 4f} ${ey + 0.4f}L${bouts[k] + 4f} ${ey + 1.1f}Q${(x + bouts[k]) / 2f} ${ey + 1.6f} $x ${ey + 2.6f}Z", brun, 0.4f)
+            }
+            pieceD("M${x - 1.4f} ${sol}Q${x - 0.6f} 30 ${x - 2.2f} -2L${x + 4f} -2L${x + 4f} ${sol}Z", brun, 0.8f)
+            val dessous = papier(0xFF2F5E2C.toInt())
+            val cols = intArrayOf(papier(0xFF4E8A3A.toInt()), papier(0xFF6FA84A.toInt()), papier(0xFF5A9640.toInt()))
+            for ((k, ey) in etages.withIndex()) {
+                val g = bouts[k]; val d = x + 3f
+                val sous = Path().apply { addRoundRect(RectF(g + 0.6f, ey - 0.4f, d, ey + 1.8f), 1.1f, 1.1f, Path.Direction.CW) }
+                piece(sous, dessous, 0.6f)
+                val dessus = Path().apply { addRoundRect(RectF(g, ey - 1.6f, d, ey + 0.8f), 1.2f, 1.2f, Path.Direction.CW) }
+                dessus.op(bosses(g + 1f, d, { ey - 1.2f }, 0.9f, 1.5f, Alea(980 + k)), Path.Op.UNION)
+                piece(dessus, cols[k], 0.8f)
+            }
+            feuilleCoeur(82f, 13.6f, 1.5f, -25f, papier(0xFFC0533A.toInt()))
+        }
+
+        /**
+         * Les Saintes en papier découpé, d'après la carte postale du
+         * propriétaire (2026-11-07) : le morne boisé de Terre-de-Haut, la
+         * maison en paquebot à son pied, le bourg et sa case au toit rouge,
+         * la baie, et deux saintoises tirées sur la plage. Le cocotier de la
+         * carte postale devient un amandier pays (pas de cocotier).
+         */
+        fun lesSaintesPapier() {
+            cumulus(66f, 15f, 26f, 990)
+            cumulus(2f, 11f, 18f, 991)
+            // Le morne, de la pointe à gauche jusqu'en haut à droite.
+            val crete = { x: Float ->
+                val u = ((x - 4f) / 72f).coerceIn(0f, 1f)
+                35f - 25f * (u * u * (3f - 2f * u)) + sin(x * 0.35f) * 0.4f
+            }
+            val morne = Path()
+            morne.moveTo(2f, BAS + 2f)
+            var x = 2f
+            while (x <= LARGEUR + 2f) { morne.lineTo(x, crete(x)); x += 1.5f }
+            morne.lineTo(LARGEUR + 2f, BAS + 2f); morne.close()
+            morne.op(bosses(4f, 103f, crete, 1.3f, 1.8f, Alea(992)), Path.Op.UNION)
+            piece(morne, papier(0xFF5E7A34.toInt()))
+            plan(1)
+            // La pointe boisée à gauche, puis la baie.
+            pieceD("M-2 40L-2 31Q3 27.5 8 30Q12 32 13 37L13 40Z", papier(0xFF4E7A3A.toInt()))
+            pieceD("M-2 36.5L102 36.5L102 56L-2 56Z", papier(0xFF2F6E9A.toInt()), 0.3f)
+            val r = Alea(993)
+            val bleus = intArrayOf(papier(0xFF3F86B0.toInt()), papier(0xFF5A9FC4.toInt()), papier(0xFF2A5F88.toInt()), papier(0xFF6FB3D0.toInt()))
+            var y = 37.2f
+            while (y < 54f) {
+                val p = (y - 37f) / 17f
+                val e = 0.35f + 0.6f * p
+                var xx = -2f + r() * 3f
+                while (xx < LARGEUR + 2f) {
+                    val l = (4f + r() * 9f) * (0.6f + p)
+                    val t = Path()
+                    t.addRoundRect(RectF(xx, y, xx + l, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, bleus[min((r() * 4f).toInt(), 3)], 0.2f)
+                    xx += l + 0.8f + r() * 2.5f
+                }
+                y += e + 0.5f + 0.4f * p
+            }
+            // Le pied du morne au bord de l'eau, et le chemin qui va du paquebot au bourg.
+            pieceD("M10 37.5Q30 34.6 50 35.2Q70 35.6 102 34.4L102 37.6Q60 38.4 10 38.2Z", papier(0xFF4E7A3A.toInt()), 0.6f)
+            pieceD("M18 36.4Q40 34.6 60 35.1Q72 35.3 84 34.8L84 35.4Q72 35.9 60 35.7Q40 35.2 18 37Z", papier(0xFFC8B48A.toInt()), 0f)
+            // La maison en paquebot, l'étrave tournée vers la baie.
+            val blancCase = papier(0xFFF2F0EA.toInt())
+            pieceD("M12 26.6L12 21L12.25 21L12.25 26.6Z", papier(0xFF5A5A5A.toInt()), 0f)
+            pieceD("M16.5 26.6L16.5 22L16.75 22L16.75 26.6Z", papier(0xFF5A5A5A.toInt()), 0f)
+            pieceD("M9.6 31L9.6 27.2L19.4 27.2L19.4 31Z", blancCase, 0.6f)
+            pieceD("M9.2 27.4L9.2 26.6L19.8 26.6L19.8 27.4Z", papier(0xFF9A4A3A.toInt()), 0.3f)
+            pieceD("M6.5 31Q8 35 10 38.4L21.5 38.4L21.5 31Z", blancCase)
+            for (k in 0 until 4) pieceD("M${10.6f + k * 2.2f} 28.4L${11.8f + k * 2.2f} 28.4L${11.8f + k * 2.2f} 29.8L${10.6f + k * 2.2f} 29.8Z", papier(0xFF3A4A5A.toInt()), 0f)
+            for (k in 0 until 4) piece(disque(12.5f + k * 2.4f, 33.5f, 0.4f), papier(0xFF3A4A5A.toInt()), 0f)
+            // Des barques au mouillage.
+            for ((bx, by) in arrayOf(30f to 40f, 47f to 42.5f, 64f to 39.5f)) {
+                pieceD("M${bx - 2.2f} ${by}L${bx + 2.4f} ${by - 0.3f}Q${bx + 2f} ${by + 0.9f} ${bx + 1.6f} ${by + 0.9f}L${bx - 1.8f} ${by + 0.9f}Z", blanc(), 0.4f)
+            }
+            // Le bourg : la grande case blanche au toit de tôle rouge, ses voisines, le kiosque.
+            pieceD("M75 37L75 33.5L80 33.5L80 37Z", papier(0xFFC9B79A.toInt()), 0.6f)
+            pieceD("M74.3 33.8L77.5 31.4L80.7 33.8Z", papier(0xFF8A5A3A.toInt()), 0.6f)
+            pieceD("M84 38L84 27.5L96 27.5L96 38Z", blancCase)
+            pieceD("M83.4 27.8L86.5 22.8L96.6 22.8L96.6 27.8Z", papier(0xFFB0463A.toInt()), 0.8f)
+            pieceD("M83.4 27.8L86.5 22.8L89.6 27.8Z", papier(0xFF8E3A30.toInt()), 0.4f)
+            for (row in 0 until 2) for (k in 0 until 3) {
+                val wx = 87.5f + k * 2.8f; val wy = 29.3f + row * 4.2f
+                pieceD("M$wx ${wy}L${wx + 1.4f} ${wy}L${wx + 1.4f} ${wy + 2.2f}L$wx ${wy + 2.2f}Z", papier(0xFF3F7A86.toInt()), 0f)
+            }
+            pieceD("M95.5 38L95.5 30L104 30L104 38Z", papier(0xFFE6E2D8.toInt()))
+            pieceD("M95 30.4L96.5 28.2L104 28.2L104 30.4Z", papier(0xFFB0463A.toInt()), 0.6f)
+            plan(2)
+            // La plage brune, le sable mouillé au bord de l'eau.
+            pieceD("M-2 50Q30 47.6 60 48.6Q82 49.2 102 47.4L102 68L-2 68Z", papier(0xFF9C8058.toInt()), 0.4f)
+            pieceD("M-2 51.4Q30 49 60 50Q82 50.6 102 48.8L102 68L-2 68Z", papier(0xFFB89A6A.toInt()), 0.6f)
+            saintoise(66f, 56.5f, 40f, false)
+            saintoise(-6f, 62.5f, 62f, true)
+            galet(30f, 64.5f, 3f, papier(0xFF8A8478.toInt()))
+            amandierPays(98f, 50f)
+        }
+
         /** Les Saintes : la baie, le Pain de Sucre, une saintoise sous voile. */
         fun lesSaintes() {
+            if (PAPIER) { lesSaintesPapier(); return }
             val r = Alea(111)
             crete(34f, 1.4f, 112, P.loin, x0 = 60f)
             plan(1)
