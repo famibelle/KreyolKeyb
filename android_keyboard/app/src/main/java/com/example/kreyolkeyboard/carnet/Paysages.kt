@@ -1932,8 +1932,165 @@ object Paysages {
 
         // ------------------------------------------------------ les lieux
 
+        // ------------------------------------------- Grande Anse en papier
+
+        /** Un cumulus de papier : des bosses rondes sur une base plate, la face à l'ombre dessous. */
+        fun cumulus(x: Float, y: Float, l: Float, graine: Int) {
+            val r = Alea(graine)
+            val t = Path()
+            t.addRoundRect(RectF(x, y - l * 0.12f, x + l, y), l * 0.06f, l * 0.06f, Path.Direction.CW)
+            var cx = x + l * 0.12f
+            while (cx < x + l * 0.9f) {
+                val rr = l * (0.1f + 0.14f * sin(PI.toFloat() * (cx - x) / l) + r() * 0.05f)
+                t.addCircle(cx, y - rr * 0.8f, rr, Path.Direction.CW)
+                cx += rr * (0.9f + r() * 0.3f)
+            }
+            val dessous = Path()
+            dessous.addRoundRect(RectF(x + l * 0.05f, y - l * 0.08f, x + l * 0.95f, y), l * 0.04f, l * 0.04f, Path.Direction.CW)
+            piece(dessous, mix(blanc(), P.cielHaut, 0.25f), 0.3f)
+            piece(t, blanc(), 0.4f)
+        }
+
+        /**
+         * Une feuille de raisinier bord de mer : ronde, un peu en rein, la
+         * nervure rouge qui part du pétiole et deux nervures de côté.
+         */
+        fun feuilleRaisinier(x: Float, y: Float, r: Float, angle: Float, col: Int) {
+            val f = Path()
+            f.moveTo(0f, 0f)
+            f.cubicTo(-r * 1.3f, -r * 0.1f, -r * 1.1f, -r * 2f, 0f, -r * 2f)
+            f.cubicTo(r * 1.1f, -r * 2f, r * 1.3f, -r * 0.1f, 0f, 0f)
+            f.close()
+            val n = Path()
+            n.moveTo(-0.12f, 0f); n.lineTo(0f, -r * 1.6f); n.lineTo(0.12f, 0f); n.close()
+            for (s in floatArrayOf(-1f, 1f)) {
+                n.moveTo(0f, -r * 0.55f); n.lineTo(s * r * 0.7f, -r * 1.15f); n.lineTo(s * r * 0.7f, -r * 1.05f); n.lineTo(0f, -r * 0.4f); n.close()
+            }
+            pose.setRotate(angle)
+            pose.postTranslate(x, y)
+            f.transform(pose)
+            n.transform(pose)
+            piece(f, col, 0.8f)
+            piece(n, papier(0xFFB8503A.toInt()), 0f)
+        }
+
+        /** Une branche de raisinier : la tige brun-rouge et ses feuilles rondes étagées. */
+        fun brancheRaisinier(x: Float, y: Float, h: Float, penche: Float, graine: Int, feuilles: Int) {
+            val r = Alea(graine)
+            val tige = Path()
+            tige.moveTo(x - 0.35f, y); tige.quadTo(x + penche * 0.4f, y - h * 0.5f, x + penche, y - h)
+            tige.lineTo(x + penche + 0.3f, y - h); tige.quadTo(x + penche * 0.4f + 0.4f, y - h * 0.5f, x + 0.35f, y); tige.close()
+            piece(tige, papier(0xFF8A4A35.toInt()), 0.5f)
+            val cols = intArrayOf(papier(0xFFB5D36A.toInt()), papier(0xFF9CC75A.toInt()), papier(0xFF7FB04A.toInt()),
+                papier(0xFF8CC060.toInt()), papier(0xFF6FA84A.toInt()), papier(0xFFA8CC62.toInt()), papier(0xFF7FB04A.toInt()),
+                papier(0xFFE8C04A.toInt()))
+            for (k in 0 until feuilles) {
+                val t = 0.25f + 0.75f * k / max(1, feuilles - 1)
+                val cote = if (k % 2 == 0) -1f else 1f
+                val bx = x + penche * t * t + cote * (0.6f + r() * 1.2f)
+                val by = y - h * t
+                val c = if (r() < 0.06f) papier(0xFFE08A3A.toInt()) else cols[min((r() * cols.size).toInt(), cols.size - 1)]
+                feuilleRaisinier(bx, by, 3f + r() * 1.6f, cote * (30f + r() * 45f), c)
+            }
+        }
+
+        /**
+         * Grande Anse en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07) : le grand morne boisé qui plonge dans la mer et son
+         * rocher, les cumulus, la mer en lanières du large au bord, la plage
+         * en diagonale et son écume, les raisiniers bord de mer devant.
+         */
+        fun grandeAnsePapier() {
+            cumulus(64f, 25f, 30f, 960)
+            cumulus(4f, 14f, 22f, 961)
+            cumulus(84f, 12f, 18f, 962)
+            // Le morne, arrondi, couvert de forêt jusqu'à la mer, et son rocher.
+            val crete = { x: Float ->
+                val u = ((x - 12f) / 54f).coerceIn(0f, 1f)
+                34f - 21f * sin(PI.toFloat() * u.pow(0.7f)).pow(1.2f) + sin(x * 0.4f) * 0.3f
+            }
+            val morne = Path()
+            morne.moveTo(10f, BAS + 2f)
+            var x = 10f
+            while (x <= 66f) { morne.lineTo(x, crete(x)); x += 1.5f }
+            morne.lineTo(66f, 34f); morne.lineTo(66f, BAS + 2f); morne.close()
+            morne.op(bosses(14f, 64f, crete, 1.2f, 1.6f, Alea(963)), Path.Op.UNION)
+            piece(morne, papier(0xFF256B3E.toInt()))
+            piece(Path().apply { addOval(RectF(65.5f, 31.8f, 69f, 34.4f), Path.Direction.CW) }, papier(0xFF3F4A44.toInt()), 0.6f)
+            plan(1)
+            // La mer, du bleu profond au large au turquoise clair près du bord.
+            val mer = Path()
+            mer.moveTo(57f, 34f); mer.lineTo(LARGEUR + 2f, 33.8f); mer.lineTo(LARGEUR + 2f, BAS + 2f); mer.lineTo(57f, BAS + 2f); mer.close()
+            piece(mer, papier(0xFF2F8FD0.toInt()), 0.3f)
+            val bleus = arrayOf(
+                intArrayOf(papier(0xFF2F8FD0.toInt()), papier(0xFF3FA3DA.toInt())),
+                intArrayOf(papier(0xFF3FB0D8.toInt()), papier(0xFF58C4DC.toInt())),
+                intArrayOf(papier(0xFF6FD3DC.toInt()), papier(0xFF9BE3E2.toInt()))
+            )
+            val r = Alea(964)
+            var y = 34.6f
+            while (y < 64f) {
+                val p = (y - 34f) / 30f
+                val e = 0.35f + 0.8f * p
+                val teintes = bleus[min((p * 3f).toInt(), 2)]
+                var xx = 58f + r() * 3f
+                while (xx < LARGEUR + 2f) {
+                    val l = (4f + r() * 9f) * (0.6f + p)
+                    val t = Path()
+                    t.addRoundRect(RectF(xx, y, xx + l, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, teintes[if (r() < 0.5f) 0 else 1], 0.25f)
+                    xx += l + 0.8f + r() * 2.5f
+                }
+                y += e + 0.5f + 0.5f * p
+            }
+            // La lisière de forêt qui descend du morne jusqu'au haut de la plage.
+            rive(true, 30f, 36f, 60f, 965, papier(0xFF3F8F4A.toInt()), 2.6f)
+            rive(true, 34f, 41f, 40f, 966, papier(0xFF5FA84A.toInt()), 3.2f)
+            plan(2)
+            // La plage en diagonale, son sable mouillé et sa frange d'écume.
+            fun bord(y: Float) = 61f + 37f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(1.2f)
+            fun dos(y: Float) = 58f - 46f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(0.9f)
+            val mouille = Path()
+            mouille.moveTo(dos(35f), 35f)
+            y = 35f
+            while (y <= BAS + 2f) { mouille.lineTo(bord(y) + 1.2f + 1.5f * (y - 34f) / 32f, y); y += 1f }
+            mouille.lineTo(dos(BAS + 2f), BAS + 2f); mouille.close()
+            piece(mouille, papier(0xFFD9B077.toInt()), 0.3f)
+            val sable = Path()
+            sable.moveTo(dos(35f), 35f)
+            y = 35f
+            while (y <= BAS + 2f) { sable.lineTo(bord(y) - 0.4f * (y - 34f) / 32f, y); y += 1f }
+            sable.lineTo(dos(BAS + 2f), BAS + 2f); sable.close()
+            piece(sable, papier(0xFFEBCB92.toInt()), 0.5f)
+            y = 35f
+            while (y < BAS) {
+                val p = (y - 34f) / 32f
+                val l = 2f + 5f * p
+                val e = 0.25f + 0.5f * p
+                val ex = bord(y) + 1.6f + 1.8f * p + (r() - 0.5f) * 1.2f
+                val t = Path()
+                t.addRoundRect(RectF(ex - l / 2f, y, ex + l / 2f, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                piece(t, blanc(), 0.2f)
+                y += 0.9f + 1.4f * p
+            }
+            // Des traces de pas dans le sable.
+            for (py in floatArrayOf(62f, 59f, 56.3f, 53.8f, 51.5f, 49.4f)) {
+                val px = dos(py) + (bord(py) - dos(py)) * 0.32f + if (py.toInt() % 2 == 0) 0.6f else -0.6f
+                piece(Path().apply { addOval(RectF(px - 0.6f, py - 0.35f, px + 0.6f, py + 0.35f), Path.Direction.CW) },
+                    papier(0xFFD4AE76.toInt()), 0f)
+            }
+            // Les raisiniers bord de mer : un massif à gauche, une branche en bas à droite.
+            brancheRaisinier(0f, BAS + 1f, 54f, 5f, 970, 12)
+            brancheRaisinier(7f, BAS + 1f, 40f, 7f, 971, 9)
+            brancheRaisinier(-3f, BAS + 1f, 30f, 9f, 973, 7)
+            brancheRaisinier(13f, BAS + 1f, 20f, 5f, 972, 5)
+            brancheRaisinier(82f, BAS + 2f, 24f, 2f, 974, 7)
+            brancheRaisinier(90f, BAS + 2f, 15f, 3f, 975, 4)
+        }
+
         /** Grande Anse : la grande plage de Deshaies, les raisiniers, un flamboyant, des touloulous, l'îlet au large. */
         fun grandeAnse() {
+            if (PAPIER) { grandeAnsePapier(); return }
             crete(30f, 1.2f, 101, P.loin, x0 = 52f)
             forme("M30 35Q33 31.6 37 31.8Q41 32.2 43 35Z", mix(P.loin, P.milieu, 0.3f))
             plan(1)
