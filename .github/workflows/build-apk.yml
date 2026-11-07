@@ -51,6 +51,28 @@ jobs:
       with:
         python-version: '3.11'
 
+    # Le dictionnaire Chalviraj (CC BY-NC-SA 4.0) n'est jamais commité : le
+    # dépôt est public, et les conditions de l'API interdisent de rediffuser
+    # une copie complète de la base. Il est téléchargé ici à chaque build, puis
+    # n'existe que dans l'APK et l'AAB. Voir Dictionnaires/generate_chalviraj.py.
+    #
+    # La clé n'est exposée qu'à cette étape, pas au job entier. L'export est
+    # limité à deux appels par heure : les pull requests ne l'appellent pas,
+    # leur APK ne part nulle part. Un tag l'exige dès que la clé est configurée,
+    # pour qu'une version publiée ne parte pas sans lui ; ailleurs, une panne
+    # laisse l'APK partir sans ce dictionnaire, avec un avertissement.
+    - name: 📚 Export Chalviraj Dictionary
+      if: github.event_name != 'pull_request'
+      env:
+        CHALVIRAJ_API_KEY: ${{ secrets.CHALVIRAJ_API_KEY }}
+      run: |
+        cd Dictionnaires
+        if [ -n "$CHALVIRAJ_API_KEY" ] && [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+          python generate_chalviraj.py --strict
+        else
+          python generate_chalviraj.py
+        fi
+
     - name: 📦 Generate Fresh Kreyòl Dictionary
       run: |
         echo "🔄 Generating fresh Kreyòl dictionary from Hugging Face..."
@@ -226,6 +248,27 @@ jobs:
           exit 1
         fi
 
+        # Chalviraj est facultatif (sans clé, ou pour une PR, l'APK part sans
+        # lui) mais, quand il est là, il ne doit être ni tronqué ni sans sa
+        # licence : la citation est la condition de la réutilisation. Le
+        # plancher est PROVISOIRE, le même que MINIMUM_ENTREES dans
+        # generate_chalviraj.py, à remonter après le premier export réel.
+        CHALVIRAJ=android_keyboard/app/src/main/assets/chalviraj.json
+        if [ -f "$CHALVIRAJ" ]; then
+          CHALVIRAJ_COUNT=$(jq '.count' "$CHALVIRAJ")
+          echo "📚 Entrées Chalviraj : $CHALVIRAJ_COUNT"
+          if [ "$CHALVIRAJ_COUNT" -lt 1000 ]; then
+            echo "::error::Seulement $CHALVIRAJ_COUNT entrées dans chalviraj.json. Lancez Dictionnaires/generate_chalviraj.py"
+            exit 1
+          fi
+          if ! jq -e '.licence == "CC BY-NC-SA 4.0" and (.attribution | length > 0)' "$CHALVIRAJ" > /dev/null; then
+            echo "::error::chalviraj.json ne porte pas sa licence et sa citation — CC BY-NC-SA et l'article 3 des conditions l'exigent."
+            exit 1
+          fi
+        else
+          echo "ℹ️ chalviraj.json absent : l'APK part sans le dictionnaire Chalviraj"
+        fi
+
         # Mokwaré n'a pas de repli codé en dur non plus : sans son actif,
         # CrosswordFragment affiche un écran qui le dit. Une grille dont un mot
         # a quitté le dictionnaire, dont une définition contient sa réponse ou
@@ -343,6 +386,7 @@ jobs:
           android_keyboard/app/src/main/assets/creole_translations.json
           android_keyboard/app/src/main/assets/creole_crossword.json
           android_keyboard/app/src/main/assets/creole_chassecroise.json
+          android_keyboard/app/src/main/assets/chalviraj.json
         retention-days: 1
 
   # 🔧 ÉTAPE 2A : BUILD DEBUG APK

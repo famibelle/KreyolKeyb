@@ -54,6 +54,12 @@ Dictionnaries/archives/scripts/
 # orthographiées, ne couvrent rien (même faute que le filtre de chemins de
 # build-apk.yml)
 Dictionnaires/__pycache__/
+# Dictionnaire Chalviraj (CC BY-NC-SA 4.0) : téléchargé au build par
+# generate_chalviraj.py, jamais commité. Le dépôt est public, et les conditions
+# de l'API interdisent de rediffuser une copie complète de la base.
+Dictionnaires/chalviraj_data/
+android_keyboard/app/src/main/assets/chalviraj.json
+android_keyboard/app/src/main/assets/chalviraj.json.tmp
 Dictionnaires/.env.template
 Dictionnaires/archives/scripts/
 Dictionnaries/backups/
