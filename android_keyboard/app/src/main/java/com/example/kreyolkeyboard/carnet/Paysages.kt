@@ -982,8 +982,16 @@ object Paysages {
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
 
-    /** Le moulin de Marie-Galante, sur le plan du milieu : le moyeu (x, y) et la longueur d'une aile. */
-    internal val MOULIN = floatArrayOf(87.4f, 23.4f, 14f)
+    /**
+     * La réduction du moulin de Marie-Galante, autour du pied de sa tour (86,
+     * 57) et décalé de 1,4 vers le bord : sans elle l'arche des cartes rares
+     * coupait le bout des ailes.
+     */
+    internal const val MOULIN_REDUCTION = 0.8f
+
+    /** Le moulin de Marie-Galante, sur le plan du milieu : le moyeu (x, y) et la longueur d'une aile, une fois réduit. */
+    internal val MOULIN = floatArrayOf(86f + (87.4f - 86f) * MOULIN_REDUCTION + 1.4f,
+        57f - (57f - 23.4f) * MOULIN_REDUCTION, 14f * MOULIN_REDUCTION)
 
     /** L'angle des ailes à l'arrêt, en degrés : en X, comme sur la photo. */
     internal const val ANGLE_MOULIN = 22f
@@ -3041,22 +3049,25 @@ object Paysages {
             cumulus(-4f, 21f, 26f, 1500)
             cumulus(30f, 12f, 14f, 1501)
             plan(1)
-            // Le morne, sa falaise à gauche, sa croix.
-            val crete = brisee(16f, 36f, 30f, 33.5f, 44f, 31f, 52f, 28.5f, 55f, 24f, 58f, 21f, 62f, 18.6f, 70f, 17.4f,
-                80f, 17f, 92f, 18f, 102f, 19f)
-            val morne = sousLaCrete(16f, 102f, crete)
-            morne.op(bosses(50f, 103f, { x -> crete(x) + 0.5f }, 1f, 1.6f, Alea(1502)), Path.Op.UNION)
-            piece(morne, papier(0xFF2C5C26.toInt()))
-            pieceD("M52 28.5L55 24L58 21L62 18.6L64.5 21Q62 23 63 26Q60 28 61 31L50 33Z", papier(0xFF8E8070.toInt()), 0.5f)
-            pieceD("M55 24L58 21L59.6 22.4Q57.4 24.6 58.4 27L55.6 28Z", papier(0xFF6E6052.toInt()), 0.2f)
-            taches(48f, 102f, 34f, 14, 1503, papier(0xFF4A8236.toInt()), crete)
-            taches(56f, 102f, 34f, 8, 1504, papier(0xFF1E441C.toInt()), crete)
-            pieceD("M14 37Q40 33.4 70 32.6Q86 32.2 102 31.6L102 36L14 38Z", papier(0xFF9DAE4E.toInt()), 0.3f)
-            val pierre = papier(0xFFD8C9A4.toInt())
-            pieceD("M86.6 17.6L89.4 17.6L89 16.4L87 16.4Z", papier(0xFFB8A984.toInt()), 0.4f)
-            barre(88f, 16.6f, 88f, 4.5f, 1.2f, pierre, 0.6f)
-            barre(85.2f, 8.2f, 90.8f, 8.2f, 1f, pierre, 0.6f)
-            barre(88.35f, 16f, 88.35f, 5f, 0.3f, papier(0xFFB0A07C.toInt()), 0f)
+            // Le morne, sa falaise à gauche, sa croix, tassés vers le rivage
+            // pour que la croix tienne sous l'arche des cartes rares.
+            tasser(50f, 36f, 1f, 0.7f) {
+                val crete = brisee(16f, 36f, 30f, 33.5f, 44f, 31f, 52f, 28.5f, 55f, 24f, 58f, 21f, 62f, 18.6f, 70f, 17.4f,
+                    80f, 17f, 92f, 18f, 102f, 19f)
+                val morne = sousLaCrete(16f, 102f, crete)
+                morne.op(bosses(50f, 103f, { x -> crete(x) + 0.5f }, 1f, 1.6f, Alea(1502)), Path.Op.UNION)
+                piece(morne, papier(0xFF2C5C26.toInt()))
+                pieceD("M52 28.5L55 24L58 21L62 18.6L64.5 21Q62 23 63 26Q60 28 61 31L50 33Z", papier(0xFF8E8070.toInt()), 0.5f)
+                pieceD("M55 24L58 21L59.6 22.4Q57.4 24.6 58.4 27L55.6 28Z", papier(0xFF6E6052.toInt()), 0.2f)
+                taches(48f, 102f, 34f, 14, 1503, papier(0xFF4A8236.toInt()), crete)
+                taches(56f, 102f, 34f, 8, 1504, papier(0xFF1E441C.toInt()), crete)
+                pieceD("M14 37Q40 33.4 70 32.6Q86 32.2 102 31.6L102 36L14 38Z", papier(0xFF9DAE4E.toInt()), 0.3f)
+                val pierre = papier(0xFFD8C9A4.toInt())
+                pieceD("M86.6 17.6L89.4 17.6L89 16.4L87 16.4Z", papier(0xFFB8A984.toInt()), 0.4f)
+                barre(88f, 16.6f, 88f, 4.5f, 1.2f, pierre, 0.6f)
+                barre(85.2f, 8.2f, 90.8f, 8.2f, 1f, pierre, 0.6f)
+                barre(88.35f, 16f, 88.35f, 5f, 0.3f, papier(0xFFB0A07C.toInt()), 0f)
+            }
             // Le plateau de calcaire du rivage, ses blocs, l'écume qui le borde.
             pieceD("M-2 36Q20 34.4 40 35.2Q70 35.8 102 34.4L102 41L-2 41Z", papier(0xFF9C7A55.toInt()), 0.5f)
             pieceD("M-2 37.6Q30 36.4 60 37.2Q80 37.4 102 36.6L102 38L-2 39Z", papier(0xFF7C5E42.toInt()), 0.2f)
@@ -3167,30 +3178,35 @@ object Paysages {
             repeat(14) { bougain.op(disque(8f + rb() * 14f, 51f + rb() * 4f, 1.4f + rb() * 1.6f), Path.Op.UNION) }
             piece(bougain, papier(0xFF3E7A34.toInt()))
             repeat(16) { piece(disque(8f + rb() * 14f, 50f + rb() * 4.5f, 0.5f + rb() * 0.7f), rose, 0f) }
-            // Le moulin : la tour de pierre, la porte, la queue, le toit.
-            val pierre = papier(0xFFB8AE9C.toInt())
-            pieceD("M77 57L80.6 29.4L91.4 29.4L95 57Z", pierre)
-            val rp = Alea(1604)
-            val moellons = intArrayOf(papier(0xFF9C9282.toInt()), papier(0xFFCFC6B4.toInt()), papier(0xFF857B6C.toInt()))
-            repeat(46) {
-                val y = 30.5f + rp() * 26f
-                val demi = 5.4f + (y - 29.4f) / 27.6f * 3.6f
-                val x = 86f - demi + 0.6f + rp() * (2f * demi - 2.4f)
-                val w = 0.8f + rp() * 1.2f
-                pieceD("M$x ${y}L${x + w} ${y - 0.1f}L${x + w + 0.1f} ${y + 0.6f}L${x - 0.1f} ${y + 0.65f}Z", moellons[(rp() * 3f).toInt().coerceAtMost(2)], 0f)
+            // Le moulin : la tour de pierre, la porte, la queue, le toit. Réduit
+            // et poussé vers le bord pour que les ailes tiennent sous l'arche
+            // des cartes rares et que le mot ne cache pas la tour ; [MOULIN]
+            // donne le moyeu et les ailes déjà réduits.
+            tasser(86f, 57f, MOULIN_REDUCTION, MOULIN_REDUCTION, 1.4f) {
+                val pierre = papier(0xFFB8AE9C.toInt())
+                pieceD("M77 57L80.6 29.4L91.4 29.4L95 57Z", pierre)
+                val rp = Alea(1604)
+                val moellons = intArrayOf(papier(0xFF9C9282.toInt()), papier(0xFFCFC6B4.toInt()), papier(0xFF857B6C.toInt()))
+                repeat(46) {
+                    val y = 30.5f + rp() * 26f
+                    val demi = 5.4f + (y - 29.4f) / 27.6f * 3.6f
+                    val x = 86f - demi + 0.6f + rp() * (2f * demi - 2.4f)
+                    val w = 0.8f + rp() * 1.2f
+                    pieceD("M$x ${y}L${x + w} ${y - 0.1f}L${x + w + 0.1f} ${y + 0.6f}L${x - 0.1f} ${y + 0.65f}Z", moellons[(rp() * 3f).toInt().coerceAtMost(2)], 0f)
+                }
+                pieceD("M91.4 29.4L95 57L92 57L89.6 29.4Z", papier(0xFF9A907E.toInt()), 0.2f)
+                pieceD("M83 57L83 50.6Q84.6 49.4 86.2 50.6L86.2 57Z", papier(0xFF3A3028.toInt()), 0.3f)
+                val queue = papier(0xFF9A8A70.toInt())
+                barre(86.6f, 25f, 78.4f, 56.4f, 0.9f, queue, 0.6f)
+                barre(88.4f, 25.6f, 81f, 56.4f, 0.5f, queue, 0.4f)
+                for (k in 1 until 10) {
+                    val u = k / 10f
+                    barre(86.6f + (78.4f - 86.6f) * u, 25f + 31.4f * u, 88.4f + (81f - 88.4f) * u, 25.6f + 30.8f * u, 0.25f, queue, 0f)
+                }
+                pieceD("M79.6 30Q82 22 86 18.8Q90 22 92.4 30Z", papier(0xFF7E7A72.toInt()), 0.8f)
+                for (k in 1 until 4) barre(80.4f + k * 0.9f, 30f - k * 2.6f, 91.6f - k * 0.9f, 30f - k * 2.6f, 0.14f, papier(0xFF64605A.toInt()), 0f)
+                pieceD("M85.6 19L86.4 19L86.2 17.2L85.8 17.2Z", papier(0xFF5A4636.toInt()), 0f)
             }
-            pieceD("M91.4 29.4L95 57L92 57L89.6 29.4Z", papier(0xFF9A907E.toInt()), 0.2f)
-            pieceD("M83 57L83 50.6Q84.6 49.4 86.2 50.6L86.2 57Z", papier(0xFF3A3028.toInt()), 0.3f)
-            val queue = papier(0xFF9A8A70.toInt())
-            barre(86.6f, 25f, 78.4f, 56.4f, 0.9f, queue, 0.6f)
-            barre(88.4f, 25.6f, 81f, 56.4f, 0.5f, queue, 0.4f)
-            for (k in 1 until 10) {
-                val u = k / 10f
-                barre(86.6f + (78.4f - 86.6f) * u, 25f + 31.4f * u, 88.4f + (81f - 88.4f) * u, 25.6f + 30.8f * u, 0.25f, queue, 0f)
-            }
-            pieceD("M79.6 30Q82 22 86 18.8Q90 22 92.4 30Z", papier(0xFF7E7A72.toInt()), 0.8f)
-            for (k in 1 until 4) barre(80.4f + k * 0.9f, 30f - k * 2.6f, 91.6f - k * 0.9f, 30f - k * 2.6f, 0.14f, papier(0xFF64605A.toInt()), 0f)
-            pieceD("M85.6 19L86.4 19L86.2 17.2L85.8 17.2Z", papier(0xFF5A4636.toInt()), 0f)
             if (faune) ailesDuMoulin(ANGLE_MOULIN)
             plan(2)
             // Le manguier au bord gauche : tronc court et épais qui se divise
@@ -3953,8 +3969,22 @@ object Paysages {
         fun papier(col: Int): Int = duJour(col)
 
         /** Une pièce de papier découpé, quelle que soit sa taille : une feuille, une lanière. */
-        fun piece(t: Path, col: Int, ombre: Float = 1f) {
+        /** Le tassement en cours (voir [tasser]), appliqué à chaque pièce. */
+        private var tasse: Matrix? = null
+
+        /**
+         * Peint [bloc] réduit de [sx] × [sy] autour de ([cx], [cy]), puis
+         * décalé de [dx] : pour faire tenir sous l'arche des cartes rares un
+         * élément haut posé près d'un bord, sans réécrire ses cotes.
+         */
+        fun tasser(cx: Float, cy: Float, sx: Float, sy: Float, dx: Float = 0f, bloc: () -> Unit) {
+            tasse = Matrix().apply { setScale(sx, sy, cx, cy); postTranslate(dx, 0f) }
+            try { bloc() } finally { tasse = null }
+        }
+
+        fun piece(t0: Path, col: Int, ombre: Float = 1f) {
             if (!actif) return
+            val t = tasse?.let { m -> Path(t0).apply { transform(m) } } ?: t0
             if (!decoupe || aplats > 0) { forme(t, col); return }
             t.computeBounds(boite, true)
             peint(t, col, 0f, boite, ombre)
