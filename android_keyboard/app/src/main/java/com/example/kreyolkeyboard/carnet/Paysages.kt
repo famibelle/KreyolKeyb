@@ -2279,6 +2279,159 @@ object Paysages {
             forme("M24.7 44L18.6 55L24.7 55Z", duJour(0xFFE3B65C.toInt()))
         }
 
+        // ------------------------------------------- la Soufrière en papier
+
+        /** Une ligne brisée lue comme une fonction : la hauteur en x, entre les points donnés. */
+        private fun brisee(vararg pts: Float): (Float) -> Float = { x ->
+            var y = pts[1]
+            var k = 0
+            while (k + 3 < pts.size) {
+                val xa = pts[k]; val ya = pts[k + 1]; val xb = pts[k + 2]; val yb = pts[k + 3]
+                if (x >= xa && x <= xb) { y = ya + (yb - ya) * (x - xa) / (xb - xa); break }
+                if (x > xb) y = yb
+                k += 2
+            }
+            y
+        }
+
+        /** La pièce sous une ligne de crête, de [x0] à [x1], jusqu'en bas de la fenêtre. */
+        private fun sousLaCrete(x0: Float, x1: Float, crete: (Float) -> Float): Path {
+            val t = Path()
+            t.moveTo(x0, BAS + 2f)
+            var x = x0
+            while (x < x1) { t.lineTo(x, crete(x)); x += 1f }
+            t.lineTo(x1, crete(x1))
+            t.lineTo(x1, BAS + 2f)
+            t.close()
+            return t
+        }
+
+        /** Des taches de mousse jaune semées sous la ligne [haut], jusqu'à [y1]. */
+        private fun taches(x0: Float, x1: Float, y1: Float, n: Int, graine: Int, col: Int, haut: (Float) -> Float) {
+            val r = Alea(graine)
+            repeat(n) {
+                val x = x0 + r() * (x1 - x0)
+                val h = haut(x) + 1.4f
+                val y = h + r() * (y1 - h)
+                val rx = 0.7f + r() * 1.3f
+                if (h < y1) {
+                    val t = Path()
+                    for (k in 0 until 3) {
+                        val dx = (r() - 0.5f) * rx * 2.2f; val dy = (r() - 0.5f) * rx * 0.6f; val q = rx * (0.5f + 0.5f * r())
+                        t.op(Path().apply { addOval(RectF(x + dx - q, y + dy - q * 0.6f, x + dx + q, y + dy + q * 0.6f), Path.Direction.CW) }, Path.Op.UNION)
+                    }
+                    piece(t, col, 0f)
+                }
+            }
+        }
+
+        /** Le panache d'une fumerolle : des bouffées qui montent de [bas] à [haut] en grossissant et en dérivant. */
+        private fun panache(x: Float, bas: Float, haut: Float, w: Float, derive: Float, graine: Int) {
+            val r = Alea(graine)
+            val col = if (P.nuit) mix(P.cielBas, P.cielHaut, 0.35f) else papier(0xFFF3F2EC.toInt())
+            for ((couche, teinte) in listOf(1f to col, 0.6f to mix(col, 0xFFFFFFFF.toInt(), 0.5f))) {
+                val t = Path()
+                var u = 0f
+                while (u <= 1f) {
+                    val cx = x + derive * u * u + (r() - 0.5f) * w * 0.5f
+                    val cy = bas + (haut - bas) * u + (r() - 0.5f) * w * 0.3f
+                    t.op(disque(cx, cy, w * (0.6f + 0.9f * u) * couche * (0.8f + 0.35f * r())), Path.Op.UNION)
+                    u += 0.06f
+                }
+                piece(t, teinte, if (couche == 1f) 0.5f else 0f)
+            }
+        }
+
+        /**
+         * La Soufrière en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07) : le sommet, son dôme de roche brune et ocre aux
+         * aiguilles sombres, la mousse vert-jaune qui l'habille à gauche, le
+         * gouffre fumant à droite, la clôture et le sentier, et devant le creux
+         * vert où descend la trace, les buttes de mousse et leurs blocs noirs.
+         */
+        fun soufrierePapier() {
+            brumePapier(66f, 104f, 9f, 7f, 1200)
+            val crete = brisee(-2f, 28f, 6f, 19f, 12f, 13f, 18f, 12.2f, 23f, 13.5f, 28f, 11f, 32f, 8.5f, 35f, 9.5f, 38f, 6.5f,
+                42f, 7.5f, 45f, 5.5f, 49f, 8f, 53f, 7f, 57f, 9.5f, 61f, 8.5f, 66f, 11f, 72f, 10.5f, 80f, 12f, 88f, 11f, 96f, 12.5f, 102f, 13.5f)
+            piece(sousLaCrete(-2f, 102f, crete), papier(0xFF7E604A.toInt()))
+            pieceD("M28 20Q40 14 56 18Q70 16 86 17Q96 17 102 19L102 30Q80 26 60 30Q44 28 28 31Z", papier(0xFFA27F58.toInt()), 0.4f)
+            val rd = Alea(1213)
+            val dalles = intArrayOf(papier(0xFF5E4A3E.toInt()), papier(0xFF6E584A.toInt()), papier(0xFF8E8070.toInt()), papier(0xFFB8996A.toInt()))
+            repeat(26) {
+                val dx = 26f + rd() * 74f
+                val dy = crete(dx) + 1f + rd() * (30f - crete(dx))
+                val l = 2f + rd() * 4.5f; val e = 1f + rd() * 1.6f
+                pieceD("M$dx ${dy}L${dx + l * 0.3f} ${dy - e}L${dx + l * 0.8f} ${dy - e * 0.8f}L${dx + l} ${dy + e * 0.2f}L${dx + l * 0.5f} ${dy + e * 0.4f}Z",
+                    dalles[min((rd() * 4f).toInt(), 3)], 0.4f)
+            }
+            val mousse = brisee(-2f, 30f, 6f, 21f, 12f, 15.6f, 18f, 15.2f, 22f, 17f, 30f, 24f, 40f, 34f)
+            val cap = sousLaCrete(-2f, 40f, mousse)
+            cap.op(bosses(-2f, 34f, { x -> mousse(x) + 0.6f }, 0.9f, 1.6f, Alea(1201)), Path.Op.UNION)
+            piece(cap, papier(0xFF6FA83A.toInt()))
+            taches(-2f, 30f, 40f, 9, 1202, papier(0xFFAFC748.toInt()), mousse)
+            plan(1)
+            // Le flanc de roche ocre à droite, le gouffre et sa fumée.
+            val flanc = brisee(48f, 33f, 60f, 28f, 72f, 26f, 84f, 24.5f, 96f, 25f, 102f, 24f)
+            piece(sousLaCrete(48f, 102f, flanc), papier(0xFFB39466.toInt()))
+            pieceD("M73 27Q84 23.5 97 27.5Q94 34 90 44Q86 47 83 44Q78 34 73 27Z", papier(0xFF6E665C.toInt()))
+            pieceD("M73 27Q78 34 83 44Q85 46 86.5 45.5Q82 34 80 25.6Z", papier(0xFF4E4842.toInt()), 0.4f)
+            panache(85.5f, 41f, 13f, 5.2f, 8f, 1203)
+            // La clôture le long du bord du gouffre.
+            val brun = papier(0xFF5A4636.toInt())
+            pieceD("M66 26.2Q80 22.4 99 25.6L99 26.1Q80 22.9 66 26.7Z", brun, 0f)
+            for (k in 0 until 9) {
+                val fx = 66f + k * 4.1f
+                val fy = 26f - sin(PI.toFloat() * (fx - 66f) / 33f) * 2.6f + (fx - 66f) * 0.02f
+                pieceD("M$fx ${fy - 1.3f}L${fx + 0.35f} ${fy - 1.3f}L${fx + 0.35f} ${fy + 0.8f}L$fx ${fy + 0.8f}Z", brun, 0f)
+            }
+            // Le versant de mousse à gauche, et le sentier qui monte vers le gouffre.
+            val versant = brisee(-2f, 30f, 10f, 29f, 22f, 31f, 34f, 36f, 46f, 40f, 58f, 44f, 70f, 46f)
+            val pente = sousLaCrete(-2f, 70f, versant)
+            pente.op(bosses(-2f, 64f, { x -> versant(x) + 0.5f }, 0.8f, 1.5f, Alea(1204)), Path.Op.UNION)
+            piece(pente, papier(0xFF8DBE3E.toInt()))
+            taches(-2f, 66f, 50f, 14, 1205, papier(0xFFBCD04C.toInt()), versant)
+            taches(-2f, 66f, 50f, 6, 1206, papier(0xFF5E9A34.toInt()), versant)
+            pieceD("M14 33.2Q30 35 42 34.4Q56 33.6 66 30.4Q70 29 74 28L74 28.8Q70 29.8 66 31.2Q56 34.6 42 35.4Q30 36 14 34Z",
+                papier(0xFFD2BE92.toInt()), 0f)
+            val rr = Alea(1207)
+            repeat(14) {
+                val gx = 50f + rr() * 24f; val gy = 31f + rr() * 9f
+                if (gy < flanc(gx) + 0.8f || gy > versant(gx) - 0.8f) galet(gx, gy, 0.6f + rr() * 0.8f, papier(0xFF7A6656.toInt()))
+            }
+            plan(2)
+            // Le creux vert et la trace qui descend vers soi.
+            val creux = brisee(-2f, 46f, 20f, 45f, 40f, 47f, 52f, 46f, 66f, 44f, 84f, 42f, 102f, 41f)
+            piece(sousLaCrete(-2f, 102f, creux), papier(0xFF4F9A3C.toInt()))
+            taches(-2f, 102f, 60f, 8, 1208, papier(0xFF6DB646.toInt()), creux)
+            pieceD("M51.5 46.3Q53 46.2 53.5 47Q52 55 55 66.5L46 66.5Q50 56 51.5 46.3Z", papier(0xFFB9A57A.toInt()), 0.3f)
+            pieceD("M52.2 47Q51 56 48.6 66.5L52.6 66.5Q51.6 56 52.8 47Z", papier(0xFF8E9A54.toInt()), 0f)
+            // La butte de gauche, sa fente sombre, sa mousse jaune.
+            val gauche = brisee(-2f, 40f, 8f, 40.5f, 18f, 43f, 26f, 49f, 32f, 56f, 36f, 64f, 38f, 68f)
+            val bg = sousLaCrete(-2f, 38f, gauche)
+            bg.op(bosses(-2f, 34f, { x -> gauche(x) + 0.5f }, 1f, 1.8f, Alea(1209)), Path.Op.UNION)
+            piece(bg, papier(0xFF7DB43A.toInt()))
+            pieceD("M18 50Q21 56 19 66L14 66Q17 57 15 51Z", papier(0xFF2F4E26.toInt()), 0.3f)
+            taches(-2f, 34f, 66f, 10, 1210, papier(0xFFB5CC48.toInt()), gauche)
+            // La butte de droite, ses blocs de roche noire.
+            val droite = brisee(58f, 68f, 62f, 58f, 68f, 53f, 76f, 49.5f, 86f, 45f, 94f, 42.5f, 102f, 41.5f)
+            val bd = sousLaCrete(58f, 102f, droite)
+            bd.op(bosses(64f, 102f, { x -> droite(x) + 0.5f }, 1f, 1.8f, Alea(1211)), Path.Op.UNION)
+            piece(bd, papier(0xFF86BC3E.toInt()))
+            taches(62f, 102f, 66f, 9, 1212, papier(0xFFB9CF4C.toInt()), droite)
+            galet(93f, 44.5f, 4.2f, papier(0xFF3E3632.toInt()))
+            galet(99f, 50f, 3.4f, papier(0xFF4A403A.toInt()))
+            galet(85f, 47.6f, 2.4f, papier(0xFF4A403A.toInt()))
+            // Au ras du sol : les rosettes de broméliacées, quelques fleurs roses, et les balisiers du colibri.
+            for ((bx, by) in arrayOf(70f to 64f, 78f to 61f, 28f to 64.5f)) {
+                for (k in -3..3) brin(bx + k * 0.4f, by, 3.2f + (3 - abs(k)) * 0.9f, k * 1.1f, papier(if (k % 2 == 0) 0xFF5FA845.toInt() else 0xFF8CC85A.toInt()))
+            }
+            for ((fx, fy) in arrayOf(82f to 58.4f, 84.5f to 57.2f, 88f to 56.2f, 74f to 60.6f)) {
+                piece(disque(fx, fy, 0.75f), papier(0xFFC2307A.toInt()), 0.3f)
+            }
+            balisier(12f, 64f, 14f, feuille())
+            balisier(88f, 64f, 14f, feuille())
+        }
+
         /**
          * La Soufrière : le dôme raide qui remplit la fenêtre, son chapeau de
          * nuages, les fumerolles, la savane d'altitude sur ses flancs et la
@@ -2286,6 +2439,7 @@ object Paysages {
          * verte qui se lisait comme une plaine (propriétaire, 2026-10-19).
          */
         fun soufriere() {
+            if (PAPIER) { soufrierePapier(); return }
             forme("M0 34Q12 26 24 30L24 66L0 66Z", P.loin)
             forme("M100 32Q88 25 76 30L76 66L100 66Z", P.loin)
             plan(1)
