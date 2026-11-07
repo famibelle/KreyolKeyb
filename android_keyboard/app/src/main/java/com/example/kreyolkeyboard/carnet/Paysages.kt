@@ -1,11 +1,18 @@
 package com.example.kreyolkeyboard.carnet
 
 import android.graphics.Bitmap
+import android.graphics.BitmapShader
+import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
+import android.graphics.DashPathEffect
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.RadialGradient
+import android.graphics.RectF
 import android.graphics.Shader
 import android.os.Handler
 import android.os.Looper
@@ -34,8 +41,8 @@ import kotlin.math.sin
  *
  * ## Quel lieu pour quel mot
  *
- * LuxKeyb tire le lieu du champ sémantique du mot ; le kréyòl n'a pas encore
- * ce classement (`creole_blasons.json`). Le lieu se tire donc **du mot
+ * LuxKeyb tire le lieu du champ sémantique du mot ; le kréyòl n'a pas ce
+ * classement (`creole_blasons.json` ne porte que des dessins). Le lieu se tire donc **du mot
  * lui-même**, par une empreinte fixe : un mot montre toujours le même lieu,
  * sur tous les téléphones et d'une version à l'autre.
  *
@@ -165,19 +172,28 @@ class Heure private constructor(
 
         private fun h(s: Long) = s.toInt()
 
+        /**
+         * Les quatre heures en couleurs vives, comme peintes à la gouache
+         * (direction validée par le propriétaire le 2026-11-01, palettes de la
+         * maquette `vives.js` de la skill `direction-artistique`) : le matin,
+         * un ciel bleu franc qui passe au rose puis au jaune pâle vers
+         * l'horizon, des verts francs et une eau soutenue ; l'après-midi
+         * orangé ; le soir violet, rose et orange ; la nuit bleu profond, où la
+         * vivacité vient des lumières dorées.
+         */
         private val BASE = arrayOf(
-            Heure(0, h(0xFFA6C6DC), null, h(0xFFF3EBDC), h(0xFFFFF7DF), 22f, 15f, 6f,
-                h(0xFFB3C3C4), h(0xFF8AA392), h(0xFF5D7964), h(0xFF43594A),
-                h(0xFFE4D8C2), h(0xFF8E5C4B), h(0xFF5B6670), false, h(0xFFB7D0D9), false),
-            Heure(1, h(0xFFE2A865), null, h(0xFFFCE6B6), h(0xFFFFF3C6), 78f, 13f, 7f,
-                h(0xFFD6B387), h(0xFFAA895A), h(0xFF735C39), h(0xFF504028),
-                h(0xFFF1D5A1), h(0xFFA3533A), h(0xFF6E4E33), false, h(0xFFECCB8E), false),
-            Heure(2, h(0xFF463A76), h(0xFFC66F8A), h(0xFFF7B179), h(0xFFFFD690), 68f, 31f, 10f,
-                h(0xFF8D6A8A), h(0xFF5D4766), h(0xFF392C46), h(0xFF241C30),
-                h(0xFFC49A8F), h(0xFF5A3141), h(0xFFFFCD78), true, h(0xFFCF8689), false),
-            Heure(3, h(0xFF091030), null, h(0xFF2A3B70), h(0xFFF6F1D8), 79f, 12f, 4.6f,
-                h(0xFF27355B), h(0xFF1A2445), h(0xFF111930), h(0xFF0A1022),
-                h(0xFF4B5474), h(0xFF2A2F4B), h(0xFFFFD98A), true, h(0xFF2A3A68), true)
+            Heure(0, h(0xFF7EC3F2), h(0xFFF5C3DA), h(0xFFFFE9A6), h(0xFFFFE066), 22f, 15f, 6f,
+                h(0xFF6F9BEA), h(0xFF5DBB63), h(0xFF2F8F5B), h(0xFF2A6B45),
+                h(0xFFF4CF94), h(0xFFE0674A), h(0xFF4B6A8A), false, h(0xFF3E9DEB), false),
+            Heure(1, h(0xFFFFA94D), h(0xFFFFD27A), h(0xFFFFF0B8), h(0xFFFFF39A), 78f, 13f, 7f,
+                h(0xFFE38B5C), h(0xFF9CC43F), h(0xFF4E8A2E), h(0xFF3B5E22),
+                h(0xFFFFD9A0), h(0xFFD9503A), h(0xFF6A4A2E), false, h(0xFF2FA8DE), false),
+            Heure(2, h(0xFF4B3BA8), h(0xFFFF6FA8), h(0xFFFFB25C), h(0xFFFFD36A), 68f, 31f, 10f,
+                h(0xFF9B5FB8), h(0xFF6B3F8F), h(0xFF3E2766), h(0xFF2A1A48),
+                h(0xFFF0A890), h(0xFF8A2F5A), h(0xFFFFCD48), true, h(0xFFE8789A), false),
+            Heure(3, h(0xFF0B1450), null, h(0xFF2D4BB0), h(0xFFFFF4C8), 79f, 12f, 4.6f,
+                h(0xFF2F4DA0), h(0xFF22357F), h(0xFF16245A), h(0xFF0C1638),
+                h(0xFF6A79B8), h(0xFF3A3F7A), h(0xFFFFD45A), true, h(0xFF2D4FA8), true)
         )
 
         /**
@@ -267,24 +283,24 @@ object Paysages {
      * fois, et deux cartes gagnées le même carême partagent toujours leur rendu.
      */
     fun image(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
-              souvenir: Souvenir? = null, ouverte: Boolean = false): Bitmap? {
+              souvenir: Souvenir? = null, facture: Facture = Facture.VIGNETTE, ouverte: Boolean = false): Bitmap? {
         if (largeurPx <= 0 || hauteurPx <= 0) return null
-        val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, ouverte)
+        val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, facture, ouverte)
         CACHE.get(cle)?.let { if (!it.isRecycled) return it }
-        val bitmap = rendu(lieu, heure, largeurPx, hauteurPx, souvenir, ouverte) ?: return null
+        val bitmap = rendu(lieu, heure, largeurPx, hauteurPx, souvenir, facture, ouverte) ?: return null
         CACHE.put(cle, bitmap)
         return bitmap
     }
 
     private fun cle(lieu: Lieu, heure: Heure, teinte: Float?, l: Int, h: Int, souvenir: Souvenir?,
-                    ouverte: Boolean = false) =
-        "${lieu.ordinal}_${heure.rang}_${teinte}_${souvenir?.saison}_${souvenir?.fete}_${l}x$h" +
+                    facture: Facture = Facture.VIGNETTE, ouverte: Boolean = false) =
+        "${lieu.ordinal}_${heure.rang}_${teinte}_${souvenir?.saison}_${souvenir?.fete}_${facture.ordinal}_${l}x$h" +
             if (ouverte) "_ouverte" else ""
 
     /** Le rendu s'il est déjà en cache, sans rien calculer. */
     fun enCache(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
-                souvenir: Souvenir? = null, ouverte: Boolean = false): Bitmap? =
-        CACHE.get(cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, ouverte))?.takeIf { !it.isRecycled }
+                souvenir: Souvenir? = null, facture: Facture = Facture.VIGNETTE, ouverte: Boolean = false): Bitmap? =
+        CACHE.get(cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir, facture, ouverte))?.takeIf { !it.isRecycled }
 
     /**
      * Rend le lieu hors du fil principal, puis appelle [pret] sur le fil
@@ -379,7 +395,7 @@ object Paysages {
      * anime, peints ils resteraient figés (propriétaire, 2026-10-19).
      */
     fun rendu(lieu: Lieu, heure: Heure, largeurPx: Int, hauteurPx: Int, souvenir: Souvenir? = null,
-              ouverte: Boolean = false): Bitmap? {
+              facture: Facture = Facture.VIGNETTE, ouverte: Boolean = false): Bitmap? {
         if (largeurPx <= 0 || hauteurPx <= 0) return null
         val bitmap = Bitmap.createBitmap(largeurPx, hauteurPx, Bitmap.Config.ARGB_8888)
         val c = Canvas(bitmap)
@@ -388,57 +404,84 @@ object Paysages {
         c.translate(k[1], k[2])
         c.scale(k[0], k[0])
         if (souvenir == null) {
-            dessiner(c, lieu, heure, etoiles = !ouverte)
+            dessiner(c, lieu, heure, facture = facture, echelle = k[0], etoiles = !ouverte)
             c.restore()
             return bitmap
         }
         // Avec une saison, le lieu est peint à part sur un calque transparent,
         // puis posé sur le ciel : ce calque est aussi le masque dont
         // [Habillage] a besoin, et le lieu n'est peint qu'une fois.
-        dessiner(c, lieu, heure, ciel = true, lieuAussi = false, etoiles = !ouverte)
+        dessiner(c, lieu, heure, ciel = true, lieuAussi = false, facture = facture, echelle = k[0], etoiles = !ouverte)
         c.restore()
         val calque = Bitmap.createBitmap(largeurPx, hauteurPx, Bitmap.Config.ARGB_8888)
         val cc = Canvas(calque)
         cc.translate(k[1], k[2])
         cc.scale(k[0], k[0])
-        dessiner(cc, lieu, heure, ciel = false)
+        val releve = Bitmap.createBitmap(largeurPx, hauteurPx, Bitmap.Config.ALPHA_8)
+        dessiner(cc, lieu, heure, ciel = false, facture = facture, echelle = k[0], releve = aLEchelle(releve, k))
         c.drawBitmap(calque, 0f, 0f, null)
-        Habillage.appliquer(bitmap, calque, lieu, heure, souvenir, k, averse = !ouverte)
+        Habillage.appliquer(bitmap, calque, lieu, heure, souvenir, k, averse = !ouverte, releve = releve)
         calque.recycle()
+        releve.recycle()
         return bitmap
     }
 
     /**
      * De combien chaque plan glisse au plus quand la carte penche à fond, en
-     * part de la largeur (de la hauteur pour le tangage) : le lointain, le
-     * milieu, le proche.
+     * part de la largeur (de la hauteur pour le tangage) : le ciel, les
+     * nuages, le lointain, le milieu, le proche, puis les coulisses.
      *
-     * C'est le lointain qui bouge le plus, comme derrière une vitre : le
-     * cadre de la carte est ce qu'il y a de plus près, le dessin du mot est
-     * posé dessus en nacre et ne bouge pas, et plus un plan est loin du
-     * verre, plus il glisse quand l'œil change d'angle.
+     * C'est le fond qui bouge le plus, comme derrière une vitre : le cadre de
+     * la carte est ce qu'il y a de plus près, le dessin du mot est posé
+     * devant et ne bouge pas, et plus un plan est loin du verre, plus il
+     * glisse quand l'œil change d'angle. Les valeurs sont celles de la
+     * maquette `cinq_plans.html` (skill `direction-artistique`, règle 8).
+     *
+     * Le sixième plan n'existe que sur les rares et les très rares : les
+     * coulisses, juste derrière la vitre (voir [nombreDePlans]).
      */
-    val GLISSEMENT = floatArrayOf(0.04f, 0.022f, 0.008f)
+    val GLISSEMENT = floatArrayOf(0.05f, 0.04f, 0.03f, 0.017f, 0.007f, 0.003f)
+
+    /** Le rang des nuages parmi les plans : une bande qui défile, voir [nuages]. */
+    const val NUAGES = 1
 
     /**
-     * Le lieu en trois calques, pour la carte ouverte : voir [GLISSEMENT].
-     * Le premier porte le ciel et ne laisse rien de vide, les deux autres
-     * sont transparents autour de ce qu'ils portent.
+     * Cinq cartons pour toutes les cartes, six à partir de rare (décision du
+     * propriétaire, 2026-11-01, règle 8 de la skill `direction-artistique`) :
+     * une commune, la carte qu'on manipule le plus, a le plein effet de
+     * théâtre. Les rares et les très rares gardent en plus leurs coulisses,
+     * la seule différence de profondeur qui reste entre les paliers ; la
+     * rareté se dit par l'heure, le métal et la plaque, qu'on voit sans
+     * pencher la carte.
+     */
+    fun nombreDePlans(heure: Heure): Int = if (heure.rang >= Rarete.RARE.ordinal) 6 else 5
+
+    /**
+     * Le lieu en cinq calques, six pour une rare ([nombreDePlans]), pour la
+     * carte ouverte : voir [GLISSEMENT]. Le premier est le ciel et ne laisse
+     * rien de vide ; le deuxième est la bande des nuages ([NUAGES]), que
+     * [CadreOrne] fait traverser le ciel ; les autres sont transparents autour
+     * de ce qu'ils portent.
      *
      * Chaque calque déborde de la fenêtre de quoi glisser sans découvrir son
-     * bord : voir [marge], et [CadreOrne] qui le peint centré sur elle. Le
-     * lointain est légèrement flou : c'est la profondeur de champ, l'œil fait
-     * le point sur le dessin du mot, au premier plan.
+     * bord : voir [marge], et [CadreOrne] qui le peint centré sur elle.
+     *
+     * Les calques sont des **cartons de théâtre de papier** (skill
+     * `direction-artistique`) : chaque pièce est un carton peint à la gouache
+     * ([Facture.GOUACHE]), chaque calque porte une ombre nette sur ceux de
+     * derrière et un liseré de lumière au bord haut ([trancher]), et le
+     * lointain s'efface par la couleur ([ESTOMPE]), sans flou. Tout cela est
+     * peint ici, une fois : pencher la carte ne coûte rien de plus.
      *
      * `null` pour une carte gagnée un jour de fête, qui garde son rendu à
-     * plat : les feux, les braises et les lumières s'ajoutent à la lumière
-     * du paysage entier, et ne se répartissent pas en calques.
+     * plat, sans nuages : les feux, les braises et les lumières s'ajoutent à
+     * la lumière du paysage entier, et ne se répartissent pas en calques.
      */
     fun plans(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
               souvenir: Souvenir? = null): Array<Bitmap>? {
         if (largeurPx <= 0 || hauteurPx <= 0 || souvenir?.fete != null) return null
         val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir)
-        val caches = Array(GLISSEMENT.size) { CACHE.get("${cle}_p$it")?.takeIf { b -> !b.isRecycled } }
+        val caches = Array(nombreDePlans(heure)) { CACHE.get("${cle}_p$it")?.takeIf { b -> !b.isRecycled } }
         if (caches.all { it != null }) return caches.requireNoNulls()
         val rendus = rendrePlans(lieu, heure, largeurPx, hauteurPx, souvenir)
         rendus.forEachIndexed { i, b -> CACHE.put("${cle}_p$i", b) }
@@ -455,90 +498,271 @@ object Paysages {
      */
     fun marge(i: Int, n: Int): Int = ceil(GLISSEMENT[i] * n).toInt() + 1
 
+    /**
+     * La profondeur de chaque calque, en plans, pour l'ombre qu'il reçoit :
+     * plus un carton est loin de celui qui la porte, plus elle monte et
+     * s'étale. Les nuages n'en reçoivent pas (-1).
+     */
+    private val PROFONDEUR = intArrayOf(0, -1, 1, 2, 3, 4)
+
     private fun rendrePlans(lieu: Lieu, heure: Heure, l: Int, h: Int, souvenir: Souvenir?): Array<Bitmap> {
-        val tailles = Array(GLISSEMENT.size) { i -> intArrayOf(l + 2 * marge(i, l), h + 2 * marge(i, h)) }
-        val ks = Array(GLISSEMENT.size) { i ->
+        val n = nombreDePlans(heure)
+        val tailles = Array(n) { i -> intArrayOf(l + 2 * marge(i, l), h + 2 * marge(i, h)) }
+        val ks = Array(n) { i ->
             cadrage(tailles[i][0].toFloat(), tailles[i][1].toFloat())
         }
-        // Les étoiles n'y sont pas : elles scintillent dans l'ambiance.
-        fun calque(i: Int, ciel: Boolean, lieuAussi: Boolean): Bitmap {
+        fun toile(i: Int, dessin: (Canvas) -> Unit): Bitmap {
             val b = Bitmap.createBitmap(tailles[i][0], tailles[i][1], Bitmap.Config.ARGB_8888)
             val c = Canvas(b)
             c.translate(ks[i][1], ks[i][2])
             c.scale(ks[i][0], ks[i][0])
-            dessiner(c, lieu, heure, ciel = ciel, lieuAussi = lieuAussi, seul = i, faune = false, etoiles = false)
+            dessin(c)
             return b
         }
-        // Le lointain : le ciel, puis la crête, floutée seule pour que la lune
-        // et les étoiles gardent leur netteté.
-        val fond = calque(0, ciel = true, lieuAussi = false)
-        val loin = calque(0, ciel = false, lieuAussi = true)
-        flouter(loin, max(1, (ks[0][0] * FLOU_LOINTAIN).roundToInt()))
-        Canvas(fond).drawBitmap(loin, 0f, 0f, null)
-        val couches = arrayOf(fond, calque(1, false, true), calque(2, false, true))
-        if (souvenir != null) {
-            Habillage.appliquerPlans(couches, arrayOf(loin, couches[1], couches[2]), lieu, heure, souvenir, ks)
+        // Le calque [i] porte le plan [i] − 2 du lieu : 0 le lointain, 1 le milieu, 2 le proche.
+        // Avec une saison, il dresse aussi le relevé de sa végétation.
+        val releves = arrayOfNulls<Bitmap>(n)
+        fun calque(i: Int) = toile(i) {
+            val releve = if (souvenir != null) {
+                Bitmap.createBitmap(tailles[i][0], tailles[i][1], Bitmap.Config.ALPHA_8).also { r -> releves[i] = r }
+            } else null
+            dessiner(it, lieu, heure, ciel = false, lieuAussi = true, seul = i - 2, faune = false,
+                facture = Facture.GOUACHE, echelle = ks[i][0], releve = releve?.let { r -> aLEchelle(r, ks[i]) })
         }
-        loin.recycle()
-        return couches
+        fun peindre(i: Int, dessin: Peintre.() -> Unit) = toile(i) {
+            Peintre(it, heure, facture = Facture.GOUACHE, echelle = ks[i][0]).dessin()
+        }
+        // Les étoiles n'y sont pas : elles scintillent dans l'ambiance.
+        val ciel = toile(0) {
+            dessiner(it, lieu, heure, ciel = true, lieuAussi = false, facture = Facture.GOUACHE, echelle = ks[0][0], etoiles = false)
+        }
+        val loin = calque(2)
+        val milieu = calque(3)
+        val proche = calque(4)
+        // Les silhouettes avant la saison : la neige ou les fleurs que
+        // [Habillage] pose par-dessus ne sont pas du carton.
+        val formes = arrayOf(loin.extractAlpha(), milieu.extractAlpha(), proche.extractAlpha())
+        val unite = ks[0][0]
+        if (souvenir != null) {
+            // Le ciel aussi, sans masque : l'hiver le pâlit, l'été le réchauffe.
+            Habillage.appliquerPlans(arrayOf(ciel, loin, milieu, proche), arrayOf(null, loin, milieu, proche),
+                lieu, heure, souvenir, arrayOf(ks[0], ks[2], ks[3], ks[4]), arrayOf(null, releves[2], releves[3], releves[4]))
+        }
+        releves.forEach { it?.recycle() }
+        // Après la saison, qui reconnaît la végétation à ses couleurs d'origine.
+        eclaircir(loin, formes[0], heure.cielBas, ESTOMPE[0])
+        eclaircir(milieu, formes[1], heure.cielBas, ESTOMPE[1])
+        // Les coulisses des rares, posées après la saison : ce sont des
+        // châssis de théâtre, pas des arbres du lieu. Deux rangées, étagées :
+        // la seconde, un pas en retrait, est collée au carton du proche, dont
+        // elle partage la course.
+        val coulisses = if (n < 6) null else {
+            val fond2 = peindre(4) { coulissesDuFond() }
+            Canvas(proche).drawBitmap(fond2, 0f, 0f, null)
+            val forme2 = Bitmap.createBitmap(tailles[4][0], tailles[4][1], Bitmap.Config.ALPHA_8)
+            Canvas(forme2).apply { drawBitmap(formes[2], 0f, 0f, null); drawBitmap(fond2, 0f, 0f, null) }
+            formes[2].recycle()
+            formes[2] = forme2
+            fond2.recycle()
+            peindre(5) { coulisses() }
+        }
+        val plans = listOfNotNull(ciel, nuages(heure, l, h), loin, milieu, proche, coulisses).toTypedArray()
+        val silhouettes = arrayOfNulls<Bitmap>(plans.size)
+        silhouettes[2] = formes[0]
+        silhouettes[3] = formes[1]
+        silhouettes[4] = formes[2]
+        if (coulisses != null) silhouettes[5] = coulisses.extractAlpha()
+        // Chaque carton porte son ombre sur tous ceux de derrière : là où un
+        // carton intermédiaire la cache, c'est en penchant qu'on la découvre,
+        // comme dans une vraie boîte. Les nuages n'en reçoivent pas : ils
+        // voyagent, et portent la leur sur leur propre carton ([nuages]).
+        for (devant in 2 until plans.size) {
+            val forme = silhouettes[devant] ?: continue
+            for (derriere in 0 until devant) {
+                if (derriere == NUAGES) continue
+                val force = when {
+                    derriere == 0 && devant == 2 -> OMBRE_SUR_LE_CIEL
+                    derriere == 0 || derriere == 2 -> OMBRE_SUR_LE_FOND
+                    else -> 1f
+                }
+                ombrer(
+                    plans[derriere], forme,
+                    marge(derriere, l) - marge(devant, l), marge(derriere, h) - marge(devant, h),
+                    unite, heure, PROFONDEUR[devant] - PROFONDEUR[derriere], force
+                )
+            }
+            trancher(plans[devant], forme, unite, heure, force = if (devant == 2) 0.6f else 1f)
+        }
+        silhouettes.forEach { it?.recycle() }
+        return plans
     }
 
-    /** Le flou du lointain, en unités de la boîte : à peine, de quoi ne plus être net. */
-    private const val FLOU_LOINTAIN = 0.22f
+    /**
+     * Les nuages de carton, le seul plan qui bouge seul (règle 7 de la skill
+     * `direction-artistique`) : une bande de toute la largeur de la boîte, de
+     * [BANDE_NUAGES] unités de haut, qui se raccorde à elle-même. [CadreOrne]
+     * la fait traverser le ciel de gauche à droite, et glisser avec la carte
+     * quand on la penche.
+     *
+     * Chaque nuage porte son ombre sur son propre carton, sous lui, pour
+     * qu'elle voyage avec lui ; aucun autre carton ne lui en fait. Les mêmes
+     * nuages pour tous les lieux : ils passent, leur place ne dit rien.
+     */
+    private fun nuages(heure: Heure, l: Int, h: Int): Bitmap {
+        val k = cadrage(l.toFloat(), h.toFloat())[0]
+        val b = Bitmap.createBitmap(ceil(LARGEUR * k).toInt(), ceil(BANDE_NUAGES * k).toInt(), Bitmap.Config.ARGB_8888)
+        val c = Canvas(b)
+        c.scale(k, k)
+        val p = Peintre(c, heure, facture = Facture.GOUACHE, echelle = k)
+        var i = 0
+        while (i < NUEES.size) {
+            val x = NUEES[i]; val y = NUEES[i + 1]; val longueur = NUEES[i + 2]
+            // Un nuage qui déborde à droite repart à gauche : la bande se répète.
+            for (decalage in floatArrayOf(0f, -LARGEUR)) {
+                if (x + decalage + longueur > -2f && x + decalage < LARGEUR + 2f) p.nuage(x + decalage, y, longueur)
+            }
+            i += 3
+        }
+        val forme = b.extractAlpha()
+        trancher(b, forme, k, heure, force = 0.6f)
+        forme.recycle()
+        return b
+    }
+
+    /** La hauteur de la bande des nuages, en unités du paysage : le haut du ciel. */
+    const val BANDE_NUAGES = 16f
 
     /**
-     * Deux passes de flou en boîte, à peu près gaussiennes, sur les couleurs
-     * prémultipliées : sans cela, le bord d'une colline fondrait vers le noir
-     * des pixels transparents.
+     * Les nuages : x, y, longueur, en unités du paysage (maquette
+     * `cinq_plans.html`).
      */
-    private fun flouter(b: Bitmap, rayon: Int) {
+    private val NUEES = floatArrayOf(57f, 5.5f, 15f, 80f, 11f, 10f, 5f, 8f, 11f)
+
+    /**
+     * La part de chemin vers la couleur de l'horizon, par plan : le lointain
+     * s'efface, le milieu à peine, le proche garde ses couleurs.
+     *
+     * C'est la perspective atmosphérique, qui remplace le flou d'avant (la
+     * profondeur de champ d'un appareil photo, jusqu'en 37.8.0) : au théâtre
+     * de papier tout est net, la profondeur vient de l'empilement des cartons
+     * et de leurs ombres, et le lointain se reconnaît à sa couleur.
+     */
+    private val ESTOMPE = floatArrayOf(0.30f, 0.10f, 0f)
+
+    /**
+     * Ce qui tombe sur le premier calque est plus léger : la toile de fond
+     * est loin derrière les cartons, et une ombre franche sur un ciel se lit
+     * comme une fumée. Moins encore pour la crête, posée sur le ciel même.
+     */
+    private const val OMBRE_SUR_LE_FOND = 0.6f
+    private const val OMBRE_SUR_LE_CIEL = 0.35f
+
+    /**
+     * L'ombre d'un carton sur un carton de derrière, en unités de la boîte :
+     * où elle tombe par plan d'écart (vers le haut, vers la droite), puis son
+     * flou.
+     *
+     * La lumière est celle de la **rampe**, au bas de la scène et un peu à
+     * gauche : elle porte les ombres vers le haut, au-dessus des crêtes, là
+     * où on les voit, et de côté, le long des bords droits des cartons. Une
+     * lumière d'en haut les cacherait derrière le carton même qui les porte.
+     * La même rampe éclaire toutes les cartes.
+     *
+     * Nette et marquée (2026-10-30) : l'ombre courte et douce d'avant ne
+     * séparait pas les cartons, la fenêtre se lisait comme une seule image à
+     * liseré blanc. C'est le vide qu'on voit derrière chaque découpe qui fait
+     * le théâtre de papier.
+     */
+    private const val OMBRE_MONTEE = 1f
+    private const val OMBRE_COTE = 0.55f
+    private const val OMBRE_FLOU = 0.22f
+
+    /**
+     * Mélange [b] vers [vers] de la part [t], là où la silhouette [forme] (de
+     * même taille) est pleine, sans toucher la transparence de [b].
+     */
+    private fun eclaircir(b: Bitmap, forme: Bitmap, vers: Int, t: Float) {
+        if (t <= 0f) return
         val w = b.width
         val h = b.height
         val px = IntArray(w * h)
+        val mk = IntArray(w * h)
         b.getPixels(px, 0, w, 0, 0, w, h)
-        val canaux = Array(4) { FloatArray(w * h) }
+        forme.getPixels(mk, 0, w, 0, 0, w, h)
         for (i in px.indices) {
+            val a = mk[i] ushr 24
+            if (a == 0) continue
             val c = px[i]
-            val a = (c ushr 24) / 255f
-            canaux[0][i] = a
-            canaux[1][i] = ((c shr 16) and 0xFF) * a
-            canaux[2][i] = ((c shr 8) and 0xFF) * a
-            canaux[3][i] = (c and 0xFF) * a
-        }
-        val tampon = FloatArray(max(w, h))
-        repeat(2) {
-            for (v in canaux) {
-                boite(v, tampon, w, h, rayon, horizontal = true)
-                boite(v, tampon, w, h, rayon, horizontal = false)
-            }
-        }
-        for (i in px.indices) {
-            val a = canaux[0][i]
-            px[i] = if (a <= 0.002f) 0 else
-                ((a * 255f).roundToInt().coerceIn(0, 255) shl 24) or
-                    ((canaux[1][i] / a).roundToInt().coerceIn(0, 255) shl 16) or
-                    ((canaux[2][i] / a).roundToInt().coerceIn(0, 255) shl 8) or
-                    (canaux[3][i] / a).roundToInt().coerceIn(0, 255)
+            px[i] = (c and 0xFF000000.toInt()) or (Heure.melange(c, vers, t * a / 255f) and 0x00FFFFFF)
         }
         b.setPixels(px, 0, w, 0, 0, w, h)
     }
 
-    /** Une moyenne glissante sur 2r + 1 pixels, bords prolongés, ligne par ligne ou colonne par colonne. */
-    private fun boite(v: FloatArray, t: FloatArray, w: Int, h: Int, r: Int, horizontal: Boolean) {
-        val n = if (horizontal) w else h
-        val lignes = if (horizontal) h else w
-        val pas = if (horizontal) 1 else w
-        val norme = 1f / (2 * r + 1)
-        for (j in 0 until lignes) {
-            val debut = if (horizontal) j * w else j
-            for (k in 0 until n) t[k] = v[debut + k * pas]
-            var somme = 0f
-            for (k in -r..r) somme += t[k.coerceIn(0, n - 1)]
-            for (k in 0 until n) {
-                v[debut + k * pas] = somme * norme
-                somme += t[(k + r + 1).coerceAtMost(n - 1)] - t[(k - r).coerceAtLeast(0)]
-            }
+    /**
+     * Peint sur [derriere] l'ombre de la silhouette [forme], posée à
+     * ([dx], [dy]) pixels de son origine, [ecart] plans plus loin : plus le
+     * carton de derrière est loin, plus l'ombre monte et s'étale. Elle ne
+     * tombe que sur ce que [derriere] porte.
+     */
+    private fun ombrer(derriere: Bitmap, forme: Bitmap, dx: Int, dy: Int, unite: Float, heure: Heure,
+                       ecart: Int, force: Float) {
+        val flou = Paint().apply {
+            maskFilter = BlurMaskFilter(max(1f, OMBRE_FLOU * unite * ecart), BlurMaskFilter.Blur.NORMAL)
         }
+        val ou = IntArray(2)
+        val ombre = forme.extractAlpha(flou, ou)
+        val p = Paint(Paint.FILTER_BITMAP_FLAG).apply {
+            color = OMBRE
+            alpha = ((if (heure.nuit) 0.7f else 0.5f) * force * 255f).roundToInt()
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+        }
+        Canvas(derriere).drawBitmap(
+            ombre, dx + ou[0] + OMBRE_COTE * unite * ecart, dy + ou[1] - OMBRE_MONTEE * unite * ecart, p
+        )
+        ombre.recycle()
+    }
+
+    /** Une ombre de carton, pas de suie : un bleu nuit presque noir. */
+    private const val OMBRE = 0xFF0B1020.toInt()
+
+    /** Ce qui n'est pas de la végétation efface le relevé : voir [Peintre.relever]. */
+    private val EFFACER = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+
+    /**
+     * La gouache est un peu mince : 84 % d'opacité, le kraft transparaît
+     * (maquette `peint.js`).
+     */
+    private const val GOUACHE_ALPHA = 214
+
+    /** Le sens des touches courtes et obliques de la pierre, en radians. */
+    private const val OBLIQUE = 1f
+
+    /**
+     * L'ombre d'une pièce sur ce qui est derrière elle dans le même carton,
+     * en unités : elle monte (la rampe), et son flou, en écart type.
+     */
+    private const val OMBRE_PIECE_MONTEE = 0.55f
+    private const val OMBRE_PIECE_FLOU = 0.55f
+
+    /**
+     * La tranche du carton, vue d'en haut : un liseré de lumière le long du
+     * bord haut de chaque découpe, que la scène éclaire. Posé derrière ce que
+     * le calque porte, il ne dépasse qu'en haut.
+     *
+     * Jusqu'au chantier gouache (2026-11-02), une bordure blanche faisait le
+     * tour de chaque découpe, l'âme du papier. Le carton peint montre le sien
+     * autrement : sa couleur kraft reparaît au bord de chaque pièce, là où le
+     * pinceau ne l'a pas couverte (voir [Peintre.peint]). Repris de la
+     * maquette `cinq_plans.html` de la skill `direction-artistique`, validée
+     * par le propriétaire le 2026-11-01.
+     */
+    private fun trancher(b: Bitmap, forme: Bitmap, unite: Float, heure: Heure, force: Float = 1f) {
+        val p = Paint(Paint.FILTER_BITMAP_FLAG).apply {
+            color = Heure.melange(heure.cielBas, 0xFFFFFFFF.toInt(), if (heure.nuit) 0.3f else 0.6f)
+            alpha = ((if (heure.nuit) 0.45f else 0.7f) * force * 255f).roundToInt()
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OVER)
+        }
+        Canvas(b).drawBitmap(forme, 0f, -max(1f, 0.3f * unite), p)
     }
 
     /**
@@ -594,7 +818,7 @@ object Paysages {
     internal const val COULEUR_ETOILE = 0xFFFFF8E0.toInt()
 
     internal class Atelier(heure: Heure) {
-        private val peintre = Peintre(Canvas(), heure)
+        private val peintre = Peintre(Canvas(), heure, decoupe = false)
 
         /** Peint [b] à l'instant [t], en secondes ; [i] décale son rythme de celui des autres. */
         fun peindre(c: Canvas, b: Bete, t: Float, i: Int) {
@@ -610,9 +834,10 @@ object Paysages {
     internal const val LIEUX_DESSINES = true
 
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
-                 seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true) {
-        val p = Peintre(c, heure, seul)
-        if (ciel) p.ciel(etoiles)
+                 seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
+                 facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
+        val p = Peintre(c, heure, seul, facture, echelle, releve)
+        if (ciel) { if (facture == Facture.GOUACHE) p.cielPeint(etoiles) else p.ciel(etoiles) }
         if (!lieuAussi || !LIEUX_DESSINES) return
         when (lieu) {
             Lieu.GRANDE_ANSE -> p.grandeAnse()
@@ -650,6 +875,9 @@ object Paysages {
         // ici et les fait vivre dans son ambiance (voir [Atelier]).
         if (faune) BETES[lieu]?.forEachIndexed { i, b -> p.bete(b, 0f, i, immobile = true) }
     }
+
+    /** Un canevas sur [b], à l'échelle [k] d'un [cadrage]. */
+    private fun aLEchelle(b: Bitmap, k: FloatArray) = Canvas(b).apply { translate(k[1], k[2]); scale(k[0], k[0]) }
 
     /**
      * Le hasard à graine fixe (mulberry32) : le même que celui de la maquette,
@@ -700,10 +928,183 @@ object Paysages {
         return path
     }
 
+    /**
+     * Le feuillage d'une coulisse, côté gauche, en unités du paysage : x, y,
+     * rayon. Il passe sous l'arche du cadre des rares, qui mange les coins
+     * hauts, et ne descend pas sous la moitié de la fenêtre ; la droite en
+     * est le miroir.
+     */
+    private val FEUILLES = floatArrayOf(
+        0f, 12f, 7.5f, 6f, 9.5f, 6f, 11f, 13f, 4.6f, 14.5f, 17.5f, 3.4f,
+        2f, 19.5f, 6.5f, 8f, 21f, 4.6f, 1f, 27f, 5.5f, 5.5f, 29.5f, 3.6f, 11.5f, 25f, 2.8f
+    )
+
+    /**
+     * La seconde rangée de coulisses ([Peintre.coulissesDuFond]), côté
+     * gauche, comme [FEUILLES] : un arbre plus petit, un pas en retrait, qui
+     * dépasse sous et à côté du feuillage de devant.
+     */
+    private val FEUILLES_DU_FOND = floatArrayOf(
+        13f, 27f, 4.6f, 18.5f, 29.5f, 4f, 15.5f, 33.5f, 4.4f, 20.5f, 35f, 3f, 11.5f, 32f, 3.4f, 16.5f, 23.5f, 3.4f
+    )
+
+    /**
+     * Comment les grandes pièces d'un lieu sont peintes.
+     *
+     * - [VIGNETTE] : des aplats, avec le bord de carton seul. En petit, des
+     *   coups de pinceau feraient du bruit, et trente vignettes se peignent
+     *   à l'ouverture du carnet.
+     * - [GOUACHE] : le carton peint de la carte ouverte et de la carte
+     *   partagée, avec son ombre, ses coups de pinceau et son bord sec.
+     */
+    enum class Facture { VIGNETTE, GOUACHE }
+
+    /**
+     * Les coups de pinceau, préparés d'avance en tuiles qui se répètent sans
+     * couture, puis posés dans le sens de chaque pièce par la matrice de leur
+     * [BitmapShader].
+     *
+     * La maquette (`peint.js`) trace jusqu'à sept cents touches de trois poils
+     * par pièce : des milliers de tracés par carte, trop pour un Galaxy A21s.
+     * Une touche y est une version plus claire ou plus sombre de la couleur de
+     * la pièce, posée en transparence ; c'est exactement un voile de blanc ou
+     * de noir, si bien qu'une seule tuile sert à toutes les couleurs. Deux
+     * tuiles : des touches longues (le ciel, l'eau, les collines, le
+     * feuillage, tournées selon la pièce) et des touches courtes et obliques
+     * (la pierre et le grès des pièces hautes).
+     */
+    private object Pinceaux {
+        /** Le côté d'une tuile, en unités du paysage. */
+        const val TUILE = 24f
+
+        /** Les touches par unité carrée, comme la maquette sur une pièce moyenne. */
+        private const val DENSITE = 0.5f
+
+        private val tuiles = HashMap<String, Bitmap>()
+
+        /**
+         * La tuile à [echelle] pixels par unité, bornée : au-delà de dix, sur
+         * la carte imprimée, elle est agrandie au rendu, et des touches de
+         * plusieurs unités supportent très bien l'agrandissement.
+         */
+        @Synchronized
+        fun tuile(courte: Boolean, echelle: Float): Bitmap {
+            val q = (echelle.coerceIn(2f, 10f) * 2f).roundToInt() / 2f
+            val cle = "${courte}_$q"
+            tuiles[cle]?.takeIf { !it.isRecycled }?.let { return it }
+            return dessiner(courte, q).also { tuiles[cle] = it }
+        }
+
+        private fun dessiner(courte: Boolean, q: Float): Bitmap {
+            val n = ceil(TUILE * q).toInt()
+            val b = Bitmap.createBitmap(n, n, Bitmap.Config.ARGB_8888)
+            val c = Canvas(b)
+            c.scale(n / TUILE, n / TUILE)
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
+            val t = Path()
+            val r = Alea(if (courte) 77 else 55)
+            val decalages = FloatArray(3)
+            repeat((TUILE * TUILE * DENSITE).roundToInt()) {
+                val x = r() * TUILE
+                val y = r() * TUILE
+                val a = (r() - 0.5f) * (if (courte) 1.4f else 0.5f)
+                val l = if (courte) 1.5f + r() * 3f else 2.5f + r() * 6f
+                val w = 0.9f + r() * 1.3f
+                // Plus claire ou plus sombre que la pièce, comme la maquette :
+                // un voile de blanc ou de noir.
+                val v = (r() - 0.5f) * 0.34f
+                val blanc = v > 0f
+                val force = if (blanc) v * 1.4f else -v
+                val dx = cos(a) * l / 2f
+                val dy = sin(a) * l / 2f
+                val px = -sin(a)
+                val py = cos(a)
+                val portee = l / 2f + w
+                for (poil in -1..1) {
+                    p.color = if (blanc) 0xFFFFFFFF.toInt() else 0xFF000000.toInt()
+                    p.alpha = ((0.4f + r() * 0.3f) * force * 255f).roundToInt()
+                    p.strokeWidth = w * 0.45f
+                    val ox = px * poil * w * 0.35f
+                    val oy = py * poil * w * 0.35f
+                    val jx = px * (r() - 0.5f) * 0.6f
+                    val jy = py * (r() - 0.5f) * 0.6f
+                    // La tuile se répète : une touche qui déborde est aussi
+                    // peinte de l'autre côté.
+                    val nx = repliements(x, portee, decalages)
+                    val xs = decalages.copyOf(nx)
+                    val ny = repliements(y, portee, decalages)
+                    for (i in 0 until nx) for (k in 0 until ny) {
+                        val ex = xs[i] + ox
+                        val ey = decalages[k] + oy
+                        t.rewind()
+                        t.moveTo(x - dx + ex, y - dy + ey)
+                        t.quadTo(x + ex + jx, y + ey + jy, x + dx + ex, y + dy + ey)
+                        c.drawPath(t, p)
+                    }
+                }
+            }
+            return b
+        }
+
+        /** Les décalages où peindre une touche en [v] de [portee] pour que la tuile se raccorde. */
+        private fun repliements(v: Float, portee: Float, sortie: FloatArray): Int {
+            var n = 0
+            sortie[n++] = 0f
+            if (v - portee < 0f) sortie[n++] = TUILE
+            if (v + portee > TUILE) sortie[n++] = -TUILE
+            return n
+        }
+    }
+
     /** Tout l'outillage de tracé d'un lieu, sur un canevas déjà à l'échelle. */
-    private class Peintre(var c: Canvas, val P: Heure, private val seul: Int = -1) {
+    private class Peintre(
+        var c: Canvas, val P: Heure, private val seul: Int = -1,
+        private val facture: Facture = Facture.VIGNETTE,
+        /** Les pixels par unité du canevas : la finesse des coups de pinceau. */
+        private val echelle: Float = 1f,
+        /**
+         * Le relevé de la végétation, à la même échelle que [c] : chaque
+         * pièce y est posée pleine si sa couleur, avant la gouache, est de la
+         * végétation ([Habillage.vegetal]), et l'efface sinon, si bien que la
+         * pièce de devant décide. [Habillage] le lit au lieu de deviner pixel
+         * par pixel sur le carton peint. Les pièces peintes dans [mineral]
+         * n'en sont jamais.
+         */
+        private val releve: Canvas? = null,
+        /**
+         * Faux pour l'[Atelier], qui repeint les bêtes à chaque trame : rien
+         * n'y devient un carton, une bête qui bouge reste un aplat.
+         */
+        private val decoupe: Boolean = true
+    ) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val BAS = HAUTEUR
+
+        private val releveP = Paint(Paint.ANTI_ALIAS_FLAG)
+        private val vegetaux = HashMap<Int, Boolean>()
+        private var mineraux = 0
+
+        /**
+         * Peint [dessin] en pierre, bois, enduit ou métal : quelle que soit sa
+         * couleur, la saison n'y verra jamais de végétation. Le soir et la
+         * nuit, les palettes rapprochent la pierre des mornes, et le carême
+         * aurait jauni les cases et les tombeaux.
+         */
+        fun mineral(dessin: () -> Unit) {
+            mineraux++
+            try { dessin() } finally { mineraux-- }
+        }
+
+        /** Pose sur le [releve] une pièce de couleur [col], tracée par [trace]. */
+        private fun relever(col: Int, o: Float, trace: (Canvas, Paint) -> Unit) {
+            val r = releve ?: return
+            if (o < 0.95f || !actif) return
+            val vegetal = mineraux == 0 && vegetaux.getOrPut(col) { Habillage.vegetal(col, P) }
+            releveP.style = Paint.Style.FILL
+            releveP.xfermode = if (vegetal) null else EFFACER
+            releveP.color = 0xFFFFFFFF.toInt()
+            trace(r, releveP)
+        }
 
         /**
          * Le plan où l'on peint : 0 le lointain, 1 le milieu, 2 le proche.
@@ -732,6 +1133,19 @@ object Paysages {
         /** Une opacité de plus sur tout ce qui se peint : une bête qui paraît ou s'efface. */
         var voile = 1f
 
+        /** Plus que zéro le temps d'une bête : voir [aplat]. */
+        private var aplats = 0
+
+        /**
+         * Peint [dessin] en aplats, sans carton : les bêtes. Peintes au repos
+         * dans la vignette, elles doivent être celles que l'[Atelier] fait
+         * bouger sur la carte ouverte, qui ne découpe rien.
+         */
+        fun aplat(dessin: () -> Unit) {
+            aplats++
+            try { dessin() } finally { aplats-- }
+        }
+
         fun teinte(col: Int, opacite: Float) {
             p.shader = null
             p.color = col
@@ -740,34 +1154,207 @@ object Paysages {
 
         fun rect(x: Float, y: Float, w: Float, h: Float, col: Int, o: Float = 1f) {
             if (!actif) return
+            if (enCarton(w, h, o)) {
+                val t = Path()
+                t.moveTo(x, y); t.lineTo(x + w, y); t.lineTo(x + w, y + h); t.lineTo(x, y + h); t.close()
+                boite.set(x, y, x + w, y + h)
+                peint(t, col, sensDe(boite), boite)
+                return
+            }
             p.style = Paint.Style.FILL; teinte(col, o)
             c.drawRect(x, y, x + w, y + h, p)
+            relever(col, o) { r, rp -> r.drawRect(x, y, x + w, y + h, rp) }
         }
 
         fun rond(cx: Float, cy: Float, r: Float, col: Int, o: Float = 1f) {
             if (!actif) return
             p.style = Paint.Style.FILL; teinte(col, o)
             c.drawCircle(cx, cy, r, p)
+            relever(col, o) { rc, rp -> rc.drawCircle(cx, cy, r, rp) }
         }
 
         fun forme(d: String, col: Int, o: Float = 1f) {
             if (!actif) return
-            p.style = Paint.Style.FILL; teinte(col, o)
-            c.drawPath(chemin(d), p)
+            forme(chemin(d), col, o)
         }
 
         fun forme(path: Path, col: Int, o: Float = 1f) {
             if (!actif) return
+            if (o >= 0.95f) {
+                path.computeBounds(boite, true)
+                if (enCarton(boite.width(), boite.height(), o)) {
+                    peint(path, col, sensDe(boite), boite)
+                    return
+                }
+            }
             p.style = Paint.Style.FILL; teinte(col, o)
             c.drawPath(path, p)
+            relever(col, o) { r, rp -> r.drawPath(path, rp) }
         }
+
+        // ------------------------------------------------- le carton peint
+
+        private val boite = RectF()
+
+        /**
+         * Vrai pour une pièce assez grande pour être un carton peint : les
+         * petits détails (fenêtres, joints, lanternes), les bandes trop fines
+         * pour un bord de carton (le liseré clair du pont) et ce qui est posé
+         * en transparence (ombres, reflets, brume) restent des aplats nets.
+         */
+        private fun enCarton(w: Float, h: Float, o: Float) =
+            decoupe && aplats == 0 && o >= 0.95f && w * h >= 14f && min(w, h) >= 1.2f
+
+        /** Le sens des coups de pinceau : horizontaux, ou courts et obliques sur une pièce haute (la pierre). */
+        private fun sensDe(b: RectF) = if (b.height() > b.width() * 1.4f) OBLIQUE else 0f
+
+        /** La couleur du carton, un brun kraft que la nuit assombrit. */
+        private val kraft = mix(0xFFB08A5A.toInt(), P.pres, if (P.nuit) 0.55f else 0.18f)
+
+        private val gouache by lazy { Paint(Paint.ANTI_ALIAS_FLAG) }
+        private val ombreCarton by lazy { Paint(Paint.ANTI_ALIAS_FLAG) }
+        private val bord by lazy { Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE } }
+        private val brosses = HashMap<Boolean, BitmapShader>()
+        private val placeBrosse = Matrix()
+        private val versPixels = Matrix()
+
+        /**
+         * Une pièce de carton peint, comme `peint` dans la maquette
+         * (`peint.js` de la skill `direction-artistique`) :
+         *
+         * 1. le carton kraft, avec son ombre, que la rampe porte vers le haut ;
+         * 2. la gouache, mate et un peu mince : le kraft transparaît ;
+         * 3. les coups de pinceau dans le sens de la forme ([dir], en radians :
+         *    0 horizontaux, [OBLIQUE] courts et obliques), pris dans
+         *    [Pinceaux] ;
+         * 4. le bord sec : le pinceau n'a pas couvert jusqu'à la découpe, le
+         *    carton reparaît par endroits. C'est la tranche brune qui a
+         *    remplacé la bordure blanche du papier.
+         *
+         * En [Facture.VIGNETTE], seuls le carton, l'aplat et le bord sec.
+         *
+         * [union] : une forme faite de plusieurs morceaux qui se chevauchent
+         * (un feuillage de ronds) ; son bord de carton se pose à l'extérieur
+         * seulement, faute de quoi chaque rond garderait le sien.
+         */
+        fun peint(chemin: Path, col: Int, dir: Float, b: RectF, ombre: Float = 1f, union: Boolean = false) {
+            if (!actif) return
+            relever(col, 1f) { r, rp -> r.drawPath(chemin, rp) }
+            val plein = facture == Facture.GOUACHE
+            if (plein) ombrer(chemin, ombre)
+            gouache.shader = null
+            gouache.style = Paint.Style.FILL
+            gouache.color = kraft
+            c.drawPath(chemin, gouache)
+            if (union) {
+                bord.pathEffect = null
+                bord.color = kraft
+                bord.strokeWidth = 0.9f
+                c.drawPath(chemin, bord)
+            }
+            c.save()
+            c.clipPath(chemin)
+            gouache.color = col
+            gouache.alpha = GOUACHE_ALPHA
+            c.drawPath(chemin, gouache)
+            val r = Alea(((b.left * 131f + b.top * 71f + b.right * 17f + b.bottom) * 10f).roundToInt())
+            if (plein) brosser(dir, b, r)
+            if (!union) {
+                bord.color = kraft
+                bord.alpha = 217
+                bord.strokeWidth = 0.9f
+                bord.pathEffect = DashPathEffect(
+                    floatArrayOf(0.6f + r() * 1.4f, 0.4f + r() * 1.2f, 1.5f + r(), 0.8f, 0.3f, 1.1f), 0f
+                )
+                c.drawPath(chemin, bord)
+                bord.pathEffect = null
+                bord.alpha = 89
+                bord.strokeWidth = 1.3f
+                c.drawPath(chemin, bord)
+            }
+            c.restore()
+        }
+
+        /**
+         * L'ombre du carton sur ce qui est derrière lui dans le même calque,
+         * tracée en pixels : le flou d'un `BlurMaskFilter` ne suit pas
+         * toujours l'échelle du canevas.
+         */
+        @Suppress("DEPRECATION")
+        private fun ombrer(chemin: Path, force: Float) {
+            val m = c.matrix
+            val enPixels = Path(chemin)
+            enPixels.transform(m)
+            enPixels.offset(0f, -OMBRE_PIECE_MONTEE * echelle)
+            val sigma = OMBRE_PIECE_FLOU * echelle
+            ombreCarton.maskFilter = BlurMaskFilter(max(0.5f, (sigma - 0.5f) / 0.57735f), BlurMaskFilter.Blur.NORMAL)
+            ombreCarton.color = OMBRE
+            ombreCarton.alpha = ((if (P.nuit) 0.5f else 0.32f) * force * 255f).roundToInt()
+            c.save()
+            c.setMatrix(versPixels)
+            c.drawPath(enPixels, ombreCarton)
+            c.restore()
+        }
+
+        /** Les coups de pinceau sur la pièce, déjà découpée par le canevas. */
+        private fun brosser(dir: Float, b: RectF, r: Alea) {
+            val courte = dir == OBLIQUE
+            val tuile = Pinceaux.tuile(courte, echelle)
+            val brosse = brosses.getOrPut(courte) {
+                BitmapShader(tuile, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+            }
+            val unite = Pinceaux.TUILE / tuile.width
+            placeBrosse.setScale(unite, unite)
+            placeBrosse.postTranslate(r() * Pinceaux.TUILE, r() * Pinceaux.TUILE)
+            placeBrosse.postRotate(Math.toDegrees(dir.toDouble()).toFloat(), b.centerX(), b.centerY())
+            brosse.setLocalMatrix(placeBrosse)
+            gouache.color = 0xFF000000.toInt()
+            gouache.shader = brosse
+            gouache.isFilterBitmap = true
+            c.drawRect(b.left - 2f, b.top - 2f, b.right + 2f, b.bottom + 2f, gouache)
+            gouache.shader = null
+        }
+
+        /**
+         * Le ciel peint, comme `cielPeint` dans la maquette : le dégradé, de
+         * larges touches horizontales un peu plus claires ou plus sombres,
+         * puis l'astre, peint après d'un seul aplat.
+         */
+        fun cielPeint(etoiles: Boolean = true) {
+            ciel(etoiles)
+            val r = Alea(5)
+            val t = Path()
+            p.style = Paint.Style.STROKE
+            p.strokeCap = Paint.Cap.ROUND
+            for (i in 0 until 260) {
+                val x = r() * 110f - 5f
+                val y = r() * 46f
+                val l = 6f + r() * 12f
+                // La couleur de la touche suit un dégradé du haut vers le bas
+                // sans le rose du milieu : c'est ce qui la fait voir.
+                val base = mix(P.cielHaut, P.cielBas, if (y < 23f) y / 46f else y / 40f)
+                val v = if (r() < 0.5f) mix(base, 0xFFFFFFFF.toInt(), 0.12f) else mix(base, 0xFF000000.toInt(), 0.05f)
+                teinte(v, 0.3f + r() * 0.2f)
+                p.strokeWidth = 1.4f + r() * 2f
+                t.rewind()
+                t.moveTo(x, y)
+                t.quadTo(x + l / 2f, y + (r() - 0.5f) * 0.8f, x + l, y + (r() - 0.5f) * 0.6f)
+                if (actif) c.drawPath(t, p)
+            }
+            p.style = Paint.Style.FILL
+            p.strokeCap = Paint.Cap.BUTT
+            if (!P.nuit) rond(P.astreX, P.astreY, P.astreR, P.astre, 0.95f)
+        }
+
 
         fun trait(d: String, col: Int, largeur: Float, o: Float = 1f) {
             if (!actif) return
             p.style = Paint.Style.STROKE; p.strokeWidth = largeur; p.strokeCap = Paint.Cap.BUTT
             teinte(col, o)
-            c.drawPath(chemin(d), p)
+            val t = chemin(d)
+            c.drawPath(t, p)
             p.style = Paint.Style.FILL
+            relever(col, o) { r, rp -> rp.style = Paint.Style.STROKE; rp.strokeWidth = largeur; r.drawPath(t, rp) }
         }
 
         fun ligne(x1: Float, y1: Float, x2: Float, y2: Float, col: Int, largeur: Float, o: Float = 1f) {
@@ -775,6 +1362,7 @@ object Paysages {
             p.style = Paint.Style.STROKE; p.strokeWidth = largeur; teinte(col, o)
             c.drawLine(x1, y1, x2, y2, p)
             p.style = Paint.Style.FILL
+            relever(col, o) { r, rp -> rp.style = Paint.Style.STROKE; rp.strokeWidth = largeur; r.drawLine(x1, y1, x2, y2, rp) }
         }
 
         fun anneau(cx: Float, cy: Float, r: Float, col: Int, largeur: Float) {
@@ -782,6 +1370,7 @@ object Paysages {
             p.style = Paint.Style.STROKE; p.strokeWidth = largeur; teinte(col, 1f)
             c.drawCircle(cx, cy, r, p)
             p.style = Paint.Style.FILL
+            relever(col, 1f) { rc, rp -> rp.style = Paint.Style.STROKE; rp.strokeWidth = largeur; rc.drawCircle(cx, cy, r, rp) }
         }
 
         fun triangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, col: Int, o: Float = 1f) {
@@ -831,7 +1420,6 @@ object Paysages {
             // La brume du matin.
             if (P.rang == 0) rect(0f, 26f, 100f, 16f, 0xFFFFFFFF.toInt(), 0.16f)
         }
-
         fun crete(y0: Float, amp: Float, graine: Int, col: Int, x0: Float = 0f, x1: Float = 100f,
                   f1: Float = 0.07f, f2: Float = 0.19f) {
             val r = Alea(graine)
@@ -870,13 +1458,13 @@ object Paysages {
             }
         }
 
-        fun fenetre(x: Float, y: Float, w: Float, h: Float, rnd: Alea?) {
+        fun fenetre(x: Float, y: Float, w: Float, h: Float, rnd: Alea?) = mineral {
             val allumee = P.allume && (rnd == null || rnd() < 0.7f)
             if (allumee) rect(x - w * 0.6f, y - h * 0.4f, w * 2.2f, h * 1.8f, P.fenetre, 0.22f)
             rect(x, y, w, h, if (allumee) P.fenetre else mix(P.pierre, P.pres, 0.55f))
         }
 
-        fun maison(x: Float, y: Float, w: Float, h: Float, rnd: Alea?, toit: Float? = null) {
+        fun maison(x: Float, y: Float, w: Float, h: Float, rnd: Alea?, toit: Float? = null) = mineral {
             val ombre = mix(P.pierre, P.pres, 0.28f)
             rect(x, y - h, w, h, P.pierre)
             rect(x + w * 0.62f, y - h, w * 0.38f, h, ombre, 0.55f)
@@ -898,6 +1486,135 @@ object Paysages {
             if (P.allume) for (x in lumieres) rect(x - 0.3f, y + 0.6f, 0.6f, (BAS - y) * 0.7f, P.fenetre, 0.45f)
         }
 
+        /**
+         * Les coulisses : deux châssis de feuillage, un de chaque côté, qui
+         * encadrent la scène sans entrer dans son milieu, où se tient le
+         * dessin du mot. Une silhouette sombre en aplat, comme un décor de
+         * théâtre de papier vu à contre-jour.
+         */
+        fun coulisses() {
+            val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.25f else 0.38f)
+            val tronc = mix(P.sol, 0xFF000000.toInt(), 0.3f)
+            for (droite in booleanArrayOf(false, true)) {
+                fun x(v: Float) = if (droite) LARGEUR - v else v
+                val t = Path()
+                t.moveTo(x(0.6f), BAS); t.lineTo(x(1.8f), 34f); t.lineTo(x(3.4f), 26f)
+                t.lineTo(x(4.6f), 35f); t.lineTo(x(5.6f), BAS); t.close()
+                forme(t, tronc)
+                trait("M${x(3.8f)} 39Q${x(8.5f)} 35 ${x(12.5f)} 28.5", tronc, 1f)
+                val r = Alea(if (droite) 62 else 61)
+                feuillage(FEUILLES, ::x, r, feuillage)
+            }
+        }
+
+        /**
+         * Un feuillage de ronds ([ronds] : x, y, rayon), découpé d'un seul
+         * carton : tous les ronds réunis, peints d'un coup, le bord de carton
+         * à l'extérieur seulement.
+         */
+        private fun feuillage(ronds: FloatArray, x: (Float) -> Float, r: Alea, col: Int) {
+            val f = Path()
+            for (i in ronds.indices step 3) {
+                val rr = ronds[i + 2] * (0.9f + 0.2f * r())
+                f.addCircle(x(ronds[i]), ronds[i + 1], rr, Path.Direction.CW)
+            }
+            f.computeBounds(boite, true)
+            peint(f, col, -0.6f, boite, 0.8f, union = true)
+        }
+
+        /**
+         * La seconde rangée de coulisses des rares, un pas en retrait de la
+         * première : un arbre de chaque côté, plus petit, plus clair, qui
+         * dépasse de derrière le feuillage de devant. Deux châssis étagés au
+         * lieu d'un seul : c'est la boîte d'un théâtre, pas un cadre.
+         */
+        fun coulissesDuFond() {
+            val feuillage = mix(P.pres, 0xFF000000.toInt(), if (P.nuit) 0.12f else 0.22f)
+            val tronc = mix(P.sol, 0xFF000000.toInt(), 0.15f)
+            for (droite in booleanArrayOf(false, true)) {
+                fun x(v: Float) = if (droite) LARGEUR - v else v
+                val t = Path()
+                t.moveTo(x(13.4f), BAS); t.lineTo(x(14.3f), 40f); t.lineTo(x(15.4f), 33f)
+                t.lineTo(x(16.5f), 40f); t.lineTo(x(17.4f), BAS); t.close()
+                forme(t, tronc)
+                val r = Alea(if (droite) 64 else 63)
+                feuillage(FEUILLES_DU_FOND, ::x, r, feuillage)
+            }
+        }
+
+        /**
+         * Un nuage de carton peint, de [l] unités de long, sa base droite à
+         * [y] + 4 × [l] / 20 : trois bosses rondes, comme découpé aux ciseaux
+         * (`nuagePeint` dans la maquette).
+         */
+        fun nuage(x: Float, y: Float, l: Float) {
+            val s = l / 20f
+            val col = mix(P.cielHaut, 0xFFFFFFFF.toInt(), if (P.nuit) 0.3f else 0.85f)
+            val t = Path()
+            t.moveTo(x, y + 4f * s)
+            t.lineTo(x + 20f * s, y + 4f * s)
+            arc(t, x + 17f * s, y + 3f * s, 3f * s, 0.3f, -PI.toFloat() * 0.7f)
+            arc(t, x + 11.5f * s, y + 1.2f * s, 4.4f * s, -0.2f, -PI.toFloat() * 0.95f)
+            arc(t, x + 5f * s, y + 2.6f * s, 3.2f * s, -0.4f, -PI.toFloat() * 1.05f)
+            t.close()
+            boite.set(x, y - 4f * s, x + 20f * s, y + 4f * s)
+            peint(t, col, 0f, boite, 1.2f)
+        }
+
+        /**
+         * Une pièce de carton peint écrite comme en SVG : [dir] est le sens
+         * des coups de pinceau, [ombre] la force de son ombre (`peint` de la
+         * maquette, appelé directement).
+         */
+        fun carton(d: String, col: Int, dir: Float, ombre: Float = 1f) {
+            if (!actif) return
+            val t = chemin(d)
+            t.computeBounds(boite, true)
+            peint(t, col, dir, boite, ombre)
+        }
+
+        /** Un rond de carton peint (`rondPeint` de la maquette). */
+        fun rondPeint(cx: Float, cy: Float, r: Float, col: Int, ombre: Float = 0.8f) {
+            if (!actif) return
+            val t = Path()
+            t.addCircle(cx, cy, r, Path.Direction.CW)
+            boite.set(cx - r, cy - r, cx + r, cy + r)
+            peint(t, col, -0.6f, boite, ombre)
+        }
+
+        /**
+         * Un feuillage de ronds de carton peint, deux rangées, la claire
+         * devant la sombre (`feuillagePeint` de la maquette) : là où le
+         * [bosquet] posait des ronds plats.
+         */
+        fun feuillagePeint(x0: Float, x1: Float, y: Float, taille: Float, graine: Int, col: Int) {
+            val r = Alea(graine)
+            val ronds = ArrayList<Float>()
+            var x = x0
+            while (x <= x1) {
+                val rr = taille * (0.65f + 0.5f * r())
+                val cx = x + r() * taille * 0.4f
+                val cy = y - rr * 0.35f + r() * 1.2f
+                ronds.add(cx); ronds.add(cy); ronds.add(rr)
+                x += taille * 1.05f
+            }
+            val sombre = mix(col, 0xFF000000.toInt(), 0.12f)
+            val claire = mix(col, 0xFFFFFFFF.toInt(), 0.1f)
+            for (i in ronds.indices step 3) rondPeint(ronds[i], ronds[i + 1] - ronds[i + 2] * 0.35f, ronds[i + 2], sombre)
+            for (i in ronds.indices step 3) {
+                val rr = ronds[i + 2]
+                rondPeint(ronds[i] + rr * 0.25f, ronds[i + 1] + rr * 0.25f, rr * 0.82f, claire)
+            }
+        }
+
+        /** Un arc de cercle tourné dans le sens inverse des aiguilles, de [de] à [a] radians, comme `arc` du canevas HTML. */
+        private fun arc(t: Path, cx: Float, cy: Float, r: Float, de: Float, a: Float) {
+            var balayage = a - de
+            while (balayage > 0f) balayage -= 2f * PI.toFloat()
+            t.arcTo(RectF(cx - r, cy - r, cx + r, cy + r),
+                Math.toDegrees(de.toDouble()).toFloat(), Math.toDegrees(balayage.toDouble()).toFloat())
+        }
+
         // ------------------------------------------------------ outils des îles
 
         /**
@@ -915,6 +1632,7 @@ object Paysages {
             if (!actif) return
             p.style = Paint.Style.FILL; teinte(col, o)
             c.drawOval(cx - rx, cy - ry, cx + rx, cy + ry, p)
+            relever(col, o) { r, rp -> r.drawOval(cx - rx, cy - ry, cx + rx, cy + ry, rp) }
         }
 
         /** Une volute de vapeur qui monte de ([x], [y]) sur [h] unités. */
@@ -985,7 +1703,7 @@ object Paysages {
         }
 
         /** Le pieu où se pose le pélican de l'îlet Macou. */
-        fun pieu(x: Float, y: Float) = rect(x - 0.4f, y, 0.8f, 6f, mix(P.sol, P.pierre, 0.2f))
+        fun pieu(x: Float, y: Float) = mineral { rect(x - 0.4f, y, 0.8f, 6f, mix(P.sol, P.pierre, 0.2f)) }
 
         /** Un pélican brun posé sur un pieu, le bec rentré. */
         fun pelican(x: Float, y: Float) {
@@ -997,7 +1715,7 @@ object Paysages {
         }
 
         /** Un damier de [n] cases de côté [s], depuis le coin ([x], [y]), dans [w] × [h]. */
-        fun damier(x: Float, y: Float, w: Float, h: Float, s: Float, noir: Int) {
+        fun damier(x: Float, y: Float, w: Float, h: Float, s: Float, noir: Int) = mineral {
             var yy = y
             var rangee = 0
             while (yy < y + h - 0.01f) {
@@ -1020,7 +1738,7 @@ object Paysages {
          * la façade : damier entier, soubassement en damier, ou mur blanc à
          * porte noire, comme les tombeaux mêlés de la photo de référence.
          */
-        fun caveau(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int, motif: Int, bougie: Boolean = false) {
+        fun caveau(x: Float, y: Float, w: Float, h: Float, noir: Int, blanc: Int, motif: Int, bougie: Boolean = false) = mineral {
             val ombre = mix(blanc, noir, 0.22f)
             rect(x, y - h, w, h, blanc)
             val s = w / 5f
@@ -1717,7 +2435,7 @@ object Paysages {
          * déploie son fanon, le pic tape, l'agouti traverse, la baleine souffle
          * puis sonde, l'iguane hoche la tête.
          */
-        fun bete(b: Bete, t: Float, i: Int, immobile: Boolean) {
+        fun bete(b: Bete, t: Float, i: Int, immobile: Boolean) = aplat {
             val ph = i * 1.7f
             val x = b.x
             val y = b.y
@@ -1740,7 +2458,7 @@ object Paysages {
                     Espece.ECREVISSE -> ecrevisse(x, y)
                     Espece.IGUANE -> iguane(x, y)
                 }
-                return
+                return@aplat
             }
             when (b.espece) {
                 // Un pas de côté, une pause, puis le retour.
@@ -1767,7 +2485,7 @@ object Paysages {
                 Espece.ANOLI -> {
                     val u = (t + ph) % 4f
                     val pompe = if (u < 1.2f) abs(sin(u / 1.2f * PI.toFloat() * 3f)) * 0.4f else 0f
-                    if (P.nuit) return
+                    if (P.nuit) return@aplat
                     anoli(x, y - pompe)
                     // Le fanon s'ouvre pendant les pompes.
                     if (u < 1.2f) rond(x + 1.4f, y + 0.7f - pompe, 0.5f + pompe * 1.4f, duJour(0xFFE07A2E.toInt()))
@@ -2179,3 +2897,4 @@ object Paysages {
         }
     }
 }
+

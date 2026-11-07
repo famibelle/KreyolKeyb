@@ -63,11 +63,11 @@ internal object Habillage {
     /**
      * Habille [b], le lieu déjà posé sur son ciel. [calque] est le même lieu
      * seul, sur fond transparent : là où son alpha est plein, il y a une
-     * colline, un toit, une berge, et c'est ce qui pose la neige sur les
-     * crêtes sans fleurir le ciel.
+     * colline, une case, une berge, et c'est ce qui jaunit l'herbe sans
+     * toucher le ciel. [releve] : la végétation pièce par pièce (voir [fond]).
      */
     fun appliquer(b: Bitmap, calque: Bitmap, lieu: Lieu, heure: Heure, s: Souvenir, k: FloatArray,
-                  averse: Boolean = true) {
+                  averse: Boolean = true, releve: Bitmap? = null) {
         val w = b.width
         val h = b.height
         val u = k[0] / PIXELS_MAQUETTE_PAR_UNITE
@@ -77,7 +77,7 @@ internal object Habillage {
         b.getPixels(px, 0, w, 0, 0, w, h)
         val graine = lieu.ordinal * 1009 + s.saison.ordinal * 101 + ((s.fete?.ordinal ?: -1) + 1) * 13 + heure.rang
         val alea = Paysages.Alea(graine)
-        val fleurs = fond(px, mk, w, h, u, heure, s.saison, alea)
+        val fleurs = fond(px, mk, w, h, u, heure, s.saison, alea, lire(releve, w, h))
         b.setPixels(px, 0, w, 0, 0, w, h)
         val c = Canvas(b)
         dessus(c, w.toFloat(), h.toFloat(), u, heure, s.saison, alea, fleurs, averse = averse)
@@ -85,16 +85,20 @@ internal object Habillage {
     }
 
     /**
-     * La même chose sur les trois calques de [Paysages.plans], chacun avec
-     * son propre masque et sa propre échelle ([ks]).
+     * La même chose sur les calques de [Paysages.plans], chacun avec son
+     * propre masque et sa propre échelle ([ks]).
      *
      * La matière change plan par plan. Les nuages de l'hivernage vont sur le
      * calque proche, par-dessus tout ; l'averse et les oiseaux du carême n'y
      * sont pas peints, ils bougent dans l'ambiance (voir [Ambiance]). Jamais
      * de fête ici : voir [Paysages.plans].
+     *
+     * Un masque `null` dit que le calque ne porte aucun objet : le ciel, que
+     * le carême réchauffe et que l'hivernage grise, sans rien qui jaunisse.
      */
     fun appliquerPlans(
-        couches: Array<Bitmap>, masques: Array<Bitmap>, lieu: Lieu, heure: Heure, s: Souvenir, ks: Array<FloatArray>
+        couches: Array<Bitmap>, masques: Array<Bitmap?>, lieu: Lieu, heure: Heure, s: Souvenir, ks: Array<FloatArray>,
+        releves: Array<Bitmap?> = arrayOfNulls(couches.size)
     ) {
         val graine = lieu.ordinal * 1009 + s.saison.ordinal * 101 + heure.rang
         val alea = Paysages.Alea(graine)
@@ -105,10 +109,10 @@ internal object Habillage {
             val h = b.height
             val u = ks[i][0] / PIXELS_MAQUETTE_PAR_UNITE
             val mk = IntArray(w * h)
-            masques[i].getPixels(mk, 0, w, 0, 0, w, h)
+            masques[i]?.getPixels(mk, 0, w, 0, 0, w, h)
             val px = IntArray(w * h)
             b.getPixels(px, 0, w, 0, 0, w, h)
-            val fleurs = fond(px, mk, w, h, u, heure, s.saison, alea)
+            val fleurs = fond(px, mk, w, h, u, heure, s.saison, alea, lire(releves[i], w, h))
             b.setPixels(px, 0, w, 0, 0, w, h)
             fleurir(Canvas(b), p, u, alea, fleurs)
         }
@@ -120,13 +124,29 @@ internal object Habillage {
 
     private fun objet(mk: IntArray, i: Int) = (mk[i] ushr 24) > SEUIL_MASQUE
 
-    // ------------------------------------------------------------ le fond
+    /** Les pixels d'un relevé de la végétation, ou `null`. */
+    private fun lire(releve: Bitmap?, w: Int, h: Int): IntArray? {
+        if (releve == null || releve.width != w || releve.height != h) return null
+        val v = IntArray(w * h)
+        releve.getPixels(v, 0, w, 0, 0, w, h)
+        return v
+    }
 
-    private fun fond(
-        px: IntArray, mk: IntArray, w: Int, h: Int, u: Float,
-        P: Heure, saison: Saison, alea: Paysages.Alea
-    ): FloatArray {
-        val nuit = if (P.nuit) 0.55f else 1f
+    /**
+     * Vrai si la couleur [col] est de la végétation pour l'heure [P] : à
+     * moins de 30 d'un des trois segments de couleur que l'heure emploie pour
+     * les collines, le premier plan et les mousses.
+     *
+     * C'est le test que [fond] fait pixel par pixel quand il n'a pas de
+     * relevé ; [Paysages] le fait une fois par pièce, sur la couleur qu'elle
+     * reçoit avant la gouache, pour dresser le relevé de la végétation.
+     */
+    fun vegetal(col: Int, P: Heure): Boolean {
+        val sg = segments(P)
+        return pres(sg, r(col).toFloat(), g(col).toFloat(), bl(col).toFloat())
+    }
+
+    private fun segments(P: Heure): FloatArray {
         val sg = FloatArray(18)
         intArrayOf(
             P.milieu, P.pres, P.loin, P.milieu,
@@ -134,31 +154,99 @@ internal object Habillage {
         ).forEachIndexed { j, col ->
             sg[j * 3] = r(col).toFloat(); sg[j * 3 + 1] = g(col).toFloat(); sg[j * 3 + 2] = bl(col).toFloat()
         }
-        fun calculer(rr: Float, gg: Float, bb: Float): Boolean {
-            for (o in 0 until 18 step 6) {
-                val ux = sg[o + 3] - sg[o]; val uy = sg[o + 4] - sg[o + 1]; val uz = sg[o + 5] - sg[o + 2]
-                val uu = (ux * ux + uy * uy + uz * uz).takeIf { it > 0f } ?: 1f
-                val t = (((rr - sg[o]) * ux + (gg - sg[o + 1]) * uy + (bb - sg[o + 2]) * uz) / uu).coerceIn(0f, 1f)
-                val dx = sg[o] + ux * t - rr; val dy = sg[o + 1] + uy * t - gg; val dz = sg[o + 2] + uz * t - bb
-                if (dx * dx + dy * dy + dz * dz < 900f) return true
-            }
-            return false
+        return sg
+    }
+
+    private fun pres(sg: FloatArray, rr: Float, gg: Float, bb: Float): Boolean {
+        for (o in 0 until 18 step 6) {
+            val ux = sg[o + 3] - sg[o]; val uy = sg[o + 4] - sg[o + 1]; val uz = sg[o + 5] - sg[o + 2]
+            val uu = (ux * ux + uy * uy + uz * uz).takeIf { it > 0f } ?: 1f
+            val t = (((rr - sg[o]) * ux + (gg - sg[o + 1]) * uy + (bb - sg[o + 2]) * uz) / uu).coerceIn(0f, 1f)
+            val dx = sg[o] + ux * t - rr; val dy = sg[o + 1] + uy * t - gg; val dz = sg[o + 2] + uz * t - bb
+            if (dx * dx + dy * dy + dz * dz < 900f) return true
         }
+        return false
+    }
+
+    // ------------------------------------------------------------ le fond
+
+    /**
+     * [releve] : la végétation pièce par pièce, dressée par [Paysages] pendant
+     * qu'il peint (alpha plein : végétation). Sans lui, la végétation se
+     * reconnaît pixel par pixel à sa couleur, ce qui ne marche plus sur un
+     * carton peint à la gouache : les coups de pinceau éclaircissent et
+     * assombrissent les collines hors des segments de la palette, et le soir
+     * des pierres et des façades tombaient dedans (relevé de LuxKeyb, porté
+     * avec le chantier gouache).
+     */
+    private fun fond(
+        px: IntArray, mk: IntArray, w: Int, h: Int, u: Float,
+        P: Heure, saison: Saison, alea: Paysages.Alea, releve: IntArray? = null
+    ): FloatArray {
+        val nuit = if (P.nuit) 0.55f else 1f
+        val sg = segments(P)
         // Le paysage est fait d'aplats : quelques centaines de couleurs pour des
         // dizaines de milliers de pixels. La réponse se garde par couleur, dans
         // une table à adressage ouvert, sans objet par pixel.
         val cles = IntArray(TABLE)
         val reponses = BooleanArray(TABLE)
         var remplies = 0
-        fun vegetal(c: Int): Boolean {
+        fun vegetalTable(c: Int): Boolean {
             val cle = (c and 0xFFFFFF) or 0x1000000
             var h = (cle * -0x61C88647) ushr (32 - BITS_TABLE)
             while (true) {
                 val k = cles[h]
                 if (k == cle) return reponses[h]
                 if (k == 0) {
-                    val v = calculer(r(c).toFloat(), g(c).toFloat(), bl(c).toFloat())
+                    val v = pres(sg, r(c).toFloat(), g(c).toFloat(), bl(c).toFloat())
                     if (remplies < TABLE * 3 / 4) { cles[h] = cle; reponses[h] = v; remplies++ }
+                    return v
+                }
+                h = (h + 1) and (TABLE - 1)
+            }
+        }
+        // Les aplats se suivent : le pixel précédent répond souvent sans table.
+        var derniere = 0
+        var derniereReponse = false
+        fun vegetalPixel(c: Int): Boolean {
+            if (c == derniere && derniere != 0) return derniereReponse
+            derniere = c
+            derniereReponse = vegetalTable(c)
+            return derniereReponse
+        }
+        fun vegetal(i: Int): Boolean = if (releve != null) (releve[i] ushr 24) > 127 else vegetalPixel(px[i])
+        // Ce que la saison fait d'une couleur ne dépend que d'elle et de la
+        // végétation : la teinte se calcule une fois par couleur et se garde
+        // dans une seconde table. Seules les taches du carême dépendent de la
+        // place du pixel, et se posent ensuite.
+        fun teinte(c: Int, veg: Boolean): Int {
+            var rr = r(c).toFloat(); var gg = g(c).toFloat(); var bb = bl(c).toFloat()
+            when (saison) {
+                // La lumière sèche : un peu plus chaude partout.
+                Saison.CAREME -> { rr += 9f; gg += 3f; bb -= 8f }
+                Saison.HIVERNAGE -> if (veg) {
+                    // Le vert gorgé d'eau.
+                    rr *= 0.93f; gg *= 1.06f; bb *= 0.97f
+                } else {
+                    // Le reste sous un ciel couvert : un peu de gris, un peu de bleu.
+                    val m = (rr + gg + bb) / 3f
+                    rr = m + (rr - m) * 0.85f; gg = m + (gg - m) * 0.85f; bb = m + (bb - m) * 0.85f + 5f
+                }
+            }
+            return (canal(rr) shl 16) or (canal(gg) shl 8) or canal(bb)
+        }
+        val clesTeintes = IntArray(TABLE)
+        val teintes = IntArray(TABLE)
+        var teintesRemplies = 0
+        fun teinteGardee(c: Int, veg: Boolean): Int {
+            val cle = (c and 0xFFFFFF) or (if (veg) 0x2000000 else 0x1000000)
+            var h = (cle * -0x61C88647) ushr (32 - BITS_TABLE)
+            while (true) {
+                val k = clesTeintes[h]
+                if (k == cle) return teintes[h]
+                if (k == 0) {
+                    val v = teinte(c, veg)
+                    if (teintesRemplies < TABLE * 3 / 4) { clesTeintes[h] = cle; teintes[h] = v; teintesRemplies++ }
                     return v
                 }
                 h = (h + 1) and (TABLE - 1)
@@ -169,46 +257,45 @@ internal object Habillage {
         // quelle que soit la taille du rendu : des blocs de quelques pixels se
         // lisaient en hachures sur la carte et en confettis sur la vignette.
         val tache = max(3f, 12f * u)
-        // Les deux bruits de l'automne, tirés une fois par nœud de leur grille
-        // plutôt que quatre fois par pixel : la carte ouverte passait la moitié
-        // de son habillage d'automne à refaire les mêmes tirages (Galaxy A21s,
-        // 2026-10-18). Le résultat est le même au bit près.
+        // Les deux bruits du carême, tirés une fois par nœud de leur grille
+        // plutôt que quatre fois par pixel, et la place dans la grille calculée
+        // une fois par colonne et une fois par rangée.
+        val careme = saison == Saison.CAREME
         val grilleX = ((w - 1) / tache).toInt() + 2
         val grilleY = ((h - 1) / tache).toInt() + 2
-        val bruit17 = if (saison == Saison.CAREME) noeuds(grilleX, grilleY, 17) else FloatArray(0)
-        val bruit71 = if (saison == Saison.CAREME) noeuds(grilleX, grilleY, 71) else FloatArray(0)
+        val bruit17 = if (careme) noeuds(grilleX, grilleY, 17) else FloatArray(0)
+        val bruit71 = if (careme) noeuds(grilleX, grilleY, 71) else FloatArray(0)
+        val colonne0 = IntArray(if (careme) w else 0) { (it / tache).toInt() }
+        val colonneF = FloatArray(if (careme) w else 0) { val gx = it / tache; lisse(gx - gx.toInt()) }
         val fleurs = ArrayList<Float>()
-        for (y in 0 until h) for (x in 0 until w) {
-            val i = y * w + x
-            val c = px[i]
-            val veg = objet(mk, i) && vegetal(c)
-            var rr = r(c).toFloat(); var gg = g(c).toFloat(); var bb = bl(c).toFloat()
-            when (saison) {
-                Saison.CAREME -> {
-                    // La lumière sèche : un peu plus chaude partout.
-                    rr += 9f; gg += 3f; bb -= 8f
-                    if (veg) {
-                        // L'herbe qui jaunit, par taches, sans tout griller.
-                        val n = bruitGrille(bruit17, grilleX, x / tache, y / tache) * 3f
-                        val a = paille[n.toInt().coerceIn(0, 2)]
-                        val b = paille[(n.toInt() + 1).coerceIn(0, 3)]
-                        val f = n - n.toInt()
-                        val t = (0.05f + 0.08f * bruitGrille(bruit71, grilleX, x / tache, y / tache)) * nuit
-                        rr += (a[0] + (b[0] - a[0]) * f - rr) * t
-                        gg += (a[1] + (b[1] - a[1]) * f - gg) * t
-                        bb += (a[2] + (b[2] - a[2]) * f - bb) * t
-                    }
+        var avantC = 0; var avantVeg = false; var avantT = -1
+        for (y in 0 until h) {
+            val rangee0 = if (careme) (y / tache).toInt() * grilleX else 0
+            val rangeeF = if (careme) { val gy = y / tache; lisse(gy - gy.toInt()) } else 0f
+            for (x in 0 until w) {
+                val i = y * w + x
+                val c = px[i]
+                val veg = objet(mk, i) && vegetal(i)
+                val t = if (avantT >= 0 && c == avantC && veg == avantVeg) avantT else teinteGardee(c, veg)
+                avantC = c; avantVeg = veg; avantT = t
+                if (!(careme && veg)) {
+                    px[i] = (c and 0xFF000000.toInt()) or t
+                    continue
                 }
-                Saison.HIVERNAGE -> if (veg) {
-                    // Le vert gorgé d'eau.
-                    rr *= 0.93f; gg *= 1.06f; bb *= 0.97f
-                } else {
-                    // Le reste sous un ciel couvert : un peu de gris, un peu de bleu.
-                    val m = (rr + gg + bb) / 3f
-                    rr = m + (rr - m) * 0.85f; gg = m + (gg - m) * 0.85f; bb = m + (bb - m) * 0.85f + 5f
-                }
+                // L'herbe qui jaunit, par taches, sans tout griller.
+                var rr = r(t).toFloat(); var gg = g(t).toFloat(); var bb = bl(t).toFloat()
+                val o = rangee0 + colonne0[x]
+                val fx = colonneF[x]
+                val n = bruitCase(bruit17, grilleX, o, fx, rangeeF) * 3f
+                val a = paille[n.toInt().coerceIn(0, 2)]
+                val b = paille[(n.toInt() + 1).coerceIn(0, 3)]
+                val f = n - n.toInt()
+                val k = (0.05f + 0.08f * bruitCase(bruit71, grilleX, o, fx, rangeeF)) * nuit
+                rr += (a[0] + (b[0] - a[0]) * f - rr) * k
+                gg += (a[1] + (b[1] - a[1]) * f - gg) * k
+                bb += (a[2] + (b[2] - a[2]) * f - bb) * k
+                px[i] = (c and 0xFF000000.toInt()) or (canal(rr) shl 16) or (canal(gg) shl 8) or canal(bb)
             }
-            px[i] = (c and 0xFF000000.toInt()) or (canal(rr) shl 16) or (canal(gg) shl 8) or canal(bb)
         }
         return fleurs.toFloatArray()
     }
@@ -449,7 +536,7 @@ internal object Habillage {
     private fun noeud(i: Int, j: Int, graine: Int) =
         (melanger((i + graine) * 73856093 xor (j + 31) * 19349663) % 1024).toFloat() / 1023f
 
-    /** Les nœuds d'une grille de [nx] × [ny], rangée par rangée, pour [bruitGrille]. */
+    /** Les nœuds d'une grille de [nx] × [ny], rangée par rangée, pour [bruitCase]. */
     private fun noeuds(nx: Int, ny: Int, graine: Int) =
         FloatArray(nx * ny) { noeud(it % nx, it / nx, graine) }
 
@@ -459,10 +546,7 @@ internal object Habillage {
      * taches de feuillage plutôt qu'une mosaïque. Les nœuds sont tirés
      * d'avance par [noeuds].
      */
-    private fun bruitGrille(grille: FloatArray, nx: Int, x: Float, y: Float): Float {
-        val x0 = x.toInt(); val y0 = y.toInt()
-        val fx = lisse(x - x0); val fy = lisse(y - y0)
-        val o = y0 * nx + x0
+    private fun bruitCase(grille: FloatArray, nx: Int, o: Int, fx: Float, fy: Float): Float {
         val haut = grille[o] + (grille[o + 1] - grille[o]) * fx
         val bas = grille[o + nx] + (grille[o + nx + 1] - grille[o + nx]) * fx
         return haut + (bas - haut) * fy
