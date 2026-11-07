@@ -2770,58 +2770,136 @@ object Paysages {
             }
         }
 
-        /**
-         * Un houppier rond de papier, en couches emboîtées de deux tons,
-         * posé sur son tronc fin : l'arbre coloré de la référence, sans cône.
-         */
-        fun houppier(x: Float, y: Float, w: Float, h: Float, col: Int, tronc: Int) {
+        /** Des bosses de canopée, du ([x0]) au ([x1]), posées sur la ligne [crete] : une lisière de forêt. */
+        private fun bosses(x0: Float, x1: Float, crete: (Float) -> Float, rMin: Float, rMax: Float, r: Alea): Path {
             val t = Path()
-            t.addRoundRect(RectF(x - 0.35f, y - h * 0.3f, x + 0.35f, y + h * 0.55f), 0.3f, 0.3f, Path.Direction.CW)
-            piece(t, tronc, 0.6f)
-            for (i in 0 until 4) {
-                val k = 1f - i * 0.21f
-                val cx = x
-                val bas = y - h * 0.15f * i
-                val ww = w * k
-                val hh = h * k
-                val o = Path()
-                o.moveTo(cx, bas)
-                o.cubicTo(cx - ww * 0.62f, bas, cx - ww * 0.55f, bas - hh * 0.75f, cx, bas - hh)
-                o.cubicTo(cx + ww * 0.55f, bas - hh * 0.75f, cx + ww * 0.62f, bas, cx, bas)
-                o.close()
-                val c = if (i % 2 == 0) mix(col, 0xFF000000.toInt(), 0.1f - i * 0.02f) else mix(col, 0xFFFFFFFF.toInt(), 0.14f)
-                piece(o, c, if (i == 0) 0.8f else 0.5f)
+            var x = x0
+            val sens = if (x1 >= x0) 1f else -1f
+            while ((x1 - x) * sens > 0f) {
+                val p = ((x - x0) / (x1 - x0)).coerceIn(0f, 1f)
+                val rr = rMax + (rMin - rMax) * p + (r() - 0.5f) * rMin * 0.6f
+                t.addCircle(x, crete(x) + rr * 0.25f, rr, Path.Direction.CW)
+                x += rr * (1.1f + r() * 0.4f) * sens
             }
+            return t
+        }
+
+        /**
+         * Une rive de forêt tropicale qui descend du bord de la fenêtre jusqu'à
+         * l'eau : le versant, et dessus une lisière de houppiers ronds, plus
+         * gros près du bord, plus petits vers l'eau. Une seule feuille de papier.
+         */
+        fun rive(gauche: Boolean, haut: Float, bas: Float, fin: Float, graine: Int, col: Int, rMax: Float) {
+            val ph = Alea(graine)() * 6f
+            val sens = if (gauche) 1f else -1f
+            val t = Path()
+            var x = if (gauche) -2f else LARGEUR + 2f
+            t.moveTo(x, BAS + 2f)
+            while ((x - fin) * sens < 0f) { t.lineTo(x, profil(gauche, haut, bas, fin, ph, x)); x += 1.5f * sens }
+            t.lineTo(fin, profil(gauche, haut, bas, fin, ph, fin))
+            t.quadTo(fin + 3f * sens, bas + 1f, fin + 2f * sens, bas + 5f)
+            t.lineTo(fin, BAS + 2f)
+            t.close()
+            val canopee = bosses(if (gauche) -3f else LARGEUR + 3f, fin - 2f * sens,
+                { v -> profil(gauche, haut, bas, fin, ph, v) }, rMax * 0.35f, rMax, Alea(graine + 50))
+            t.op(canopee, Path.Op.UNION)
+            piece(t, col)
+        }
+
+        /** Un morne couvert de forêt : une crête arrondie hérissée de houppiers. */
+        fun morneBoise(y0: Float, amp: Float, graine: Int, col: Int, r: Float) {
+            val ph = Alea(graine)() * 6f
+            fun crete(x: Float) = y0 + sin(x * 0.045f + ph) * amp + sin(x * 0.13f + 2f * ph) * amp * 0.35f
+            val t = Path()
+            t.moveTo(-2f, BAS + 2f)
+            var x = -2f
+            while (x <= LARGEUR + 2f) { t.lineTo(x, crete(x)); x += 2f }
+            t.lineTo(LARGEUR + 2f, BAS + 2f)
+            t.close()
+            t.op(bosses(-3f, LARGEUR + 3f, ::crete, r, r, Alea(graine + 50)), Path.Op.UNION)
+            piece(t, col)
+        }
+
+        /**
+         * Un arbre de la forêt : le tronc fin, évasé en contreforts au pied,
+         * et un houppier en chou-fleur de deux tons, l'ombre dessous, la
+         * lumière en haut.
+         */
+        fun arbreRond(x: Float, y: Float, r: Float, col: Int, tronc: Int) {
+            val t = Path()
+            t.moveTo(x - 1.6f, y); t.quadTo(x - 0.4f, y - 1f, x - 0.35f, y - r * 1.6f)
+            t.lineTo(x + 0.35f, y - r * 1.6f); t.quadTo(x + 0.4f, y - 1f, x + 1.6f, y); t.close()
+            piece(t, tronc, 0.6f)
+            val cy = y - r * 1.9f
+            val al = Alea((x * 13f + y * 7f).toInt())
+            val sombre = Path()
+            for (k in 0 until 6) {
+                val a = k / 6f * 2f * PI.toFloat()
+                sombre.addCircle(x + cos(a) * r * 0.62f, cy + sin(a) * r * 0.42f, r * (0.5f + al() * 0.15f), Path.Direction.CW)
+            }
+            sombre.addCircle(x, cy, r * 0.7f, Path.Direction.CW)
+            piece(sombre, mix(col, 0xFF000000.toInt(), 0.12f), 0.9f)
+            val clair = Path()
+            for (k in 0 until 4) {
+                clair.addCircle(x - r * 0.35f + k * r * 0.25f, cy - r * 0.35f + (al() - 0.5f) * r * 0.2f, r * (0.32f + al() * 0.1f), Path.Direction.CW)
+            }
+            piece(clair, mix(col, 0xFFFFFFFF.toInt(), 0.12f), 0.5f)
+        }
+
+        /** Une grande feuille de bananier, en pagaie, sa nervure et deux déchirures. */
+        fun feuilleBananier(x: Float, y: Float, l: Float, angle: Float, col: Int) {
+            val w = l * 0.24f
+            val f = Path()
+            f.moveTo(0f, 0f)
+            f.cubicTo(l * 0.15f, -w, l * 0.85f, -w, l, -w * 0.15f)
+            f.cubicTo(l * 0.9f, w * 0.9f, l * 0.2f, w, 0f, 0f)
+            f.close()
+            for (d in floatArrayOf(0.45f, 0.7f)) {
+                val coupe = Path()
+                coupe.moveTo(l * d, -w * 1.2f); coupe.lineTo(l * d + 0.5f, -w * 1.2f); coupe.lineTo(l * d + 0.25f, -w * 0.05f); coupe.close()
+                f.op(coupe, Path.Op.DIFFERENCE)
+            }
+            val nervure = Path()
+            nervure.moveTo(-l * 0.25f, 0.25f); nervure.lineTo(l * 0.95f, -w * 0.1f); nervure.lineTo(-l * 0.25f, -0.25f); nervure.close()
+            pose.setRotate(angle)
+            pose.postTranslate(x, y)
+            f.transform(pose)
+            nervure.transform(pose)
+            piece(f, col, 0.9f)
+            piece(nervure, mix(col, 0xFFFFFFFF.toInt(), 0.3f), 0f)
+        }
+
+        /** Une feuille en cœur sur sa tige, comme celles des malangas du sous-bois. */
+        fun feuilleCoeur(x: Float, y: Float, s: Float, angle: Float, col: Int) {
+            val f = Path()
+            f.moveTo(0f, 0f)
+            f.cubicTo(-s * 0.9f, -s * 0.15f, -s * 0.7f, -s * 1.1f, 0f, -s * 1.3f)
+            f.cubicTo(s * 0.7f, -s * 1.1f, s * 0.9f, -s * 0.15f, 0f, 0f)
+            f.close()
             val n = Path()
-            n.moveTo(x - 0.15f, y - h * 0.1f)
-            n.lineTo(x, y - h * 0.85f)
-            n.lineTo(x + 0.15f, y - h * 0.1f)
-            n.close()
-            piece(n, mix(col, 0xFFFFFFFF.toInt(), 0.35f), 0f)
+            n.moveTo(-0.15f, 0f); n.lineTo(0f, -s * 1.2f); n.lineTo(0.15f, 0f); n.close()
+            pose.setRotate(angle)
+            pose.postTranslate(x, y)
+            f.transform(pose)
+            n.transform(pose)
+            val tige = Path()
+            tige.moveTo(x - 0.25f, y + s * 1.2f); tige.lineTo(x - 0.2f, y); tige.lineTo(x + 0.2f, y); tige.lineTo(x + 0.25f, y + s * 1.2f); tige.close()
+            piece(tige, mix(col, 0xFF000000.toInt(), 0.2f), 0.4f)
+            piece(f, col, 0.9f)
+            piece(n, mix(col, 0xFFFFFFFF.toInt(), 0.3f), 0f)
         }
 
         /**
          * Grand Étang en papier découpé, d'après la référence du propriétaire
-         * (2026-11-07) transposée sous les tropiques : les mornes au loin,
-         * l'étang en lanières qui s'élargit vers soi entre deux rives en
-         * lignes de niveau, des houppiers colorés sur les berges, des buttes
-         * devant. Sans voûte : tout tient dans l'empilement des plans.
+         * (2026-11-07) transposée en forêt tropicale : des mornes boisés au
+         * loin, l'étang en lanières qui s'élargit vers soi entre deux rives de
+         * forêt aux houppiers ronds, de grandes feuilles devant. Sans voûte ni
+         * rien de pointu : tout tient dans l'empilement des plans.
          */
         fun grandEtangPapier() {
-            // Le lointain : deux rangs de mornes pointus, puis des collines en bandes.
-            for ((i, sommets) in arrayOf(
-                floatArrayOf(-2f, 30f, 14f, 21f, 30f, 26f, 47f, 18f, 62f, 25f, 80f, 19f, 102f, 27f),
-                floatArrayOf(-2f, 31f, 20f, 25f, 38f, 29f, 56f, 23f, 72f, 28f, 88f, 24f, 102f, 30f)
-            ).withIndex()) {
-                val t = Path()
-                t.moveTo(-2f, BAS)
-                var k = 0
-                while (k < sommets.size) { t.lineTo(sommets[k], sommets[k + 1]); k += 2 }
-                t.lineTo(102f, BAS)
-                t.close()
-                piece(t, mix(papier(if (i == 0) 0xFF7FB8A8.toInt() else 0xFF5FA88A.toInt()), P.cielBas, if (i == 0) 0.35f else 0.18f), 0.8f)
-            }
-            bandes(27.5f, 1.6f, 4, 1.6f, 700, papier(0xFF8FD99A.toInt()), papier(0xFF3FA86A.toInt()), f1 = 0.09f)
+            morneBoise(22f, 3f, 700, mix(papier(0xFF7FB8A8.toInt()), P.cielBas, 0.35f), 1.6f)
+            morneBoise(26f, 2.4f, 701, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.2f), 1.8f)
+            morneBoise(29.5f, 1.6f, 702, papier(0xFF6FCB8A.toInt()), 1.6f)
             plan(1)
             // L'étang, qui naît à l'horizon et s'élargit jusqu'au premier plan.
             fun gauche(y: Float) = 41f - (y - 32f) / 28f * 22f
@@ -2846,39 +2924,34 @@ object Paysages {
                 }
                 y += e + 0.35f + 0.6f * p
             }
-            // Les rives en lignes de niveau, qui descendent jusqu'à l'eau.
-            val rives = intArrayOf(papier(0xFF2E9E6E.toInt()), papier(0xFF6FCB8A.toInt()), papier(SARCELLE),
-                papier(LIME), papier(0xFF4FB06A.toInt()), papier(MENTHE))
+            // Les rives de forêt, en lisières de houppiers qui descendent jusqu'à l'eau.
+            val verts = intArrayOf(papier(0xFF2E9E6E.toInt()), papier(0xFF8FD99A.toInt()), papier(SARCELLE),
+                papier(LIME), papier(0xFF4FB06A.toInt()), papier(VERT_PROFOND))
             for (k in 0 until 6) {
                 val bas = 33.5f + k * 4.6f
-                pente(true, 27f + k * 4f, bas, gauche(bas), 720 + k, rives[k])
-                pente(false, 28f + k * 4f, bas + 0.5f, droite(bas + 0.5f), 730 + k, rives[(k + 2) % 6])
-                if (k == 1) {
-                    // Les houppiers colorés des berges, serrés, à la place des sapins de la référence.
+                rive(true, 27f + k * 4f, bas, gauche(bas), 720 + k, verts[k], 3.2f + k * 0.5f)
+                rive(false, 28f + k * 4f, bas + 0.5f, droite(bas + 0.5f), 730 + k, verts[(k + 2) % 6], 3.2f + k * 0.5f)
+                if (k == 2) {
+                    // Quelques grands arbres qui dépassent de la canopée.
                     val tronc = papier(TERRE)
-                    houppier(4f, 40f, 9f, 13f, papier(MOUTARDE), tronc)
-                    houppier(11f, 41f, 8f, 12f, papier(0xFFF3EEE4.toInt()), tronc)
-                    houppier(18f, 40.5f, 7f, 10f, papier(PRUNE), tronc)
-                    houppier(24f, 40f, 5.5f, 8f, papier(0xFFD9447A.toInt()), tronc)
-                    houppier(77f, 40f, 5.5f, 8f, papier(MOUTARDE), tronc)
-                    houppier(84f, 41f, 7.5f, 11f, papier(0xFFF3EEE4.toInt()), tronc)
-                    houppier(92f, 40.5f, 9f, 13f, papier(PRUNE), tronc)
+                    arbreRond(7f, 44f, 4.5f, papier(0xFF3FA86A.toInt()), tronc)
+                    arbreRond(17f, 45f, 3.6f, papier(MOUTARDE), tronc)
+                    arbreRond(84f, 45f, 3.6f, papier(0xFF8FD99A.toInt()), tronc)
+                    arbreRond(93f, 44f, 4.5f, papier(SARCELLE), tronc)
                 }
             }
-            herbes(0f, 24f, 48f, 741, intArrayOf(SARCELLE, LIME, MOUTARDE))
-            herbes(76f, 100f, 48f, 742, intArrayOf(SARCELLE, LIME, PRUNE))
             plan(2)
-            // Les buttes du premier plan.
-            butte(4f, 72f, 26f, 13f, papier(TURQUOISE))
-            butte(28f, 74f, 18f, 10f, papier(BLEU_PROFOND))
-            butte(96f, 71f, 26f, 13f, papier(LIME))
-            butte(72f, 74f, 17f, 9f, papier(MENTHE))
-            herbes(0f, 20f, 61f, 750, intArrayOf(0xFFE8743B.toInt(), PRUNE, LIME))
-            herbes(80f, 100f, 61f, 751, intArrayOf(0xFFE8743B.toInt(), SARCELLE, PRUNE))
-            houppier(8f, 62f, 9f, 14f, papier(PRUNE), papier(TERRE))
-            houppier(93f, 62f, 8.5f, 14f, papier(LAVANDE), papier(TERRE))
-            balisier(19f, 63f, 9f, papier(SARCELLE))
-            anthurium(83f, 63f)
+            // Le sous-bois du premier plan : grandes feuilles, balisier, anthurium.
+            butte(4f, 74f, 24f, 11f, papier(TURQUOISE))
+            butte(96f, 73f, 24f, 11f, papier(LIME))
+            feuilleBananier(-1f, 60f, 16f, -38f, papier(0xFF4FB06A.toInt()))
+            feuilleBananier(2f, 63f, 14f, -12f, papier(SARCELLE))
+            feuilleBananier(101f, 60f, 16f, -142f, papier(0xFF3FA86A.toInt()))
+            feuilleCoeur(10f, 63f, 4.5f, -18f, papier(VERT_PROFOND))
+            feuilleCoeur(16f, 65f, 3.5f, 12f, papier(0xFF2E9E6E.toInt()))
+            feuilleCoeur(90f, 64f, 4.2f, 15f, papier(VERT_PROFOND))
+            balisier(22f, 64f, 9f, papier(SARCELLE))
+            anthurium(81f, 64f)
         }
 
         /** Le Grand Étang : le lac dans sa cuvette de forêt, les mornes, une libellule. */
