@@ -960,6 +960,12 @@ object Paysages {
     /** Les fumées du bassin de Ravine Chaude, sur le plan de devant : x, pied, haut, largeur et dérive de chacune. */
     internal val VAPEURS_RAVINE = arrayOf(floatArrayOf(40f, 57f, 49f, 1.4f, -2f), floatArrayOf(58f, 58f, 51f, 1.2f, 2f))
 
+    /** L'écume du rivage de la Pointe des Châteaux, sur le plan du milieu : sa ligne. */
+    internal const val RIVAGE_CHATEAUX = 39.2f
+
+    /** La crête de la grosse vague de la Pointe des Châteaux, sur le plan de devant : de (x0, y0) à (x1, y1). */
+    internal val VAGUE_CHATEAUX = floatArrayOf(17f, 44.8f, 34f, 42.6f)
+
     /** La chute du Carbet, sur le plan du milieu : son x, son haut, son pied et sa largeur. */
     internal val CHUTE_CARBET = floatArrayOf(80f, 12f, 47f, 4.6f)
     internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
@@ -2932,8 +2938,106 @@ object Paysages {
             balisier(86f, 57f, 14f, mix(P.pres, P.milieu, 0.3f))
         }
 
+        // ------------------------------------------- la Pointe des Châteaux en papier
+
+        /** Des bandes d'eau en lanières de [y0] à [y1], plus épaisses vers soi. */
+        private fun lanieresMer(y0: Float, y1: Float, graine: Int, cols: IntArray) {
+            val r = Alea(graine)
+            var y = y0
+            while (y < y1) {
+                val q = (y - y0) / max(1f, y1 - y0)
+                val e = 0.4f + 0.7f * q
+                var x = -2f + r() * 3f
+                while (x < LARGEUR + 2f) {
+                    val l = (4f + r() * 10f) * (0.7f + q)
+                    val t = Path()
+                    t.addRoundRect(RectF(x, y, x + l, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, cols[min((r() * cols.size).toInt(), cols.size - 1)], 0.2f)
+                    x += l + 0.8f + r() * 2.5f
+                }
+                y += e + 0.45f + 0.4f * q
+            }
+        }
+
+        /**
+         * La Pointe des Châteaux en papier découpé, d'après la photo du
+         * propriétaire (2026-11-07) : le morne couvert de broussaille sèche,
+         * sa falaise de calcaire en profil à gauche, la grande croix au
+         * sommet, à droite pour rester à côté du dessin du mot ; le plateau
+         * rocheux du rivage et l'écume, la mer d'un bleu profond, une grosse
+         * vague qui se brise, et la roche noire au premier plan. Les vagues
+         * bougent sur la carte ouverte (`Vagues` dans [Ambiance]).
+         */
+        fun pointeChateauxPapier() {
+            cumulus(-4f, 21f, 26f, 1500)
+            cumulus(30f, 12f, 14f, 1501)
+            plan(1)
+            // Le morne, sa falaise à gauche, sa croix.
+            val crete = brisee(16f, 36f, 30f, 33.5f, 44f, 31f, 52f, 28.5f, 55f, 24f, 58f, 21f, 62f, 18.6f, 70f, 17.4f,
+                80f, 17f, 92f, 18f, 102f, 19f)
+            val morne = sousLaCrete(16f, 102f, crete)
+            morne.op(bosses(50f, 103f, { x -> crete(x) + 0.5f }, 1f, 1.6f, Alea(1502)), Path.Op.UNION)
+            piece(morne, papier(0xFF2C5C26.toInt()))
+            pieceD("M52 28.5L55 24L58 21L62 18.6L64.5 21Q62 23 63 26Q60 28 61 31L50 33Z", papier(0xFF8E8070.toInt()), 0.5f)
+            pieceD("M55 24L58 21L59.6 22.4Q57.4 24.6 58.4 27L55.6 28Z", papier(0xFF6E6052.toInt()), 0.2f)
+            taches(48f, 102f, 34f, 14, 1503, papier(0xFF4A8236.toInt()), crete)
+            taches(56f, 102f, 34f, 8, 1504, papier(0xFF1E441C.toInt()), crete)
+            pieceD("M14 37Q40 33.4 70 32.6Q86 32.2 102 31.6L102 36L14 38Z", papier(0xFF9DAE4E.toInt()), 0.3f)
+            val pierre = papier(0xFFD8C9A4.toInt())
+            pieceD("M86.6 17.6L89.4 17.6L89 16.4L87 16.4Z", papier(0xFFB8A984.toInt()), 0.4f)
+            barre(88f, 16.6f, 88f, 4.5f, 1.2f, pierre, 0.6f)
+            barre(85.2f, 8.2f, 90.8f, 8.2f, 1f, pierre, 0.6f)
+            barre(88.35f, 16f, 88.35f, 5f, 0.3f, papier(0xFFB0A07C.toInt()), 0f)
+            // Le plateau de calcaire du rivage, ses blocs, l'écume qui le borde.
+            pieceD("M-2 36Q20 34.4 40 35.2Q70 35.8 102 34.4L102 41L-2 41Z", papier(0xFF9C7A55.toInt()), 0.5f)
+            pieceD("M-2 37.6Q30 36.4 60 37.2Q80 37.4 102 36.6L102 38L-2 39Z", papier(0xFF7C5E42.toInt()), 0.2f)
+            for ((gx, gy, gr) in arrayOf(Triple(18f, 37.2f, 1.4f), Triple(44f, 37.4f, 1.1f), Triple(71f, 37f, 1.6f), Triple(77f, 36.9f, 1.1f), Triple(92f, 36.6f, 1.3f)))
+                galet(gx, gy, gr, papier(0xFF5A4636.toInt()))
+            pieceD("M-2 39.4L102 39.2L102 42L-2 42Z", papier(0xFF2A6EA8.toInt()), 0f)
+            val ecume = Path()
+            val re = Alea(1505)
+            var ex = -2f
+            // Une bande d'écume continue, bosselée, plus épaisse là où la mer frappe.
+            ecume.op(chemin("M-2 ${RIVAGE_CHATEAUX - 0.4f}L102 ${RIVAGE_CHATEAUX - 0.6f}L102 ${RIVAGE_CHATEAUX + 1.6f}L-2 ${RIVAGE_CHATEAUX + 1.8f}Z"), Path.Op.UNION)
+            while (ex < 104f) {
+                val grosse = ex in 30f..56f
+                val rr = if (grosse) 1.2f + re() * 1.6f else 0.5f + re() * 1.1f
+                ecume.op(disque(ex, RIVAGE_CHATEAUX - re() * (if (grosse) 2f else 0.6f), rr), Path.Op.UNION)
+                ex += 0.9f + re() * 2.6f
+            }
+            ecume.op(chemin("M34 40Q36 33.5 41 34.4Q44 32.6 48 35Q52 34 53 39Z"), Path.Op.UNION)
+            piece(ecume, papier(0xFFF6F8F6.toInt()), 0.4f)
+            plan(2)
+            // La mer profonde, la grosse vague qui se brise, la roche noire devant.
+            val bleus = intArrayOf(papier(0xFF2A78B8.toInt()), papier(0xFF1E4E8C.toInt()), papier(0xFF3E9AD0.toInt()), papier(0xFF2AA0B8.toInt()))
+            pieceD("M-2 41L102 41L102 68L-2 68Z", papier(0xFF1F5C9E.toInt()), 0.2f)
+            lanieresMer(41.4f, 50f, 1506, bleus)
+            // La grosse vague, qui se brise vers la gauche : le dos turquoise,
+            // le creux sombre sous la lèvre, l'écume qui dévale la face.
+            pieceD("M-2 56L-2 53.5Q8 52 15 47.5Q21 42.4 28 42Q35 42.4 41 47.4Q49 53 64 53.8L64 56Z", papier(0xFF1F9FB0.toInt()))
+            pieceD("M30 43Q39 45.4 48 51.8L46 52.4Q37 46.4 30 43.8Z", papier(0xFF52C6CA.toInt()), 0f)
+            pieceD("M15 47.6Q19.6 44 26 43Q21.6 45.6 20.4 51.6Q17.4 50 15 47.6Z", papier(0xFF125A78.toInt()), 0.2f)
+            pieceD("M16 47Q21.6 42.2 29 41.8Q33.4 42 35.6 44Q31 43.8 28.6 45.2Q25.6 47.6 24.4 51.8Q22.4 49.4 20.8 52.4Q19.4 49.8 17.2 51.4Q17.4 49 15.4 49.4Z",
+                papier(0xFFF6F8F6.toInt()), 0.4f)
+            val (c0, cy0, c1, cy1) = VAGUE_CHATEAUX
+            val rc = Alea(1507)
+            val embruns = Path()
+            for (k in 0..8) {
+                val u = k / 8f
+                embruns.op(disque(c0 + (c1 - c0) * u + rc() * 0.8f, cy0 + (cy1 - cy0) * u - 0.8f - rc() * 1.2f, 0.4f + rc() * 0.6f), Path.Op.UNION)
+            }
+            piece(embruns, papier(0xFFF6F8F6.toInt()), 0.2f)
+            lanieresMer(55f, 62f, 1508, bleus)
+            val roche = brisee(-2f, 61.5f, 8f, 60.4f, 16f, 61.6f, 26f, 60.6f, 38f, 62f, 50f, 61f, 62f, 62.2f, 74f, 61f, 86f, 62f, 96f, 60.8f, 102f, 61.6f)
+            val rocher = sousLaCrete(-2f, 102f, roche)
+            rocher.op(bosses(-2f, 102f, { x -> roche(x) + 0.3f }, 0.5f, 0.9f, Alea(1509)), Path.Op.UNION)
+            piece(rocher, papier(0xFF3E322A.toInt()))
+            taches(-2f, 102f, 66f, 12, 1510, papier(0xFF5E4C3E.toInt()), roche)
+        }
+
         /** La Pointe des Châteaux : les falaises calcaires, la Roche dans l'écume, la croix, la Désirade au loin. */
         fun pointeChateaux() {
+            if (PAPIER) { pointeChateauxPapier(); return }
             forme("M66 33.5L68 31Q72 30 84 30Q93 30.2 95 33.5Z", P.loin)
             plan(1)
             eau(33.5f, 161)

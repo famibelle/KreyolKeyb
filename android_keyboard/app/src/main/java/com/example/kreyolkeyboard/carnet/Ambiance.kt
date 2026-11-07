@@ -140,6 +140,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
                 enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
+                enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1135,6 +1136,87 @@ private class Vapeurs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
             p.color = (alpha shl 24) or 0xFFFFFF
             val rx = 4f + 2.5f * ligne[k]
             c.drawOval(nx - rx, ny - 0.9f, nx + rx, ny + 0.9f, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * La mer de la Pointe des Châteaux : l'écume qui jaillit par à-coups le long
+ * du rivage ([Paysages.RIVAGE_CHATEAUX], plan du milieu), les embruns
+ * arrachés à la crête de la grosse vague ([Paysages.VAGUE_CHATEAUX], plan
+ * de devant), et des lignes d'écume qui roulent du bas vers le rivage en
+ * rapetissant avec la distance.
+ */
+private class Vagues(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val jets = floatArrayOf(6f, 18f, 31f, 38f, 45f, 52f, 64f, 78f, 90f)
+    private val rythmeJet = FloatArray(jets.size) { 2.2f + hasard() * 1.4f }
+    private val phaseJet = FloatArray(jets.size) { hasard() }
+    private val nEmbruns = 12
+    private val placeEmbrun = FloatArray(nEmbruns) { hasard() }
+    private val rythmeEmbrun = FloatArray(nEmbruns) { 1.1f + hasard() * 0.9f }
+    private val nRouleaux = 8
+    private val xRouleau = FloatArray(nRouleaux) { 4f + hasard() * 92f }
+    private val rythmeRouleau = FloatArray(nRouleaux) { 6f + hasard() * 4f }
+    private val phaseRouleau = FloatArray(nRouleaux) { hasard() }
+    private val longueur = FloatArray(nRouleaux) { 2.5f + hasard() * 3f }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    private fun blanc(t: Float, force: Float) = ((t.coerceIn(0f, 1f) * force).toInt() shl 24) or 0xFFFFFF
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        p.style = Paint.Style.FILL
+        // Le plan du milieu : le rivage.
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.scale(e, e)
+        val rive = Paysages.RIVAGE_CHATEAUX
+        jets.forEachIndexed { i, x ->
+            val t = (temps / rythmeJet[i] + phaseJet[i]) % 1f
+            // La mer frappe plus fort sous la pointe, comme sur la photo.
+            val h = if (x in 30f..56f) 4.5f else 2.2f
+            for (j in 0 until 4) {
+                p.color = blanc(1f - t, 210f)
+                c.drawCircle(x + (j - 1.5f) * 1.3f * t, rive - sin(PI.toFloat() * t) * h * (1f - abs(j - 1.5f) * 0.25f),
+                    0.6f + 1.4f * t, p)
+            }
+        }
+        c.restore()
+        // Le plan de devant : la grosse vague et les rouleaux.
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.scale(e, e)
+        val (c0, cy0, c1, cy1) = Paysages.VAGUE_CHATEAUX
+        for (k in 0 until nEmbruns) {
+            val t = (temps / rythmeEmbrun[k] + k / nEmbruns.toFloat()) % 1f
+            val u = placeEmbrun[k]
+            val x0 = c0 + (c1 - c0) * u; val y0 = cy0 + (cy1 - cy0) * u
+            // Le vent rabat les embruns en arrière de la vague qui déferle vers la gauche.
+            p.color = blanc(1f - t, 230f)
+            c.drawCircle(x0 + 3.5f * t, y0 - sin(PI.toFloat() * t * 0.85f) * 3f, 0.35f + 0.7f * t, p)
+        }
+        for (k in 0 until nRouleaux) {
+            val t = (temps / rythmeRouleau[k] + phaseRouleau[k]) % 1f
+            val y = 61f - 18f * t
+            val loin = 0.45f + 0.55f * (y - 41f) / 20f
+            val rx = longueur[k] * loin
+            p.color = blanc(sin(PI.toFloat() * t), 160f)
+            c.drawOval(xRouleau[k] - rx, y - 0.3f * loin, xRouleau[k] + rx, y + 0.3f * loin, p)
         }
         c.restore()
     }
