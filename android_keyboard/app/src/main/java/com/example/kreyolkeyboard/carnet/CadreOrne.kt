@@ -4780,8 +4780,40 @@ class Motif(
             else {
                 ombres?.getOrNull(i)?.let { o -> peindreOmbre(c, o, i, regardX, regardY) }
                 c.drawBitmap(etages[i], null, ouPlan, peinture)
+                if (i == Paysages.MILIEU && Paysages.PAPIER && lieu == Lieu.MARIE_GALANTE) peindreAiles(c, i, regardX, regardY)
             }
         }
+    }
+
+    private val peintureAiles = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /**
+     * Les ailes du moulin de Marie-Galante, sur le plan [i] qui porte la
+     * tour et sous celui de devant : les calques les taisent
+     * ([Paysages.dessiner] avec `faune` faux) pour qu'elles tournent ici, un
+     * tour en [Paysages.TOUR_MOULIN], à l'horloge comme les nuages. Une image
+     * figée (partage, carte imprimée) les pose à l'angle de la vignette.
+     * Leur ombre tombe sur la tour, comme celle d'un carton.
+     */
+    private fun peindreAiles(c: Canvas, i: Int, regardX: Float, regardY: Float) {
+        val k = cadrage[0]
+        val tour = if (c.isHardwareAccelerated)
+            (android.os.SystemClock.uptimeMillis() % Paysages.TOUR_MOULIN) * 360f / Paysages.TOUR_MOULIN else 0f
+        val ailes = Paysages.ailesMoulin(Paysages.ANGLE_MOULIN + tour)
+        c.save()
+        c.translate(visible.left + cadrage[1] + Paysages.GLISSEMENT[i] * visible.width() * regardX,
+            visible.top + cadrage[2] + Paysages.GLISSEMENT[i] * visible.height() * regardY)
+        c.scale(k, k)
+        c.save()
+        c.translate(Paysages.OMBRE_PORTEE_X, Paysages.OMBRE_PORTEE_Y)
+        peintureAiles.color = Paysages.couleurOmbrePortee(heure)
+        c.drawPath(ailes, peintureAiles)
+        c.restore()
+        peintureAiles.color = Paysages.couleurAiles(heure)
+        c.drawPath(ailes, peintureAiles)
+        peintureAiles.color = Paysages.couleurMoyeu(heure)
+        c.drawCircle(Paysages.MOULIN[0], Paysages.MOULIN[1], 1.1f, peintureAiles)
+        c.restore()
     }
 
     private val peintureOmbre by lazy {
@@ -5249,7 +5281,7 @@ private class Plaque(private val trace: Path, private val cadre: RectF, heure: H
 
     companion object {
         /** L'axe du pied, au milieu de la fenêtre. */
-        const val CX = 50f
+        const val CX = AbscissesDuTrace.AXE
 
         /**
          * Où le socle se pose sur le plancher, en unités du paysage : sur la
@@ -5460,10 +5492,12 @@ private class Enluminure private constructor(
  *
  * Voyelle en haut, consonne en bas, la hauteur affinée par le code du
  * caractère ; un nœud sur chaque voyelle, qui donne la scansion. Le pas est
- * **constant et calé à gauche**, jamais étiré sur la largeur : deux formes qui
- * partagent leur début partagent alors leurs points *exactement*, au lieu de
- * seulement se ressembler. Dans une grille, `Woch`, `Wochen` et `Woche` se
- * lisent comme un seul mot à trois états.
+ * **constant**, jamais étiré sur la largeur, et le tracé est **centré sur la
+ * tige** de son pied ([Plaque.CX]) : une plaque posée de travers sur son pied
+ * se lit comme une erreur (propriétaire, 2026-11-07). Calé à gauche jusque-là,
+ * il faisait partager à deux formes de même début leurs points exactement
+ * (`Woch`, `Wochen`, `Woche`) ; centrées, elles gardent la même courbe,
+ * décalée d'un demi-pas par lettre de plus.
  *
  * La règle n'a pas changé avec les paysages, seule la matière du trait a
  * changé : nacre de l'heure, ombre portée, fil de lumière, et à partir de
@@ -5475,6 +5509,29 @@ private class Enluminure private constructor(
  * formes du carnet. C'est un monogramme, pas
  * une illustration : il montre **le mot**, pas **la chose**.
  */
+/**
+ * Où tombent les lettres du [Trace] d'un mot, en x : à pas constant, et
+ * toujours centrées sur la tige du pied ([Plaque.CX]), quelle que soit la
+ * longueur du mot (propriétaire, 2026-11-07 : « veille à ce que les tracés
+ * des mots soient toujours centrés »). Sans `Path` ni `Canvas`, pour que
+ * `TraceCentreTest` le vérifie sur la JVM.
+ */
+internal object AbscissesDuTrace {
+    /** L'axe de la tige, au milieu de la fenêtre : le même que [Plaque.CX]. */
+    const val AXE = 50f
+
+    /**
+     * Les x des [n] lettres, sur au plus [largeur] unités autour de l'axe.
+     * Un mot de sept lettres occupe toute la largeur ; un plus court est
+     * plus étroit, un plus long resserre son pas.
+     */
+    fun de(n: Int, largeur: Float): FloatArray {
+        val pas = largeur / (maxOf(n, 7) - 1).toFloat()
+        val debut = AXE - pas * (n - 1) / 2f
+        return FloatArray(n) { i -> debut + pas * i }
+    }
+}
+
 private class Trace private constructor(
     private val xs: FloatArray,
     private val ys: FloatArray,
@@ -5568,9 +5625,8 @@ private class Trace private constructor(
         /**
          * Où tombe le tracé dans la boîte 100 × 66 du paysage : entre l'arche
          * des paliers hauts et le sol, et dans la largeur qu'une vignette
-         * garde une fois rognée sur les côtés.
+         * garde une fois rognée sur les côtés (de 16 à 84), centré sur la tige.
          */
-        private const val X0 = 16f
         private const val LARGEUR = 68f
         private const val MILIEU = 35f
         private const val AMPLITUDE = 17f
@@ -5578,16 +5634,12 @@ private class Trace private constructor(
         fun pour(mot: String, heure: Heure, vignette: Boolean = false): Trace {
             val lettres = mot.toCharArray()
             val n = lettres.size
-            // Un mot de sept lettres occupe toute la largeur ; un plus court
-            // s'arrête avant, un plus long resserre son pas.
-            val pas = LARGEUR / (maxOf(n, 7) - 1).toFloat()
-            val xs = FloatArray(n)
+            val xs = AbscissesDuTrace.de(n, LARGEUR)
             val ys = FloatArray(n)
             val voyelle = BooleanArray(n)
             for (i in 0 until n) {
                 val ch = lettres[i]
                 voyelle[i] = ch.lowercaseChar() in VOYELLES
-                xs[i] = if (n == 1) 50f else X0 + pas * i
                 ys[i] = MILIEU + (if (voyelle[i]) -1f else 1f) *
                     AMPLITUDE * (0.42f + 0.58f * ((ch.code % 7) / 6f))
             }

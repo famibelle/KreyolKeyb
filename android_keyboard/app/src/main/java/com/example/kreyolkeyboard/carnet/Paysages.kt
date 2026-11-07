@@ -445,6 +445,9 @@ object Paysages {
     /** Le rang des nuages parmi les plans : une bande qui défile, voir [nuages]. */
     const val NUAGES = 1
 
+    /** Le rang du plan du milieu du lieu (son plan 1) parmi les plans. */
+    const val MILIEU = 3
+
     /**
      * Cinq cartons pour toutes les cartes, six à partir de rare (décision du
      * propriétaire, 2026-11-01, règle 8 de la skill `direction-artistique`) :
@@ -966,6 +969,57 @@ object Paysages {
     /** La crête de la grosse vague de la Pointe des Châteaux, sur le plan de devant : de (x0, y0) à (x1, y1). */
     internal val VAGUE_CHATEAUX = floatArrayOf(17f, 44.8f, 34f, 42.6f)
 
+    /** Le moulin de Marie-Galante, sur le plan du milieu : le moyeu (x, y) et la longueur d'une aile. */
+    internal val MOULIN = floatArrayOf(87.4f, 23.4f, 14f)
+
+    /** L'angle des ailes à l'arrêt, en degrés : en X, comme sur la photo. */
+    internal const val ANGLE_MOULIN = 22f
+
+    /** Un tour d'ailes, en millisecondes : lent, un moulin par petite brise. */
+    internal const val TOUR_MOULIN = 18_000L
+
+    /** Le bois des ailes à l'heure [heure], teinté comme le reste du lieu (`Peintre.duJour`). */
+    internal fun couleurAiles(heure: Heure): Int =
+        Heure.melange(0xFFCDB890.toInt(), heure.pres, floatArrayOf(0.04f, 0.14f, 0.42f, 0.72f)[heure.rang])
+
+    /** Le moyeu, foncé, à l'heure [heure]. */
+    internal fun couleurMoyeu(heure: Heure): Int =
+        Heure.melange(0xFF4A3A2E.toInt(), heure.pres, floatArrayOf(0.04f, 0.14f, 0.42f, 0.72f)[heure.rang])
+
+    /**
+     * Les quatre ailes du moulin tournées de [angle] degrés : chacune un bras
+     * et, d'un côté, un cadre à claire-voie (deux longerons et des barreaux).
+     * Une seule forme, peinte par la vignette et redessinée à chaque trame
+     * par l'ambiance de la carte ouverte.
+     */
+    internal fun ailesMoulin(angle: Float): Path {
+        val (hx, hy, r) = MOULIN
+        val t = Path()
+        fun barreau(ax: Float, ay: Float, bx: Float, by: Float, e: Float) {
+            val dx = bx - ax; val dy = by - ay
+            val n = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(0.01f)
+            val nx = -dy / n * e / 2f; val ny = dx / n * e / 2f
+            t.moveTo(ax + nx, ay + ny); t.lineTo(bx + nx, by + ny); t.lineTo(bx - nx, by - ny); t.lineTo(ax - nx, ay - ny); t.close()
+        }
+        for (k in 0 until 4) {
+            val a = Math.toRadians((angle + k * 90f).toDouble())
+            val dx = kotlin.math.cos(a).toFloat(); val dy = kotlin.math.sin(a).toFloat()
+            val nx = -dy; val ny = dx
+            barreau(hx, hy, hx + dx * r, hy + dy * r, 0.7f)
+            val w = r * 0.24f
+            val d0 = r * 0.26f
+            barreau(hx + dx * d0 + nx * w, hy + dy * d0 + ny * w, hx + dx * r + nx * w, hy + dy * r + ny * w, 0.4f)
+            barreau(hx + dx * d0 + nx * w * 0.5f, hy + dy * d0 + ny * w * 0.5f, hx + dx * r + nx * w * 0.5f, hy + dy * r + ny * w * 0.5f, 0.2f)
+            var d = d0
+            while (d <= r + 0.01f) {
+                barreau(hx + dx * d, hy + dy * d, hx + dx * d + nx * w, hy + dy * d + ny * w, 0.26f)
+                d += r * 0.0925f
+            }
+        }
+        t.fillType = Path.FillType.WINDING
+        return t
+    }
+
     /** La chute du Carbet, sur le plan du milieu : son x, son haut, son pied et sa largeur. */
     internal val CHUTE_CARBET = floatArrayOf(80f, 12f, 47f, 4.6f)
     internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
@@ -973,7 +1027,7 @@ object Paysages {
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
-        val p = Peintre(c, heure, seul, facture, echelle, releve)
+        val p = Peintre(c, heure, seul, facture, echelle, releve, faune = faune)
         if (ciel) { if (PAPIER) p.cielPapier() else if (facture == Facture.GOUACHE) p.cielPeint(etoiles) else p.ciel(etoiles) }
         if (!lieuAussi || !LIEUX_DESSINES) return
         when (lieu) {
@@ -1212,7 +1266,9 @@ object Paysages {
          * Faux pour l'[Atelier], qui repeint les bêtes à chaque trame : rien
          * n'y devient un carton, une bête qui bouge reste un aplat.
          */
-        private val decoupe: Boolean = true
+        private val decoupe: Boolean = true,
+        /** Faux sur les calques de la carte ouverte : ce qui bouge y est repeint par l'ambiance. */
+        val faune: Boolean = true
     ) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val BAS = HAUTEUR
@@ -3056,8 +3112,123 @@ object Paysages {
             rect(4.6f, 18.6f, 4.9f, 0.9f, bois)
         }
 
+        // ------------------------------------------- Marie-Galante en papier
+
+        /**
+         * Les ailes du moulin, peintes à l'arrêt : la vignette et le lieu à
+         * plat seulement. Le lieu en plans les tait et [Motif] les fait
+         * tourner entre le plan du milieu et celui de devant.
+         */
+        fun ailesDuMoulin(angle: Float) {
+            piece(ailesMoulin(angle), couleurAiles(P), 0.6f)
+            piece(disque(MOULIN[0], MOULIN[1], 1.1f), couleurMoyeu(P), 0.4f)
+        }
+
+        /**
+         * Marie-Galante en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07) : le moulin à vent de pierre, son toit conique de
+         * bardeaux, ses quatre ailes à claire-voie et la queue qui l'oriente,
+         * le petit abri de bois et son rôle, un bougainvillier, un manguier
+         * au bord gauche, la pelouse. Les palmiers de la photo ne sont pas
+         * repris (pas de cocotier ni de silhouette qui y ressemble).
+         */
+        fun marieGalantePapier() {
+            cumulus(-4f, 30f, 24f, 1600)
+            cumulus(40f, 16f, 14f, 1601)
+            val lisiere = { x: Float -> 49f + sin(x * 0.21f) * 1.2f + sin(x * 0.07f) * 1.6f }
+            val l = sousLaCrete(-2f, 102f, lisiere)
+            l.op(bosses(-2f, 102f, lisiere, 1.6f, 2.6f, Alea(1602)), Path.Op.UNION)
+            piece(l, papier(0xFF3E7A3A.toInt()))
+            plan(1)
+            // La pelouse du fond, l'abri et son rôle, le bougainvillier.
+            pieceD("M-2 54Q40 52.6 102 53.4L102 68L-2 68Z", papier(0xFF62A83E.toInt()), 0.4f)
+            val bois = papier(0xFF8A7458.toInt())
+            barre(64.8f, 43f, 64.8f, 56.6f, 0.7f, bois, 0.4f)
+            barre(75.2f, 43f, 75.2f, 56.6f, 0.7f, bois, 0.4f)
+            pieceD("M67 56.6L67 51.6Q70 50.6 73 51.6L73 56.6Z", papier(0xFF5A4232.toInt()), 0.5f)
+            pieceD("M63 43.8L77 43.8L75.4 40.4L64.6 40.4Z", papier(0xFF6E6A62.toInt()), 0.8f)
+            for (k in 1 until 4) barre(64f + k * 0.4f, 43.8f - k * 0.85f, 76f - k * 0.4f, 43.8f - k * 0.85f, 0.12f, papier(0xFF55524C.toInt()), 0f)
+            val rose = papier(0xFFD0407A.toInt())
+            val bougain = Path()
+            val rb = Alea(1603)
+            repeat(14) { bougain.op(disque(8f + rb() * 14f, 51f + rb() * 4f, 1.4f + rb() * 1.6f), Path.Op.UNION) }
+            piece(bougain, papier(0xFF3E7A34.toInt()))
+            repeat(16) { piece(disque(8f + rb() * 14f, 50f + rb() * 4.5f, 0.5f + rb() * 0.7f), rose, 0f) }
+            // Le moulin : la tour de pierre, la porte, la queue, le toit.
+            val pierre = papier(0xFFB8AE9C.toInt())
+            pieceD("M77 57L80.6 29.4L91.4 29.4L95 57Z", pierre)
+            val rp = Alea(1604)
+            val moellons = intArrayOf(papier(0xFF9C9282.toInt()), papier(0xFFCFC6B4.toInt()), papier(0xFF857B6C.toInt()))
+            repeat(46) {
+                val y = 30.5f + rp() * 26f
+                val demi = 5.4f + (y - 29.4f) / 27.6f * 3.6f
+                val x = 86f - demi + 0.6f + rp() * (2f * demi - 2.4f)
+                val w = 0.8f + rp() * 1.2f
+                pieceD("M$x ${y}L${x + w} ${y - 0.1f}L${x + w + 0.1f} ${y + 0.6f}L${x - 0.1f} ${y + 0.65f}Z", moellons[(rp() * 3f).toInt().coerceAtMost(2)], 0f)
+            }
+            pieceD("M91.4 29.4L95 57L92 57L89.6 29.4Z", papier(0xFF9A907E.toInt()), 0.2f)
+            pieceD("M83 57L83 50.6Q84.6 49.4 86.2 50.6L86.2 57Z", papier(0xFF3A3028.toInt()), 0.3f)
+            val queue = papier(0xFF9A8A70.toInt())
+            barre(86.6f, 25f, 78.4f, 56.4f, 0.9f, queue, 0.6f)
+            barre(88.4f, 25.6f, 81f, 56.4f, 0.5f, queue, 0.4f)
+            for (k in 1 until 10) {
+                val u = k / 10f
+                barre(86.6f + (78.4f - 86.6f) * u, 25f + 31.4f * u, 88.4f + (81f - 88.4f) * u, 25.6f + 30.8f * u, 0.25f, queue, 0f)
+            }
+            pieceD("M79.6 30Q82 22 86 18.8Q90 22 92.4 30Z", papier(0xFF7E7A72.toInt()), 0.8f)
+            for (k in 1 until 4) barre(80.4f + k * 0.9f, 30f - k * 2.6f, 91.6f - k * 0.9f, 30f - k * 2.6f, 0.14f, papier(0xFF64605A.toInt()), 0f)
+            pieceD("M85.6 19L86.4 19L86.2 17.2L85.8 17.2Z", papier(0xFF5A4636.toInt()), 0f)
+            if (faune) ailesDuMoulin(ANGLE_MOULIN)
+            plan(2)
+            // Le manguier au bord gauche : tronc court et épais qui se divise
+            // tôt, grand dôme plus large que haut, d'un vert sombre et luisant,
+            // des pousses bronze, quelques mangues qui pendent sous le feuillage.
+            val ecorce = papier(0xFF4E3C2E.toInt())
+            pieceD("M1 58.6Q3 50 3.4 44Q1.8 40 -2 37L0.4 35.6Q3.8 38.6 5.2 41.6Q7 37.6 11 35L12.4 36.6Q8.4 40 7.6 44Q8 51 10.4 58.6Z", ecorce, 0.7f)
+            val dome = Path()
+            val rm = Alea(1605)
+            val bord = { x: Float -> 9f + ((x - 4f) / 15f).let { it * it } * 14f }
+            repeat(22) {
+                val x = -9f + rm() * 28f
+                val y = bord(x) + 2f + rm() * (33f - bord(x)).coerceAtLeast(1f)
+                dome.op(disque(x, y, 3.4f + rm() * 2.6f), Path.Op.UNION)
+            }
+            dome.op(chemin("M-10 38Q4 41 20 37L20 34L-10 34Z"), Path.Op.UNION)
+            piece(dome, papier(0xFF1F4A22.toInt()))
+            val lumiere = Path()
+            repeat(9) { lumiere.op(disque(-4f + rm() * 18f, bord(4f) + 1.5f + rm() * 9f, 2f + rm() * 1.8f), Path.Op.UNION) }
+            piece(lumiere, papier(0xFF2F6630.toInt()), 0.3f)
+            // Les feuilles en lance au bord du dôme, et quelques pousses bronze.
+            val feuilles = intArrayOf(papier(0xFF1F4A22.toInt()), papier(0xFF2A5E2A.toInt()), papier(0xFF16381A.toInt()))
+            repeat(26) {
+                val a = rm() * PI.toFloat()
+                val x = 4f + cos(a) * 15f * (0.9f + rm() * 0.15f)
+                val y = 23f - sin(a) * 14f * (0.9f + rm() * 0.15f)
+                feuillePliee(x, y, 2.6f + rm() * 1.2f, -Math.toDegrees(a.toDouble()).toFloat() + (rm() - 0.5f) * 50f,
+                    feuilles[(rm() * 3f).toInt().coerceAtMost(2)], 0.26f)
+            }
+            repeat(5) {
+                val x = -2f + rm() * 18f; val y = bord(x) + 0.4f
+                for (k in 0 until 3) feuillePliee(x, y, 2.2f, -110f + k * 25f, papier(0xFFA0522D.toInt()), 0.25f)
+            }
+            for ((mx, my) in arrayOf(1f to 39.4f, 7.5f to 40.6f, 13.6f to 38.6f, 17.2f to 37.2f)) {
+                barre(mx, my - 2.2f, mx, my - 0.8f, 0.18f, ecorce, 0f)
+                val t = Path(); t.addOval(RectF(mx - 0.8f, my - 1.1f, mx + 0.8f, my + 1.1f), Path.Direction.CW)
+                piece(t, papier(0xFFE89A2E.toInt()), 0.4f)
+                val r2 = Path(); r2.addOval(RectF(mx - 0.75f, my - 1.05f, mx + 0.1f, my + 0.2f), Path.Direction.CW)
+                piece(r2, papier(0xFFC8432E.toInt()), 0f)
+            }
+            pieceD("M-2 58Q50 56 102 57.4L102 68L-2 68Z", papier(0xFF74B842.toInt()), 0.4f)
+            for (k in 0 until 4) {
+                val y = 59.5f + k * 1.8f
+                pieceD("M-2 ${y}Q50 ${y - 1f} 102 ${y + 0.2f}L102 ${y + 0.7f}Q50 ${y - 0.3f} -2 ${y + 0.7f}Z", papier(0xFF8CC852.toInt()), 0f)
+            }
+            pieceD("M-2 58.4Q8 57.6 20 59Q12 60.6 -2 61Z", papier(0xFF4E8E34.toInt()), 0f)
+        }
+
         /** Marie-Galante : la plaine de canne, le moulin de pierre et ses ailes. */
         fun marieGalante() {
+            if (PAPIER) { marieGalantePapier(); return }
             val r = Alea(171)
             crete(39f, 0.5f, 172, P.loin)
             plan(1)
