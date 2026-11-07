@@ -950,6 +950,12 @@ object Paysages {
      */
     internal const val PAPIER = true
 
+    /** La proposition de Chutes du Carbet montrée (0 A, 1 B, 2 C), le temps que le propriétaire choisisse. */
+    @Volatile internal var CARBET = 0
+
+    /** Vide le cache des rendus : pour les planches qui comparent des propositions. */
+    internal fun viderCache() = CACHE.evictAll()
+
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
@@ -2007,8 +2013,211 @@ object Paysages {
             balisier(90f, 65f, 12f, feuille())
         }
 
+        // ------------------------------------------- les Chutes du Carbet en papier
+
+        private fun roche() = papier(0xFF5E6660.toInt())
+
+        /** Une chute : le rideau d'eau clair, des filets blancs de longueurs inégales, l'écume au pied. */
+        fun cascade(x: Float, haut: Float, bas: Float, w: Float, graine: Int) {
+            val r = Alea(graine)
+            val rideau = Path()
+            rideau.moveTo(x - w * 0.35f, haut); rideau.lineTo(x + w * 0.35f, haut)
+            rideau.lineTo(x + w * 0.55f, bas); rideau.lineTo(x - w * 0.55f, bas); rideau.close()
+            piece(rideau, mix(blanc(), papier(EAU_CLAIRE), 0.35f), 0.6f)
+            repeat(14) {
+                val fx = x + (r() - 0.5f) * w * 0.9f
+                val y0 = haut + r() * (bas - haut) * 0.3f
+                val y1 = bas - r() * (bas - haut) * 0.2f
+                val e = 0.35f + r() * 0.6f
+                val t = Path()
+                t.addRoundRect(RectF(fx - e / 2f, y0, fx + e / 2f, y1), e / 2f, e / 2f, Path.Direction.CW)
+                piece(t, if (r() < 0.75f) blanc() else papier(EAU_CLAIRE), 0.3f)
+            }
+            for (j in 0 until 5) piece(disque(x + (j - 2f) * w * 0.32f, bas + r() * 0.6f, w * (0.3f + r() * 0.2f)), blanc(), 0.5f)
+        }
+
+        /** Une bande de brume en papier, effilée aux deux bouts. */
+        fun brumePapier(x0: Float, x1: Float, y: Float, e: Float, graine: Int) {
+            val ph = Alea(graine)() * 6f
+            val col = if (P.nuit) mix(P.cielBas, P.cielHaut, 0.3f) else mix(P.cielBas, 0xFFF2F3EF.toInt(), 0.75f)
+            val t = Path()
+            fun epais(x: Float) = sin(PI.toFloat() * ((x - x0) / (x1 - x0)).coerceIn(0f, 1f)).pow(0.5f) * e * 0.5f
+            var x = x0
+            t.moveTo(x0, y)
+            while (x <= x1) { t.lineTo(x, y - epais(x) * (0.8f + 0.3f * sin(x * 0.23f + ph))); x += 1.5f }
+            x = x1
+            while (x >= x0) { t.lineTo(x, y + epais(x) * (0.7f + 0.3f * sin(x * 0.17f + 2f * ph))); x -= 1.5f }
+            t.close()
+            piece(t, col, 0.4f)
+        }
+
+        /** La mousse et les fougères qui coulent le long de la paroi, en longues gouttes verticales. */
+        private fun mousses(x0: Float, x1: Float, y0: Float, y1: Float, n: Int, graine: Int) {
+            val r = Alea(graine)
+            val cols = intArrayOf(papier(0xFF3FA86A.toInt()), papier(0xFF2E9E6E.toInt()), papier(0xFF6FBF5A.toInt()))
+            repeat(n) {
+                val cx = x0 + r() * (x1 - x0); val haut = y0 + r() * (y1 - y0) * 0.6f
+                val l = 4f + r() * (y1 - haut) * 0.6f; val w = 0.8f + r() * 1.2f
+                val t = Path()
+                t.moveTo(cx, haut)
+                t.cubicTo(cx + w, haut + l * 0.2f, cx + w * 0.8f, haut + l * 0.8f, cx, haut + l)
+                t.cubicTo(cx - w * 0.8f, haut + l * 0.8f, cx - w, haut + l * 0.2f, cx, haut)
+                t.close()
+                piece(t, cols[min((r() * 3f).toInt(), 2)], 0.5f)
+            }
+        }
+
+        /** Un galet de rivière : la pierre sombre, et sa face éclairée en haut. */
+        fun galet(cx: Float, cy: Float, rx: Float, col: Int) {
+            val ry = rx * 0.62f
+            piece(Path().apply { addOval(RectF(cx - rx, cy - ry, cx + rx, cy + ry), Path.Direction.CW) }, col, 0.8f)
+            piece(Path().apply { addOval(RectF(cx - rx * 0.75f, cy - ry * 0.95f, cx + rx * 0.55f, cy + ry * 0.05f), Path.Direction.CW) },
+                mix(col, 0xFFFFFFFF.toInt(), 0.16f), 0f)
+        }
+
+        /**
+         * La rivière qui part du pied de la chute ([xs], [ys]) et s'élargit
+         * jusqu'au bas de la fenêtre entre [xl] et [xr] : l'eau sombre, des
+         * remous blancs, des galets de plus en plus gros vers soi.
+         */
+        fun riviere(xs: Float, ys: Float, xl: Float, xr: Float, graine: Int) {
+            val milieu = (xl + xr) / 2f
+            fun centre(t: Float) = xs + (milieu - xs) * t.pow(0.7f)
+            fun largeur(t: Float) = 2.5f + (xr - xl - 2.5f) * t
+            val eau = Path()
+            eau.moveTo(xs - 1.2f, ys)
+            var t = 0f
+            while (t <= 1f) { eau.lineTo(centre(t) - largeur(t) / 2f, ys + (BAS + 2f - ys) * t); t += 0.05f }
+            t = 1f
+            while (t >= 0f) { eau.lineTo(centre(t) + largeur(t) / 2f, ys + (BAS + 2f - ys) * t); t -= 0.05f }
+            eau.close()
+            piece(eau, papier(0xFF35585A.toInt()), 0.4f)
+            val r = Alea(graine)
+            t = 0.04f
+            while (t < 1f) {
+                val y = ys + (BAS - ys) * t
+                val n = 1 + (t * 3f).toInt()
+                repeat(n) {
+                    val x = centre(t) + (r() - 0.5f) * largeur(t) * 0.8f
+                    val l = (1.5f + r() * 3f) * (0.5f + t)
+                    val e = 0.3f + 0.5f * t
+                    val w = Path()
+                    w.addRoundRect(RectF(x - l / 2f, y, x + l / 2f, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(w, if (r() < 0.7f) blanc() else papier(EAU_CLAIRE), 0.2f)
+                }
+                t += 0.035f + 0.02f * t
+            }
+            val pierres = intArrayOf(papier(0xFF5C5650.toInt()), papier(0xFF6E665E.toInt()), papier(0xFF4A4642.toInt()), papier(0xFF7A7068.toInt()))
+            t = 0.02f
+            while (t < 1.05f) {
+                val y = ys + (BAS - ys) * t
+                for (cote in floatArrayOf(-1f, 1f, 0f)) {
+                    if (cote == 0f && r() < 0.6f) continue
+                    val x = centre(t) + cote * largeur(t) * (0.42f + r() * 0.15f) + (r() - 0.5f) * 1.5f
+                    galet(x, y, (0.8f + r() * 1.4f) * (0.5f + 1.6f * t), pierres[min((r() * 4f).toInt(), 3)])
+                }
+                t += 0.05f + 0.04f * t
+            }
+        }
+
+        /** Les feuilles du sous-bois au premier plan, dans les deux coins. */
+        private fun sousBois() {
+            feuilleBananier(-1f, 62f, 15f, -35f, papier(0xFF4FB06A.toInt()))
+            feuilleCoeur(8f, 64f, 4.5f, -15f, papier(VERT_PROFOND))
+            balisier(15f, 65f, 8f, papier(SARCELLE))
+            feuilleCoeur(93f, 64f, 4.5f, 15f, papier(VERT_PROFOND))
+            feuilleBananier(101f, 63f, 13f, -150f, papier(0xFF3FA86A.toInt()))
+        }
+
+        /** Proposition A, fidèle à la photo : la chute à droite, la forêt de gauche qui descend, la rivière vers soi. */
+        fun carbetPhoto() {
+            morneBoise(17f, 3f, 900, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.55f), 1.8f)
+            brumePapier(-2f, 102f, 22f, 6f, 901)
+            plan(1)
+            val sommet = { x: Float -> 9f - (x - 64f) * 0.04f + sin(x * 0.3f) * 0.6f }
+            val falaise = Path()
+            falaise.moveTo(60f, BAS + 2f); falaise.lineTo(62f, 30f)
+            falaise.cubicTo(62.5f, 18f, 64f, 11f, 66f, sommet(66f))
+            var x = 66f
+            while (x <= 102f) { falaise.lineTo(x, sommet(x)); x += 2f }
+            falaise.lineTo(102f, BAS + 2f); falaise.close()
+            falaise.op(bosses(64f, 103f, sommet, 1.8f, 2.6f, Alea(902)), Path.Op.UNION)
+            piece(falaise, papier(0xFF3F5A44.toInt()))
+            val paroi = Path()
+            paroi.moveTo(66f, 50f); paroi.cubicTo(66f, 30f, 68f, 18f, 72f, 14f)
+            paroi.lineTo(90f, 13f); paroi.cubicTo(92f, 26f, 93f, 40f, 92f, 50f); paroi.close()
+            piece(paroi, roche(), 0.6f)
+            mousses(66f, 92f, 16f, 48f, 14, 906)
+            cascade(80f, 12f, 47f, 4.6f, 903)
+            brumePapier(56f, 102f, 11f, 4.5f, 904)
+            val verts = intArrayOf(papier(VERT_PROFOND), papier(0xFF2E9E6E.toInt()), papier(0xFF3FA86A.toInt()), papier(SARCELLE))
+            for (k in 0 until 4) rive(true, 14f + k * 6f, 40f + k * 4f, 48f - k * 7f, 905 + k, verts[k], 4.5f + k * 0.6f)
+            plan(2)
+            riviere(78f, 47f, 30f, 74f, 910)
+            rive(false, 30f, 54f, 90f, 911, papier(0xFF2E9E6E.toInt()), 5f)
+            sousBois()
+        }
+
+        /** Proposition B, les deux chutes de part et d'autre du dessin, dans un amphithéâtre de falaise. */
+        fun carbetDeuxChutes() {
+            morneBoise(14f, 2.5f, 920, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.55f), 1.8f)
+            brumePapier(-2f, 102f, 18f, 5f, 921)
+            plan(1)
+            val sommet = { x: Float -> 14f + sin(x * 0.08f + 1f) * 1.6f - abs(x - 50f) * 0.06f }
+            val f = Path()
+            f.moveTo(-2f, BAS + 2f)
+            var x = -2f
+            while (x <= 102f) { f.lineTo(x, sommet(x)); x += 2f }
+            f.lineTo(102f, BAS + 2f); f.close()
+            f.op(bosses(-3f, 103f, sommet, 1.8f, 1.8f, Alea(922)), Path.Op.UNION)
+            piece(f, papier(0xFF3F5A44.toInt()))
+            val paroi = Path()
+            paroi.moveTo(6f, 46f); paroi.cubicTo(6f, 26f, 8f, 18f, 12f, 16f)
+            x = 12f
+            while (x <= 88f) { paroi.lineTo(x, sommet(x) + 3f); x += 4f }
+            paroi.cubicTo(92f, 18f, 94f, 26f, 94f, 46f); paroi.close()
+            piece(paroi, roche(), 0.6f)
+            mousses(8f, 92f, 18f, 44f, 22, 926)
+            cascade(21f, 15f, 45f, 3.6f, 923)
+            cascade(79f, 14f, 45f, 4.2f, 924)
+            brumePapier(-2f, 102f, 13f, 3.5f, 925)
+            rive(true, 38f, 50f, 30f, 927, papier(0xFF2E9E6E.toInt()), 4f)
+            rive(false, 39f, 50f, 70f, 928, papier(0xFF3FA86A.toInt()), 4f)
+            plan(2)
+            riviere(50f, 48f, 24f, 76f, 930)
+            sousBois()
+        }
+
+        /** Proposition C, la grande chute tout près à gauche, sa vasque, la vallée boisée qui s'ouvre sur la brume. */
+        fun carbetChuteProche() {
+            morneBoise(18f, 3f, 940, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.5f), 1.8f)
+            brumePapier(-2f, 102f, 23f, 6f, 941)
+            plan(1)
+            val verts = intArrayOf(papier(VERT_PROFOND), papier(0xFF2E9E6E.toInt()), papier(0xFF3FA86A.toInt()))
+            for (k in 0 until 3) {
+                rive(true, 26f + k * 5f, 42f + k * 3f, 46f - k * 6f, 942 + k, verts[k], 3.8f + k * 0.5f)
+                rive(false, 24f + k * 5f, 42f + k * 3f, 56f + k * 6f, 945 + k, verts[(k + 1) % 3], 3.8f + k * 0.5f)
+            }
+            plan(2)
+            val paroi = Path()
+            paroi.moveTo(-2f, -2f); paroi.lineTo(8f, -2f)
+            paroi.cubicTo(10f, 12f, 8f, 30f, 10f, 50f)
+            paroi.lineTo(-2f, 54f); paroi.close()
+            piece(paroi, roche())
+            mousses(-1f, 8f, 2f, 48f, 9, 950)
+            cascade(13f, -2f, 51f, 6.5f, 951)
+            riviere(14f, 51f, 26f, 86f, 952)
+            feuilleCoeur(93f, 64f, 4.5f, 15f, papier(VERT_PROFOND))
+            feuilleBananier(101f, 63f, 14f, -150f, papier(0xFF3FA86A.toInt()))
+            balisier(86f, 65f, 8f, papier(SARCELLE))
+        }
+
         /** Les Chutes du Carbet : la chute dans la paroi, le bassin, les fougères. */
         fun chutesCarbet() {
+            if (PAPIER) {
+                when (CARBET) { 0 -> carbetPhoto(); 1 -> carbetDeuxChutes(); else -> carbetChuteProche() }
+                return
+            }
             val r = Alea(131)
             crete(24f, 2.2f, 132, P.loin)
             plan(1)
