@@ -481,12 +481,44 @@ object Paysages {
               souvenir: Souvenir? = null): Array<Bitmap>? {
         if (largeurPx <= 0 || hauteurPx <= 0 || souvenir?.fete != null) return null
         val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir)
-        val caches = Array(nombreDePlans(heure)) { CACHE.get("${cle}_p$it")?.takeIf { b -> !b.isRecycled } }
-        if (caches.all { it != null }) return caches.requireNoNulls()
-        val rendus = rendrePlans(lieu, heure, largeurPx, hauteurPx, souvenir)
+        val n = nombreDePlans(heure)
+        val caches = Array(n) { CACHE.get("${cle}_p$it")?.takeIf { b -> !b.isRecycled } }
+        val ombresOk = !PAPIER || (2 until n).all { CACHE.get("${cle}_o$it")?.isRecycled == false }
+        if (caches.all { it != null } && ombresOk) return caches.requireNoNulls()
+        val ombres = arrayOfNulls<Bitmap>(n)
+        val rendus = rendrePlans(lieu, heure, largeurPx, hauteurPx, souvenir, ombres)
         rendus.forEachIndexed { i, b -> CACHE.put("${cle}_p$i", b) }
+        ombres.forEachIndexed { i, b -> if (b != null) CACHE.put("${cle}_o$i", b) }
         return rendus
     }
+
+    /**
+     * Les ombres portées des plans du papier découpé ([PAPIER]), une par
+     * plan à partir du lointain, de la taille de son calque : la silhouette
+     * du plan, floutée. [CadreOrne] les pose à chaque trame sur le plan de
+     * derrière, si bien que l'ombre glisse avec lui et que l'écart entre la
+     * découpe et son ombre change quand on penche la carte, comme dans un
+     * théâtre de papier. `null` hors papier ou pour une fête ; une case
+     * `null` si le cache l'a perdue.
+     */
+    fun ombres(lieu: Lieu, heure: Heure, teinte: Float?, largeurPx: Int, hauteurPx: Int,
+               souvenir: Souvenir? = null): Array<Bitmap?>? {
+        if (!PAPIER || largeurPx <= 0 || hauteurPx <= 0 || souvenir?.fete != null) return null
+        val cle = cle(lieu, heure, teinte, largeurPx, hauteurPx, souvenir)
+        return Array(nombreDePlans(heure)) { CACHE.get("${cle}_o$it")?.takeIf { b -> !b.isRecycled } }
+    }
+
+    /**
+     * Où tombe l'ombre d'un plan sur celui de derrière, en unités de la
+     * boîte : la lumière de la rampe, en bas à gauche, la porte vers le haut
+     * et à droite. Légère.
+     */
+    const val OMBRE_PORTEE_X = 0.55f
+    const val OMBRE_PORTEE_Y = -0.85f
+
+    /** La couleur de l'ombre portée d'un plan, à l'heure de la carte. */
+    fun couleurOmbrePortee(heure: Heure): Int =
+        ((if (heure.nuit) 0.5f else 0.34f) * 255f).roundToInt() shl 24 or (OMBRE and 0xFFFFFF)
 
     /**
      * Ce que le calque [i] déborde de chaque côté d'une fenêtre de [n] pixels :
@@ -505,7 +537,8 @@ object Paysages {
      */
     private val PROFONDEUR = intArrayOf(0, -1, 1, 2, 3, 4)
 
-    private fun rendrePlans(lieu: Lieu, heure: Heure, l: Int, h: Int, souvenir: Souvenir?): Array<Bitmap> {
+    private fun rendrePlans(lieu: Lieu, heure: Heure, l: Int, h: Int, souvenir: Souvenir?,
+                            ombres: Array<Bitmap?> = arrayOfNulls(0)): Array<Bitmap> {
         val n = nombreDePlans(heure)
         val tailles = Array(n) { i -> intArrayOf(l + 2 * marge(i, l), h + 2 * marge(i, h)) }
         val ks = Array(n) { i ->
@@ -576,6 +609,18 @@ object Paysages {
         // carton intermédiaire la cache, c'est en penchant qu'on la découvre,
         // comme dans une vraie boîte. Les nuages n'en reçoivent pas : ils
         // voyagent, et portent la leur sur leur propre carton ([nuages]).
+        if (PAPIER) {
+            // Chaque plan est peint sur du kraft découpé avec une petite
+            // marge, et son ombre est posée à part, à chaque trame.
+            for (devant in 2 until plans.size) {
+                val forme = silhouettes[devant] ?: continue
+                krafter(plans[devant], forme, unite, heure)
+                if (devant < ombres.size) ombres[devant] = flouter(forme, unite)
+            }
+            silhouettes.forEach { it?.recycle() }
+            plans.forEach { Grain.poser(it) }
+            return plans
+        }
         for (devant in 2 until plans.size) {
             val forme = silhouettes[devant] ?: continue
             for (derriere in 0 until devant) {
@@ -594,8 +639,32 @@ object Paysages {
             trancher(plans[devant], forme, unite, heure, force = if (devant == 2) 0.6f else 1f)
         }
         silhouettes.forEach { it?.recycle() }
-        if (PAPIER) plans.forEach { Grain.poser(it) }
         return plans
+    }
+
+    /** Le kraft du plan, qui dépasse tout autour de sa découpe : un liseré brun, un peu plus large en bas. */
+    private fun krafter(b: Bitmap, forme: Bitmap, unite: Float, heure: Heure) {
+        val p = Paint(Paint.FILTER_BITMAP_FLAG).apply {
+            color = Heure.melange(0xFFB08A5A.toInt(), heure.pres, if (heure.nuit) 0.55f else 0.15f)
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OVER)
+        }
+        val r = max(1f, 0.32f * unite)
+        val c = Canvas(b)
+        for (k in 0 until 12) {
+            val a = k / 12f * 2f * PI.toFloat()
+            c.drawBitmap(forme, cos(a) * r, sin(a) * r + 0.25f * r, p)
+        }
+    }
+
+    /** La silhouette [forme] floutée, de la même taille : l'ombre portée d'un plan. */
+    private fun flouter(forme: Bitmap, unite: Float): Bitmap {
+        val p = Paint().apply { maskFilter = BlurMaskFilter(max(1f, 0.7f * unite), BlurMaskFilter.Blur.NORMAL) }
+        val ou = IntArray(2)
+        val flou = forme.extractAlpha(p, ou)
+        val b = Bitmap.createBitmap(forme.width, forme.height, Bitmap.Config.ALPHA_8)
+        Canvas(b).drawBitmap(flou, ou[0].toFloat(), ou[1].toFloat(), null)
+        flou.recycle()
+        return b
     }
 
     /**
@@ -2796,9 +2865,11 @@ object Paysages {
             var x = if (gauche) -2f else LARGEUR + 2f
             t.moveTo(x, BAS + 2f)
             while ((x - fin) * sens < 0f) { t.lineTo(x, profil(gauche, haut, bas, fin, ph, x)); x += 1.5f * sens }
-            t.lineTo(fin, profil(gauche, haut, bas, fin, ph, fin))
-            t.quadTo(fin + 3f * sens, bas + 1f, fin + 2f * sens, bas + 5f)
-            t.lineTo(fin, BAS + 2f)
+            // Le bout de la rive s'arrondit dans l'eau, puis rentre sous elle.
+            val yb = profil(gauche, haut, bas, fin, ph, fin)
+            t.lineTo(fin, yb)
+            t.cubicTo(fin + 3.5f * sens, yb, fin + 3.5f * sens, yb + 4f, fin, yb + 4.5f)
+            t.cubicTo(fin - 3f * sens, yb + 5f, fin - 6f * sens, yb + 7f, fin - 8f * sens, BAS + 2f)
             t.close()
             val canopee = bosses(if (gauche) -3f else LARGEUR + 3f, fin - 2f * sens,
                 { v -> profil(gauche, haut, bas, fin, ph, v) }, rMax * 0.35f, rMax, Alea(graine + 50))
@@ -2902,8 +2973,8 @@ object Paysages {
             morneBoise(29.5f, 1.6f, 702, papier(0xFF6FCB8A.toInt()), 1.6f)
             plan(1)
             // L'étang, qui naît à l'horizon et s'élargit jusqu'au premier plan.
-            fun gauche(y: Float) = 41f - (y - 32f) / 28f * 22f
-            fun droite(y: Float) = 59f + (y - 32f) / 28f * 22f
+            fun gauche(y: Float) = 36f - (y - 32f) / 28f * 30f
+            fun droite(y: Float) = 64f + (y - 32f) / 28f * 30f
             val eau = Path()
             eau.moveTo(gauche(32f) - 2f, 32f); eau.lineTo(droite(32f) + 2f, 32f)
             eau.lineTo(droite(66f) + 4f, BAS); eau.lineTo(gauche(66f) - 4f, BAS); eau.close()
@@ -2928,7 +2999,7 @@ object Paysages {
             val verts = intArrayOf(papier(0xFF2E9E6E.toInt()), papier(0xFF8FD99A.toInt()), papier(SARCELLE),
                 papier(LIME), papier(0xFF4FB06A.toInt()), papier(VERT_PROFOND))
             for (k in 0 until 6) {
-                val bas = 33.5f + k * 4.6f
+                val bas = 33f + k * 3.6f
                 rive(true, 27f + k * 4f, bas, gauche(bas), 720 + k, verts[k], 3.2f + k * 0.5f)
                 rive(false, 28f + k * 4f, bas + 0.5f, droite(bas + 0.5f), 730 + k, verts[(k + 2) % 6], 3.2f + k * 0.5f)
                 if (k == 2) {

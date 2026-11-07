@@ -4766,6 +4766,7 @@ class Motif(
     private fun peindrePlans(c: Canvas, etages: Array<Bitmap>, l: Int, h: Int, regardX: Float, regardY: Float) {
         val sx = visible.width() / l
         val sy = visible.height() / h
+        val ombres = Paysages.ombres(lieu, heure, teinteChamp, l, h, souvenir)
         for (i in etages.indices) {
             val dx = Paysages.GLISSEMENT[i] * visible.width() * regardX
             val dy = Paysages.GLISSEMENT[i] * visible.height() * regardY
@@ -4776,8 +4777,32 @@ class Motif(
                 visible.right + mx + dx, visible.bottom + my + dy
             )
             if (i == Paysages.NUAGES) peindreNuages(c, etages[i], regardX, regardY)
-            else c.drawBitmap(etages[i], null, ouPlan, peinture)
+            else {
+                ombres?.getOrNull(i)?.let { o -> peindreOmbre(c, o, i, regardX, regardY) }
+                c.drawBitmap(etages[i], null, ouPlan, peinture)
+            }
         }
+    }
+
+    private val peintureOmbre by lazy {
+        Paint(Paint.FILTER_BITMAP_FLAG).apply { color = Paysages.couleurOmbrePortee(heure) }
+    }
+    private val ouOmbre = RectF()
+
+    /**
+     * L'ombre portée du plan [i] ([Paysages.ombres]), juste avant lui : elle
+     * tombe sur le plan de derrière et glisse avec lui, pas avec le plan qui
+     * la porte. Pencher la carte fait donc varier l'écart entre la découpe et
+     * son ombre, comme dans un théâtre de papier.
+     */
+    private fun peindreOmbre(c: Canvas, ombre: Bitmap, i: Int, regardX: Float, regardY: Float) {
+        val derriere = if (i - 1 == Paysages.NUAGES) 0 else i - 1
+        val k = cadrage[0]
+        val gx = (Paysages.GLISSEMENT[derriere] - Paysages.GLISSEMENT[i]) * visible.width() * regardX
+        val gy = (Paysages.GLISSEMENT[derriere] - Paysages.GLISSEMENT[i]) * visible.height() * regardY
+        ouOmbre.set(ouPlan)
+        ouOmbre.offset(gx + Paysages.OMBRE_PORTEE_X * k, gy + Paysages.OMBRE_PORTEE_Y * k)
+        c.drawBitmap(ombre, null, ouOmbre, peintureOmbre)
     }
 
     /**
