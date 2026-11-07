@@ -950,12 +950,6 @@ object Paysages {
      */
     internal const val PAPIER = true
 
-    /** La proposition de Chutes du Carbet montrée (0 A, 1 B, 2 C), le temps que le propriétaire choisisse. */
-    @Volatile internal var CARBET = 0
-
-    /** Vide le cache des rendus : pour les planches qui comparent des propositions. */
-    internal fun viderCache() = CACHE.evictAll()
-
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
@@ -2129,8 +2123,15 @@ object Paysages {
             feuilleBananier(101f, 63f, 13f, -150f, papier(0xFF3FA86A.toInt()))
         }
 
-        /** Proposition A, fidèle à la photo : la chute à droite, la forêt de gauche qui descend, la rivière vers soi. */
-        fun carbetPhoto() {
+        /**
+         * Les Chutes du Carbet en papier découpé, d'après la photo du
+         * propriétaire (proposition A, retenue le 2026-11-07) : la chute
+         * tombe d'une haute falaise à droite, coiffée de forêt et de brume ;
+         * la forêt de gauche descend en lisières jusqu'à la rivière, qui
+         * vient vers soi entre les galets. La chute reste à côté du dessin du
+         * mot, jamais derrière.
+         */
+        fun carbetPapier() {
             morneBoise(17f, 3f, 900, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.55f), 1.8f)
             brumePapier(-2f, 102f, 22f, 6f, 901)
             plan(1)
@@ -2158,64 +2159,10 @@ object Paysages {
             sousBois()
         }
 
-        /** Proposition B, les deux chutes de part et d'autre du dessin, dans un amphithéâtre de falaise. */
-        fun carbetDeuxChutes() {
-            morneBoise(14f, 2.5f, 920, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.55f), 1.8f)
-            brumePapier(-2f, 102f, 18f, 5f, 921)
-            plan(1)
-            val sommet = { x: Float -> 14f + sin(x * 0.08f + 1f) * 1.6f - abs(x - 50f) * 0.06f }
-            val f = Path()
-            f.moveTo(-2f, BAS + 2f)
-            var x = -2f
-            while (x <= 102f) { f.lineTo(x, sommet(x)); x += 2f }
-            f.lineTo(102f, BAS + 2f); f.close()
-            f.op(bosses(-3f, 103f, sommet, 1.8f, 1.8f, Alea(922)), Path.Op.UNION)
-            piece(f, papier(0xFF3F5A44.toInt()))
-            val paroi = Path()
-            paroi.moveTo(6f, 46f); paroi.cubicTo(6f, 26f, 8f, 18f, 12f, 16f)
-            x = 12f
-            while (x <= 88f) { paroi.lineTo(x, sommet(x) + 3f); x += 4f }
-            paroi.cubicTo(92f, 18f, 94f, 26f, 94f, 46f); paroi.close()
-            piece(paroi, roche(), 0.6f)
-            mousses(8f, 92f, 18f, 44f, 22, 926)
-            cascade(21f, 15f, 45f, 3.6f, 923)
-            cascade(79f, 14f, 45f, 4.2f, 924)
-            brumePapier(-2f, 102f, 13f, 3.5f, 925)
-            rive(true, 38f, 50f, 30f, 927, papier(0xFF2E9E6E.toInt()), 4f)
-            rive(false, 39f, 50f, 70f, 928, papier(0xFF3FA86A.toInt()), 4f)
-            plan(2)
-            riviere(50f, 48f, 24f, 76f, 930)
-            sousBois()
-        }
-
-        /** Proposition C, la grande chute tout près à gauche, sa vasque, la vallée boisée qui s'ouvre sur la brume. */
-        fun carbetChuteProche() {
-            morneBoise(18f, 3f, 940, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.5f), 1.8f)
-            brumePapier(-2f, 102f, 23f, 6f, 941)
-            plan(1)
-            val verts = intArrayOf(papier(VERT_PROFOND), papier(0xFF2E9E6E.toInt()), papier(0xFF3FA86A.toInt()))
-            for (k in 0 until 3) {
-                rive(true, 26f + k * 5f, 42f + k * 3f, 46f - k * 6f, 942 + k, verts[k], 3.8f + k * 0.5f)
-                rive(false, 24f + k * 5f, 42f + k * 3f, 56f + k * 6f, 945 + k, verts[(k + 1) % 3], 3.8f + k * 0.5f)
-            }
-            plan(2)
-            val paroi = Path()
-            paroi.moveTo(-2f, -2f); paroi.lineTo(8f, -2f)
-            paroi.cubicTo(10f, 12f, 8f, 30f, 10f, 50f)
-            paroi.lineTo(-2f, 54f); paroi.close()
-            piece(paroi, roche())
-            mousses(-1f, 8f, 2f, 48f, 9, 950)
-            cascade(13f, -2f, 51f, 6.5f, 951)
-            riviere(14f, 51f, 26f, 86f, 952)
-            feuilleCoeur(93f, 64f, 4.5f, 15f, papier(VERT_PROFOND))
-            feuilleBananier(101f, 63f, 14f, -150f, papier(0xFF3FA86A.toInt()))
-            balisier(86f, 65f, 8f, papier(SARCELLE))
-        }
-
         /** Les Chutes du Carbet : la chute dans la paroi, le bassin, les fougères. */
         fun chutesCarbet() {
             if (PAPIER) {
-                when (CARBET) { 0 -> carbetPhoto(); 1 -> carbetDeuxChutes(); else -> carbetChuteProche() }
+                carbetPapier()
                 return
             }
             val r = Alea(131)
