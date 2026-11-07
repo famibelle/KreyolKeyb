@@ -969,6 +969,19 @@ object Paysages {
     /** La crête de la grosse vague de la Pointe des Châteaux, sur le plan de devant : de (x0, y0) à (x1, y1). */
     internal val VAGUE_CHATEAUX = floatArrayOf(17f, 44.8f, 34f, 42.6f)
 
+    /**
+     * La mer de la Désirade, sur le plan du loin : de x0 à x1, la ligne du
+     * large et celle où le ressac blanchit au pied du morne. Le dessin y peint
+     * l'écume au repos, [Ambiance] y fait rouler et casser le ressac.
+     */
+    internal val RESSAC_DESIRADE = floatArrayOf(-2f, 50f, 36f, 44.6f)
+
+    /** Où la mer de la Désirade frappe le pied du morne, sur le plan du milieu : (x, y) de chaque gerbe. */
+    internal val GERBES_DESIRADE = arrayOf(5f to 45f, 15f to 44.8f, 27f to 44.3f, 37f to 43.3f, 46f to 42.2f)
+
+    /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
+    internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
+
     /** Le moulin de Marie-Galante, sur le plan du milieu : le moyeu (x, y) et la longueur d'une aile. */
     internal val MOULIN = floatArrayOf(87.4f, 23.4f, 14f)
 
@@ -3265,8 +3278,108 @@ object Paysages {
             }
         }
 
+        // ------------------------------------------- la Désirade en papier
+
+        /**
+         * La Désirade en papier découpé, d'après la photo du propriétaire
+         * (2026-11-07) : le phare de la pointe Doublé, sa tour blanche, sa
+         * lanterne rouge et l'échelle qui y monte, à droite pour rester à côté
+         * du dessin du mot ; le morne de broussaille et de blocs bruns sur
+         * lequel il est posé, la mer de l'Atlantique à gauche et son ressac,
+         * le plateau de terre sèche semé de pierres devant. Le ressac bouge
+         * sur la carte ouverte, et le soir et la nuit le faisceau du phare
+         * tourne (`Ressac` dans [Ambiance]).
+         */
+        fun desiradePapier() {
+            cumulus(-6f, 16f, 30f, 1700)
+            cumulus(40f, 9f, 16f, 1701)
+            // La mer, du large au rivage, et le ressac qui blanchit au bord.
+            val (rx0, rx1, large, rivage) = RESSAC_DESIRADE
+            pieceD("M-2 $large L102 $large L102 50L-2 50Z", papier(0xFF2C6FA6.toInt()), 0.2f)
+            lanieresMer(large + 0.4f, rivage + 1f, 1702, intArrayOf(papier(0xFF2A78B8.toInt()), papier(0xFF1E5A94.toInt()),
+                papier(0xFF3A8CC4.toInt()), papier(0xFF4C9CC8.toInt())))
+            val re = Alea(1703)
+            for (k in 0 until 4) {
+                val y = large + 3f + k * 1.4f
+                var x = rx0 + re() * 6f
+                while (x < rx1 - 4f) {
+                    val l = 3f + re() * 7f
+                    pieceD("M$x ${y + 0.3f}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y + 0.3f}L${x + l} ${y + 0.7f}Q${x + l / 2f} ${y + 0.1f} $x ${y + 0.7f}Z",
+                        papier(0xFFF2F6F4.toInt()), 0f)
+                    x += l + 3f + re() * 7f
+                }
+            }
+            plan(1)
+            // Le morne qui monte vers la droite, sa broussaille, ses blocs, le phare.
+            val crete = brisee(-2f, rivage + 0.6f, 24f, rivage, 42f, 42.6f, 54f, 40.6f, 62f, 37.6f, 70f, 35.2f, 78f, 34f,
+                86f, 33.6f, 96f, 33.8f, 102f, 34.2f)
+            // L'écume au pied du morne : une bande continue et bosselée, jamais
+            // un rang de perles.
+            val ecume = chemin("M-2 ${crete(-2f) + 0.6f}" + (0..52 step 2).joinToString("") { x -> "L$x ${crete(x.toFloat()) + 0.6f}" } +
+                (52 downTo -2 step 2).joinToString("") { x -> "L$x ${crete(x.toFloat()) - 0.5f - (if (x % 4 == 0) 0.3f else 0f)}" } + "Z")
+            ecume.op(bosses(-2f, 50f, { x -> crete(x) - 0.3f }, 0.4f, 0.8f, Alea(1711)), Path.Op.UNION)
+            piece(ecume, papier(0xFFF6F8F6.toInt()), 0.3f)
+            val morne = sousLaCrete(-2f, 102f, crete)
+            morne.op(bosses(46f, 103f, { x -> crete(x) + 0.4f }, 0.8f, 1.5f, Alea(1704)), Path.Op.UNION)
+            piece(morne, papier(0xFFA88A62.toInt()))
+            val herbe = brisee(40f, 44f, 54f, 41.6f, 62f, 38.8f, 70f, 36.4f, 78f, 35.2f, 102f, 35.4f)
+            pieceD("M44 ${crete(44f) + 0.6f}" + (46..102 step 2).joinToString("") { x -> "L$x ${crete(x.toFloat()) + 0.5f}" } +
+                (102 downTo 44 step 2).joinToString("") { x -> "L$x ${herbe(x.toFloat()) + 2.2f + (x % 6) * 0.25f}" } + "Z",
+                papier(0xFF8C9A4A.toInt()), 0.3f)
+            taches(46f, 102f, 41f, 16, 1705, papier(0xFF6E8A34.toInt()), crete)
+            taches(54f, 102f, 40f, 9, 1706, papier(0xFF4E6E2A.toInt()), crete)
+            for ((gx, gy, gr) in arrayOf(Triple(60f, 39.6f, 1.2f), Triple(66f, 37.8f, 1.6f), Triple(73.4f, 37.2f, 1.1f),
+                    Triple(80f, 35.8f, 1.8f), Triple(95.6f, 35.4f, 1.5f), Triple(50f, 42.4f, 0.9f), Triple(32f, 44.6f, 0.8f)))
+                galet(gx, gy, gr, papier(0xFF8E5E44.toInt()))
+            // Le phare : la tour blanche et son ombre, l'échelle sur sa face
+            // gauche, la porte rouge, la lanterne rouge, sa vitre et l'antenne.
+            // Il tient sous le plein cintre des cartes rares (voir
+            // CadreOrne.cheminFenetre) : plus haut, l'arche coupe la lanterne.
+            val blancTour = papier(0xFFF2F0EA.toInt())
+            val rouge = papier(0xFFD8332C.toInt())
+            val (px, py) = PHARE_DESIRADE
+            pieceD("M92.6 34.4L92.6 31.4L95.4 31.4L95.4 34.6Z", papier(0xFFDAD6CC.toInt()), 0.5f)
+            pieceD("M${px - 2.1f} 34.6L${px - 1.8f} 21L${px + 1.8f} 21L${px + 2.1f} 34.6Z", blancTour, 0.8f)
+            pieceD("M${px + 0.8f} 34.6L${px + 0.7f} 21L${px + 1.8f} 21L${px + 2.1f} 34.6Z", papier(0xFFCFCBC2.toInt()), 0f)
+            val fer = papier(0xFF4A4C50.toInt())
+            barre(px - 1.4f, 32.4f, px - 1.3f, 21.4f, 0.2f, fer, 0f)
+            barre(px - 0.4f, 32.4f, px - 0.4f, 21.4f, 0.2f, fer, 0f)
+            var ey = 31.8f
+            while (ey > 21.8f) { barre(px - 1.4f, ey, px - 0.4f, ey, 0.14f, fer, 0f); ey -= 0.9f }
+            pieceD("M${px + 0.6f} 34.6L${px + 0.6f} 32.6L${px + 1.6f} 32.6L${px + 1.6f} 34.6Z", rouge, 0.2f)
+            pieceD("M${px - 3f} 21.2L${px - 3f} 20.4L${px + 3f} 20.4L${px + 3f} 21.2Z", papier(0xFFB82A24.toInt()), 0.3f)
+            pieceD("M${px - 2.4f} 20.4L${px - 2.4f} ${py + 0.9f}L${px + 2.4f} ${py + 0.9f}L${px + 2.4f} 20.4Z", rouge, 0.6f)
+            val vitre = if (P.allume) duJour(0xFFFFE08A.toInt()) else papier(0xFF3C4450.toInt())
+            pieceD("M${px - 1.6f} ${py + 0.9f}L${px - 1.4f} ${py - 0.9f}L${px + 1.4f} ${py - 0.9f}L${px + 1.6f} ${py + 0.9f}Z", vitre, 0.3f)
+            pieceD("M${px - 1.8f} ${py - 0.7f}Q$px ${py - 2.6f} ${px + 1.8f} ${py - 0.7f}Z", papier(0xFFE8E6E0.toInt()), 0.3f)
+            barre(px, py - 1.6f, px, py - 3.6f, 0.2f, fer, 0f)
+            plan(2)
+            // Le plateau de terre sèche, ses pierres claires, ses touffes.
+            val sol = brisee(-2f, 50.6f, 18f, 49.4f, 36f, 50f, 56f, 49f, 76f, 48.4f, 102f, 47.4f)
+            val plateau = sousLaCrete(-2f, 102f, sol)
+            plateau.op(bosses(-2f, 102f, { x -> sol(x) + 0.3f }, 0.5f, 1f, Alea(1707)), Path.Op.UNION)
+            piece(plateau, papier(0xFFB98E68.toInt()))
+            pieceD("M-2 56Q30 53.6 60 55Q80 55.8 102 54L102 68L-2 68Z", papier(0xFFA87652.toInt()), 0.4f)
+            pieceD("M-2 61.6Q36 59.8 66 61.2Q86 61.8 102 60.4L102 68L-2 68Z", papier(0xFF96643F.toInt()), 0.4f)
+            val rp = Alea(1708)
+            repeat(26) {
+                val x = -1f + rp() * 102f
+                val y = sol(x) + 1.6f + rp() * (66f - sol(x) - 1.6f)
+                val r = (0.3f + rp() * 0.5f) * (0.6f + (y - 48f) / 18f)
+                galet(x, y, r, papier(if (rp() < 0.7f) 0xFFDCCDB4.toInt() else 0xFF9C8C78.toInt()))
+            }
+            taches(-2f, 102f, 54f, 7, 1709, papier(0xFF7A8A3A.toInt()), sol)
+            for ((tx, ty) in arrayOf(30f to 51.4f, 4f to 52.6f, 90f to 50.6f)) {
+                val t = Path()
+                val rt = Alea(1710 + tx.toInt())
+                repeat(5) { t.op(disque(tx + (rt() - 0.5f) * 4f, ty + (rt() - 0.5f) * 0.8f, 0.9f + rt() * 0.8f), Path.Op.UNION) }
+                piece(t, papier(0xFF5E7A2E.toInt()), 0.5f)
+            }
+        }
+
         /** La Désirade vue de la côte : la longue île en table, un gommier tiré sur le sable. */
         fun desirade() {
+            if (PAPIER) { desiradePapier(); return }
             val r = Alea(181)
             plan(1)
             eau(40f, 182)

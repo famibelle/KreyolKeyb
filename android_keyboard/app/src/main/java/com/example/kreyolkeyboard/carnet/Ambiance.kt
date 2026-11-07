@@ -1,8 +1,11 @@
 package com.example.kreyolkeyboard.carnet
 
 import android.graphics.Canvas
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -141,6 +144,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
+                enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1219,6 +1223,113 @@ private class Vagues(zone: RectF, graine: Int) : Ambiance(zone, graine) {
             c.drawOval(xRouleau[k] - rx, y - 0.3f * loin, xRouleau[k] + rx, y + 0.3f * loin, p)
         }
         c.restore()
+    }
+}
+
+/**
+ * Le ressac de la Désirade : des lignes d'écume qui naissent au large
+ * ([Paysages.RESSAC_DESIRADE], plan du loin), roulent vers le rivage en
+ * s'allongeant et s'effacent ; et des gerbes qui jaillissent par à-coups au
+ * pied du morne ([Paysages.GERBES_DESIRADE], plan du milieu). Doux exprès :
+ * vu de loin, le ressac respire, il ne gronde pas.
+ *
+ * Le soir et la nuit ([phare]), le faisceau du phare tourne depuis la
+ * lanterne ([Paysages.PHARE_DESIRADE]). Vu de côté, il s'allonge vers la
+ * gauche puis rapetisse, éclate en lueur quand il passe face à nous, et
+ * repart plus pâle, de dos. Il balaie le ciel au-dessus du dessin du mot.
+ */
+private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val nLignes = 7
+    private val xLigne = FloatArray(nLignes) { hasard() }
+    private val rythmeLigne = FloatArray(nLignes) { 5f + hasard() * 3f }
+    private val phaseLigne = FloatArray(nLignes) { hasard() }
+    private val longueur = FloatArray(nLignes) { 3f + hasard() * 4f }
+    private val rythmeGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { 2.6f + hasard() * 1.6f }
+    private val phaseGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    private fun blanc(t: Float, force: Float) = ((t.coerceIn(0f, 1f) * force).toInt() shl 24) or 0xFFFFFF
+
+    private fun suivre(c: Canvas, plan: Int) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
+        c.scale(e, e)
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        p.style = Paint.Style.FILL
+        val (x0, x1, large, rivage) = Paysages.RESSAC_DESIRADE
+        suivre(c, 2)
+        for (k in 0 until nLignes) {
+            val t = (temps / rythmeLigne[k] + phaseLigne[k]) % 1f
+            val y = large + 2f + (rivage - large - 2.6f) * t
+            val pres = 0.5f + 0.5f * t
+            val x = x0 + 4f + (x1 - x0 - 12f) * xLigne[k]
+            val rx = longueur[k] * pres * (1f + 0.6f * t)
+            p.color = blanc(sin(PI.toFloat() * t), 190f)
+            c.drawOval(x - rx, y - 0.32f * pres, x + rx, y + 0.32f * pres, p)
+        }
+        c.restore()
+        suivre(c, 3)
+        Paysages.GERBES_DESIRADE.forEachIndexed { i, (x, y) ->
+            val t = (temps / rythmeGerbe[i] + phaseGerbe[i]) % 1f
+            for (j in 0 until 4) {
+                p.color = blanc(1f - t, 200f)
+                c.drawCircle(x + (j - 1.5f) * 1.1f * t, y - sin(PI.toFloat() * t) * 2.4f * (1f - abs(j - 1.5f) * 0.25f),
+                    0.5f + 1.1f * t, p)
+            }
+        }
+        if (phare) faisceau(c, p)
+        c.restore()
+    }
+
+    private val cone = Path()
+
+    private fun faisceau(c: Canvas, p: Paint) {
+        val (lx, ly) = Paysages.PHARE_DESIRADE
+        val a = 2f * PI.toFloat() * (temps / TOUR_PHARE % 1f)
+        val face = sin(a).coerceAtLeast(0f)
+        val longueur = 92f * abs(cos(a))
+        val force = 0.3f + 0.7f * face
+        if (longueur > 1.5f) {
+            val sens = if (cos(a) < 0f) -1f else 1f
+            val bout = lx + sens * longueur
+            val demi = 0.7f + 0.055f * longueur
+            cone.rewind()
+            cone.moveTo(lx, ly - 0.7f)
+            cone.lineTo(bout, ly - demi)
+            cone.lineTo(bout, ly + demi)
+            cone.lineTo(lx, ly + 0.7f)
+            cone.close()
+            p.color = 0xFFFFFFFF.toInt()
+            p.shader = LinearGradient(lx, ly, bout, ly, ((force * 150f).toInt() shl 24) or 0xFFF2C4, 0x00FFF2C4,
+                Shader.TileMode.CLAMP)
+            c.drawPath(cone, p)
+            p.shader = null
+        }
+        // L'éclat, quand le faisceau passe face à nous.
+        val eclat = face * face * face * face
+        p.color = ((40f + eclat * 170f).toInt() shl 24) or 0xFFF2C4
+        c.drawCircle(lx, ly, 1.6f + eclat * 3.4f, p)
+    }
+
+    private companion object {
+        /** Un tour du faisceau, en secondes. */
+        const val TOUR_PHARE = 9f
     }
 }
 
