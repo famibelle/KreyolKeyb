@@ -212,13 +212,19 @@ object CarteCarnet {
      * de [c] calculerait à sa première image : son métal, ses rayons et son
      * paysage, à la largeur [largeurPx]. Le lecteur s'en sert pour les deux
      * cartes voisines, si bien qu'on feuillette sans attendre.
+     *
+     * Le paysage est celui que le lecteur montrera : en plans de théâtre
+     * ([CarteOrnee.avecAmbiance]), sauf animations coupées. Préparé à plat,
+     * il ne servait à rien : la carte ouverte recalculait ses plans au
+     * glissé (repris de LuxKeyb 38.1.0).
      */
     fun preparer(context: Context, c: ContenuCarte, largeurPx: Int) {
         if (largeurPx <= 0) return
         Ornement.metal(context, c.rarete, largeurPx, vignette = false)
         Ornement.rayons(c.rarete, largeurPx, vignette = false)
         Motif(c.carte.forme, c.rarete, Ornement.FENETRE, c.blason, Souvenir.de(c.carte.premiereFois))
-            .rendreLieu(largeurPx / Ornement.LARGEUR)
+            .apply { profondeur = !Pochette.animationsReduites(context) }
+            .rendreIci(largeurPx / Ornement.LARGEUR)
     }
 
     /**
@@ -309,16 +315,14 @@ object CarteCarnet {
             )
         )
 
+        // VUES gravé, NIVEAU en jauge des six casiers (voir [JaugeNiveau]).
+        carte.posee(ChiffreGrave(context, "${c.carte.rencontres}", metal), Ornement.ECU_G_TEXTE)
+        val niveau = if (c.carte.acquise) JaugeNiveau.CASES else c.carte.boite
         carte.posee(
-            ligne(context, "${c.carte.rencontres}", taille = 15f, couleur = Color.WHITE, gras = true),
-            Ornement.ECU_G_TEXTE
-        )
-        carte.posee(
-            ligne(
-                context,
-                if (c.carte.acquise) "✓" else "${c.carte.boite + 1}",
-                taille = 15f, couleur = Color.WHITE, gras = true
-            ),
+            JaugeNiveau(context, niveau, metal.trait).apply {
+                contentDescription = context.getString(R.string.carte_ecu_niveau) + " $niveau / ${JaugeNiveau.CASES}"
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+            },
             Ornement.ECU_D_TEXTE
         )
 
@@ -340,13 +344,24 @@ object CarteCarnet {
         // bordures et des heures.
         val rang = c.rang?.let { context.getString(R.string.carte_rang, it + 1) }
             ?: context.getString(R.string.carte_hors_corpus)
+        val palier = context.getString(c.rarete.libelle)
+        // La rareté est une jauge de quatre étoiles calée à droite
+        // ([EtoilesRarete]), le mot du palier juste avant : les symboles
+        // ● ◆ ★ ✦ ne se comprenaient pas sans les avoir appris, alors qu'un
+        // enfant sait qu'avec plus d'étoiles, c'est plus rare (repris de
+        // LuxKeyb 37.8.0).
+        val bande = Ornement.serieD(c.rarete)
+        val jauge = RectF(bande.right - EtoilesRarete.PLACES * EtoilesRarete.PAS, bande.top, bande.right, bande.bottom)
         carte.posee(
-            ligne(
-                context,
-                "${c.rarete.symbole} ${context.getString(c.rarete.libelle)} · $rang",
-                taille = 7.5f, couleur = metal.trait, gras = true, ou = Gravity.END
-            ),
-            Ornement.serieD(c.rarete)
+            EtoilesRarete(context, c.rarete.ordinal + 1, metal.trait).apply {
+                contentDescription = palier
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+            },
+            jauge
+        )
+        carte.posee(
+            ligne(context, "$palier · $rang", taille = 7.5f, couleur = metal.trait, gras = true, ou = Gravity.END),
+            RectF(bande.left, bande.top, jauge.left - 2.5f, bande.bottom)
         )
         return carte
     }
