@@ -146,6 +146,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
+                enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1393,6 +1394,64 @@ private class Reflets(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, 
             c.drawOval(x - rx, y - 0.2f - 0.1f * pres, x + rx, y + 0.2f + 0.1f * pres, p)
         }
         c.restore()
+    }
+}
+
+/**
+ * Les bougies du cimetière de Morne-à-l'Eau, le soir et la nuit
+ * ([Paysages.BOUGIES_MORNE]) : chaque flamme vacille à son rythme, s'étire
+ * et penche un peu, et sa lueur chaude respire autour d'elle. Chacune suit
+ * le plan qui la porte quand la carte penche.
+ */
+private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val bougies = Paysages.BOUGIES_MORNE
+    private val phase = FloatArray(bougies.size) { hasard() * 6.28f }
+    private val vitesse = FloatArray(bougies.size) { 5f + hasard() * 4f }
+    private val flamme = android.graphics.Path()
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        p.style = Paint.Style.FILL
+        for (plan in 0..2) {
+            val g = Paysages.GLISSEMENT[plan + 2]
+            c.save()
+            c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+            c.scale(e, e)
+            bougies.forEachIndexed { i, (x, y, pl) ->
+                if (pl.toInt() != plan) return@forEachIndexed
+                val t = temps * vitesse[i] + phase[i]
+                val vacille = 0.75f + 0.15f * sin(t) + 0.1f * sin(t * 2.3f + 1f)
+                val penche = 0.25f * sin(t * 0.7f)
+                p.color = ((38f * vacille).toInt() shl 24) or 0xFF9A3C
+                c.drawCircle(x, y - 1.6f, 3.4f + 0.8f * vacille, p)
+                p.color = ((80f * vacille).toInt() shl 24) or 0xFFB050
+                c.drawCircle(x, y - 1.5f, 1.5f + 0.6f * vacille, p)
+                val haut = 0.9f + 1.3f * vacille
+                flamme.rewind()
+                flamme.moveTo(x + penche, y - 0.8f - haut)
+                flamme.quadTo(x + 0.42f, y - 1.1f, x, y - 0.8f)
+                flamme.quadTo(x - 0.42f, y - 1.1f, x + penche, y - 0.8f - haut)
+                flamme.close()
+                p.color = 0xFFFFB238.toInt()
+                c.drawPath(flamme, p)
+                p.color = 0xFFFFF0B0.toInt()
+                c.drawCircle(x, y - 1.05f, 0.17f, p)
+            }
+            c.restore()
+        }
     }
 }
 

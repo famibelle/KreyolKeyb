@@ -985,6 +985,48 @@ object Paysages {
     /** L'eau de Bouillante qui scintille, sur le plan du milieu : x0, x1, y0, y1. */
     internal val REFLETS_BOUILLANTE = floatArrayOf(-2f, 84f, 48f, 64f)
 
+    /** Un caveau du cimetière de Morne-à-l'Eau : son pied, sa largeur, sa hauteur, sa sorte, le plan du lieu qui le porte. */
+    internal class Caveau(val x: Float, val sol: Float, val l: Float, val h: Float, val sorte: Int, val plan: Int)
+
+    /**
+     * Les caveaux de Morne-à-l'Eau, rang après rang, du haut du morne au bas :
+     * (plan du lieu, pied du rang, début, largeur et hauteur d'un caveau).
+     * Les rangs montent vers la droite comme le morne sur la photo.
+     */
+    private val RANGS_MORNE = arrayOf(
+        floatArrayOf(0f, 13f, 58f, 5f, 4.2f), floatArrayOf(0f, 19.4f, 46f, 5.6f, 4.6f),
+        floatArrayOf(1f, 26f, 36f, 6.2f, 5f), floatArrayOf(1f, 32.6f, 22f, 6.8f, 5.4f),
+        floatArrayOf(1f, 39.4f, 8f, 7.4f, 5.8f), floatArrayOf(1f, 46.4f, -4f, 8.2f, 6.2f))
+
+    internal val CAVEAUX_MORNE: List<Caveau> by lazy {
+        val r = Alea(2010)
+        val liste = ArrayList<Caveau>()
+        for ((plan, sol, debut, l, h) in RANGS_MORNE) {
+            var x = debut - r() * l * 0.5f
+            while (x < LARGEUR + 2f) {
+                val w = l * (0.8f + r() * 0.4f)
+                liste += Caveau(x, sol + (r() - 0.5f) * 0.6f, w, h * (0.85f + r() * 0.3f), (r() * 4f).toInt().coerceAtMost(3), plan.toInt())
+                x += w + 0.25f + r() * 0.6f
+            }
+        }
+        liste
+    }
+
+    /** Les caveaux à toit plat, ceux qui portent des bougies le soir et la nuit. */
+    internal const val CAVEAU_PLAT = 1
+
+    /**
+     * Les bougies de Morne-à-l'Eau : x, y et plan du lieu de chacune, posées
+     * sur le rebord des caveaux à toit plat, là où le rang de devant ne les
+     * cache pas. Le dessin les peint, [Ambiance] fait vaciller leur flamme.
+     */
+    internal val BOUGIES_MORNE: List<FloatArray> by lazy {
+        val r = Alea(2011)
+        CAVEAUX_MORNE.filter { it.sorte == CAVEAU_PLAT }.flatMap { c ->
+            (0 until 1 + (r() * 2f).toInt()).map { k -> floatArrayOf(c.x + c.l * (0.2f + 0.3f * k + r() * 0.1f), c.sol - c.h - 0.35f, c.plan.toFloat()) }
+        } + listOf(floatArrayOf(82f, 52.2f, 2f), floatArrayOf(88f, 51.8f, 2f), floatArrayOf(10f, 55.4f, 2f), floatArrayOf(20f, 55f, 2f))
+    }
+
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
 
@@ -3565,8 +3607,128 @@ object Paysages {
             vapeur(46f, 52.5f, 8f)
         }
 
+        // ------------------------------------------- Morne-à-l'Eau en papier
+
+        /** Un damier noir de [cols] × [rangs] cases de [c] à partir de ([x], [y]), en une seule pièce. */
+        private fun damier(x: Float, y: Float, cols: Int, rangs: Int, c: Float, col: Int) {
+            val t = Path()
+            for (i in 0 until cols) for (j in 0 until rangs) if ((i + j) % 2 == 0) t.addRect(x + i * c, y + j * c, x + (i + 1) * c, y + (j + 1) * c, Path.Direction.CW)
+            piece(t, col, 0f)
+        }
+
+        /**
+         * Un caveau en tombe-maison : le corps blanc et son flanc à l'ombre,
+         * une bande de damier, la niche sombre, et selon sa sorte un pignon
+         * à croix, un toit plat à balustrade, une façade toute en damier ou
+         * une chapelle à fronton.
+         */
+        private fun caveau(k: Caveau) {
+            val x = k.x; val y = k.sol; val l = k.l; val h = k.h
+            // Un caveau sur quatre est crème ou ocre pâle, comme sur la photo.
+            val teinte = when (((x * 7f + y * 3f).toInt() % 8 + 8) % 8) { 0 -> 0xFFEEDDB4.toInt(); 3 -> 0xFFE8D2A2.toInt(); else -> 0xFFF2EFE8.toInt() }
+            val blanc = papier(teinte)
+            val ombre = papier(mix(teinte, 0xFF8C8478.toInt(), 0.18f))
+            val noir = papier(0xFF1E1E22.toInt())
+            val cote = l / 8f
+            pieceD("M$x ${y}L$x ${y - h}L${x + l} ${y - h}L${x + l} ${y}Z", blanc, 0.5f)
+            pieceD("M${x + l * 0.8f} ${y}L${x + l * 0.8f} ${y - h}L${x + l} ${y - h}L${x + l} ${y}Z", ombre, 0f)
+            when (k.sorte) {
+                2 -> damier(x, y - h, 8, (h / cote).toInt().coerceAtLeast(1), cote, noir)
+                else -> damier(x, y - h, 8, 2, cote, noir)
+            }
+            pieceD("M${x + l * 0.36f} ${y}L${x + l * 0.36f} ${y - h * 0.42f}L${x + l * 0.64f} ${y - h * 0.42f}L${x + l * 0.64f} ${y}Z",
+                papier(0xFF2C2A2C.toInt()), 0f)
+            val croix = papier(0xFFF6F4EE.toInt())
+            when (k.sorte) {
+                0 -> {
+                    pieceD("M${x - 0.3f} ${y - h}L${x + l / 2f} ${y - h - h * 0.42f}L${x + l + 0.3f} ${y - h}Z", blanc, 0.4f)
+                    pieceD("M${x + l * 0.1f} ${y - h - 0.2f}L${x + l / 2f} ${y - h - h * 0.34f}L${x + l * 0.9f} ${y - h - 0.2f}Z", noir, 0f)
+                    barre(x + l / 2f, y - h - h * 0.4f, x + l / 2f, y - h - h * 0.4f - 2.2f, 0.32f, croix, 0.2f)
+                    barre(x + l / 2f - 0.7f, y - h - h * 0.4f - 1.5f, x + l / 2f + 0.7f, y - h - h * 0.4f - 1.5f, 0.32f, croix, 0f)
+                }
+                CAVEAU_PLAT -> {
+                    pieceD("M${x - 0.3f} ${y - h}L${x - 0.3f} ${y - h - 0.6f}L${x + l + 0.3f} ${y - h - 0.6f}L${x + l + 0.3f} ${y - h}Z", blanc, 0.3f)
+                    var bx = x + 0.4f
+                    while (bx < x + l - 0.2f) { barre(bx, y - h - 0.6f, bx, y - h - 1.5f, 0.2f, blanc, 0f); bx += 0.7f }
+                    barre(x, y - h - 1.6f, x + l, y - h - 1.6f, 0.25f, blanc, 0f)
+                }
+                3 -> {
+                    pieceD("M${x + l * 0.15f} ${y - h}L${x + l * 0.15f} ${y - h - 1.4f}Q${x + l / 2f} ${y - h - 3.4f} ${x + l * 0.85f} ${y - h - 1.4f}L${x + l * 0.85f} ${y - h}Z", blanc, 0.4f)
+                    barre(x + l / 2f, y - h - 2.6f, x + l / 2f, y - h - 4.8f, 0.32f, croix, 0.2f)
+                    barre(x + l / 2f - 0.7f, y - h - 4f, x + l / 2f + 0.7f, y - h - 4f, 0.32f, croix, 0f)
+                }
+                else -> pieceD("M${x - 0.2f} ${y - h}L${x - 0.2f} ${y - h - 0.5f}L${x + l + 0.2f} ${y - h - 0.5f}L${x + l + 0.2f} ${y - h}Z", noir, 0.2f)
+            }
+        }
+
+        /** Une bougie posée en ([x], [y]) : sa cire, et sa flamme peinte quand l'heure les allume et que rien ne l'anime. */
+        private fun bougie(x: Float, y: Float) {
+            pieceD("M${x - 0.25f} ${y}L${x - 0.25f} ${y - 0.8f}L${x + 0.25f} ${y - 0.8f}L${x + 0.25f} ${y}Z", papier(0xFFF4EEDC.toInt()), 0f)
+            if (P.allume && faune) {
+                piece(disque(x, y - 1.6f, 1.6f), (0x50 shl 24) or 0xFFC060, 0f)
+                pieceD("M$x ${y - 2.1f}Q${x + 0.4f} ${y - 1.2f} $x ${y - 0.9f}Q${x - 0.4f} ${y - 1.2f} $x ${y - 2.1f}Z", duJour(0xFFFFC23A.toInt()), 0f)
+            }
+        }
+
+        /**
+         * Le cimetière de Morne-à-l'Eau en papier découpé, d'après la photo
+         * du propriétaire (2026-11-07) : les tombes-maisons blanches en damier
+         * noir et blanc qui montent à flanc de morne vers la droite, rang
+         * après rang, pignons et croix, toits plats à balustrade, chapelles ;
+         * la forêt sombre en haut à gauche ; devant, les dalles des grands
+         * caveaux. Le soir et la nuit, les bougies sont allumées sur les toits
+         * et leur flamme vacille sur la carte ouverte (`Bougies` dans
+         * [Ambiance]). Les palmiers de la photo ne sont pas repris.
+         */
+        fun morneALEauPapier() {
+            // La forêt du morne en haut à gauche, en lisières de houppiers.
+            val crete = brisee(-2f, 30f, 14f, 24f, 30f, 17f, 46f, 10f, 60f, 5f, 72f, 2f)
+            val foret = sousLaCrete(-2f, 72f, crete)
+            foret.op(bosses(-2f, 72f, { x -> crete(x) + 0.4f }, 1.6f, 2.8f, Alea(2001)), Path.Op.UNION)
+            foret.op(chemin("M60 -4L104 -4L104 20L60 20Z"), Path.Op.UNION)
+            piece(foret, papier(0xFF244E24.toInt()))
+            for ((k, col) in listOf(0xFF3A7232, 0xFF2E622A, 0xFF447E36).withIndex()) {
+                val lis = { x: Float -> crete(x) + 4.5f + k * 5f + sin(x * 0.35f + k) * 0.8f }
+                val b = sousLaCrete(-2f, 72f, lis)
+                b.op(bosses(-2f, 72f, lis, 1.4f, 2.4f, Alea(2002 + k)), Path.Op.UNION)
+                piece(b, papier(col.toInt()), 0.5f)
+            }
+            plan(1)
+            pieceD("M-4 45L104 45L104 68L-4 68Z", papier(0xFF9C978E.toInt()), 0f)
+            plan(0)
+            val ciment = papier(0xFFB4AEA2.toInt())
+            // Les rangs de caveaux, chacun sur le muret de sa terrasse.
+            var plan = 0
+            var rang = -100f
+            for (c in CAVEAUX_MORNE) {
+                if (c.plan != plan) { plan = c.plan; plan(plan) }
+                if (abs(c.sol - rang) > 3f) {
+                    rang = c.sol
+                    pieceD("M${c.x - 1f} ${rang - 0.4f}L104 ${rang - 0.4f}L104 ${rang + 1.6f}L${c.x - 1f} ${rang + 1.6f}Z", ciment, 0.5f)
+                }
+                caveau(c)
+            }
+            // Les bougies posées sur les toits plats.
+            for (b in BOUGIES_MORNE) if (b[2] < 2f) {
+                if (b[2].toInt() != plan) { plan = b[2].toInt(); plan(plan) }
+                bougie(b[0], b[1])
+            }
+            plan(2)
+            // Devant : la dalle d'un caveau en damier à gauche, les grandes
+            // dalles grises en gradins à droite.
+            pieceD("M-2 55.6L24 54.8L30 57.6L30 68L-2 68Z", papier(0xFF4A4846.toInt()), 0.8f)
+            pieceD("M-2 58.4L30 58.4L30 62.6L-2 62.6Z", papier(0xFFF2EFE8.toInt()), 0.2f)
+            damier(-2f, 58.4f, 16, 2, 2.1f, papier(0xFF1E1E22.toInt()))
+            pieceD("M56 66L60 53L102 50.6L102 68L56 68Z", papier(0xFF8C8882.toInt()), 0.8f)
+            pieceD("M58.6 58L102 55.6L102 57.4L58.2 59.4Z", papier(0xFFB0ACA4.toInt()), 0.3f)
+            pieceD("M57.2 62.6L102 60.6L102 62.2L56.8 64Z", papier(0xFFB0ACA4.toInt()), 0.3f)
+            pieceD("M60 53L102 50.6L102 51.6L59.8 54Z", ciment, 0f)
+            for (b in BOUGIES_MORNE) if (b[2] >= 2f) bougie(b[0], b[1])
+        }
+
         /** Le cimetière de Morne-à-l'Eau : le morne couvert de caveaux en damier noir et blanc, gradin après gradin, une dalle en damier devant. */
         fun morneALEau() {
+            if (PAPIER) { morneALEauPapier(); return }
             val r = Alea(201)
             crete(26f, 1.4f, 202, P.loin)
             val noir = mix(0xFF1C1C1E.toInt(), P.pres, if (P.nuit) 0.3f else 0f)
