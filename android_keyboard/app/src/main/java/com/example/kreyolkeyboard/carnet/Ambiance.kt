@@ -150,6 +150,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
+                enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)

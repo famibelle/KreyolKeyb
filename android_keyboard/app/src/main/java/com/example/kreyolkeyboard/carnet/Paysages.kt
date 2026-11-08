@@ -1045,6 +1045,9 @@ object Paysages {
     /** Le lagon de Petite-Terre, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_PETITE_TERRE = floatArrayOf(-2f, 102f, 41f, 52f)
 
+    /** L'océan sous Gueule Grand Gouffre, sur le plan du fond : x0, x1, y0, y1. */
+    internal val EAU_GOUFFRE = floatArrayOf(-2f, 66f, 16f, 42f)
+
     internal val EAU_GOSIER = floatArrayOf(-2f, 60f, 46f, 58f)
 
     internal val EAU_CUL_DE_SAC = floatArrayOf(-2f, 60f, 44f, 62f)
@@ -5829,8 +5832,97 @@ object Paysages {
             paletuvier(7f, 60f)
         }
 
+        // ------------------------------------------- Gueule Grand Gouffre en papier
+
+        /**
+         * Gueule Grand Gouffre en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08), vue d'en haut : l'océan turquoise qui
+         * monte jusqu'à un horizon haut, la pointe boisée au loin à droite et
+         * son écume ; l'arête de calcaire coiffée d'herbe qui monte en biais
+         * vers la droite, percée de l'arche où la mer s'engouffre, à droite
+         * du mot ; les blocs clairs du bord devant. La mer scintille sur la
+         * carte ouverte.
+         */
+        fun gueuleGrandGouffrePapier() {
+            // L'océan, bleu profond au large, turquoise vers la côte.
+            pieceD("M-2 12.6L102 12.6L102 68L-2 68Z", papier(0xFF2A72A8.toInt()), 0.2f)
+            pieceD("M-2 20Q50 19 102 21L102 68L-2 68Z", papier(0xFF1E9AB8.toInt()), 0f)
+            pieceD("M-2 30Q50 29 102 31L102 68L-2 68Z", papier(0xFF22B4C0.toInt()), 0f)
+            // Peu de lanières, longues : serrées, leurs tranches de kraft
+            // brunissent la mer.
+            val rm = Alea(2402)
+            val houle = intArrayOf(papier(0xFF2A86B4.toInt()), papier(0xFF46C2CA.toInt()), papier(0xFF1E8AB0.toInt()))
+            repeat(22) {
+                val y = 14f + rm() * 34f; val x = -2f + rm() * 90f; val l = (5f + rm() * 10f) * (0.5f + y / 40f)
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.4f} $x ${y}Z", houle[min((rm() * 3f).toInt(), 2)], 0f)
+            }
+            repeat(26) {
+                val x = -2f + rm() * 70f; val y = 18f + rm() * 30f; val l = 0.8f + rm() * 1.6f * (y / 30f)
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.3f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.2f} $x ${y}Z", papier(0xFFF2F6F6.toInt()), 0f)
+            }
+            // La pointe boisée au loin, sa falaise, l'écume à son pied.
+            val pointe = brisee(68f, 26f, 74f, 21f, 82f, 18.4f, 92f, 17.4f, 102f, 17f)
+            val p = sousLaCrete(68f, 102f, pointe)
+            p.op(chemin("M66 0L104 0L104 29L66 29Z"), Path.Op.INTERSECT)
+            piece(p, papier(0xFF8A8478.toInt()))
+            val vert = { x: Float -> pointe(x) }
+            val herbe = sousLaCrete(70f, 102f, vert)
+            herbe.op(chemin("M66 0L104 0L104 23Q88 22 76 24.6L72 24Z"), Path.Op.INTERSECT)
+            herbe.op(bosses(72f, 103f, { x -> pointe(x) + 0.2f }, 0.7f, 1.2f, Alea(2403)), Path.Op.UNION)
+            piece(herbe, papier(0xFF4E8A3A.toInt()))
+            for ((ex, ey, el) in arrayOf(Triple(64f, 28f, 6f), Triple(70f, 29f, 5f), Triple(60f, 30.4f, 4f)))
+                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.7f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.4f} $ex ${ey}Z", papier(0xFFF2F6F6.toInt()), 0f)
+            plan(1)
+            // L'arête de calcaire qui monte vers la droite, coiffée d'herbe.
+            val arete = brisee(-2f, 50f, 20f, 47f, 40f, 43f, 56f, 38f, 70f, 32.6f, 84f, 27.4f, 102f, 22f)
+            val roc = sousLaCrete(-2f, 102f, arete)
+            // L'arche : la mer passe dessous, à droite du mot.
+            val arche = chemin("M75.4 70L76 52Q77.6 44 84 43.4Q91 44 92.4 52L93 70Z")
+            roc.op(arche, Path.Op.DIFFERENCE)
+            piece(roc, papier(0xFF8E867C.toInt()))
+            // Les strates, la face ombrée sous la crête, l'ombre dans l'arche.
+            val rr = Alea(2407)
+            repeat(26) {
+                val x = -2f + rr() * 104f
+                val y = arete(x) + 2.4f + rr() * 18f
+                val l = 3f + rr() * 6f
+                if (x + l < 75f || x > 93f || y < 42f)
+                    pieceD("M$x ${y}Q${x + l * 0.4f} ${y - 1f - rr()} ${x + l} ${y - 0.3f}Q${x + l * 0.6f} ${y + 0.8f} $x ${y}Z",
+                        papier(if (rr() < 0.6f) 0xFF8A7E70.toInt() else 0xFFB8AE9E.toInt()), 0f)
+            }
+            pieceD("M93 70L92.4 52Q91 44 84 43.4Q90 42 96 40Q100 38 102 36L102 70Z", papier(0xFF6E6458.toInt()), 0.3f)
+            val dedans = Path(arche)
+            piece(dedans, papier(0xFF1E8EA4.toInt()), 0f)
+            for ((y, x0, l) in arrayOf(Triple(53f, 79f, 6f), Triple(56.6f, 78f, 9f), Triple(60.4f, 77.4f, 11f), Triple(64f, 77f, 12f)))
+                pieceD("M$x0 ${y}Q${x0 + l / 2f} ${y - 0.5f} ${x0 + l} ${y}Q${x0 + l / 2f} ${y + 0.4f} $x0 ${y}Z", papier(0xFF5ACCD2.toInt()), 0f)
+            pieceD("M77 66Q83 64.6 92 66Q85 67.2 77 66Z", papier(0xFFF2F6F6.toInt()), 0f)
+            pieceD("M76 52Q77.6 44 84 43.4L84 44.8Q79 45.6 77.4 52.6L77 68L75.8 68Z", papier(0xFF544A40.toInt()), 0f)
+            // L'herbe de la crête.
+            val gazon = Path()
+            var gx = -2f
+            gazon.moveTo(-2f, arete(-2f) + 1.4f)
+            while (gx <= 102f) { gazon.lineTo(gx, arete(gx) + 1.2f + sin(gx * 0.7f) * 0.2f); gx += 2f }
+            gx = 102f
+            while (gx >= -2f) { gazon.lineTo(gx, arete(gx) - 0.2f); gx -= 2f }
+            gazon.close()
+            gazon.op(bosses(-2f, 102f, { x -> arete(x) - 0.1f }, 0.5f, 0.9f, Alea(2404)), Path.Op.UNION)
+            piece(gazon, papier(0xFF5E9A3A.toInt()), 0.4f)
+            plan(2)
+            // Les blocs clairs du bord, devant à droite.
+            val bord = brisee(60f, 70f, 66f, 64f, 74f, 62f, 84f, 61f, 94f, 58f, 102f, 56f)
+            val blocs = sousLaCrete(54f, 102f, bord)
+            blocs.op(bosses(62f, 103f, { x -> bord(x) + 0.6f }, 1.2f, 2.4f, Alea(2405)), Path.Op.UNION)
+            piece(blocs, papier(0xFFC6C0B4.toInt()))
+            taches(64f, 102f, 68f, 10, 2406, papier(0xFFA8A296.toInt()), bord)
+            repeat(6) {
+                val x = 66f + rm() * 34f
+                feuillePliee(x, bord(x) + 1f + rm() * 3f, 1.2f, -150f + rm() * 120f, papier(0xFF6E9A3A.toInt()), 0.45f)
+            }
+        }
+
         /** Gueule Grand Gouffre : la falaise de Marie-Galante percée d'un gouffre où la mer s'engouffre. */
         fun gueuleGrandGouffre() {
+            if (PAPIER) { gueuleGrandGouffrePapier(); return }
             plan(1)
             eau(40f, 341)
             ecume("M84 50Q90 48 96 50M82 58Q90 56 98 58")
@@ -6201,8 +6293,97 @@ object Paysages {
             balisier(71f, 65f, 10f, feuille())
         }
 
+        // ------------------------------------------- le Fort Delgrès en papier
+
+        /** Une pierre dressée du mémorial : un bloc de lave sombre au sommet arrondi, sa face éclairée. */
+        private fun pierreDressee(x: Float, sol: Float, l: Float, h: Float, col: Int, r: Alea) {
+            val pench = (r() - 0.5f) * l * 0.4f
+            pieceD("M${x - l / 2f} ${sol}L${x - l * 0.45f + pench} ${sol - h * 0.75f}Q${x - l * 0.3f + pench} ${sol - h} ${x + pench} ${sol - h}" +
+                "Q${x + l * 0.45f + pench} ${sol - h * 0.95f} ${x + l * 0.5f + pench} ${sol - h * 0.6f}L${x + l / 2f} ${sol}Z", col, 0.6f)
+            pieceD("M${x + l * 0.1f + pench} ${sol - h * 0.92f}Q${x + l * 0.45f + pench} ${sol - h * 0.9f} ${x + l * 0.5f + pench} ${sol - h * 0.6f}" +
+                "L${x + l / 2f} ${sol}L${x + l * 0.2f} ${sol}Z", mix(col, 0xFFFFFFFF.toInt(), 0.16f), 0f)
+        }
+
+        /**
+         * Le Fort Delgrès en papier découpé, d'après la photo du propriétaire
+         * (2026-11-08) : les mornes verts de la Soufrière derrière ; les
+         * remparts de pierre sombre et la longue caserne au toit de tuiles
+         * brunes ; sur la pelouse, à droite du mot, le mémorial : la grande
+         * tête de Delgrès entourée de pierres de lave dressées le long d'une
+         * spirale de pavés. L'anoli fait ses pompes sur un bloc à gauche.
+         */
+        fun fortDelgresPapier() {
+            cumulus(-6f, 16f, 20f, 2801)
+            // Les mornes de la Soufrière.
+            val loin = brisee(-2f, 26f, 14f, 22f, 28f, 18f, 38f, 12.6f, 46f, 11f, 54f, 13f, 62f, 17.6f, 68f, 15.6f, 76f, 12.4f,
+                84f, 16f, 96f, 23f, 102f, 26f)
+            val m = sousLaCrete(-2f, 102f, loin)
+            m.op(bosses(-2f, 102f, { x -> loin(x) + 0.3f }, 1f, 1.6f, Alea(2802)), Path.Op.UNION)
+            piece(m, mix(papier(0xFF4E8A4A.toInt()), P.cielBas, 0.3f))
+            taches(-2f, 102f, 36f, 16, 2803, mix(papier(0xFF6EA858.toInt()), P.cielBas, 0.25f), loin)
+            morneBoise(28f, 2.4f, 2804, papier(0xFF3E7A3A.toInt()), 2.4f)
+            plan(1)
+            // Les remparts de pierre sombre, leurs moellons.
+            val pierre = papier(0xFF5E5A56.toInt())
+            pieceD("M-2 33.6L30 34.6L30 44L-2 44Z", pierre, 0.6f)
+            pieceD("M66 35L102 34L102 44L66 44Z", pierre, 0.6f)
+            pieceD("M84 44L102 38.6L102 44Z", papier(0xFF6E6A64.toInt()), 0.3f)
+            val rm = Alea(2805)
+            repeat(40) {
+                val x = -2f + rm() * 104f; val y = 35.4f + rm() * 8f
+                if (x < 30f || x > 66f)
+                    piece(Path().apply { addRoundRect(RectF(x, y, x + 1.6f + rm(), y + 0.8f), 0.3f, 0.3f, Path.Direction.CW) },
+                        papier(if (rm() < 0.5f) 0xFF4A4644.toInt() else 0xFF726C66.toInt()), 0f)
+            }
+            pieceD("M4 31.6L9 31.6L9 34L4 34Z", pierre, 0.4f)
+            // La longue caserne : murs de pierre, toit de tuiles brunes en croupe, l'auvent.
+            pieceD("M28 40L72 40L72 45L28 45Z", papier(0xFF6E6862.toInt()), 0.5f)
+            val tuile = papier(0xFF8E5E48.toInt())
+            pieceD("M26.6 40.4L73.4 40.4L68 34L32 34Z", tuile, 0.8f)
+            var tx = 33f
+            while (tx < 68f) { barre(tx - 0.4f, 34.2f, tx - 1.2f, 40.2f, 0.1f, papier(0xFF6E4636.toInt()), 0f); tx += 1.4f }
+            for (k in 1..3) barre(27f + k * 1.4f, 40.2f - k * 1.5f, 73f - k * 1.4f, 40.2f - k * 1.5f, 0.1f, papier(0xFF6E4636.toInt()), 0f)
+            pieceD("M24 43L76 43L76.6 44.6L23.4 44.6Z", papier(0xFF9E6A50.toInt()), 0.4f)
+            // La pelouse.
+            pieceD("M-2 44Q50 43 102 44L102 68L-2 68Z", papier(0xFF8EAA4A.toInt()), 0.4f)
+            pieceD("M-2 48Q40 46.6 102 48.6L102 68L-2 68Z", papier(0xFF7E9E42.toInt()), 0f)
+            plan(2)
+            // Le mémorial : la spirale de pavés, les pierres dressées, la tête,
+            // agrandis autour du centre de la spirale.
+            tasser(80f, 58f, 1.3f, 1.3f) {
+            val pave = papier(0xFF5A5A58.toInt())
+            for ((rx, ry) in arrayOf(17f to 5.4f, 11f to 3.4f)) {
+                val anneau = Path().apply { addOval(RectF(80f - rx, 57f - ry, 80f + rx, 57f + ry), Path.Direction.CW) }
+                anneau.op(Path().apply { addOval(RectF(80f - rx + 0.8f, 57f - ry + 0.5f, 80f + rx - 0.8f, 57f + ry - 0.5f), Path.Direction.CW) }, Path.Op.DIFFERENCE)
+                piece(anneau, pave, 0f)
+            }
+            val lave = intArrayOf(papier(0xFF4A4A4C.toInt()), papier(0xFF5E5C5A.toInt()), papier(0xFF3E3E40.toInt()))
+            val rp = Alea(2806)
+            // Les pierres du fond, puis la tête, puis celles de devant.
+            val fond = arrayOf(floatArrayOf(66f, 54f), floatArrayOf(71f, 52.4f), floatArrayOf(76f, 52f), floatArrayOf(86f, 52.2f),
+                floatArrayOf(91f, 53f), floatArrayOf(95.6f, 54.6f))
+            for ((x, y) in fond) pierreDressee(x, y, 2f + rp() * 1f, 4f + rp() * 2.4f, lave[min((rp() * 3f).toInt(), 2)], rp)
+            // La tête de Delgrès, de trois quarts : le crâne, le front, le nez, la bouche, le menton.
+            val bronze = papier(0xFF4E4E50.toInt())
+            pieceD("M75.4 56Q74.6 50 76 46.6Q78 43.4 81.6 43.6Q85.6 44 86.4 47.6L86.6 49.4L87.8 51.2L86.8 51.6L86.8 53Q86.4 54.6 84.6 55L84 56.4Z", bronze, 0.8f)
+            pieceD("M82.4 44Q85.6 44.6 86.4 47.6L86.6 49.4L87.8 51.2L86.8 51.6L86.8 53Q86.4 54.6 84.6 55L84 56.4L82.6 56.4Q84 52 82.4 44Z",
+                mix(bronze, 0xFFFFFFFF.toInt(), 0.15f), 0f)
+            pieceD("M84.4 48.2Q85.6 47.6 86.4 48.2L86.2 48.6Q85.4 48.2 84.6 48.6Z", papier(0xFF2E2E30.toInt()), 0f)
+            pieceD("M85.2 53Q86 52.8 86.6 53.2L86.4 53.5Q85.8 53.3 85.3 53.4Z", papier(0xFF2E2E30.toInt()), 0f)
+            piece(Path().apply { addOval(RectF(77.4f, 48.4f, 79.4f, 51.6f), Path.Direction.CW) }, mix(bronze, 0xFF000000.toInt(), 0.2f), 0f)
+            val devant = arrayOf(floatArrayOf(64f, 59f), floatArrayOf(69f, 61f), floatArrayOf(74.6f, 62.4f), floatArrayOf(81f, 62.6f),
+                floatArrayOf(87f, 62f), floatArrayOf(93f, 60.4f), floatArrayOf(97f, 58.4f), floatArrayOf(73f, 57.4f), floatArrayOf(88f, 57.6f))
+            for ((x, y) in devant) pierreDressee(x, y, 2.2f + rp() * 1.2f, 4.4f + rp() * 3f, lave[min((rp() * 3f).toInt(), 2)], rp)
+            }
+            // Le bloc de pierre de l'anoli, à gauche, et la butte d'herbe.
+            pieceD("M-2 58Q20 55.6 40 60L44 68L-2 68Z", papier(0xFF8CB04C.toInt()), 0.4f)
+            pieceD("M15.6 55.2L24.6 55.2L24.6 61L15.6 61Z", papier(0xFF6E6A64.toInt()), 0.6f)
+            pieceD("M15.6 55.2L24.6 55.2L24.6 56L15.6 56Z", papier(0xFF8E8A84.toInt()), 0f)
+        }
+
         /** Le fort Delgrès : le bastion et son échauguette, la mer, la Soufrière derrière, un anoli sur le mur. */
         fun fortDelgres() {
+            if (PAPIER) { fortDelgresPapier(); return }
             forme("M0 40Q20 30 36 20Q44 14 52 14Q60 16 68 24Q84 34 100 38L100 66L0 66Z", P.loin)
             vapeur(50f, 14f, 8f)
             plan(1)
