@@ -961,11 +961,20 @@ object Paysages {
     internal const val PAPIER = true
 
     /**
-     * Les douches de Sofaïa : où chaque filet d'eau quitte le mur du fond
-     * ([DOUCHE_HAUT]), son x et l'endroit où il touche l'eau. Le dessin les
-     * peint, [Ambiance] y fait tomber les gouttes sur la carte ouverte.
+     * Le tuyau des douches de Sofaïa, qui traverse le bassin en diagonale
+     * sur son poteau : de ([TUYAU_DOUCHES] 0, 1) à (2, 3). Il est percé en
+     * dessous et porte de minuscules pommeaux, d'où tombent les filets.
      */
-    internal const val DOUCHE_HAUT = 41.8f
+    internal val TUYAU_DOUCHES = floatArrayOf(16f, 50f, 72f, 37.6f)
+
+    /** Où un filet de x [x] quitte son pommeau, sous le tuyau. */
+    internal fun doucheHaut(x: Float): Float {
+        val (x0, y0, x1, y1) = TUYAU_DOUCHES
+        return y0 + (x - x0) / (x1 - x0) * (y1 - y0) + 1.1f
+    }
+
+    /** Les douches de Sofaïa : x de chaque pommeau et l'endroit où son filet touche l'eau. Le dessin les peint, [Ambiance] y fait tomber les gouttes. */
+    internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
 
     /** Les fumées du bassin de Ravine Chaude, sur le plan de devant : x, pied, haut, largeur et dérive de chacune. */
     internal val VAPEURS_RAVINE = arrayOf(floatArrayOf(40f, 57f, 49f, 1.4f, -2f), floatArrayOf(58f, 58f, 51f, 1.2f, 2f))
@@ -1131,8 +1140,6 @@ object Paysages {
     internal val CHUTE_ECREVISSES = floatArrayOf(79f, 18f, 45f, 9f)
 
     internal val CHUTE_LEZARDE = floatArrayOf(86f, 17f, 39.4f, 6f)
-    internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
-
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
@@ -2949,10 +2956,10 @@ object Paysages {
             for ((x, y, l) in arrayOf(Triple(30f, 53f, 9f), Triple(48f, 56f, 12f), Triple(24f, 59f, 8f), Triple(62f, 60f, 10f), Triple(40f, 61.5f, 7f)))
                 pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.4f} $x ${y}Z", papier(0xFF4E6E64.toInt()), 0f)
             pieceD("M52 50.6L56.4 50.2L56.8 53.4L52.4 53.8Z", papier(0xFF9A9A94.toInt()), 0.3f)
-            // Les filets d'eau chaude qui tombent du mur du fond.
+            // Les filets d'eau chaude qui tombent des pommeaux du tuyau.
             val filet = papier(0xFFDCEAE8.toInt())
             for ((x, y1) in DOUCHES) {
-                var y = DOUCHE_HAUT
+                var y = doucheHaut(x)
                 while (y < y1) {
                     val l = min(1.2f + r() * 1.6f, y1 - y)
                     val dx = sin(y * 1.7f + x) * 0.15f
@@ -2970,11 +2977,22 @@ object Paysages {
             }
             // La conduite grise qui longe le bord gauche.
             barre(-2f, 55f, 14f, 52.4f, 1.6f, papier(0xFF9C9E9A.toInt()), 0.5f)
-            // Les rambardes : bois au fond et à gauche, la poutre en travers, métal blanc à droite.
+            // Les rambardes : bois au fond et à gauche, métal blanc à droite.
             val bois = papier(0xFF8C5E3C.toInt())
             rambarde(50f, 41.2f, 76f, 41.2f, 6.5f, 3, 12, bois, 0.9f)
             rambarde(22f, 41.2f, 10f, 64f, 8f, 3, 10, bois, 1.1f)
-            barre(8f, 60f, 70f, 36f, 1.5f, papier(0xFFCBAA7C.toInt()), 0.7f)
+            // Le tuyau des douches : il sort de la conduite, se coude et traverse le
+            // bassin sur son poteau de bois ; dessous, ses minuscules pommeaux.
+            val (tx0, ty0, tx1, ty1) = TUYAU_DOUCHES
+            barre(30f, ty0 + (30f - tx0) / (tx1 - tx0) * (ty1 - ty0), 30.4f, 62f, 1f, bois, 0.6f)
+            val metal = papier(0xFF9C9E9A.toInt())
+            barre(13.4f, 52.6f, tx0, ty0, 1.2f, metal, 0.5f)
+            barre(tx0, ty0, tx1, ty1, 1.2f, metal, 0.7f)
+            barre(tx0 + 1f, ty0 - 0.4f, tx1, ty1 - 0.4f, 0.3f, mix(metal, 0xFFFFFFFF.toInt(), 0.45f), 0f)
+            for ((x, _) in DOUCHES) {
+                val y = doucheHaut(x)
+                pieceD("M${x - 0.45f} ${y - 0.6f}L${x + 0.45f} ${y - 0.6f}L${x + 0.3f} ${y}L${x - 0.3f} ${y}Z", papier(0xFF5E605C.toInt()), 0f)
+            }
             rambarde(76f, 41.2f, 89f, 64.5f, 9.5f, 4, 14, papier(0xFFE4E6E2.toInt()), 0.9f)
             balisier(5f, 67f, 13f, feuille())
             balisier(96f, 67f, 13f, feuille())

@@ -975,7 +975,7 @@ internal object Faune {
 
 /**
  * L'eau chaude qui tombe des douches de Sofaïa : sur chaque filet peint
- * ([Paysages.DOUCHES]), des gouttes claires qui accélèrent en tombant, et à
+ * ([Paysages.DOUCHES]), depuis son pommeau sous le tuyau, des gouttes claires qui accélèrent en tombant, et à
  * leur pied des ronds qui s'élargissent et s'effacent sur l'eau sombre. Le
  * bassin est sur le plan de devant : l'eau glisse avec lui quand on penche.
  */
@@ -1005,8 +1005,8 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
         c.scale(e, e)
         p.style = Paint.Style.STROKE
         p.strokeCap = Paint.Cap.ROUND
-        val haut = Paysages.DOUCHE_HAUT
         Paysages.DOUCHES.forEachIndexed { i, (x, bas) ->
+            val haut = Paysages.doucheHaut(x)
             val chute = bas - haut
             // Trois gouttes par filet, également espacées dans le cycle.
             for (k in 0 until 3) {
