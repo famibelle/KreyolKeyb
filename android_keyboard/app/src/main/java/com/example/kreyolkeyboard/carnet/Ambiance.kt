@@ -142,11 +142,14 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             val eau = when {
                 enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
                 enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
+                enPlans && lieu == Lieu.SAUT_LEZARDE -> Cascade(zone, graine, Paysages.CHUTE_LEZARDE)
+                enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
@@ -1025,12 +1028,13 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 }
 
 /**
- * L'eau de la chute du Carbet ([Paysages.CHUTE_CARBET]) : des traînées
+ * L'eau de la chute du Carbet ([Paysages.CHUTE_CARBET]) ou du Saut de la
+ * Lézarde ([Paysages.CHUTE_LEZARDE]) : des traînées
  * blanches qui dévalent le rideau peint en accélérant et s'écartent un peu
  * vers le pied, où l'écume bouillonne en bouffées qui gonflent et
  * s'effacent. La chute est sur le plan du milieu et glisse avec lui.
  */
-private class Cascade(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Paysages.CHUTE_CARBET) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 22
     private val voie = FloatArray(n) { hasard() - 0.5f }
@@ -1054,7 +1058,7 @@ private class Cascade(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     }
 
     override fun dessiner(c: Canvas, p: Paint) {
-        val (x, haut, bas, w) = Paysages.CHUTE_CARBET
+        val (x, haut, bas, w) = eau
         val e = cadre[0]
         c.save()
         c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,

@@ -4781,8 +4781,27 @@ class Motif(
                 ombres?.getOrNull(i)?.let { o -> peindreOmbre(c, o, i, regardX, regardY) }
                 c.drawBitmap(etages[i], null, ouPlan, peinture)
                 if (i == Paysages.MILIEU && Paysages.PAPIER && lieu == Lieu.MARIE_GALANTE) peindreAiles(c, i, regardX, regardY)
+                if (!c.isHardwareAccelerated) poserBetes(c, i)
             }
         }
+    }
+
+    private val atelierFige by lazy { Paysages.Atelier(heure) }
+
+    /**
+     * Les bêtes du lieu, au repos, sur le plan [i] qui les porte : les calques
+     * les taisent pour que la carte ouverte les anime ([Ambiance]), mais une
+     * image figée (partage, carte imprimée) n'a pas d'ambiance et doit garder
+     * ce qui fait le lieu, l'iguane de Petite-Terre ou le pélican sur sa bitte.
+     */
+    private fun poserBetes(c: Canvas, i: Int) {
+        val betes = Paysages.BETES[lieu] ?: return
+        val k = cadrage[0]
+        c.save()
+        c.translate(visible.left + cadrage[1], visible.top + cadrage[2])
+        c.scale(k, k)
+        betes.forEachIndexed { n, b -> if (b.plan + 2 == i) atelierFige.poser(c, b, n) }
+        c.restore()
     }
 
     private val peintureAiles = Paint(Paint.ANTI_ALIAS_FLAG)
