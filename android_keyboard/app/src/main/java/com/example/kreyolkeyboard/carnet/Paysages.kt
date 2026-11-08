@@ -970,6 +970,9 @@ object Paysages {
     /** Les fumées du bassin de Ravine Chaude, sur le plan de devant : x, pied, haut, largeur et dérive de chacune. */
     internal val VAPEURS_RAVINE = arrayOf(floatArrayOf(40f, 57f, 49f, 1.4f, -2f), floatArrayOf(58f, 58f, 51f, 1.2f, 2f))
 
+    /** Les deux fumées légères du bassin des Bains Jaunes, sur le plan du milieu : x, pied, haut, largeur, dérive. */
+    internal val VAPEURS_BAINS = arrayOf(floatArrayOf(76f, 49f, 38f, 1.4f, -2f), floatArrayOf(90f, 55f, 43f, 1.4f, 1.6f))
+
     /** L'écume du rivage de la Pointe des Châteaux, sur le plan du milieu : sa ligne. */
     internal const val RIVAGE_CHATEAUX = 39.2f
 
@@ -2508,6 +2511,28 @@ object Paysages {
         }
 
         /** Le panache d'une fumerolle : des bouffées qui montent de [bas] à [haut] en grossissant et en dérivant. */
+        /**
+         * Une vapeur légère, en voile de papier calque : des nappes ovales à
+         * peine opaques qui s'élargissent en montant, et s'effacent en haut.
+         */
+        private fun voileVapeur(x: Float, bas: Float, haut: Float, w: Float, derive: Float, graine: Int) {
+            val r = Alea(graine)
+            val col = if (P.nuit) mix(P.cielBas, P.cielHaut, 0.35f) else 0xFFFFFFFF.toInt()
+            // Deux voiles : le large et pâle, puis le cœur plus étroit qui s'arrête plus bas.
+            for ((large, fin, o) in arrayOf(Triple(1f, 1f, 0.2f), Triple(0.55f, 0.6f, 0.2f))) {
+                val t = Path()
+                var u = 0f
+                while (u <= fin) {
+                    val cx = x + derive * u * u + (r() - 0.5f) * w * 0.6f
+                    val cy = bas + (haut - bas) * u
+                    val rx = w * (1.2f + 2.2f * u) * large; val ry = w * (0.7f + 0.6f * u) * large
+                    t.op(Path().apply { addOval(RectF(cx - rx, cy - ry, cx + rx, cy + ry), Path.Direction.CW) }, Path.Op.UNION)
+                    u += 0.08f
+                }
+                forme(t, col, o)
+            }
+        }
+
         private fun panache(x: Float, bas: Float, haut: Float, w: Float, derive: Float, graine: Int) {
             val r = Alea(graine)
             val col = if (P.nuit) mix(P.cielBas, P.cielHaut, 0.35f) else papier(0xFFF3F2EC.toInt())
@@ -5233,6 +5258,10 @@ object Paysages {
             }
             // La rive de roche noire au fond à droite.
             pieceD("M96 40.4Q100 38 104 38L104 44L98 41.8Z", papier(0xFF2E2C2A.toInt()), 0.4f)
+            // Une vapeur légère monte de l'eau chaude.
+            VAPEURS_BAINS.forEachIndexed { i, (x, pied, haut, w, derive) -> voileVapeur(x, pied, haut, w, derive, 1630 + i) }
+            for ((vx, vy, vl) in arrayOf(Triple(70f, 48f, 9f), Triple(86f, 52f, 11f), Triple(78f, 58f, 12f)))
+                forme(Path().apply { addOval(RectF(vx - vl, vy - 1.2f, vx + vl, vy + 1.2f), Path.Direction.CW) }, 0xFFFFFFFF.toInt(), 0.18f)
             plan(2)
             // La mousse du bord gauche, les marches de bois, les grandes feuilles claires.
             pieceD("M-2 56Q4 58 6 68L-2 68Z", papier(0xFF5E9A3A.toInt()), 0.4f)
@@ -6450,19 +6479,46 @@ object Paysages {
          * devant. Balisiers pour le colibri.
          */
         fun matoubaPapier() {
-            cumulus(-6f, 18f, 24f, 2701)
-            cumulus(22f, 8f, 16f, 2702)
-            // Le flanc du morne, en bandes de forêt.
+            // Le fond de forêt en couches, des troncs pâles dans la brume.
+            morneBoise(4f, 2.4f, 2711, mix(papier(0xFF8CBE74.toInt()), P.cielBas, 0.5f), 2.6f)
+            val pale = mix(papier(0xFF7E8E70.toInt()), P.cielBas, 0.4f)
+            for ((x, e) in arrayOf(34f to 0.6f, 41f to 0.5f, 52f to 0.7f, 58f to 0.5f)) barre(x, 44f, x + 0.6f, 4f, e, pale, 0f)
+            // Le flanc du morne qui monte à droite, hérissé de houppiers.
             val flanc = brisee(20f, 44f, 34f, 30f, 46f, 18f, 58f, 10f, 70f, 4f, 82f, -1f, 102f, -4f)
-            val verts = intArrayOf(papier(0xFF3E7A34.toInt()), papier(0xFF5A9440.toInt()), papier(0xFF2E6A2E.toInt()),
-                papier(0xFF6EA44A.toInt()), papier(0xFF4A8638.toInt()))
-            for (k in 0 until 5) {
-                val c = { x: Float -> flanc(x - k * 5f) + k * 4f }
-                val bande = sousLaCrete(20f + k * 5f, 104f, c)
-                bande.op(bosses(20f + k * 5f, 104f, { x -> c(x) + 0.4f }, 1.4f, 2.4f, Alea(2703 + k)), Path.Op.UNION)
-                piece(bande, if (k == 0) mix(verts[k], P.cielBas, 0.2f) else verts[k], 0.6f)
+            val verts = intArrayOf(papier(0xFF3E7A34.toInt()), papier(0xFF2E6A2E.toInt()), papier(0xFF4A8638.toInt()))
+            for (k in 0 until 3) {
+                val c = { x: Float -> flanc(x - k * 7f) + k * 6f }
+                val bande = sousLaCrete(20f + k * 7f, 104f, c)
+                bande.op(bosses(20f + k * 7f, 104f, { x -> c(x) + 0.4f }, 1.8f, 3.2f, Alea(2703 + k)), Path.Op.UNION)
+                piece(bande, if (k == 0) mix(verts[k], P.cielBas, 0.3f) else mix(verts[k], P.cielBas, 0.15f), 0.6f)
+                taches(24f + k * 7f, 104f, 46f, 10, 2712 + k, mix(papier(0xFF6EA846.toInt()), P.cielBas, 0.2f), c)
             }
+            brumePapier(24f, 76f, 30f, 4f, 2715)
+            morneBoise(30f, 1.8f, 2716, mix(papier(0xFF5E9E52.toInt()), P.cielBas, 0.2f), 2.6f)
+            brumePapier(30f, 70f, 40f, 3f, 2717)
+            morneBoise(38f, 1.4f, 2718, mix(papier(0xFF4E8E46.toInt()), P.cielBas, 0.1f), 2.2f)
             plan(1)
+            // Les deux lisières de la forêt, qui descendent vers la clairière.
+            val lisieres = intArrayOf(papier(0xFF2E6A3A.toInt()), papier(0xFF4E8E46.toInt()))
+            for (k in 0 until 2) {
+                rive(true, 6f + k * 12f, 40f + k * 3f, 30f - k * 6f, 2720 + k, lisieres[k], 3.6f)
+                rive(false, 4f + k * 12f, 41f + k * 3f, 66f + k * 6f, 2722 + k, lisieres[1 - k], 3.6f)
+            }
+            // Le gros tronc de droite, ses contreforts, ses épiphytes et ses lianes.
+            val gros = papier(0xFF4A4036.toInt())
+            pieceD("M78.4 -2L84.6 -2Q84 20 85 34Q86 42 91 47.6L72 47.6Q77 42 77.8 34Q78.8 20 78.4 -2Z", gros, 0.8f)
+            pieceD("M82.8 -2L84.6 -2Q84 20 85 34Q86 42 91 47.6L87.6 47.6Q84.4 40 83.4 30Q82.8 14 82.8 -2Z", mix(gros, 0xFFFFFFFF.toInt(), 0.12f), 0f)
+            for ((y, l) in arrayOf(10f to 5f, 22f to 4f)) feuillePliee(79f, y, l, 95f, papier(0xFF5E9A44.toInt()), 0.35f)
+            // La voûte : les houppiers qui se rejoignent en haut, à droite.
+            val voute = Path()
+            val rv = Alea(2724)
+            repeat(14) { voute.op(disque(56f + rv() * 50f, -2f + rv() * 9f, 3f + rv() * 2.6f), Path.Op.UNION) }
+            piece(voute, papier(0xFF2E6A2E.toInt()))
+            taches(56f, 104f, 8f, 8, 2725, papier(0xFF5E9A44.toInt())) { -2f }
+            val liane = papier(0xFF6A7A48.toInt())
+            barre(64f, 2f, 63.2f, 24f, 0.3f, liane, 0.2f)
+            barre(71f, 4f, 72f, 32f, 0.35f, liane, 0.2f)
+            barre(94f, 4f, 93f, 28f, 0.3f, liane, 0.2f)
             // Le grand arbre de gauche : son tronc pour le pic, son houppier en haut.
             val ecorce = papier(0xFF5A4A3A.toInt())
             barre(14.4f, 46f, 13.8f, 6f, 1.4f, ecorce, 0.5f)
@@ -6472,9 +6528,10 @@ object Paysages {
             repeat(12) { houppier.op(disque(-2f + rh() * 30f, -1f + rh() * 12f, 3f + rh() * 2.4f), Path.Op.UNION) }
             piece(houppier, papier(0xFF3E7A30.toInt()))
             taches(-2f, 28f, 12f, 8, 2705, papier(0xFF6EA846.toInt())) { 0f }
-            // L'herbe de la clairière.
-            pieceD("M-2 46Q30 44 60 45.4Q80 46 102 44L102 68L-2 68Z", papier(0xFF7EAE44.toInt()), 0.4f)
-            pieceD("M-2 52Q40 50 102 52.6L102 68L-2 68Z", papier(0xFF8CBA4C.toInt()), 0f)
+            // Le sol du sous-bois, sombre, et l'herbe de la petite clairière au milieu.
+            pieceD("M-2 46Q30 44.6 60 45.6Q80 46.4 102 45L102 68L-2 68Z", papier(0xFF4E7A38.toInt()), 0.4f)
+            pieceD("M26 47Q46 45.6 64 46.6Q74 47.4 80 51Q70 56 52 56.6Q34 56 22 52Q20 48.6 26 47Z", papier(0xFF7EAE44.toInt()), 0f)
+            taches(-2f, 102f, 58f, 16, 2726, papier(0xFF3E6A2E.toInt())) { 45f }
             // Le carbet de bois, ouvert, à gauche.
             val bois = papier(0xFF8A7458.toInt()); val sombre = papier(0xFF4E4234.toInt())
             pieceD("M4 39.4L24 38.8L24 46L4 46.6Z", sombre, 0.2f)
@@ -6497,8 +6554,8 @@ object Paysages {
             // La clôture de piquets, au fond de la clairière.
             val piquet = papier(0xFF7A6A56.toInt())
             var fx = 38f
-            while (fx < 84f) { barre(fx, 45.6f, fx, 42f, 0.35f, piquet, 0.2f); fx += 4.6f }
-            barre(38f, 43f, 84f, 42.6f, 0.08f, papier(0xFF5A5450.toInt()), 0f)
+            while (fx < 60f) { barre(fx, 45.6f, fx, 42f, 0.35f, piquet, 0.2f); fx += 4.6f }
+            barre(38f, 43f, 56.6f, 42.8f, 0.08f, papier(0xFF5A5450.toInt()), 0f)
             // Le petit bassin de pierre, creusé dans l'herbe, à droite du mot.
             val pierre = papier(0xFF8E8A82.toInt())
             pieceD("M62 47.4L76 47L78 50L60 50.4Z", papier(0xFF2A2E2A.toInt()), 0.2f)
@@ -6512,16 +6569,21 @@ object Paysages {
             pied(98f, 52f, 16f, 2707)
             pied(84f, 50f, 12f, 2708)
             plan(2)
-            // L'herbe de devant, les marches de bois, les fougères de droite.
-            pieceD("M-2 58Q30 56 60 58.6Q80 60 102 57L102 68L-2 68Z", papier(0xFF96C054.toInt()), 0.4f)
+            // Le sous-bois de devant : les marches de bois, fougères et grandes feuilles des deux bords.
             val planche = papier(0xFF9A8A70.toInt())
-            pieceD("M4 56.6L16 54.6L16.6 56L4.6 58Z", planche, 0.5f)
-            pieceD("M0 62.6L22 60L22.6 61.6L0.6 64.2Z", planche, 0.5f)
+            pieceD("M24 60.6L36 59.4L36.4 60.8L24.4 62Z", planche, 0.5f)
+            pieceD("M20 65.6L40 64L40.4 65.6L20.4 67.2Z", planche, 0.5f)
             val fougeres = intArrayOf(papier(0xFF5EA04A.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF7AB654.toInt()))
-            for ((fx2, fy, fl, fa) in arrayOf(floatArrayOf(102f, 56f, 13f, -160f), floatArrayOf(100f, 62f, 12f, -150f), floatArrayOf(96f, 67f, 11f, -140f)))
-                fougere(fx2, fy, fl, fa, fougeres[(fy.toInt() and 0xFF) % 3])
-            balisier(9f, 63f, 13f, feuille())
-            balisier(86f, 62f, 13f, feuille())
+            for ((fx2, fy, fl, fa) in arrayOf(
+                floatArrayOf(-2f, 52f, 13f, -25f), floatArrayOf(2f, 58f, 14f, -15f), floatArrayOf(4f, 66f, 12f, -32f),
+                floatArrayOf(102f, 52f, 13f, -155f), floatArrayOf(100f, 58f, 13f, -165f), floatArrayOf(96f, 67f, 11f, -140f)))
+                fougere(fx2, fy, fl, fa, fougeres[((fx2 + fy).toInt() and 0xFF) % 3])
+            feuilleBananier(-2f, 67f, 12f, -40f, papier(0xFF4FB06A.toInt()))
+            feuilleCoeur(16f, 67f, 4f, -10f, papier(VERT_PROFOND))
+            feuilleBananier(102f, 67f, 12f, -142f, papier(0xFF3FA86A.toInt()))
+            feuilleCoeur(82f, 67f, 3.6f, 14f, papier(VERT_PROFOND))
+            balisier(12f, 61f, 13f, feuille())
+            balisier(87f, 61f, 13f, feuille())
         }
 
         /** Matouba : la stèle de Delgrès et de ses compagnons, dans sa clairière, au cœur de la forêt. */

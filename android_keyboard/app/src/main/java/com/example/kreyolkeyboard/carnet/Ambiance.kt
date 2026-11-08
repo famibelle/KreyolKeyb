@@ -145,6 +145,8 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.SAUT_LEZARDE -> Cascade(zone, graine, Paysages.CHUTE_LEZARDE)
                 enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
+                enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
+                    nappe = floatArrayOf(68f, 30f, 46f, 10f), force = 0.6f)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
@@ -1097,17 +1099,24 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
 }
 
 /**
- * La vapeur du bassin de Ravine Chaude ([Paysages.VAPEURS_RAVINE]) : par-dessus
+ * La vapeur du bassin de Ravine Chaude ([Paysages.VAPEURS_RAVINE]), ou plus
+ * légère celle des Bains Jaunes ([Paysages.VAPEURS_BAINS]) : par-dessus
  * chaque fumée peinte, des bouffées pâles montent lentement en grossissant,
  * ondulent un peu et s'effacent ; et au ras de l'eau, des nappes glissent
  * d'un bord à l'autre du bassin. Les nappes comptent le plus : le dessin du
  * mot, devant, cache presque toujours le haut des fumées, jamais l'eau sous
  * lui. Doux exprès : une eau tiède qui fume, pas une marmite.
  */
-private class Vapeurs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+private class Vapeurs(
+    zone: RectF, graine: Int,
+    private val sources: Array<FloatArray> = Paysages.VAPEURS_RAVINE,
+    private val plan: Int = 4,
+    private val nappe: FloatArray = floatArrayOf(30f, 36f, 57.2f, 4f),
+    private val force: Float = 1f
+) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val parSource = 5
-    private val periode = FloatArray(Paysages.VAPEURS_RAVINE.size * parSource) { 3.2f + hasard() * 1.6f }
+    private val periode = FloatArray(sources.size * parSource) { 3.2f + hasard() * 1.6f }
     private val onde = FloatArray(periode.size) { hasard() * 6.28f }
     private val nappes = 6
     private val vitesse = FloatArray(nappes) { (0.9f + hasard() * 0.9f) * (if (hasard() < 0.5f) -1f else 1f) }
@@ -1129,27 +1138,27 @@ private class Vapeurs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     override fun dessiner(c: Canvas, p: Paint) {
         val e = cadre[0]
         c.save()
-        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
-            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
         c.scale(e, e)
         p.style = Paint.Style.FILL
-        Paysages.VAPEURS_RAVINE.forEachIndexed { s, (x, pied, haut, w, derive) ->
+        sources.forEachIndexed { s, (x, pied, haut, w, derive) ->
             for (k in 0 until parSource) {
                 val i = s * parSource + k
                 val t = (temps / periode[i] + k / parSource.toFloat()) % 1f
                 val y = pied - (pied - haut) * 1.3f * t
                 val bx = x + derive * t * t + sin(temps * 1.1f + onde[i]) * 1.1f * t
                 val r = w * (0.5f + 1.3f * t)
-                p.color = ((sin(PI.toFloat() * t) * 150f).toInt() shl 24) or 0xFFFFFF
+                p.color = ((sin(PI.toFloat() * t) * 150f * force).toInt() shl 24) or 0xFFFFFF
                 c.drawCircle(bx, y, r, p)
             }
         }
-        // Les nappes, dans l'ovale du bassin (centre 48, 59 ; 22 sur 3,6).
+        // Les nappes, au ras de l'eau du bassin ([nappe] : x, largeur, y, hauteur).
         for (k in 0 until nappes) {
             val u = ((depart[k] + temps * vitesse[k] / 40f) % 1f + 1f) % 1f
-            val nx = 30f + 36f * u
-            val ny = 57.2f + ligne[k] * 4f - sin(PI.toFloat() * u) * 1.2f
-            val alpha = (sin(PI.toFloat() * u) * 130f).toInt()
+            val nx = nappe[0] + nappe[1] * u
+            val ny = nappe[2] + ligne[k] * nappe[3] - sin(PI.toFloat() * u) * 1.2f
+            val alpha = (sin(PI.toFloat() * u) * 130f * force).toInt()
             p.color = (alpha shl 24) or 0xFFFFFF
             val rx = 4f + 2.5f * ligne[k]
             c.drawOval(nx - rx, ny - 0.9f, nx + rx, ny + 0.9f, p)
