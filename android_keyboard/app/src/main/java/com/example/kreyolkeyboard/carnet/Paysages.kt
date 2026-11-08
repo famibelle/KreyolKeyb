@@ -6551,6 +6551,14 @@ object Paysages {
             }
             pieceD("M26.4 39.6L28.6 39.6L28.6 42.6L26.4 42.6Z", papier(0xFFE8E6E0.toInt()), 0.3f)
             barre(27.5f, 42.6f, 27.5f, 46f, 0.2f, sombre, 0f)
+            // Dans un coin, au bord de la clairière, la petite stèle de Delgrès et de ses compagnons.
+            val stele = papier(0xFF9A968E.toInt())
+            pieceD("M29.2 47.4L34.2 47.4L34.2 48.4L29.2 48.4Z", mix(stele, 0xFF000000.toInt(), 0.15f), 0.3f)
+            pieceD("M30.2 42.2Q31.7 41.2 33.2 42.2L33.6 47.4L29.8 47.4Z", stele, 0.4f)
+            pieceD("M30.7 43.2L32.7 43.2L32.7 44.8L30.7 44.8Z", papier(0xFF5E5A54.toInt()), 0f)
+            // Deux fleurs rouges déposées au pied.
+            for ((fx, fy) in arrayOf(29.8f to 47.6f, 33.6f to 47.8f))
+                pieceD("M${fx - 0.45f} ${fy}Q$fx ${fy - 0.7f} ${fx + 0.45f} ${fy}Q$fx ${fy + 0.5f} ${fx - 0.45f} ${fy}Z", papier(0xFFC8402E.toInt()), 0f)
             // La clôture de piquets, au fond de la clairière.
             val piquet = papier(0xFF7A6A56.toInt())
             var fx = 38f
