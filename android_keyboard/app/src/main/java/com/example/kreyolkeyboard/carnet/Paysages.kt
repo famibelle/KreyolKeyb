@@ -890,7 +890,7 @@ object Paysages {
         Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f)),
         Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
         Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
-        Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 43f)),
+        Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 40.4f, plan = 1)),
         Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 28f, 62f, taille = 1.5f), Bete(Espece.ECREVISSE, 50f, 63.6f, taille = 1.7f),
             Bete(Espece.ECREVISSE, 68f, 61.6f, taille = 1.3f), Bete(Espece.LIBELLULE, 33f, 43f)),
         Lieu.SAUT_LEZARDE to listOf(Bete(Espece.LIBELLULE, 44f, 50f, plan = 1)),
@@ -5161,8 +5161,90 @@ object Paysages {
             balisier(88f, 64f, 11f, feuille())
         }
 
+        // ------------------------------------------- les Bains Jaunes en papier
+
+        /**
+         * Les Bains Jaunes en papier découpé, d'après la photo du propriétaire
+         * (2026-11-08) : le bassin rectangulaire d'eau sombre, son rebord de
+         * pierre qui fuit vers le fond à droite du mot ; le chemin de pavés
+         * mouillés semé de feuilles jaunes qui longe le bassin ; la forêt
+         * dense des deux côtés, les bambous qui se penchent sur l'eau, les
+         * grandes feuilles claires devant à droite, les marches de bois. Le
+         * raton laveur longe le rebord du fond la nuit.
+         */
+        fun bainsJaunesPapier() {
+            // Le fond de la forêt en lisières, plus clair au bout du chemin.
+            morneBoise(2f, 2f, 1601, papier(0xFF2E5E30.toInt()), 3f)
+            val pale = mix(papier(0xFF6E7E62.toInt()), P.cielBas, 0.35f)
+            for ((x, e) in arrayOf(34f to 0.6f, 42f to 0.5f, 55f to 0.7f)) barre(x, 40f, x + 0.6f, 4f, e, pale, 0f)
+            morneBoise(14f, 2.4f, 1602, mix(papier(0xFF6EA858.toInt()), P.cielBas, 0.3f), 3f)
+            brumePapier(26f, 72f, 24f, 4f, 1603)
+            morneBoise(24f, 2f, 1604, mix(papier(0xFF4E8E44.toInt()), P.cielBas, 0.15f), 2.8f)
+            morneBoise(33f, 1.6f, 1605, papier(0xFF6AA24E.toInt()), 2.4f)
+            plan(1)
+            // Les deux bords de forêt.
+            val verts = intArrayOf(papier(0xFF5E9A44.toInt()), papier(0xFF2E6230.toInt()), papier(0xFF7AAE4E.toInt()))
+            for (k in 0 until 3) rive(true, 10f + k * 8f, 40f + k * 3f, 44f - k * 6f, 1610 + k, verts[k], 3.4f + k * 0.5f)
+            for (k in 0 until 2) rive(false, 14f + k * 8f, 38f + k * 1.6f, 64f + k * 6f, 1620 + k, verts[(k + 1) % 3], 3.4f + k * 0.5f)
+            bambous(98f, 42f, 30f, -1f, 1625)
+            // Le chemin de pavés mouillés, qui monte vers le fond.
+            pieceD("M-2 68L-2 52Q20 46 44 41.6L60 41.2L70 68Z", papier(0xFF5E6466.toInt()), 0.4f)
+            val rp = Alea(1626)
+            var y = 42f
+            while (y < 67.5f) {
+                val p = (y - 41f) / 27f
+                val g = -2f + (44f + 2f) * (1f - p) - (if (y > 52f) 0f else 0f)
+                val gauche = if (y < 52f) 44f - (y - 41.6f) / 10.4f * 46f else -2f
+                val droite = 60f + (y - 41.2f) / 26.8f * 10f
+                var x = gauche + rp() * 1.2f
+                val e = 0.4f + p * 1.4f
+                while (x < droite - 0.6f) {
+                    val l = (0.8f + rp() * 1f) * (0.5f + p * 1.6f)
+                    galet(x + l / 2f, y + e / 2f, l / 2f, papier(if (rp() < 0.5f) 0xFF7A8284.toInt() else 0xFF8E9698.toInt()))
+                    x += l + 0.15f
+                }
+                y += e + 0.15f
+                if (g > 1000f) break
+            }
+            for ((fx, fy) in arrayOf(20f to 58f, 34f to 62f, 46f to 55f, 12f to 64f, 52f to 64.6f, 40f to 48f))
+                feuillePliee(fx, fy, 1.4f, rp() * 360f, papier(0xFFD8B83A.toInt()), 0.4f)
+            // Le bassin : l'eau sombre, ses reflets, le rebord de pierre.
+            val eau = papier(0xFF1E2C24.toInt())
+            pieceD("M61.4 42.6L98 41.8L104 41.8L104 68L71.6 68Z", eau, 0.2f)
+            pieceD("M66 46Q80 45 98 46L98 49Q84 50.6 70 52Q67 50 66 46Z", papier(0xFF3E5A34.toInt()), 0f)
+            pieceD("M72 56Q86 54.6 104 56L104 59Q88 60.6 74 61.4Z", papier(0xFF2E4A30.toInt()), 0f)
+            for ((ry, rx0, rl) in arrayOf(Triple(53f, 76f, 14f), Triple(63f, 80f, 18f)))
+                pieceD("M$rx0 ${ry}Q${rx0 + rl / 2f} ${ry - 0.3f} ${rx0 + rl} ${ry}Q${rx0 + rl / 2f} ${ry + 0.4f} $rx0 ${ry}Z", papier(0xFF6E8A6A.toInt()), 0f)
+            val rebord = papier(0xFF8A8E8A.toInt())
+            val paroi = papier(0xFF4E5250.toInt())
+            pieceD("M59.6 41L98 40.2L98 41.8L61.4 42.6Z", rebord, 0.4f)
+            pieceD("M61.4 42.6L98 41.8L98 42.8L61.8 43.6Z", paroi, 0f)
+            pieceD("M59.6 41L61.4 42.6L71.6 68L68 68Z", rebord, 0.6f)
+            pieceD("M61.4 42.6L62.6 43.4L72.8 68L71.6 68Z", paroi, 0f)
+            var k = 0
+            while (k < 12) {
+                val u = k / 12f
+                val x0 = 59.6f + (68f - 59.6f) * u; val y0 = 41f + 27f * u
+                barre(x0, y0, x0 + 1.6f + u * 1.6f, y0 + 1.4f * (1f - u), 0.1f, papier(0xFF6E726E.toInt()), 0f)
+                k++
+            }
+            // La rive de roche noire au fond à droite.
+            pieceD("M96 40.4Q100 38 104 38L104 44L98 41.8Z", papier(0xFF2E2C2A.toInt()), 0.4f)
+            plan(2)
+            // La mousse du bord gauche, les marches de bois, les grandes feuilles claires.
+            pieceD("M-2 56Q4 58 6 68L-2 68Z", papier(0xFF5E9A3A.toInt()), 0.4f)
+            val bois = papier(0xFF7A5A40.toInt())
+            pieceD("M76 62L90 61.4L90.6 64L76.4 64.6Z", bois, 0.6f)
+            pieceD("M75.4 65.4L91 64.8L91.6 67.6L75.8 68.2Z", bois, 0.6f)
+            for ((fx, fy, fa) in arrayOf(Triple(104f, 50f, -160f), Triple(104f, 58f, -150f), Triple(104f, 64f, -170f), Triple(96f, 68f, -120f)))
+                feuilleBananier(fx, fy, 11f, fa, papier(0xFFB4D86A.toInt()))
+            balisier(10f, 62f, 13f, feuille())
+            balisier(92f, 60f, 12f, feuille())
+        }
+
         /** Les Bains Jaunes : le bassin de pierre au pied de la Soufrière, la vapeur, le raton laveur la nuit. */
         fun bainsJaunes() {
+            if (PAPIER) { bainsJaunesPapier(); return }
             forme("M0 26Q20 16 40 22Q60 12 80 20Q92 16 100 20L100 66L0 66Z", P.loin)
             bosquet(-2f, 102f, 25f, 2.6f, 261, mix(P.loin, P.milieu, 0.5f))
             plan(1)
