@@ -48,6 +48,31 @@ class PlancheLieuxTest {
         cases.chunked(32).forEachIndexed { i, morceau -> planche("planche_lieux_${i + 1}", morceau, 4) }
     }
 
+    /**
+     * Le théâtre de papier de la carte ouverte, carte à plat : les calques de
+     * [Paysages.plans] empilés sans glissement, les nuages à leur place.
+     */
+    private fun theatre(lieu: Lieu, heure: Heure, souvenir: Souvenir? = null): Bitmap? {
+        val plans = Paysages.plans(lieu, heure, null, L, H, souvenir) ?: return null
+        val out = Bitmap.createBitmap(L, H, Bitmap.Config.ARGB_8888)
+        val c = Canvas(out)
+        val k = Paysages.cadrage(L.toFloat(), H.toFloat())
+        val p = Paint(Paint.FILTER_BITMAP_FLAG)
+        plans.forEachIndexed { i, b ->
+            if (i == Paysages.NUAGES) c.drawBitmap(b, k[1], k[2], p)
+            else c.drawBitmap(b, -Paysages.marge(i, L).toFloat(), -Paysages.marge(i, H).toFloat(), p)
+        }
+        return out
+    }
+
+    @Test
+    fun theatres() {
+        val cases = ArrayList<Pair<String, Bitmap?>>()
+        for (lieu in Lieu.values()) for (r in Rarete.values())
+            cases += "${lieu.nom} · ${r.name}" to theatre(lieu, Heure.de(r, null), Souvenir(Saison.CAREME, null))
+        cases.chunked(32).forEachIndexed { i, morceau -> planche("planche_theatres_${i + 1}", morceau, 4) }
+    }
+
     @Test
     fun souvenirs() {
         val s = listOf(

@@ -93,7 +93,9 @@ object PartageCarte {
         c.drawRect(0f, 0f, LARGEUR.toFloat(), HAUTEUR.toFloat(), p)
         p.shader = null
 
-        val carte = CarteCarnet.complete(context, contenu)
+        // Le théâtre de papier de la carte ouverte, figé : la carte qu'on partage
+        // est celle qu'on a vue.
+        val carte = CarteCarnet.complete(context, contenu).also { (it as? CarteOrnee)?.enTheatre() }
         carte.measure(
             View.MeasureSpec.makeMeasureSpec(LARGEUR_CARTE, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)

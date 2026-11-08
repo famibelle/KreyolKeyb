@@ -1,8 +1,11 @@
 package com.example.kreyolkeyboard.carnet
 
 import android.graphics.Canvas
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -79,9 +82,9 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
          * aigrettes le jour, des lucioles le soir et la nuit ([nuit], les deux
          * paliers hauts). L'hivernage pleut.
          *
-         * [oiseaux] : les oiseaux de l'été volent ici plutôt que d'être peints
-         * dans le paysage, ce que fait le rendu en plans de la carte ouverte
-         * (voir [Habillage.appliquerPlans]). Le rendu à plat les garde peints.
+         * Les oiseaux de l'été n'en sont plus (2026-11-02) : sur la carte en
+         * plans, ils sont posés sur le carton des nuages et voyagent avec lui
+         * (voir [Motif]) ; le rendu à plat les garde peints ([Habillage]).
          */
         fun pour(souvenir: Souvenir?, zone: RectF, graine: Int, nuit: Boolean = false,
                  oiseaux: Boolean = false, lieu: Lieu? = null, heure: Heure? = null): Ambiance? {
@@ -133,7 +136,32 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             // La nuit, les étoiles de la carte ouverte scintillent, fête ou
             // non : le ciel peint pour elle n'en porte pas (Paysages.rendu).
             val ciel = if (oiseaux && heure?.nuit == true) Etoiles(zone, graine) else null
-            return listOfNotNull(ciel, faune, temps).let {
+            // L'eau des douches de Sofaïa et de la chute du Carbet tombe quand
+            // le lieu est rendu en plans.
+            val enPlans = oiseaux && souvenir?.fete == null && Paysages.PAPIER
+            val eau = when {
+                enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
+                enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
+                enPlans && lieu == Lieu.SAUT_LEZARDE -> Cascade(zone, graine, Paysages.CHUTE_LEZARDE)
+                enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES)
+                enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
+                enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
+                    nappe = floatArrayOf(68f, 30f, 46f, 10f), force = 0.6f)
+                enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
+                enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
+                enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
+                enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
+                enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
+                enPlans && lieu == Lieu.GRANDE_VIGIE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
+                enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
+                enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
+                enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
+                else -> null
+            }
+            return listOfNotNull(ciel, eau, faune, temps).let {
                 when (it.size) {
                     0 -> null
                     1 -> it[0]
@@ -328,6 +356,10 @@ private abstract class Chute(
 /**
  * La neige : des disques, trois profondeurs, lente exprès. Une neige pressée
  * se lit comme de la pluie.
+ *
+ * Depuis le chantier gouache (2026-11-02), des flocons de papier : une petite
+ * ombre, le liseré du carton kraft, puis le disque blanc (skill
+ * `direction-artistique` : ce qui est matière devient papier peint).
  */
 private class Neige(zone: RectF, graine: Int) :
     Chute(zone, graine, FLOCONS, 5f, 16f, 1.5f, 4.5f, 0.55f, 1.35f) {
@@ -336,12 +368,15 @@ private class Neige(zone: RectF, graine: Int) :
     private val alpha = IntArray(n) { (150 + profondeur[it] * 105).toInt() }
 
     override fun dessinerUn(c: Canvas, p: Paint, i: Int, fx: Float, fy: Float) {
-        // Un liseré gris-bleu sous le flocon : sans lui, la neige disparaissait
-        // sur les ciels d'hiver clairs du matin et de l'après-midi, blanc sur
-        // blanc.
-        p.color = LISERE
-        p.alpha = alpha[i] / 3
-        c.drawCircle(fx, fy, r[i] + 0.45f, p)
+        // L'ombre, puis le liseré de kraft sous le flocon : sans un liseré, la
+        // neige disparaissait sur les ciels d'hiver clairs du matin et de
+        // l'après-midi, blanc sur blanc.
+        p.color = OMBRE_PAPIER
+        p.alpha = alpha[i] / 4
+        c.drawCircle(fx + 0.25f, fy + 0.35f, r[i] + 0.3f, p)
+        p.color = KRAFT
+        p.alpha = alpha[i]
+        c.drawCircle(fx, fy, r[i] + 0.3f, p)
         p.color = 0xFFFFFFFF.toInt()
         p.alpha = alpha[i]
         c.drawCircle(fx, fy, r[i], p)
@@ -349,7 +384,6 @@ private class Neige(zone: RectF, graine: Int) :
 
     private companion object {
         const val FLOCONS = 46
-        const val LISERE = 0xFF4A5A78.toInt()
     }
 }
 
@@ -393,6 +427,13 @@ private class Pluie(zone: RectF, graine: Int) :
  * Chaque teinte est dessinée une fois dans une petite image, que la carte
  * graphique fait ensuite tourner : tracées comme des chemins, les feuilles
  * étaient redécoupées à chaque angle.
+ *
+ * Depuis le chantier gouache (2026-11-02, maquette `automne.html`), ce sont
+ * des pièces de **papier peint** ([Style.papier]) : une petite ombre, le
+ * papier kraft découpé, la gouache aux couleurs vives posée un peu en
+ * retrait du bord, puis la nervure ; le revers est d'un ton plus sombre. Les
+ * aigrettes, trop fines pour un bord de papier, gardent leur dessin, avec
+ * leur ombre et un trait de kraft.
  */
 private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
     Chute(
@@ -418,10 +459,15 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
         val contour: Int,
         val cadre: RectF,
         val tige: Boolean,
-        val forme: () -> android.graphics.Path
+        val forme: () -> android.graphics.Path,
+        /** Une pièce de papier découpé : un bord de kraft autour de la gouache. */
+        val papier: Boolean = true
     ) {
-        internal val sprites = arrayOfNulls<android.graphics.Bitmap>(teintes.size)
+        /** Deux images par teinte : la face, puis le revers, plus sombre. */
+        internal val sprites = arrayOfNulls<android.graphics.Bitmap>(teintes.size * 2)
         internal val chemin by lazy { forme() }
+        /** Le même, décalé là où tombe son ombre. */
+        internal val ombre by lazy { forme().apply { offset(0.18f, 0.28f) } }
     }
 
     private val taille = FloatArray(n) { style.tailleMin + profondeur[it] * (style.tailleMax - style.tailleMin) }
@@ -449,35 +495,61 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
         c.translate(fx, fy)
         c.rotate(angle)
         c.scale(t * (0.25f + 0.75f * abs(retourne)), t)
-        val image = if (c.isHardwareAccelerated) sprite(teinte[i]) else null
+        val revers = retourne < 0f
+        val image = if (c.isHardwareAccelerated) sprite(teinte[i], revers) else null
         p.alpha = alpha[i]
         if (image != null) {
             p.isFilterBitmap = true
             c.drawBitmap(image, null, style.cadre, p)
             p.isFilterBitmap = false
         } else {
-            peindre(c, p, style.teintes[teinte[i]], alpha[i])
+            peindre(c, p, style.teintes[teinte[i]], alpha[i], revers)
         }
         c.restore()
     }
 
-    private fun peindre(c: Canvas, p: Paint, couleur: Int, a: Int) {
+    private fun peindre(c: Canvas, p: Paint, couleur: Int, a: Int, revers: Boolean) {
         p.style = Paint.Style.FILL
-        p.color = couleur
-        p.alpha = a
-        c.drawPath(style.chemin, p)
-        p.style = Paint.Style.STROKE
-        p.strokeWidth = 0.08f
-        p.color = style.contour
-        p.alpha = a / 2
-        c.drawPath(style.chemin, p)
-        if (style.tige) c.drawLine(0f, -0.95f, 0f, 1.15f, p)
+        // L'ombre de la pièce sur ce qu'il y a derrière.
+        p.color = OMBRE_PAPIER
+        p.alpha = a / 4
+        c.drawPath(style.ombre, p)
+        val gouache = if (revers) Heure.melange(couleur, 0xFF000000.toInt(), 0.18f) else couleur
+        if (style.papier) {
+            // Le papier kraft, puis la gouache, un peu en retrait du bord.
+            p.color = KRAFT
+            p.alpha = a
+            c.drawPath(style.chemin, p)
+            c.save()
+            c.scale(0.86f, 0.9f)
+            p.color = gouache
+            p.alpha = a
+            c.drawPath(style.chemin, p)
+            c.restore()
+        } else {
+            p.color = gouache
+            p.alpha = a
+            c.drawPath(style.chemin, p)
+            p.style = Paint.Style.STROKE
+            p.strokeWidth = 0.05f
+            p.color = KRAFT
+            p.alpha = a
+            c.drawPath(style.chemin, p)
+        }
+        if (style.tige) {
+            p.style = Paint.Style.STROKE
+            p.strokeWidth = 0.08f
+            p.color = NERVURE
+            p.alpha = a * 140 / 255
+            c.drawLine(0f, -0.85f, 0f, 1.15f, p)
+        }
         p.style = Paint.Style.FILL
     }
 
-    /** La petite image de la teinte [k], faite au premier besoin et partagée. */
-    private fun sprite(k: Int): android.graphics.Bitmap? {
-        style.sprites[k]?.let { return it }
+    /** La petite image de la teinte [k], face ou [revers], faite au premier besoin et partagée. */
+    private fun sprite(k: Int, revers: Boolean): android.graphics.Bitmap? {
+        val rang = k * 2 + (if (revers) 1 else 0)
+        style.sprites[rang]?.let { return it }
         return try {
             val cadre = style.cadre
             val l = 48
@@ -486,8 +558,8 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
             val c = Canvas(b)
             c.scale(l / (cadre.right - cadre.left), h / (cadre.bottom - cadre.top))
             c.translate(-cadre.left, -cadre.top)
-            peindre(c, Paint(Paint.ANTI_ALIAS_FLAG), style.teintes[k], 255)
-            style.sprites[k] = b
+            peindre(c, Paint(Paint.ANTI_ALIAS_FLAG), style.teintes[k], 255, revers)
+            style.sprites[rang] = b
             b
         } catch (e: Throwable) {
             null
@@ -551,29 +623,30 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
             close()
         }
 
+        /** Les feuilles d'automne, aux couleurs vives de la maquette `automne.html`. */
         val FEUILLES = Style(
             "feuilles", 16, 4f, 10f, 5f, 11f, 3.4f, 6.6f,
             intArrayOf(
-                0xFFB5481F.toInt(), // rouille
-                0xFFE07B24.toInt(), // orange
-                0xFFD9A03B.toInt(), // ocre
-                0xFF8B5A2B.toInt(), // brun
-                0xFF9E2B25.toInt()  // rouge sombre
+                0xFFE8632A.toInt(), // orange vif
+                0xFFF2A33A.toInt(), // safran
+                0xFFC8402F.toInt(), // rouge
+                0xFFD98A2B.toInt(), // ocre
+                0xFFF6C445.toInt()  // jaune
             ),
-            0xFF4E2E14.toInt(), cadre(-0.85f, -1.1f, 0.85f, 1.25f), true, ::feuille
+            0xFF4E2E14.toInt(), cadre(-0.85f, -1.1f, 1.05f, 1.4f), true, ::feuille
         )
 
         val PETALES = Style(
             "pétales", 22, 3f, 8f, 4f, 9f, 1.8f, 3.4f,
             intArrayOf(0xFFF8BBD0.toInt(), 0xFFFFFFFF.toInt(), 0xFFF48FB1.toInt(), 0xFFFCE4EC.toInt()),
-            0xFFAD5C7A.toInt(), cadre(-0.95f, -1.05f, 0.95f, 1.05f), false, ::petale
+            0xFFAD5C7A.toInt(), cadre(-0.95f, -1.05f, 1.15f, 1.35f), false, ::petale
         )
 
         /** Des aigrettes qui planent : presque sans poids, elles flânent. */
         val AIGRETTES = Style(
             "aigrettes", 12, 1.5f, 4f, 6f, 13f, 3f, 5f,
             intArrayOf(0xFFFFFFFF.toInt(), 0xFFFFFDE7.toInt()),
-            0xFF6D6D6D.toInt(), cadre(-1f, -1.05f, 1f, 1.05f), false, ::aigrette
+            0xFF6D6D6D.toInt(), cadre(-1f, -1.05f, 1.2f, 1.35f), false, ::aigrette, papier = false
         )
 
         val CONFETTIS = Style(
@@ -582,7 +655,7 @@ private class Tournoyants(zone: RectF, graine: Int, private val style: Style) :
                 0xFFED2939.toInt(), 0xFF00A1DE.toInt(), 0xFFFFD54F.toInt(),
                 0xFF66BB6A.toInt(), 0xFFAB47BC.toInt(), 0xFFFFFFFF.toInt()
             ),
-            0xFF333333.toInt(), cadre(-0.5f, -1.05f, 0.5f, 1.05f), false, ::confetti
+            0xFF333333.toInt(), cadre(-0.5f, -1.05f, 0.7f, 1.35f), false, ::confetti
         )
     }
 }
@@ -901,6 +974,515 @@ internal object Faune {
 }
 
 /**
+ * L'eau chaude qui tombe des douches de Sofaïa : sur chaque filet peint
+ * ([Paysages.DOUCHES]), depuis son pommeau sous le tuyau, des gouttes claires qui accélèrent en tombant, et à
+ * leur pied des ronds qui s'élargissent et s'effacent sur l'eau sombre. Le
+ * bassin est sur le plan de devant : l'eau glisse avec lui quand on penche.
+ */
+private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = Paysages.DOUCHES.size
+    private val periode = FloatArray(n) { 0.55f + hasard() * 0.25f }
+    private val phase = FloatArray(n) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        Paysages.DOUCHES.forEachIndexed { i, (x, bas) ->
+            val haut = Paysages.doucheHaut(x)
+            val chute = bas - haut
+            // La perspective : les filets du fond sont plus courts, leurs gouttes plus fines.
+            val k = chute / (Paysages.doucheBas(23f) - Paysages.doucheHaut(23f))
+            // Trois gouttes par filet, également espacées dans le cycle.
+            for (k in 0 until 3) {
+                val t = ((temps / periode[i] + phase[i] + k / 3f) % 1f)
+                val y = haut + chute * t * t
+                val l = (0.6f + 1.6f * t) * k
+                p.strokeWidth = 0.42f * k
+                p.color = 0xE6FFFFFF.toInt()
+                c.drawLine(x, (y - l).coerceAtLeast(haut), x, y, p)
+            }
+            // Deux ronds par filet, décalés d'un demi-cycle.
+            for (k in 0 until 2) {
+                val t = ((temps / (periode[i] * 1.6f) + phase[i] + k / 2f) % 1f)
+                val r = (0.5f + 2.2f * t) * k
+                p.strokeWidth = 0.22f * k
+                p.color = (((1f - t) * 170f).toInt() shl 24) or 0xDDEEEA
+                c.drawOval(x - r, bas + 0.5f - r * 0.32f, x + r, bas + 0.5f + r * 0.32f, p)
+            }
+        }
+        p.style = Paint.Style.FILL
+        c.restore()
+    }
+}
+
+/**
+ * L'eau de la chute du Carbet ([Paysages.CHUTE_CARBET]) ou du Saut de la
+ * Lézarde ([Paysages.CHUTE_LEZARDE]) : des traînées
+ * blanches qui dévalent le rideau peint en accélérant et s'écartent un peu
+ * vers le pied, où l'écume bouillonne en bouffées qui gonflent et
+ * s'effacent. La chute est sur le plan du milieu et glisse avec lui.
+ */
+private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Paysages.CHUTE_CARBET) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = 22
+    private val voie = FloatArray(n) { hasard() - 0.5f }
+    private val periode = FloatArray(n) { 0.7f + hasard() * 0.5f }
+    private val phase = FloatArray(n) { hasard() }
+    private val epaisseur = FloatArray(n) { 0.3f + hasard() * 0.35f }
+    private val bouffees = 6
+    private val decalage = FloatArray(bouffees) { hasard() - 0.5f }
+    private val rythme = FloatArray(bouffees) { 0.9f + hasard() * 0.6f }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val (x, haut, bas, w) = eau
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        val chute = bas - haut
+        for (i in 0 until n) {
+            val t = (temps / periode[i] + phase[i]) % 1f
+            val v = t * t * 0.6f + t * 0.4f
+            val y = haut + chute * v
+            val l = 1.5f + 3.5f * v
+            // Dans le rideau peint, qui va de 0,7 à 1,1 fois la largeur.
+            val ecart = w * (0.7f + 0.4f * v)
+            val fx = x + voie[i] * ecart * 0.6f
+            // Fondu à l'entrée (sous la brume) et au pied (dans l'écume).
+            val alpha = (minOf(t / 0.15f, (1f - t) / 0.2f, 1f) * 220f).toInt().coerceIn(0, 255)
+            // Sur un rideau blanc, une traînée blanche ne se voit pas : deux
+            // sur trois sont d'un bleu d'eau, la troisième d'un blanc d'écume.
+            p.strokeWidth = epaisseur[i]
+            p.color = (alpha shl 24) or (if (i % 3 == 0) 0xFFFFFF else 0x7DB8B2)
+            c.drawLine(fx, (y - l).coerceAtLeast(haut), fx, y, p)
+        }
+        p.style = Paint.Style.FILL
+        for (j in 0 until bouffees) {
+            val t = (temps / rythme[j] + j / bouffees.toFloat()) % 1f
+            val r = w * (0.25f + 0.4f * t)
+            p.color = (((1f - t) * 200f).toInt() shl 24) or 0xFFFFFF
+            c.drawCircle(x + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f, r, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * La vapeur du bassin de Ravine Chaude ([Paysages.VAPEURS_RAVINE]), ou plus
+ * légère celle des Bains Jaunes ([Paysages.VAPEURS_BAINS]) : par-dessus
+ * chaque fumée peinte, des bouffées pâles montent lentement en grossissant,
+ * ondulent un peu et s'effacent ; et au ras de l'eau, des nappes glissent
+ * d'un bord à l'autre du bassin. Les nappes comptent le plus : le dessin du
+ * mot, devant, cache presque toujours le haut des fumées, jamais l'eau sous
+ * lui. Doux exprès : une eau tiède qui fume, pas une marmite.
+ */
+private class Vapeurs(
+    zone: RectF, graine: Int,
+    private val sources: Array<FloatArray> = Paysages.VAPEURS_RAVINE,
+    private val plan: Int = 4,
+    private val nappe: FloatArray = floatArrayOf(30f, 36f, 57.2f, 4f),
+    private val force: Float = 1f
+) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val parSource = 5
+    private val periode = FloatArray(sources.size * parSource) { 3.2f + hasard() * 1.6f }
+    private val onde = FloatArray(periode.size) { hasard() * 6.28f }
+    private val nappes = 6
+    private val vitesse = FloatArray(nappes) { (0.9f + hasard() * 0.9f) * (if (hasard() < 0.5f) -1f else 1f) }
+    private val depart = FloatArray(nappes) { hasard() }
+    private val ligne = FloatArray(nappes) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        sources.forEachIndexed { s, (x, pied, haut, w, derive) ->
+            for (k in 0 until parSource) {
+                val i = s * parSource + k
+                val t = (temps / periode[i] + k / parSource.toFloat()) % 1f
+                val y = pied - (pied - haut) * 1.3f * t
+                val bx = x + derive * t * t + sin(temps * 1.1f + onde[i]) * 1.1f * t
+                val r = w * (0.5f + 1.3f * t)
+                p.color = ((sin(PI.toFloat() * t) * 150f * force).toInt() shl 24) or 0xFFFFFF
+                c.drawCircle(bx, y, r, p)
+            }
+        }
+        // Les nappes, au ras de l'eau du bassin ([nappe] : x, largeur, y, hauteur).
+        for (k in 0 until nappes) {
+            val u = ((depart[k] + temps * vitesse[k] / 40f) % 1f + 1f) % 1f
+            val nx = nappe[0] + nappe[1] * u
+            val ny = nappe[2] + ligne[k] * nappe[3] - sin(PI.toFloat() * u) * 1.2f
+            val alpha = (sin(PI.toFloat() * u) * 130f * force).toInt()
+            p.color = (alpha shl 24) or 0xFFFFFF
+            val rx = 4f + 2.5f * ligne[k]
+            c.drawOval(nx - rx, ny - 0.9f, nx + rx, ny + 0.9f, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * La mer de la Pointe des Châteaux : l'écume qui jaillit par à-coups le long
+ * du rivage ([Paysages.RIVAGE_CHATEAUX], plan du milieu), les embruns
+ * arrachés à la crête de la grosse vague ([Paysages.VAGUE_CHATEAUX], plan
+ * de devant), et des lignes d'écume qui roulent du bas vers le rivage en
+ * rapetissant avec la distance.
+ */
+private class Vagues(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val jets = floatArrayOf(6f, 18f, 31f, 38f, 45f, 52f, 64f, 78f, 90f)
+    private val rythmeJet = FloatArray(jets.size) { 2.2f + hasard() * 1.4f }
+    private val phaseJet = FloatArray(jets.size) { hasard() }
+    private val nEmbruns = 12
+    private val placeEmbrun = FloatArray(nEmbruns) { hasard() }
+    private val rythmeEmbrun = FloatArray(nEmbruns) { 1.1f + hasard() * 0.9f }
+    private val nRouleaux = 8
+    private val xRouleau = FloatArray(nRouleaux) { 4f + hasard() * 92f }
+    private val rythmeRouleau = FloatArray(nRouleaux) { 6f + hasard() * 4f }
+    private val phaseRouleau = FloatArray(nRouleaux) { hasard() }
+    private val longueur = FloatArray(nRouleaux) { 2.5f + hasard() * 3f }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    private fun blanc(t: Float, force: Float) = ((t.coerceIn(0f, 1f) * force).toInt() shl 24) or 0xFFFFFF
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        p.style = Paint.Style.FILL
+        // Le plan du milieu : le rivage.
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.scale(e, e)
+        val rive = Paysages.RIVAGE_CHATEAUX
+        jets.forEachIndexed { i, x ->
+            val t = (temps / rythmeJet[i] + phaseJet[i]) % 1f
+            // La mer frappe plus fort sous la pointe, comme sur la photo.
+            val h = if (x in 30f..56f) 4.5f else 2.2f
+            for (j in 0 until 4) {
+                p.color = blanc(1f - t, 210f)
+                c.drawCircle(x + (j - 1.5f) * 1.3f * t, rive - sin(PI.toFloat() * t) * h * (1f - abs(j - 1.5f) * 0.25f),
+                    0.6f + 1.4f * t, p)
+            }
+        }
+        c.restore()
+        // Le plan de devant : la grosse vague et les rouleaux.
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[4] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[4] * hauteur * regardY)
+        c.scale(e, e)
+        val (c0, cy0, c1, cy1) = Paysages.VAGUE_CHATEAUX
+        for (k in 0 until nEmbruns) {
+            val t = (temps / rythmeEmbrun[k] + k / nEmbruns.toFloat()) % 1f
+            val u = placeEmbrun[k]
+            val x0 = c0 + (c1 - c0) * u; val y0 = cy0 + (cy1 - cy0) * u
+            // Le vent rabat les embruns en arrière de la vague qui déferle vers la gauche.
+            p.color = blanc(1f - t, 230f)
+            c.drawCircle(x0 + 3.5f * t, y0 - sin(PI.toFloat() * t * 0.85f) * 3f, 0.35f + 0.7f * t, p)
+        }
+        for (k in 0 until nRouleaux) {
+            val t = (temps / rythmeRouleau[k] + phaseRouleau[k]) % 1f
+            val y = 61f - 18f * t
+            val loin = 0.45f + 0.55f * (y - 41f) / 20f
+            val rx = longueur[k] * loin
+            p.color = blanc(sin(PI.toFloat() * t), 160f)
+            c.drawOval(xRouleau[k] - rx, y - 0.3f * loin, xRouleau[k] + rx, y + 0.3f * loin, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * Le ressac de la Désirade : des lignes d'écume qui naissent au large
+ * ([Paysages.RESSAC_DESIRADE], plan du loin), roulent vers le rivage en
+ * s'allongeant et s'effacent ; et des gerbes qui jaillissent par à-coups au
+ * pied du morne ([Paysages.GERBES_DESIRADE], plan du milieu). Doux exprès :
+ * vu de loin, le ressac respire, il ne gronde pas.
+ *
+ * Le soir et la nuit ([phare]), le faisceau du phare tourne depuis la
+ * lanterne ([Paysages.PHARE_DESIRADE]). Vu de côté, il s'allonge vers la
+ * gauche puis rapetisse, éclate en lueur quand il passe face à nous, et
+ * repart plus pâle, de dos. Il balaie le ciel au-dessus du dessin du mot.
+ */
+private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val nLignes = 7
+    private val xLigne = FloatArray(nLignes) { hasard() }
+    private val rythmeLigne = FloatArray(nLignes) { 5f + hasard() * 3f }
+    private val phaseLigne = FloatArray(nLignes) { hasard() }
+    private val longueur = FloatArray(nLignes) { 3f + hasard() * 4f }
+    private val rythmeGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { 2.6f + hasard() * 1.6f }
+    private val phaseGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    private fun blanc(t: Float, force: Float) = ((t.coerceIn(0f, 1f) * force).toInt() shl 24) or 0xFFFFFF
+
+    private fun suivre(c: Canvas, plan: Int) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
+        c.scale(e, e)
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        p.style = Paint.Style.FILL
+        val (x0, x1, large, rivage) = Paysages.RESSAC_DESIRADE
+        suivre(c, 2)
+        for (k in 0 until nLignes) {
+            val t = (temps / rythmeLigne[k] + phaseLigne[k]) % 1f
+            val y = large + 2f + (rivage - large - 2.6f) * t
+            val pres = 0.5f + 0.5f * t
+            val x = x0 + 4f + (x1 - x0 - 12f) * xLigne[k]
+            val rx = longueur[k] * pres * (1f + 0.6f * t)
+            p.color = blanc(sin(PI.toFloat() * t), 190f)
+            c.drawOval(x - rx, y - 0.32f * pres, x + rx, y + 0.32f * pres, p)
+        }
+        c.restore()
+        suivre(c, 3)
+        Paysages.GERBES_DESIRADE.forEachIndexed { i, (x, y) ->
+            val t = (temps / rythmeGerbe[i] + phaseGerbe[i]) % 1f
+            for (j in 0 until 4) {
+                p.color = blanc(1f - t, 200f)
+                c.drawCircle(x + (j - 1.5f) * 1.1f * t, y - sin(PI.toFloat() * t) * 2.4f * (1f - abs(j - 1.5f) * 0.25f),
+                    0.5f + 1.1f * t, p)
+            }
+        }
+        if (phare) faisceau(c, p)
+        c.restore()
+    }
+
+    private val cone = Path()
+
+    private fun faisceau(c: Canvas, p: Paint) {
+        val (lx, ly) = Paysages.PHARE_DESIRADE
+        val a = 2f * PI.toFloat() * (temps / TOUR_PHARE % 1f)
+        val face = sin(a).coerceAtLeast(0f)
+        val longueur = 92f * abs(cos(a))
+        val force = 0.3f + 0.7f * face
+        if (longueur > 1.5f) {
+            val sens = if (cos(a) < 0f) -1f else 1f
+            val bout = lx + sens * longueur
+            val demi = 0.7f + 0.055f * longueur
+            cone.rewind()
+            cone.moveTo(lx, ly - 0.7f)
+            cone.lineTo(bout, ly - demi)
+            cone.lineTo(bout, ly + demi)
+            cone.lineTo(lx, ly + 0.7f)
+            cone.close()
+            p.color = 0xFFFFFFFF.toInt()
+            p.shader = LinearGradient(lx, ly, bout, ly, ((force * 150f).toInt() shl 24) or 0xFFF2C4, 0x00FFF2C4,
+                Shader.TileMode.CLAMP)
+            c.drawPath(cone, p)
+            p.shader = null
+        }
+        // L'éclat, quand le faisceau passe face à nous.
+        val eclat = face * face * face * face
+        p.color = ((40f + eclat * 170f).toInt() shl 24) or 0xFFF2C4
+        c.drawCircle(lx, ly, 1.6f + eclat * 3.4f, p)
+    }
+
+    private companion object {
+        /** Un tour du faisceau, en secondes. */
+        const val TOUR_PHARE = 9f
+    }
+}
+
+/**
+ * L'eau calme de l'anse de Bouillante ([Paysages.REFLETS_BOUILLANTE], plan du
+ * milieu), ou celle de la mangrove de l'Îlet Macou ([Paysages.EAU_MACOU],
+ * avec moins d'éclats) ou celle de la baie du Mémorial ACTe ([Paysages.EAU_ACTE],
+ * plan de devant) : des éclats de soleil qui s'allument et s'éteignent, plus serrés
+ * du côté du soleil, à gauche, comme sur la photo ; et de longues rides qui
+ * glissent lentement. La nuit, les éclats sont rares et pâles.
+ */
+private class Reflets(
+    zone: RectF, graine: Int, nuit: Boolean,
+    private val eau: FloatArray = Paysages.REFLETS_BOUILLANTE, eclatsDuJour: Int = 34, private val plan: Int = 3
+) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val nEclats = if (nuit) eclatsDuJour / 3 else eclatsDuJour
+    private val force = if (nuit) 110f else 230f
+    private val xEclat = FloatArray(nEclats) { val u = hasard(); u * u }
+    private val yEclat = FloatArray(nEclats) { hasard() }
+    private val rythme = FloatArray(nEclats) { 1.2f + hasard() * 1.8f }
+    private val phase = FloatArray(nEclats) { hasard() }
+    private val nRides = 6
+    private val yRide = FloatArray(nRides) { hasard() }
+    private val vitesse = FloatArray(nRides) { 1.2f + hasard() * 1.2f }
+    private val depart = FloatArray(nRides) { hasard() }
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        val (x0, x1, y0, y1) = eau
+        c.save()
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        for (k in 0 until nRides) {
+            val u = ((depart[k] + temps * vitesse[k] / 60f) % 1f + 1f) % 1f
+            val y = y0 + 1f + (y1 - y0 - 2f) * yRide[k]
+            val pres = (y - y0) / (y1 - y0)
+            val x = x0 + (x1 - x0 + 10f) * u - 5f
+            val rx = 4f + 5f * pres
+            p.color = ((sin(PI.toFloat() * u) * 70f).toInt() shl 24) or 0xFFFFFF
+            c.drawOval(x - rx, y - 0.18f - 0.12f * pres, x + rx, y + 0.18f + 0.12f * pres, p)
+        }
+        for (k in 0 until nEclats) {
+            val t = (temps / rythme[k] + phase[k]) % 1f
+            val vif = sin(PI.toFloat() * t).let { it * it }
+            val y = y0 + (y1 - y0) * yEclat[k]
+            val pres = (y - y0) / (y1 - y0)
+            val x = x0 + (x1 - x0) * xEclat[k]
+            val rx = (0.5f + 0.9f * pres) * (0.6f + 0.4f * vif)
+            p.color = ((vif * force).toInt() shl 24) or 0xFFFFFF
+            c.drawOval(x - rx, y - 0.2f - 0.1f * pres, x + rx, y + 0.2f + 0.1f * pres, p)
+        }
+        c.restore()
+    }
+}
+
+/**
+ * Les bougies du cimetière de Morne-à-l'Eau, le soir et la nuit
+ * ([Paysages.BOUGIES_MORNE]) : chaque flamme vacille à son rythme, s'étire
+ * et penche un peu, et sa lueur chaude respire autour d'elle. Chacune suit
+ * le plan qui la porte quand la carte penche.
+ */
+private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val bougies = Paysages.BOUGIES_MORNE
+    private val phase = FloatArray(bougies.size) { hasard() * 6.28f }
+    private val vitesse = FloatArray(bougies.size) { 5f + hasard() * 4f }
+    private val flamme = android.graphics.Path()
+    private var temps = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        p.style = Paint.Style.FILL
+        for (plan in 0..2) {
+            val g = Paysages.GLISSEMENT[plan + 2]
+            c.save()
+            c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+            c.scale(e, e)
+            bougies.forEachIndexed { i, (x, y, pl) ->
+                if (pl.toInt() != plan) return@forEachIndexed
+                val t = temps * vitesse[i] + phase[i]
+                val vacille = 0.75f + 0.15f * sin(t) + 0.1f * sin(t * 2.3f + 1f)
+                val penche = 0.25f * sin(t * 0.7f)
+                p.color = ((38f * vacille).toInt() shl 24) or 0xFF9A3C
+                c.drawCircle(x, y - 1.6f, 3.4f + 0.8f * vacille, p)
+                p.color = ((80f * vacille).toInt() shl 24) or 0xFFB050
+                c.drawCircle(x, y - 1.5f, 1.5f + 0.6f * vacille, p)
+                val haut = 0.9f + 1.3f * vacille
+                flamme.rewind()
+                flamme.moveTo(x + penche, y - 0.8f - haut)
+                flamme.quadTo(x + 0.42f, y - 1.1f, x, y - 0.8f)
+                flamme.quadTo(x - 0.42f, y - 1.1f, x + penche, y - 0.8f - haut)
+                flamme.close()
+                p.color = 0xFFFFB238.toInt()
+                c.drawPath(flamme, p)
+                p.color = 0xFFFFF0B0.toInt()
+                c.drawCircle(x, y - 1.05f, 0.17f, p)
+            }
+            c.restore()
+        }
+    }
+}
+
+/**
  * Les bêtes peintes d'un lieu, rendues vivantes sur la carte ouverte : la
  * même place et les mêmes couleurs que sur la vignette, et le mouvement de
  * chaque espèce (voir `Peintre.bete` dans [Paysages]). Chacune glisse avec le
@@ -930,8 +1512,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         c.scale(e, e)
         betes.forEachIndexed { i, b ->
             c.save()
-            c.translate(Paysages.GLISSEMENT[b.plan] * largeur * regardX / e,
-                Paysages.GLISSEMENT[b.plan] * hauteur * regardY / e)
+            c.translate(Paysages.GLISSEMENT[b.plan + 2] * largeur * regardX / e,
+                Paysages.GLISSEMENT[b.plan + 2] * hauteur * regardY / e)
             atelier.peindre(c, b, temps, i)
             c.restore()
         }
@@ -1085,3 +1667,11 @@ private class Colibri(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     }
 }
 
+/** Le papier kraft des pièces découpées (voir [Peintre.peint] dans [Paysages]). */
+private const val KRAFT = 0xFFB08A5A.toInt()
+
+/** L'ombre d'une pièce de papier : le bleu nuit des ombres de carton. */
+private const val OMBRE_PAPIER = 0xFF0B1020.toInt()
+
+/** La nervure d'une feuille de papier. */
+private const val NERVURE = 0xFF5A3214.toInt()

@@ -105,35 +105,26 @@ data class Blasonnement(
  * L'armorial : le classement des lemmes, lu une fois dans l'actif.
  *
  * L'actif est produit hors du build par `Dictionnaires/generate_blasons.py`,
- * qui porte le lexique, la relecture à la main et l'attribution des meubles.
- * Il est petit — 52 ko pour 2 064 lemmes — donc il se lit d'un coup au premier
- * besoin, sans le balayage de texte que `Carnet.lireRangs` doit faire sur le
- * mégaoctet du dictionnaire de fréquences.
+ * qui porte la table des dessins, relue mot par mot contre la glose. Il est
+ * petit, une quarantaine de mots, donc il se lit d'un coup au premier besoin.
  *
- * **La clé est le représentant de la famille**, pas la forme rencontrée : le
- * joueur a gagné « Männer », c'est le blason de « Mann » qu'il faut lui
- * montrer, comme c'est la glose de « Mann » qu'il lit. `ContenuCarte` a déjà
- * ce représentant sous la main — il vient de `TranslationDictionary.fiche` —
- * donc le blason ne coûte pas une recherche de plus.
+ * La clé est la forme elle-même : le kréyòl n'a pas de familles de flexions
+ * auxquelles déléguer le rangement, contrairement au carnet luxembourgeois.
  */
 object Armorial {
 
     /**
-     * L'actif de classement, **qui n'est pas encore livré**.
+     * L'actif des dessins, livré depuis la 24.0.0 : **des meubles seulement,
+     * aucun champ**.
      *
-     * Le carnet luxembourgeois range ses lemmes en huit champs sémantiques et
-     * en attribue les meubles à la main, dans un actif de 52 ko produit par
-     * `Dictionnaires/generate_blasons.py`. Ce classement n'a pas d'équivalent
-     * kréyòl : il se relit mot par mot, et la table de gloses ne porte rien
-     * qui le donne.
+     * Le carnet luxembourgeois range aussi ses lemmes en huit champs
+     * sémantiques. Ce classement n'a pas d'équivalent kréyòl : il se relit
+     * mot par mot, et la table de gloses ne porte rien qui le donne. Chaque
+     * carte garde donc la teinte de ses trois premières lettres ; seuls les
+     * mots de la table reçoivent un dessin à la place du tracé de leur mot.
      *
-     * Son absence est **une livraison valide**, pas une panne. Sans lui,
-     * chaque carte garde la teinte de ses trois premières lettres et le tracé
-     * de son mot, c'est-à-dire exactement l'état dans lequel le carnet
-     * luxembourgeois a vécu jusqu'à sa 22.6.0. Aucune version intermédiaire du
-     * classement n'est laide, donc il pourra s'ajouter par vagues sans jamais
-     * bloquer une livraison — c'est la propriété qui fait qu'on peut partir
-     * sans lui.
+     * Son absence reste **une livraison valide**, pas une panne : toutes les
+     * cartes retombent sur leur tracé, et la série des enluminures disparaît.
      */
     private const val ACTIF = "creole_blasons.json"
 

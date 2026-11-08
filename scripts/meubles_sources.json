@@ -1,0 +1,1839 @@
+{
+ "maison": {
+  "source": "Openclipart",
+  "auteur": "tsaoja",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/237998",
+  "url": "https://openclipart.org/download/237998",
+  "mode": "rendu"
+ },
+ "porte": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/barred-door.svg",
+  "mode": "rendu"
+ },
+ "fenetre": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/268807",
+  "url": "https://openclipart.org/download/268807",
+  "mode": "rendu"
+ },
+ "table": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/table-with-chairs.svg",
+  "mode": "rendu"
+ },
+ "banc": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/317571",
+  "url": "https://openclipart.org/download/317571",
+  "mode": "rendu"
+ },
+ "lit": {
+  "source": "Openclipart",
+  "auteur": "Moini",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/151945",
+  "url": "https://openclipart.org/download/151945",
+  "mode": "rendu"
+ },
+ "tiroir": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/chest-of-drawers.svg",
+  "mode": "rendu"
+ },
+ "robinet": {
+  "source": "Openclipart",
+  "auteur": "scro2003",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/191549",
+  "url": "https://openclipart.org/download/191549",
+  "mode": "rendu"
+ },
+ "quille": {
+  "source": "Openclipart",
+  "auteur": "shokunin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/77437",
+  "url": "https://openclipart.org/download/77437",
+  "mode": "rendu"
+ },
+ "village": {
+  "source": "Maki (Iconify)",
+  "auteur": "Mapbox",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/mapbox/maki",
+  "url": "https://api.iconify.design/maki/town.svg",
+  "mode": "rendu"
+ },
+ "ville": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/311078",
+  "url": "https://openclipart.org/download/311078",
+  "mode": "rendu"
+ },
+ "eglise": {
+  "source": "Openclipart",
+  "auteur": "phidrho",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/281770",
+  "url": "https://openclipart.org/download/281770",
+  "mode": "rendu"
+ },
+ "ecole": {
+  "source": "Openclipart",
+  "auteur": "amcolley",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/250678",
+  "url": "https://openclipart.org/download/250678",
+  "mode": "rendu"
+ },
+ "pilier": {
+  "source": "Openclipart",
+  "auteur": "ExNihilo01",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/216510",
+  "url": "https://openclipart.org/download/216510",
+  "mode": "rendu",
+  "seuil": 240,
+  "trou": 3000
+ },
+ "poteau": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/guidepost.svg",
+  "mode": "rendu"
+ },
+ "tunnel": {
+  "source": "Maki (Iconify)",
+  "auteur": "Mapbox",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/mapbox/maki",
+  "url": "https://api.iconify.design/maki/tunnel.svg",
+  "mode": "rendu"
+ },
+ "grue": {
+  "source": "Openclipart",
+  "auteur": "ShannonW",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/296505",
+  "url": "https://openclipart.org/download/296505",
+  "mode": "rendu"
+ },
+ "moulin": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/288589",
+  "url": "https://openclipart.org/download/288589",
+  "mode": "rendu"
+ },
+ "tente": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/a-frame-sidewall-tent.svg",
+  "mode": "rendu"
+ },
+ "hopital": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/314202",
+  "url": "https://openclipart.org/download/314202",
+  "mode": "rendu"
+ },
+ "banque": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323636",
+  "url": "https://openclipart.org/download/323636",
+  "mode": "rendu"
+ },
+ "batiment": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/lowrise-apartment-building.svg",
+  "mode": "rendu"
+ },
+ "prison": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/prison-14.svg",
+  "mode": "rendu"
+ },
+ "mur": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/brick-wall.svg",
+  "mode": "rendu"
+ },
+ "gare": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/railway-halt-14.svg",
+  "mode": "rendu"
+ },
+ "parking": {
+  "source": "Openclipart",
+  "auteur": "jean_victor_balin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/26631",
+  "url": "https://openclipart.org/download/26631",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pain": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/246041",
+  "url": "https://openclipart.org/download/246041",
+  "mode": "rendu"
+ },
+ "fromage": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323777",
+  "url": "https://openclipart.org/download/323777",
+  "mode": "rendu"
+ },
+ "gateau": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/330467",
+  "url": "https://openclipart.org/download/330467",
+  "mode": "rendu"
+ },
+ "pizza": {
+  "source": "Openclipart",
+  "auteur": "cactus_cowboy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/293113",
+  "url": "https://openclipart.org/download/293113",
+  "mode": "rendu"
+ },
+ "fruits": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/331488",
+  "url": "https://openclipart.org/download/331488",
+  "mode": "rendu"
+ },
+ "lait": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/milk-churn.svg",
+  "mode": "rendu"
+ },
+ "bouteille": {
+  "source": "Openclipart",
+  "auteur": "qubodup",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/352374",
+  "url": "https://openclipart.org/download/352374",
+  "mode": "rendu"
+ },
+ "vin": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/320858",
+  "url": "https://openclipart.org/download/320858",
+  "mode": "rendu"
+ },
+ "cafe": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/300659",
+  "url": "https://openclipart.org/download/300659",
+  "mode": "rendu"
+ },
+ "couteau": {
+  "source": "Openclipart",
+  "auteur": "marcodiego",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/331267",
+  "url": "https://openclipart.org/download/331267",
+  "mode": "rendu",
+  "vole": true
+ },
+ "eau": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/264139",
+  "url": "https://openclipart.org/download/264139",
+  "mode": "rendu",
+  "vole": true
+ },
+ "arbre": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/263166",
+  "url": "https://openclipart.org/download/263166",
+  "mode": "rendu",
+  "tolerance": 0.2
+ },
+ "coeur": {
+  "source": "Openclipart",
+  "auteur": "nerdy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/355536",
+  "url": "https://openclipart.org/download/355536",
+  "mode": "rendu",
+  "vole": true
+ },
+ "poisson": {
+  "source": "PhyloPic",
+  "auteur": "Ando",
+  "licence": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "page": "https://www.phylopic.org/images/bbc78f09-18e1-4e4d-9e77-c6f9daee33c1",
+  "url": "https://images.phylopic.org/images/bbc78f09-18e1-4e4d-9e77-c6f9daee33c1/vector.svg",
+  "mode": "vecteur",
+  "miroir": true,
+  "vole": true
+ },
+ "chat": {
+  "source": "PhyloPic",
+  "auteur": "Mozillian",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/81e1f778-d176-47ba-a0c4-01f54e1157a9",
+  "url": "https://images.phylopic.org/images/81e1f778-d176-47ba-a0c4-01f54e1157a9/vector.svg",
+  "mode": "vecteur"
+ },
+ "chien": {
+  "source": "PhyloPic",
+  "auteur": "Jody Taylor",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/d149744f-8330-46df-8683-fcd4b385aa07",
+  "url": "https://images.phylopic.org/images/d149744f-8330-46df-8683-fcd4b385aa07/vector.svg",
+  "mode": "vecteur",
+  "miroir": true
+ },
+ "cheval": {
+  "source": "PhyloPic",
+  "auteur": "Mozillian",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/b302ceef-072c-471c-bc7d-164c428dd57a",
+  "url": "https://images.phylopic.org/images/b302ceef-072c-471c-bc7d-164c428dd57a/vector.svg",
+  "mode": "vecteur"
+ },
+ "boeuf": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/327999",
+  "url": "https://openclipart.org/download/327999",
+  "mode": "rendu"
+ },
+ "chevreuil": {
+  "source": "PhyloPic",
+  "auteur": "Ferran Sayol",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/1a8006a1-f578-4dd2-963b-c659208bf9ab",
+  "url": "https://images.phylopic.org/images/1a8006a1-f578-4dd2-963b-c659208bf9ab/vector.svg",
+  "mode": "vecteur"
+ },
+ "merle": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/279076",
+  "url": "https://openclipart.org/download/279076",
+  "mode": "rendu"
+ },
+ "main": {
+  "source": "Openclipart",
+  "auteur": "algotruneman",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/333296",
+  "url": "https://openclipart.org/download/333296",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pied": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/322341",
+  "url": "https://openclipart.org/download/322341",
+  "mode": "rendu",
+  "vole": true
+ },
+ "tete": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/340250",
+  "url": "https://openclipart.org/download/340250",
+  "mode": "rendu",
+  "miroir": true,
+  "vole": true
+ },
+ "dent": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/dentist-14.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "ange": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/308039",
+  "url": "https://openclipart.org/download/308039",
+  "mode": "rendu",
+  "vole": true
+ },
+ "foret": {
+  "source": "Openclipart",
+  "auteur": "Chrisdesign",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/8764",
+  "url": "https://openclipart.org/download/8764",
+  "mode": "rendu",
+  "tolerance": 0.25
+ },
+ "ile": {
+  "source": "Temaki (Iconify)",
+  "auteur": "Bryan Housel",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/rapideditor/temaki",
+  "url": "https://api.iconify.design/temaki/island-trees-building.svg",
+  "mode": "rendu"
+ },
+ "virus": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/320041",
+  "url": "https://openclipart.org/download/320041",
+  "mode": "rendu",
+  "vole": true
+ },
+ "soleil": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323479",
+  "url": "https://openclipart.org/download/323479",
+  "mode": "rendu",
+  "vole": true
+ },
+ "lune": {
+  "source": "Openclipart",
+  "auteur": "phidari",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/220480",
+  "url": "https://openclipart.org/download/220480",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pluie": {
+  "source": "Openclipart",
+  "auteur": "gl367",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/246265",
+  "url": "https://openclipart.org/download/246265",
+  "mode": "rendu",
+  "vole": true
+ },
+ "flocon": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/292679",
+  "url": "https://openclipart.org/download/292679",
+  "mode": "rendu",
+  "vole": true
+ },
+ "globe": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/327761",
+  "url": "https://openclipart.org/download/327761",
+  "mode": "rendu"
+ },
+ "europe": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/332652",
+  "url": "https://openclipart.org/download/332652",
+  "mode": "rendu",
+  "dilate": 3,
+  "trou": 40,
+  "vole": true,
+  "tolerance": 0.3,
+  "miettes": 2
+ },
+ "voiture": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/321286",
+  "url": "https://openclipart.org/download/321286",
+  "mode": "rendu",
+  "miroir": true
+ },
+ "velo": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/276013",
+  "url": "https://openclipart.org/download/276013",
+  "mode": "rendu"
+ },
+ "avion": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/312645",
+  "url": "https://openclipart.org/download/312645",
+  "mode": "rendu",
+  "vole": true
+ },
+ "helicoptere": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/270674",
+  "url": "https://openclipart.org/download/270674",
+  "mode": "rendu",
+  "miroir": true,
+  "vole": true
+ },
+ "bateau": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323340",
+  "url": "https://openclipart.org/download/323340",
+  "mode": "rendu"
+ },
+ "bus": {
+  "source": "Openclipart",
+  "auteur": "ToBeFree",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/218241",
+  "url": "https://openclipart.org/download/218241",
+  "mode": "rendu",
+  "miroir": true
+ },
+ "tram": {
+  "source": "Openclipart",
+  "auteur": "petersirka",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/226330",
+  "url": "https://openclipart.org/download/226330",
+  "mode": "rendu"
+ },
+ "train": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/296326",
+  "url": "https://openclipart.org/download/296326",
+  "mode": "rendu",
+  "miroir": true
+ },
+ "camion": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/box-truck.svg",
+  "mode": "rendu"
+ },
+ "ambulance": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/314219",
+  "url": "https://openclipart.org/download/314219",
+  "mode": "rendu"
+ },
+ "moto": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/337499",
+  "url": "https://openclipart.org/download/337499",
+  "mode": "rendu"
+ },
+ "panneau_danger": {
+  "source": "Openclipart",
+  "auteur": "DynV",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/15564",
+  "url": "https://openclipart.org/download/15564",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pompe_essence": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/fuel-14.svg",
+  "mode": "rendu"
+ },
+ "valise": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/suitcase.svg",
+  "mode": "rendu"
+ },
+ "livre": {
+  "source": "Openclipart",
+  "auteur": "nerdy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/355399",
+  "url": "https://openclipart.org/download/355399",
+  "mode": "rendu",
+  "vole": true
+ },
+ "lettre": {
+  "source": "Openclipart",
+  "auteur": "ciubotaru",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/262222",
+  "url": "https://openclipart.org/download/262222",
+  "mode": "rendu",
+  "vole": true
+ },
+ "carte": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/payment-card.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "photo": {
+  "source": "Openclipart",
+  "auteur": "ytknick",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/17373",
+  "url": "https://openclipart.org/download/17373",
+  "mode": "rendu",
+  "vole": true
+ },
+ "ticket": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323810",
+  "url": "https://openclipart.org/download/323810",
+  "mode": "rendu",
+  "vole": true
+ },
+ "loupe": {
+  "source": "Openclipart",
+  "auteur": "snifty",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/274762",
+  "url": "https://openclipart.org/download/274762",
+  "mode": "rendu",
+  "vole": true
+ },
+ "lunettes": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/324793",
+  "url": "https://openclipart.org/download/324793",
+  "mode": "rendu",
+  "vole": true
+ },
+ "micro": {
+  "source": "Openclipart",
+  "auteur": "phidari",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/220473",
+  "url": "https://openclipart.org/download/220473",
+  "mode": "rendu"
+ },
+ "camera": {
+  "source": "Openclipart",
+  "auteur": "Maiconfz",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/244452",
+  "url": "https://openclipart.org/download/244452",
+  "mode": "rendu"
+ },
+ "telephone": {
+  "source": "Openclipart",
+  "auteur": "schoolfreeware",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/276127",
+  "url": "https://openclipart.org/download/276127",
+  "mode": "rendu"
+ },
+ "antenne": {
+  "source": "Openclipart",
+  "auteur": "ejmillan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/265841",
+  "url": "https://openclipart.org/download/265841",
+  "mode": "rendu"
+ },
+ "drapeau": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/327756",
+  "url": "https://openclipart.org/download/327756",
+  "mode": "rendu",
+  "vole": true
+ },
+ "horloge": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/292432",
+  "url": "https://openclipart.org/download/292432",
+  "mode": "rendu"
+ },
+ "journal": {
+  "source": "Openclipart",
+  "auteur": "libberry",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/188834",
+  "url": "https://openclipart.org/download/188834",
+  "mode": "rendu",
+  "vole": true
+ },
+ "document": {
+  "source": "Openclipart",
+  "auteur": "tsaoja",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/237988",
+  "url": "https://openclipart.org/download/237988",
+  "mode": "rendu",
+  "vole": true
+ },
+ "dossier": {
+  "source": "Openclipart",
+  "auteur": "snifty",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/88081",
+  "url": "https://openclipart.org/download/88081",
+  "mode": "rendu",
+  "vole": true
+ },
+ "film": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/285626",
+  "url": "https://openclipart.org/download/285626",
+  "mode": "rendu",
+  "vole": true
+ },
+ "ordinateur": {
+  "source": "Openclipart",
+  "auteur": "yyk_mail_ru",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/264318",
+  "url": "https://openclipart.org/download/264318",
+  "mode": "rendu"
+ },
+ "note": {
+  "source": "Openclipart",
+  "auteur": "Artster_Time",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/350524",
+  "url": "https://openclipart.org/download/350524",
+  "mode": "rendu",
+  "vole": true
+ },
+ "marteau": {
+  "source": "Openclipart",
+  "auteur": "SunKing2",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/354397",
+  "url": "https://openclipart.org/download/354397",
+  "mode": "rendu",
+  "angle": -35,
+  "vole": true
+ },
+ "or": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/308776",
+  "url": "https://openclipart.org/download/308776",
+  "mode": "rendu",
+  "vole": true
+ },
+ "casque": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/320907",
+  "url": "https://openclipart.org/download/320907",
+  "mode": "rendu"
+ },
+ "jean": {
+  "source": "Openclipart",
+  "auteur": "AngyPangy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/263803",
+  "url": "https://openclipart.org/download/263803",
+  "mode": "rendu"
+ },
+ "chaussure": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/321487",
+  "url": "https://openclipart.org/download/321487",
+  "mode": "rendu"
+ },
+ "cigarette": {
+  "source": "Openclipart",
+  "auteur": "jean_victor_balin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/26336",
+  "url": "https://openclipart.org/download/26336",
+  "mode": "rendu",
+  "vole": true
+ },
+ "lampe": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/279918",
+  "url": "https://openclipart.org/download/279918",
+  "mode": "rendu"
+ },
+ "regle": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/pencil-beside-ruler.svg",
+  "mode": "rendu"
+ },
+ "balance": {
+  "source": "Openclipart",
+  "auteur": "laobc",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/62989",
+  "url": "https://openclipart.org/download/62989",
+  "mode": "rendu"
+ },
+ "seringue": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/289052",
+  "url": "https://openclipart.org/download/289052",
+  "mode": "rendu",
+  "angle": -40,
+  "vole": true
+ },
+ "piece": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/euro.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "restaurant": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/311230",
+  "url": "https://openclipart.org/download/311230",
+  "mode": "rendu",
+  "vole": true
+ },
+ "robe": {
+  "source": "Openclipart",
+  "auteur": "Manuela",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/348216",
+  "url": "https://openclipart.org/download/348216",
+  "mode": "rendu"
+ },
+ "tour_eiffel": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/328267",
+  "url": "https://openclipart.org/download/328267",
+  "mode": "rendu"
+ },
+ "abeille": {
+  "source": "PhyloPic",
+  "auteur": "Kamil S. Jaron",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/5fdc4327-2881-4664-9e42-f176d95568c9",
+  "url": "https://images.phylopic.org/images/5fdc4327-2881-4664-9e42-f176d95568c9/vector.svg",
+  "mode": "vecteur",
+  "miroir": true,
+  "vole": true
+ },
+ "fourmi": {
+  "source": "PhyloPic",
+  "auteur": "Richard Harris",
+  "licence": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "page": "https://www.phylopic.org/images/0e6f41f2-7456-45d4-aa2c-9697c4b0efe5",
+  "url": "https://images.phylopic.org/images/0e6f41f2-7456-45d4-aa2c-9697c4b0efe5/vector.svg",
+  "mode": "vecteur"
+ },
+ "guepe": {
+  "source": "PhyloPic",
+  "auteur": "Richard Harris",
+  "licence": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "page": "https://www.phylopic.org/images/10daab45-21e7-4d2a-97e0-9809e0a3eb5b",
+  "url": "https://images.phylopic.org/images/10daab45-21e7-4d2a-97e0-9809e0a3eb5b/vector.svg",
+  "mode": "vecteur",
+  "vole": true
+ },
+ "dauphin": {
+  "source": "PhyloPic",
+  "auteur": "Michael Day",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/388e792c-f8fd-4bd8-ad38-e251b5244ac0",
+  "url": "https://images.phylopic.org/images/388e792c-f8fd-4bd8-ad38-e251b5244ac0/vector.svg",
+  "mode": "vecteur",
+  "miroir": true,
+  "vole": true
+ },
+ "veau": {
+  "source": "PhyloPic",
+  "auteur": "Mozillian",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/8a2d5863-cd6c-4158-a164-d62e789c2210",
+  "url": "https://images.phylopic.org/images/8a2d5863-cd6c-4158-a164-d62e789c2210/vector.svg",
+  "mode": "vecteur"
+ },
+ "elephant": {
+  "source": "PhyloPic",
+  "auteur": "Chuanxin Yu",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/910d853a-1a15-4953-a1d3-b81208994d35",
+  "url": "https://images.phylopic.org/images/910d853a-1a15-4953-a1d3-b81208994d35/vector.svg",
+  "mode": "vecteur",
+  "miroir": true
+ },
+ "crocodile": {
+  "source": "PhyloPic",
+  "auteur": "Steven Traver",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/a796420f-5158-4e96-acbe-e30ef36b26d6",
+  "url": "https://images.phylopic.org/images/a796420f-5158-4e96-acbe-e30ef36b26d6/vector.svg",
+  "mode": "vecteur",
+  "miroir": true
+ },
+ "hirondelle": {
+  "source": "PhyloPic",
+  "auteur": "Edwin Price",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/5c7a8f66-6839-4883-b459-e0062e9f3be1",
+  "url": "https://images.phylopic.org/images/5c7a8f66-6839-4883-b459-e0062e9f3be1/vector.svg",
+  "mode": "vecteur",
+  "vole": true
+ },
+ "lapin": {
+  "source": "PhyloPic",
+  "auteur": "Anthony Caravaggi",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/d71fcd12-90f6-40c4-b918-0dac0ba3e809",
+  "url": "https://images.phylopic.org/images/d71fcd12-90f6-40c4-b918-0dac0ba3e809/vector.svg",
+  "mode": "vecteur",
+  "miroir": true
+ },
+ "lion": {
+  "source": "PhyloPic",
+  "auteur": "Margot Michaud",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://www.phylopic.org/images/76a5e7ce-53fa-46ae-af9e-fabd8b863dcf",
+  "url": "https://images.phylopic.org/images/76a5e7ce-53fa-46ae-af9e-fabd8b863dcf/vector.svg",
+  "mode": "vecteur"
+ },
+ "oignon": {
+  "source": "Openclipart",
+  "auteur": "cactus_cowboy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/293103",
+  "url": "https://openclipart.org/download/293103",
+  "mode": "rendu"
+ },
+ "tomate": {
+  "source": "Openclipart",
+  "auteur": "yamachem",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/225413",
+  "url": "https://openclipart.org/download/225413",
+  "mode": "rendu"
+ },
+ "prune": {
+  "source": "Openclipart",
+  "auteur": "frankes",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/245256",
+  "url": "https://openclipart.org/download/245256",
+  "mode": "rendu"
+ },
+ "banane": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/banana-hand.svg",
+  "mode": "rendu"
+ },
+ "crepe": {
+  "source": "Openclipart",
+  "auteur": "oksmith",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/334830",
+  "url": "https://openclipart.org/download/334830",
+  "mode": "rendu",
+  "sombre": true,
+  "seuil": 150
+ },
+ "petit_pain": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/loaf-of-bread.svg",
+  "mode": "rendu"
+ },
+ "noisette": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/301525",
+  "url": "https://openclipart.org/download/301525",
+  "mode": "rendu"
+ },
+ "question": {
+  "source": "Openclipart",
+  "auteur": "Kerooker",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/338487",
+  "url": "https://openclipart.org/download/338487",
+  "mode": "rendu",
+  "vole": true
+ },
+ "cahier": {
+  "source": "Openclipart",
+  "auteur": "kevinolson",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/339117",
+  "url": "https://openclipart.org/download/339117",
+  "mode": "rendu",
+  "vole": true
+ },
+ "colle": {
+  "source": "Openclipart",
+  "auteur": "mr_lex",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/287638",
+  "url": "https://openclipart.org/download/287638",
+  "mode": "rendu"
+ },
+ "calcul": {
+  "source": "Openclipart",
+  "auteur": "Laredo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/316163",
+  "url": "https://openclipart.org/download/316163",
+  "mode": "rendu",
+  "vole": true
+ },
+ "crayon": {
+  "source": "Openclipart",
+  "auteur": "Underside",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/332503",
+  "url": "https://openclipart.org/download/332503",
+  "mode": "rendu"
+ },
+ "cartable": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/242115",
+  "url": "https://openclipart.org/download/242115",
+  "mode": "rendu",
+  "recadre": [
+   0,
+   0,
+   0.67,
+   1
+  ]
+ },
+ "mathematiques": {
+  "source": "Openclipart",
+  "auteur": "cstemberg",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/350469",
+  "url": "https://openclipart.org/download/350469",
+  "mode": "rendu",
+  "vole": true
+ },
+ "hetre": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/239974",
+  "url": "https://openclipart.org/download/239974",
+  "mode": "rendu",
+  "vole": true,
+  "tolerance": 0.18
+ },
+ "orage": {
+  "source": "Openclipart",
+  "auteur": "barnheartowl",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/217033",
+  "url": "https://openclipart.org/download/217033",
+  "mode": "rendu",
+  "vole": true
+ },
+ "verger": {
+  "source": "Openclipart",
+  "auteur": "marcodiego",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/323926",
+  "url": "https://openclipart.org/download/323926",
+  "mode": "rendu"
+ },
+ "automne": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/322843",
+  "url": "https://openclipart.org/download/322843",
+  "mode": "rendu",
+  "vole": true
+ },
+ "printemps": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/307148",
+  "url": "https://openclipart.org/download/307148",
+  "mode": "rendu"
+ },
+ "glacier": {
+  "source": "Openclipart",
+  "auteur": "nerdy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/355139",
+  "url": "https://openclipart.org/download/355139",
+  "mode": "rendu"
+ },
+ "coquelicot": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/300016",
+  "url": "https://openclipart.org/download/300016",
+  "mode": "rendu"
+ },
+ "lever_soleil": {
+  "source": "Openclipart",
+  "auteur": "bartovan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/215006",
+  "url": "https://openclipart.org/download/215006",
+  "mode": "rendu",
+  "sombre": true
+ },
+ "coucher_soleil": {
+  "source": "Openclipart",
+  "auteur": "bartovan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/215007",
+  "url": "https://openclipart.org/download/215007",
+  "mode": "rendu",
+  "sombre": true
+ },
+ "salut_main": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/hand.svg",
+  "mode": "rendu"
+ },
+ "pouce_haut": {
+  "source": "Openclipart",
+  "auteur": "qubodup",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/349023",
+  "url": "https://openclipart.org/download/349023",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pouce_bas": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/thumbs-down-hand-with-sleeve.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "badge": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/id-card.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "boite_lettres": {
+  "source": "Openclipart",
+  "auteur": "NicholasJudy567",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/330490",
+  "url": "https://openclipart.org/download/330490",
+  "mode": "rendu"
+ },
+ "passeport": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/passport-with-graticule-globe.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "sablier": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/304223",
+  "url": "https://openclipart.org/download/304223",
+  "mode": "rendu"
+ },
+ "bulle": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/speech-bubble.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "alliances": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/ring-linked-to-ring-with-jewel.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "famille": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/337186",
+  "url": "https://openclipart.org/download/337186",
+  "mode": "rendu"
+ },
+ "couple": {
+  "source": "Openclipart",
+  "auteur": "liftarn",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/329216",
+  "url": "https://openclipart.org/download/329216",
+  "mode": "rendu"
+ },
+ "pere": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/270682",
+  "url": "https://openclipart.org/download/270682",
+  "mode": "rendu"
+ },
+ "mere": {
+  "source": "Openclipart",
+  "auteur": "j4p4n",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/351473",
+  "url": "https://openclipart.org/download/351473",
+  "mode": "rendu"
+ },
+ "garcon": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/315164",
+  "url": "https://openclipart.org/download/315164",
+  "mode": "rendu"
+ },
+ "fille": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/277398",
+  "url": "https://openclipart.org/download/277398",
+  "mode": "rendu"
+ },
+ "enfants": {
+  "source": "Openclipart",
+  "auteur": "j4p4n",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/348424",
+  "url": "https://openclipart.org/download/348424",
+  "mode": "rendu"
+ },
+ "grand_pere": {
+  "source": "Openclipart",
+  "auteur": "algotruneman",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/284452",
+  "url": "https://openclipart.org/download/284452",
+  "mode": "rendu"
+ },
+ "grand_mere": {
+  "source": "Openclipart",
+  "auteur": "oksmith",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/279927",
+  "url": "https://openclipart.org/download/279927",
+  "mode": "rendu"
+ },
+ "homme": {
+  "source": "Openclipart",
+  "auteur": "foxkehicons",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/351244",
+  "url": "https://openclipart.org/download/351244",
+  "mode": "rendu"
+ },
+ "femme": {
+  "source": "Openclipart",
+  "auteur": "Manuela",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/333234",
+  "url": "https://openclipart.org/download/333234",
+  "mode": "rendu"
+ },
+ "calendrier": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/calendar.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "meteo": {
+  "source": "Openclipart",
+  "auteur": "pawnk",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/122887",
+  "url": "https://openclipart.org/download/122887",
+  "mode": "rendu",
+  "vole": true
+ },
+ "parasol": {
+  "source": "Maki (Iconify)",
+  "auteur": "Mapbox",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/mapbox/maki",
+  "url": "https://api.iconify.design/maki/beach.svg",
+  "mode": "rendu"
+ },
+ "casserole": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/pot.svg",
+  "mode": "rendu"
+ },
+ "canape": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/couch.svg",
+  "mode": "rendu"
+ },
+ "baignoire": {
+  "source": "Openclipart",
+  "auteur": "Moini",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/151903",
+  "url": "https://openclipart.org/download/151903",
+  "mode": "rendu"
+ },
+ "arrosoir": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/watering-can.svg",
+  "mode": "rendu"
+ },
+ "chaise": {
+  "source": "Openclipart",
+  "auteur": "anarres",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/281231",
+  "url": "https://openclipart.org/download/281231",
+  "mode": "rendu"
+ },
+ "armoire": {
+  "source": "Openclipart",
+  "auteur": "anarres",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/282644",
+  "url": "https://openclipart.org/download/282644",
+  "mode": "rendu",
+  "sombre": true,
+  "seuil": 90,
+  "trou": 3000
+ },
+ "mallette": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/briefcase.svg",
+  "mode": "rendu"
+ },
+ "bureau": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/person-behind-desk.svg",
+  "mode": "rendu"
+ },
+ "billets": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/banknote.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "arret_bus": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/bus-stop-10.svg",
+  "mode": "rendu"
+ },
+ "pieton": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/person-walking.svg",
+  "mode": "rendu"
+ },
+ "viande": {
+  "source": "Openclipart",
+  "auteur": "j4p4n",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/303163",
+  "url": "https://openclipart.org/download/303163",
+  "mode": "rendu",
+  "vole": true
+ },
+ "legumes": {
+  "source": "Openclipart",
+  "auteur": "dordy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/293606",
+  "url": "https://openclipart.org/download/293606",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pomme": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/apple.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pomme_de_terre": {
+  "source": "Openclipart",
+  "auteur": "cactus_cowboy",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/291193",
+  "url": "https://openclipart.org/download/291193",
+  "mode": "rendu",
+  "vole": true
+ },
+ "oeuf": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/egg.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "soupe": {
+  "source": "Temaki (Iconify)",
+  "auteur": "Bryan Housel",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/rapideditor/temaki",
+  "url": "https://api.iconify.design/temaki/hotpot.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "the": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/teapot.svg",
+  "mode": "rendu"
+ },
+ "biere": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/beer-mug-with-foam.svg",
+  "mode": "rendu"
+ },
+ "boutique": {
+  "source": "Openclipart",
+  "auteur": "j4p4n",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/332567",
+  "url": "https://openclipart.org/download/332567",
+  "mode": "rendu"
+ },
+ "caddie": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/shopping-cart.svg",
+  "mode": "rendu"
+ },
+ "etiquette_prix": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/tag.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "sac_courses": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/shopping-bag.svg",
+  "mode": "rendu"
+ },
+ "oeil": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/eye.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "nez": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/nose-outline.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "bouche": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/lips.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "oreille": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/ear.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "jambe": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/leg.svg",
+  "mode": "rendu"
+ },
+ "stethoscope": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/stethoscope.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "pharmacie": {
+  "source": "OSM Icons (Iconify)",
+  "auteur": "GMGeo",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/gmgeo/osmic",
+  "url": "https://api.iconify.design/osmic/pharmacy-14.svg",
+  "mode": "rendu"
+ },
+ "medicament": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/capsule-pill.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "chemise": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/tshirt.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "veste": {
+  "source": "Openclipart",
+  "auteur": "Maria_Banakova",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/331798",
+  "url": "https://openclipart.org/download/331798",
+  "mode": "rendu",
+  "vole": true,
+  "trou": 3000
+ },
+ "casquette": {
+  "source": "Openclipart",
+  "auteur": "algotruneman",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/302421",
+  "url": "https://openclipart.org/download/302421",
+  "mode": "rendu",
+  "vole": true
+ },
+ "sport": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/soccer-ball.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "nageur": {
+  "source": "Maki (Iconify)",
+  "auteur": "Mapbox",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/mapbox/maki",
+  "url": "https://api.iconify.design/maki/swimming.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "danseurs": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/315149",
+  "url": "https://openclipart.org/download/315149",
+  "mode": "rendu"
+ },
+ "ballons": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/balloon.svg",
+  "mode": "rendu"
+ },
+ "cadeau": {
+  "source": "Maki (Iconify)",
+  "auteur": "Mapbox",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/mapbox/maki",
+  "url": "https://api.iconify.design/maki/gift.svg",
+  "mode": "rendu"
+ },
+ "sapin_noel": {
+  "source": "Openclipart",
+  "auteur": "ploki",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/312683",
+  "url": "https://openclipart.org/download/312683",
+  "mode": "rendu"
+ },
+ "oeuf_paques": {
+  "source": "Openclipart",
+  "auteur": "Firkin",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/279146",
+  "url": "https://openclipart.org/download/279146",
+  "mode": "rendu",
+  "vole": true
+ },
+ "feux_artifice": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/263138",
+  "url": "https://openclipart.org/download/263138",
+  "mode": "rendu",
+  "vole": true
+ },
+ "verre": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/shaker-pint-glass.svg",
+  "mode": "rendu"
+ },
+ "des": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/dice.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "centre": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/target.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "qui": {
+  "source": "Openclipart",
+  "auteur": "GDJ",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://openclipart.org/detail/253816",
+  "url": "https://openclipart.org/download/253816",
+  "mode": "rendu",
+  "vole": true,
+  "sombre": true,
+  "seuil": 110
+ },
+ "repere": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/map-pin-with-dot.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "fleche_haut": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/arrow-up.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "fleche_bas": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/arrow-down.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "fleche_gauche": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/arrow-left.svg",
+  "mode": "rendu",
+  "vole": true
+ },
+ "fleche_droite": {
+  "source": "Pinhead Map Icons (Iconify)",
+  "auteur": "Quincy Morgan",
+  "licence": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://github.com/waysidemapping/pinhead",
+  "url": "https://api.iconify.design/pinhead/arrow-right.svg",
+  "mode": "rendu",
+  "vole": true
+ }
+}

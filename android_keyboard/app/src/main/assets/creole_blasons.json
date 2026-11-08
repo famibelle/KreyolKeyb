@@ -1,0 +1,135 @@
+{
+ "version": 1,
+ "note": "Généré par Dictionnaires/generate_blasons.py : ne pas modifier à la main.",
+ "blasons": {
+  "avyon": {
+   "m": "avion"
+  },
+  "bouch": {
+   "m": "bouche"
+  },
+  "boug": {
+   "m": "homme"
+  },
+  "boutik": {
+   "m": "boutique"
+  },
+  "chimiz": {
+   "m": "chemise"
+  },
+  "chouval": {
+   "m": "cheval"
+  },
+  "dan": {
+   "m": "dent"
+  },
+  "diven": {
+   "m": "vin"
+  },
+  "dlo": {
+   "m": "eau"
+  },
+  "drapo": {
+   "m": "drapeau"
+  },
+  "fanm": {
+   "m": "femme"
+  },
+  "fanmasi": {
+   "m": "pharmacie"
+  },
+  "fanmi": {
+   "m": "famille"
+  },
+  "fi": {
+   "m": "fille"
+  },
+  "foto": {
+   "m": "photo"
+  },
+  "kado": {
+   "m": "cadeau"
+  },
+  "kafé": {
+   "m": "cafe"
+  },
+  "kaz": {
+   "m": "maison"
+  },
+  "lajòl": {
+   "m": "prison"
+  },
+  "lanmen": {
+   "m": "main"
+  },
+  "lapli": {
+   "m": "pluie"
+  },
+  "lari": {
+   "m": "rue"
+  },
+  "liv": {
+   "m": "livre"
+  },
+  "lolo": {
+   "m": "boutique"
+  },
+  "lopital": {
+   "m": "hopital"
+  },
+  "loraj": {
+   "m": "orage"
+  },
+  "légliz": {
+   "m": "eglise"
+  },
+  "madanm": {
+   "m": "femme"
+  },
+  "manman": {
+   "m": "mere"
+  },
+  "matématik": {
+   "m": "mathematiques"
+  },
+  "men": {
+   "m": "main"
+  },
+  "moltani": {
+   "m": "soupe"
+  },
+  "myèl": {
+   "m": "abeille"
+  },
+  "papa": {
+   "m": "pere"
+  },
+  "pwason": {
+   "m": "poisson"
+  },
+  "pyé": {
+   "m": "pied"
+  },
+  "pyébwa": {
+   "m": "arbre"
+  },
+  "rèstoran": {
+   "m": "restaurant"
+  },
+  "solèy": {
+   "m": "soleil"
+  },
+  "soulyé": {
+   "m": "chaussure"
+  },
+  "téléfòn": {
+   "m": "telephone"
+  },
+  "vè": {
+   "m": "verre"
+  },
+  "wòb": {
+   "m": "robe"
+  }
+ }
+}

@@ -15,6 +15,7 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -389,8 +390,44 @@ object Ornement {
     val ECU_G = RectF(28f, 375f, 80f, 410f)
     val ECU_D = RectF(220f, 375f, 272f, 410f)
     /** Le chiffre d'un écu : sous le libellé gravé, pas par-dessus. */
-    val ECU_G_TEXTE = RectF(28f, 382f, 80f, 408f)
-    val ECU_D_TEXTE = RectF(220f, 382f, 272f, 408f)
+    val ECU_G_TEXTE = RectF(28f, 385.4f, 80f, 401.4f)
+    val ECU_D_TEXTE = RectF(220f, 385.4f, 272f, 401.4f)
+    /**
+     * Les écus de la carte imprimée, plus larges : ils y portent le coût et le
+     * type du Wuertduell, que des enfants doivent lire. À 52 unités, « ✦✦✦✦ »
+     * ne tenait qu'à 5,4 pt et « ADJECTIF » à 4,6 (skill designer-cartes,
+     * 2026-10-26). Le médaillon de provenance, absent du papier, leur laisse la
+     * place : ils s'arrêtent à 9 unités de son disque (127–173).
+     *
+     * Quatre unités plus hauts que ceux de l'appli (35 → 39, la pointe
+     * descend de 404 à 407, encore à 15 unités du bord de la face) : le
+     * libellé collait au bord haut de l'écu et l'accent de « COÛT » le
+     * touchait (propriétaire, 2026-10-27). Il descend de 2,5 unités
+     * ([LIGNE_LIBELLE_IMPRIME]), et les émaux du coût et du type avec lui.
+     *
+     * Et 74 unités de large au lieu de 90 : une fois le type passé en
+     * pictogramme, les écus de 90 étaient de larges bannières d'or vide, sans
+     * relief à côté du médaillon (« pas jolis », propriétaire, 2026-10-27).
+     * À 74 × 39 ils retrouvent la proportion d'un blason, et quatre émaux de
+     * coût y tiennent encore ([PictoCout]). Ils sont ornés comme la plaque
+     * (voir [ecu]).
+     */
+    val ECU_G_IMPRIME = RectF(36f, 375f, 110f, 414f)
+    val ECU_D_IMPRIME = RectF(190f, 375f, 264f, 414f)
+    /** La ligne de base du libellé « COÛT » ou « TYPE » sous le bord haut de l'écu imprimé. */
+    const val LIGNE_LIBELLE_IMPRIME = 10.6f
+    /**
+     * Les émaux du coût et du type ([PictoCout], [PictoType]), sous le
+     * libellé : 16 unités, aussi haut que le libellé le permet. Plus bas,
+     * les pièces des bords descendaient dans l'arrondi de l'écu et frôlaient
+     * ses filets (propriétaire, 2026-10-27) : le libellé est passé à 7 unités
+     * pour leur laisser la place, et la jauge est centrée à 393,4, où l'écu
+     * garde encore 57 unités de large entre ses filets.
+     */
+    val ECU_G_IMPRIME_TEXTE = RectF(36f, 385.4f, 110f, 401.4f)
+    val ECU_D_IMPRIME_TEXTE = RectF(190f, 385.4f, 264f, 401.4f)
+    /** La largeur de l'écu imprimé au bas de ses lettres (398,6, 61 unités) : le texte ne la dépasse pas. */
+    const val ECU_IMPRIME_LARGEUR_TEXTE = 60f
     /**
      * La ligne de série est passée **dans la marge**, où ce genre de mention
      * vit sur une carte imprimée : numéro, date, rang — de
@@ -846,19 +883,8 @@ object Ornement {
         // d'une plaque large venait buter contre le bord de la carte. La règle
         // est « neuf unités du bord », pas un rapport accordé à une largeur —
         // elle survit donc à la prochaine plaque qu'on élargira.
-        val q = min(r.height() * 0.55f, min(r.left, LARGEUR - r.right) - 9f)
-        val chemin = Path()
-        if (pointes) {
-            chemin.moveTo(r.left - q, r.centerY())
-            chemin.lineTo(r.left, r.top)
-            chemin.lineTo(r.right, r.top)
-            chemin.lineTo(r.right + q, r.centerY())
-            chemin.lineTo(r.right, r.bottom)
-            chemin.lineTo(r.left, r.bottom)
-            chemin.close()
-        } else {
-            chemin.addRoundRect(r, 3f, 3f, Path.Direction.CW)
-        }
+        val q = panDePlaque(r)
+        val chemin = cheminPlaque(r, pointes)
         // L'ombre portée. La plaque mord sur l'ouverture de vingt-quatre
         // unités, et sans elle ce recouvrement se lirait comme une découpe
         // dans l'illustration plutôt que comme une plaque posée dessus.
@@ -944,6 +970,26 @@ object Ornement {
         }
     }
 
+    private fun panDePlaque(r: RectF): Float = min(r.height() * 0.55f, min(r.left, LARGEUR - r.right) - 9f)
+
+    /** Le contour de la plaque : rectangle arrondi, ou à pointes pour la très rare. */
+    private fun cheminPlaque(r: RectF, pointes: Boolean): Path {
+        val q = panDePlaque(r)
+        val chemin = Path()
+        if (pointes) {
+            chemin.moveTo(r.left - q, r.centerY())
+            chemin.lineTo(r.left, r.top)
+            chemin.lineTo(r.right, r.top)
+            chemin.lineTo(r.right + q, r.centerY())
+            chemin.lineTo(r.right, r.bottom)
+            chemin.lineTo(r.left, r.bottom)
+            chemin.close()
+        } else {
+            chemin.addRoundRect(r, 3f, 3f, Path.Direction.CW)
+        }
+        return chemin
+    }
+
     /**
      * Une pastille : la capsule des deux étiquettes de la ligne de type.
      *
@@ -1017,13 +1063,15 @@ object Ornement {
     }
 
     /** L'écu d'une statistique : un blason à base arrondie. */
-    private fun ecu(c: Canvas, p: Paint, r: RectF, m: Metal, filet: Boolean) {
-        val chemin = Path()
-        chemin.moveTo(r.left, r.top)
-        chemin.lineTo(r.right, r.top)
-        chemin.lineTo(r.right, r.top + r.height() * 0.5f)
-        chemin.quadTo(r.centerX(), r.bottom + r.height() * 0.16f, r.left, r.top + r.height() * 0.5f)
-        chemin.close()
+    /**
+     * Un écu : le blason d'or, son contour, et sur un palier rare son filet
+     * clair. [orne] (la carte imprimée) ajoute ce qui rend la plaque du nom
+     * précieuse : un biseau clair en retrait, un filet gravé plus fin dedans,
+     * ouvert en haut pour laisser sa bande au libellé, et deux rivets aux
+     * angles du haut.
+     */
+    private fun ecu(c: Canvas, p: Paint, r: RectF, m: Metal, filet: Boolean, orne: Boolean = false) {
+        val chemin = cheminEcu(r)
         p.style = Paint.Style.FILL
         // Un dégradé est multiplié par l'alpha du pinceau : sans ce retour à
         // l'opaque, l'écu héritait du filet tracé juste avant et devenait
@@ -1044,6 +1092,35 @@ object Ornement {
             p.color = 0x80FFFFFF.toInt()
             c.drawPath(chemin, p)
         }
+        if (orne) {
+            p.strokeWidth = 1f
+            p.color = 0x8CFFFFFF.toInt()
+            c.drawPath(cheminEcu(RectF(r.left + 2.6f, r.top + 2.6f, r.right - 2.6f, r.bottom - 2.6f)), p)
+            // Le filet gravé est ouvert en haut, comme un cartouche : il ne
+            // longe que les côtés et la pointe. Fermé, il passait juste sous
+            // le bord et l'accent de « COÛT » le touchait (propriétaire,
+            // 2026-10-27).
+            p.strokeWidth = 0.5f
+            p.color = m.trait
+            p.alpha = 150
+            c.save()
+            c.clipRect(r.left, r.top + 9f, r.right, r.bottom + 10f)
+            c.drawPath(cheminEcu(RectF(r.left + 3.8f, r.top + 3.8f, r.right - 3.8f, r.bottom - 3.8f)), p)
+            c.restore()
+            p.alpha = 255
+            joyau(c, p, r.left + 7f, r.top + 7f, 1.5f, m.hi, 0)
+            joyau(c, p, r.right - 7f, r.top + 7f, 1.5f, m.hi, 0)
+        }
+    }
+
+    private fun cheminEcu(r: RectF): Path {
+        val chemin = Path()
+        chemin.moveTo(r.left, r.top)
+        chemin.lineTo(r.right, r.top)
+        chemin.lineTo(r.right, r.top + r.height() * 0.5f)
+        chemin.quadTo(r.centerX(), r.bottom + r.height() * 0.16f, r.left, r.top + r.height() * 0.5f)
+        chemin.close()
+        return chemin
     }
 
     /**
@@ -1102,12 +1179,17 @@ object Ornement {
     /**
      * Les deux écus portent un libellé (« VUES », « NIVEAU ») : il entre dans
      * la clef du cache, sinon un changement de langue garderait l'ancien.
+     * [ecus] les remplace : la carte imprimée y écrit « COÛT » et « TYPE »
+     * (voir [ImpressionCarte]).
      */
-    fun metal(context: Context, rarete: Rarete, largeurPx: Int, vignette: Boolean): Bitmap? {
-        val vues = context.getString(R.string.carte_ecu_vues)
-        val niveau = context.getString(R.string.carte_ecu_niveau)
-        return couche("m$vues$niveau", rarete, largeurPx, vignette) { c ->
-            dessinerMetal(c, rarete, vignette, vues, niveau)
+    fun metal(
+        context: Context, rarete: Rarete, largeurPx: Int, vignette: Boolean,
+        ecus: Pair<String, String>? = null
+    ): Bitmap? {
+        val vues = ecus?.first ?: context.getString(R.string.carte_ecu_vues)
+        val niveau = ecus?.second ?: context.getString(R.string.carte_ecu_niveau)
+        return couche(if (ecus != null) "mi$vues$niveau" else "m$vues$niveau", rarete, largeurPx, vignette) { c ->
+            dessinerMetal(c, rarete, vignette, vues, niveau, imprime = ecus != null)
         }
     }
 
@@ -1505,7 +1587,9 @@ object Ornement {
      * Le centre reste transparent — la face teintée et l'illustration sont
      * peintes dessous, en direct, par [CarteOrnee].
      */
-    private fun dessinerMetal(c: Canvas, rarete: Rarete, vignette: Boolean, vues: String, niveau: String) {
+    private fun dessinerMetal(
+        c: Canvas, rarete: Rarete, vignette: Boolean, vues: String, niveau: String, imprime: Boolean = false
+    ) {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         val palier = rarete.ordinal
         val m = metal(rarete)
@@ -1664,20 +1748,52 @@ object Ornement {
         // Sans libellé, deux chiffres nus dans deux blasons ne veulent rien
         // dire — et comme ils ne dépendent pas du mot, ils entrent dans le
         // bitmap mis en cache au même titre que le métal.
-        ecu(c, p, ECU_G, m, palier >= 3)
-        ecu(c, p, ECU_D, m, palier >= 3)
+        //
+        // Sur la carte imprimée, les écus s'élargissent et leur libellé passe
+        // à 11 unités (6 pt), opaque : à 7,5 et 75 %, « COÛT » faisait 4 pt.
+        val ecuG = if (imprime) ECU_G_IMPRIME else ECU_G
+        val ecuD = if (imprime) ECU_D_IMPRIME else ECU_D
+        // Ornés et gravés dans l'appli comme sur papier (2026-10-27) : la
+        // carte imprimée a montré qu'un écu d'or uni, à côté du médaillon,
+        // faisait une bannière vide.
+        ecu(c, p, ecuG, m, palier >= 3, orne = true)
+        ecu(c, p, ecuD, m, palier >= 3, orne = true)
         p.style = Paint.Style.FILL
         p.shader = null
-        p.color = m.trait
-        p.alpha = 190
         p.textAlign = Paint.Align.CENTER
-        p.textSize = 7.5f
         p.typeface = android.graphics.Typeface.create(
             android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD
         )
-        c.drawText(vues, ECU_G.centerX(), ECU_G.top + 9f, p)
-        c.drawText(niveau, ECU_D.centerX(), ECU_D.top + 9f, p)
-        p.alpha = 255
+        run {
+            // Gravé dans l'écu, comme le nom dans la plaque ([MotGrave]) : un
+            // creux un peu plus sombre que l'or, son ombre au bord du haut, sa
+            // lèvre claire au bord du bas. À 7 unités et espacé : le libellé
+            // aide l'enfant qui commence à lire, mais c'est la jauge et
+            // l'image dessous qui informent. À 10, l'accent de « COÛT »
+            // mordait sur les filets du haut ; à 8, il poussait les pièces
+            // dans l'arrondi de l'écu (propriétaire, 2026-10-27).
+            p.letterSpacing = 0.14f
+            val creux = Email.melange(m.lo, m.trait, 0.45f)
+            for ((texte, ecu) in listOf(vues to ecuG, niveau to ecuD)) {
+                // Entre les deux rivets, avec trois unités d'air de chaque
+                // côté : un libellé plus long (« NIVEAU », « GESEHEN » dans
+                // l'écu de 52 de l'appli) se resserre.
+                p.textSize = 7f
+                val large = p.measureText(texte)
+                val dispo = ecu.width() - 24f
+                if (large > dispo) p.textSize = 7f * dispo / large
+                val base = ecu.top + LIGNE_LIBELLE_IMPRIME
+                p.color = m.hi
+                c.drawText(texte, ecu.centerX(), base + 0.5f, p)
+                p.color = m.trait
+                p.alpha = 150
+                c.drawText(texte, ecu.centerX(), base - 0.35f, p)
+                p.alpha = 255
+                p.color = creux
+                c.drawText(texte, ecu.centerX(), base, p)
+            }
+            p.letterSpacing = 0f
+        }
 
         // 12. Le disque du médaillon de provenance, par-dessus le panneau
         //     qu'il mord, entre les deux écus.
@@ -1734,23 +1850,7 @@ object Ornement {
     fun dessinerMedaillon(context: Context, c: Canvas, p: Paint, jeu: JeuCarte, m: Metal) {
         val cx = PROVENANCE.centerX()
         val cy = PROVENANCE.centerY()
-        val hsv = FloatArray(3)
-        Color.colorToHSV(jeu.couleur, hsv)
-        val clair = Color.HSVToColor(floatArrayOf(hsv[0], hsv[1] * 0.55f, min(1f, hsv[2] + 0.25f)))
-        val sombre = Color.HSVToColor(floatArrayOf(hsv[0], min(1f, hsv[1] + 0.1f), hsv[2] * 0.55f))
-
-        p.style = Paint.Style.FILL
-        p.color = Color.BLACK
-        p.shader = RadialGradient(
-            cx - R_EMAIL * 0.3f, cy - R_EMAIL * 0.35f, R_EMAIL * 1.5f,
-            intArrayOf(clair, jeu.couleur, sombre), floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP
-        )
-        c.drawCircle(cx, cy, R_EMAIL, p)
-        p.shader = null
-        p.style = Paint.Style.STROKE
-        p.strokeWidth = 1f
-        p.color = 0x40000000
-        c.drawCircle(cx, cy, R_EMAIL - 0.5f, p)
+        email(c, p, jeu.couleur, cx, cy)
 
         emblemeDuJeu(c, p, jeu, cx, cy)
 
@@ -1761,12 +1861,36 @@ object Ornement {
             android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD
         )
         // Une carte cédée n'a pas été gagnée : elle a été reçue.
-        val dessus = if (jeu == JeuCarte.CADEAU) R.string.carte_recue_medaillon else R.string.carte_gagne_a_medaillon
+        val dessus = when (jeu) {
+            JeuCarte.CADEAU -> R.string.carte_recue_medaillon
+            else -> R.string.carte_gagne_a_medaillon
+        }
         texteSurArc(c, p, context.getString(dessus), cx, cy, R_EMAIL + 2.2f, true)
         texteSurArc(c, p, jeu.libelle(context).uppercase(), cx, cy, R_MEDAILLON - 3.6f, false)
         p.typeface = android.graphics.Typeface.DEFAULT
         p.strokeCap = Paint.Cap.BUTT
         p.strokeJoin = Paint.Join.MITER
+    }
+
+    /** L'émail du médaillon : une couleur bombée, claire en haut à gauche, et son ombre de bord. */
+    private fun email(c: Canvas, p: Paint, couleur: Int, cx: Float, cy: Float) {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(couleur, hsv)
+        val clair = Color.HSVToColor(floatArrayOf(hsv[0], hsv[1] * 0.55f, min(1f, hsv[2] + 0.25f)))
+        val sombre = Color.HSVToColor(floatArrayOf(hsv[0], min(1f, hsv[1] + 0.1f), hsv[2] * 0.55f))
+
+        p.style = Paint.Style.FILL
+        p.color = Color.BLACK
+        p.shader = RadialGradient(
+            cx - R_EMAIL * 0.3f, cy - R_EMAIL * 0.35f, R_EMAIL * 1.5f,
+            intArrayOf(clair, couleur, sombre), floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP
+        )
+        c.drawCircle(cx, cy, R_EMAIL, p)
+        p.shader = null
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 1f
+        p.color = 0x40000000
+        c.drawCircle(cx, cy, R_EMAIL - 0.5f, p)
     }
 
     /**
@@ -2110,7 +2234,7 @@ object Ornement {
      * ouvertures de la même carte montrent les mêmes étincelles aux mêmes
      * endroits, ce qui en fait une propriété de la pièce et non un effet.
      */
-    fun dessinerSemis(c: Canvas, p: Paint, mot: String, rarete: Rarete, vignette: Boolean) {
+    fun dessinerSemis(c: Canvas, p: Paint, mot: String, rarete: Rarete, vignette: Boolean, imprime: Boolean = false) {
         if (rarete != Rarete.TRES_RARE) return
         val haut = if (vignette) HAUTEUR_VIGNETTE else HAUTEUR
         var g = mot.fold(7919) { acc, ch -> acc * 31 + ch.code }
@@ -2122,7 +2246,8 @@ object Ornement {
         // passe pour un défaut d'impression. On retire, au même générateur.
         val interdits = if (vignette) arrayOf(NOM_VIGNETTE, GLOSE_VIGNETTE, BOITE_VIGNETTE)
         else arrayOf(
-            GEMME, PLAQUE, GEMME_CENTRE, NATURE, PANNEAU, ECU_G, ECU_D, PROVENANCE
+            GEMME, PLAQUE, GEMME_CENTRE, NATURE, PANNEAU,
+            if (imprime) ECU_G_IMPRIME else ECU_G, if (imprime) ECU_D_IMPRIME else ECU_D, PROVENANCE
         )
         var poses = 0
         var essais = 0
@@ -2158,14 +2283,108 @@ object Ornement {
     /**
      * Le reflet spéculaire qui traverse le métal quand on incline l'appareil.
      *
-     * Réservé aux deux paliers hauts, et calé sur le **même roulis** que
-     * l'irisation de l'illustration : les deux doivent glisser ensemble,
-     * sinon la carte se lit comme deux objets superposés.
+     * Calé sur le **même roulis** que l'irisation de l'illustration : les
+     * deux doivent glisser ensemble, sinon la carte se lit comme deux objets
+     * superposés.
+     *
+     * Sa force suit la noblesse du métal (propriétaire, 2026-10-19) : l'étain
+     * brossé de la commune le boit presque, le bronze le rend un peu, l'argent
+     * et l'or le renvoient comme avant. Sur une vignette, qui ne suit pas la
+     * lumière, seuls les deux paliers hauts le gardent : un reflet figé sur
+     * trente communes se lirait comme une tache répétée.
      */
     fun dessinerReflet(c: Canvas, p: Paint, rarete: Rarete, roulis: Float, vignette: Boolean) {
-        if (!rarete.distinguee) return
+        if (vignette && !rarete.distinguee) return
         val haut = if (vignette) HAUTEUR_VIGNETTE else HAUTEUR
-        refletBalaye(c, p, roulis, haut, if (rarete == Rarete.TRES_RARE) 0x66 else 0x2E)
+        val force = when (rarete) {
+            Rarete.COMMUN -> 0x12
+            Rarete.PEU_COMMUN -> 0x20
+            Rarete.RARE -> 0x2E
+            Rarete.TRES_RARE -> 0x66
+        }
+        refletBalaye(c, p, roulis, haut, force)
+    }
+
+    /**
+     * Les pièces en volume : la pastille de nature, les deux écus, le disque
+     * du médaillon, les deux sertissures, et la plaque quand elle est de
+     * métal (argent, or ; le bois et le parchemin des deux paliers bas ne
+     * brillent pas).
+     *
+     * ## Une seule lumière qui voyage
+     *
+     * Un éclat par pièce, toutes allumées à la fois, a été essayé et jugé
+     * « trop de reflets » (propriétaire, 2026-10-19) : la carte scintillait
+     * partout. L'éclat est donc le **même balayage** que [refletBalaye], sur
+     * le même axe et au même endroit, mais plus étroit et plus vif, et il ne
+     * se peint que sur les pièces. Une pièce ne s'allume que quand la bande du
+     * cadre passe sur elle : en inclinant, on voit la lumière courir de la
+     * plaque au médaillon, puis à un écu. Une ou deux pièces brillent à la
+     * fois, jamais toutes, comme un objet sous une seule lampe.
+     *
+     * La force suit la noblesse du métal, comme le reflet du cadre. Carte
+     * ouverte seulement : sur une vignette ces pièces n'existent pas.
+     */
+    fun dessinerEclatsDesPieces(c: Canvas, p: Paint, rarete: Rarete, roulis: Float) {
+        val dx = roulis * LARGEUR * ETALEMENT
+        // L'axe du balayage, de (dx, HAUTEUR) à (LARGEUR + dx, 0) : t = 0,5
+        // est le milieu de la bande. Une pièce dont aucun coin n'approche ce
+        // milieu reste éteinte, et n'est même pas tracée.
+        val ax = LARGEUR
+        val ay = -HAUTEUR
+        val norme = ax * ax + ay * ay
+        val eclat = ECLATS[rarete.ordinal]
+        PLACE_ECLAT.setTranslate(dx, 0f)
+        eclat.setLocalMatrix(PLACE_ECLAT)
+        p.style = Paint.Style.FILL
+        p.shader = eclat
+        for (piece in PIECES[rarete.ordinal]) {
+            val b = piece.boite
+            var bas = 1f
+            var haut = 0f
+            for (x in floatArrayOf(b.left, b.right)) for (y in floatArrayOf(b.top, b.bottom)) {
+                val t = ((x - dx) * ax + (y - HAUTEUR) * ay) / norme
+                bas = min(bas, t)
+                haut = max(haut, t)
+            }
+            if (haut < 0.5f - DEMI_ECLAT || bas > 0.5f + DEMI_ECLAT) continue
+            c.drawPath(piece.contour, p)
+        }
+        p.shader = null
+    }
+
+    private class Piece(val contour: Path, val boite: RectF)
+
+    /** La demi-largeur de l'éclat le long de l'axe : un tiers de celle du reflet du cadre. */
+    private const val DEMI_ECLAT = 0.07f
+    private val PLACE_ECLAT = Matrix()
+
+    private val PIECES: Array<List<Piece>> by lazy {
+        Array(4) { palier ->
+            fun ovale(r: RectF) = Piece(Path().apply { addOval(r, Path.Direction.CW) }, r)
+            val ecus = listOf(ECU_G, ECU_D).map { Piece(cheminEcu(it), it) }
+            val rayon = NATURE.height() / 2f
+            val pastille = Piece(Path().apply { addRoundRect(NATURE, rayon, rayon, Path.Direction.CW) }, NATURE)
+            val plaque = if (palier >= 2) {
+                val q = if (palier >= 3) panDePlaque(PLAQUE) else 0f
+                listOf(Piece(cheminPlaque(PLAQUE, palier >= 3), RectF(PLAQUE.left - q, PLAQUE.top, PLAQUE.right + q, PLAQUE.bottom)))
+            } else emptyList()
+            plaque + pastille + ecus + ovale(PROVENANCE) + ovale(GEMME) + ovale(GEMME_CENTRE)
+        }
+    }
+
+    /** L'éclat de chaque métal : le balayage du cadre, resserré et plus vif. */
+    private val ECLATS: Array<LinearGradient> by lazy {
+        Array(4) { palier ->
+            val force = intArrayOf(0x34, 0x48, 0x5C, 0x84)[palier]
+            fun blanc(a: Int) = (a shl 24) or 0xFFFFFF
+            LinearGradient(
+                0f, HAUTEUR, LARGEUR, 0f,
+                intArrayOf(blanc(0), blanc(force / 3), blanc(force), blanc(force / 3), blanc(0)),
+                floatArrayOf(0.5f - DEMI_ECLAT, 0.5f - DEMI_ECLAT / 2.5f, 0.5f, 0.5f + DEMI_ECLAT / 2.5f, 0.5f + DEMI_ECLAT),
+                Shader.TileMode.CLAMP
+            )
+        }
     }
 
     /**
@@ -3213,6 +3432,13 @@ abstract class Carton(context: Context) : ViewGroup(context), SensorEventListene
     protected val roulis: Float get() = pesanteur + (doigt - pesanteur) * main
 
     /**
+     * La lumière du dessin du mot, dans [-1, 1] : le [roulis], amplifié comme
+     * le regard ([GAIN_REGARD]) pour que le reflet de la plaque traverse sa
+     * face sans qu'il faille coucher le téléphone (voir [Plaque.lumiere]).
+     */
+    protected val lumiere: Float get() = (-roulis * GAIN_REGARD).coerceIn(-1f, 1f)
+
+    /**
      * Comment le carton est réellement tourné, dans les mêmes unités.
      *
      * C'est ce que lit la tranche, et le doigt n'y écrit pas — sauf par
@@ -3584,8 +3810,8 @@ class CarteOrnee(
      * Toute carte ouverte suit la pesanteur, et plus seulement les deux
      * paliers hauts.
      *
-     * Le reflet, lui, reste un privilège de rareté ; la tranche n'en est pas
-     * un. Une commune qui resterait plate pendant qu'une rare prend de
+     * Le reflet, lui, gradue la rareté par sa force ; la tranche ne la
+     * gradue pas. Une commune qui resterait plate pendant qu'une rare prend de
      * l'épaisseur ne se lirait pas comme moins précieuse, mais comme moins
      * réelle — et c'est précisément la distinction qu'[Inclinaison] refuse de
      * faire depuis qu'elle existe.
@@ -3607,6 +3833,7 @@ class CarteOrnee(
      */
     private val fenetre = if (vignette) Ornement.FENETRE_VIGNETTE else Ornement.FENETRE
     private val decoupe = Ornement.cheminFenetre(fenetre, rarete.ordinal >= 2)
+    private val verre = if (vignette) null else Verre(fenetre, decoupe)
     private val degradeFace: android.graphics.LinearGradient
     private val degradeGemme: android.graphics.RadialGradient
     private val degradeAgrafe: android.graphics.RadialGradient
@@ -3825,6 +4052,14 @@ class CarteOrnee(
      */
     private var matierePrete = true
     private var quandPrete: (() -> Unit)? = null
+
+    /**
+     * Les libellés gravés sur les deux écus, à la place de « VUES » et
+     * « NIVEAU » : la carte imprimée y met « COÛT » et « TYPE », qui servent au
+     * jeu de cartes. À poser avant que la carte ne connaisse sa taille.
+     */
+    var ecus: Pair<String, String>? = null
+
     private var largeurPreparee = 0
 
     /**
@@ -3868,7 +4103,7 @@ class CarteOrnee(
         Thread({
             // Un échec ne bloque pas la carte : elle retombe sur le rendu direct.
             try {
-                Ornement.metal(ctx, rarete, w, vignette)
+                Ornement.metal(ctx, rarete, w, vignette, ecus)
                 Ornement.rayons(rarete, w, vignette)
             } catch (e: Throwable) {
                 android.util.Log.w("CarteOrnee", "Métal non préparé : ${e.message}")
@@ -3908,9 +4143,30 @@ class CarteOrnee(
             canvas.scale(u, u)
             motif.dessusDuLieu(canvas, pinceau, roulis, decoupe, avecSujet = true, avecIris = true)
             canvas.restore()
+        } else if (motif.nuagesEnRoute && canvas.isHardwareAccelerated) {
+            relancer()
         }
+        lumiereDuSujet(canvas, u)
+        refletDuVerre(canvas, u)
         dessus(canvas, u)
         vivant(canvas, u)
+    }
+
+    /** La lumière de la plaque du mot, qui suit l'inclinaison : voir [Motif.lumiereDuSujet]. */
+    private fun lumiereDuSujet(canvas: Canvas, u: Float) {
+        canvas.save()
+        canvas.scale(u, u)
+        motif.lumiereDuSujet(canvas, if (canvas.isHardwareAccelerated) lumiere else 0f, decoupe)
+        canvas.restore()
+    }
+
+    /** Le reflet de la vitre : par-dessus le paysage et sa neige, sous le métal. */
+    private fun refletDuVerre(canvas: Canvas, u: Float) {
+        val v = verre ?: return
+        canvas.save()
+        canvas.scale(u, u)
+        v.reflet(canvas, pinceau, roulis)
+        canvas.restore()
     }
 
     /** Ce qui bouge dans la fenêtre : voir [Ambiance]. Réservé au lecteur et à la pochette. */
@@ -3919,13 +4175,26 @@ class CarteOrnee(
 
     /**
      * Pour le lecteur de cartes et la pochette : la fenêtre vit au temps de sa
-     * saison, et son lieu prend de la profondeur en trois plans qui glissent
+     * saison, et son lieu prend de la profondeur en cinq plans qui glissent
      * avec l'inclinaison ([Motif.profondeur]). Rien sur une vignette, rien si
      * le téléphone demande des animations réduites.
      */
+    /**
+     * Pour une image figée, la carte imprimée ou l'image partagée : le lieu en
+     * cartons de théâtre de papier, comme sur la carte ouverte, mais immobile,
+     * sans ambiance ni inclinaison (voir [Paysages.plans]). À appeler avant la
+     * mise en page. Une carte de fête garde son paysage à plat, comme dans le
+     * lecteur.
+     */
+    fun enTheatre(): CarteOrnee {
+        motif.profondeur = true
+        return this
+    }
+
     fun avecAmbiance(): CarteOrnee {
         if (vignette || Pochette.animationsReduites(context)) return this
         motif.profondeur = true
+        motif.lumiereVivante = true
         val zone = RectF(fenetre.left, fenetre.top, fenetre.right, min(fenetre.bottom, Ornement.PLAQUE.top + 4f))
         // Au carême, l'heure de la carte choisit : aigrettes le jour,
         // lucioles le soir et la nuit, les heures des deux paliers hauts. Le
@@ -4001,8 +4270,15 @@ class CarteOrnee(
         canvas.clipPath(decoupe)
         a.dessiner(canvas, pinceau)
         canvas.restore()
-        // Une image sur deux : trente par seconde suffisent à des flocons
-        // lents, et la batterie tient deux fois mieux qu'à soixante.
+        relancer()
+    }
+
+    /**
+     * Redemande une image. Une sur deux : trente par seconde suffisent à des
+     * flocons lents et à des nuages qui passent, et la batterie tient deux
+     * fois mieux qu'à soixante.
+     */
+    private fun relancer() {
         if (!relancePrevue) {
             relancePrevue = true
             postOnAnimationDelayed(relance, 1000L / IMAGES_PAR_SECONDE - 8)
@@ -4040,7 +4316,13 @@ class CarteOrnee(
 
     /** Le métal et ce qui s'y pose : joyaux, médaillon, sceau, plume, saison, semis. */
     private fun dessus(canvas: Canvas, u: Float) {
-        Ornement.metal(context, rarete, width, vignette)?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        verre?.let {
+            canvas.save()
+            canvas.scale(u, u)
+            it.encastrement(canvas)
+            canvas.restore()
+        }
+        Ornement.metal(context, rarete, width, vignette, ecus)?.let { canvas.drawBitmap(it, 0f, 0f, null) }
 
         canvas.save()
         canvas.scale(u, u)
@@ -4064,7 +4346,7 @@ class CarteOrnee(
         if (boite >= Sonje.BOITE_ACQUISE) Ornement.dessinerSceau(canvas, pinceau, vignette)
         if (plume) Ornement.dessinerPlume(canvas, pinceau, vignette, rarete)
         souvenir?.let { Ornement.dessinerSaison(canvas, pinceau, it, rarete, vignette) }
-        Ornement.dessinerSemis(canvas, pinceau, mot, rarete, vignette)
+        Ornement.dessinerSemis(canvas, pinceau, mot, rarete, vignette, imprime = ecus != null)
         canvas.restore()
     }
 
@@ -4084,6 +4366,7 @@ class CarteOrnee(
         else @Suppress("DEPRECATION") canvas.clipPath(decoupe, android.graphics.Region.Op.DIFFERENCE)
         Ornement.dessinerReflet(canvas, pinceau, rarete, roulis, vignette)
         canvas.restore()
+        if (!vignette) Ornement.dessinerEclatsDesPieces(canvas, pinceau, rarete, roulis)
         canvas.restore()
     }
 
@@ -4113,7 +4396,7 @@ class CarteOrnee(
     private fun couches(canvas: Canvas, u: Float): Boolean {
         if (vignette || android.os.Build.VERSION.SDK_INT < 29 || !canvas.isHardwareAccelerated) return false
         if (emprise >= 0.01f) return false
-        if (!motif.aSonLieu || Ornement.metal(context, rarete, width, vignette) == null) return false
+        if (!motif.aSonLieu || Ornement.metal(context, rarete, width, vignette, ecus) == null) return false
         val anime = ambiance != null
         // Le lieu en plans glisse à chaque trame : il sort de la couche fixe,
         // et le dessin du mot avec lui, qui doit passer devant.
@@ -4168,14 +4451,17 @@ class CarteOrnee(
             motif.peindreLieu(canvas, decoupe, u, regardX, regardY)
             canvas.restore()
         }
-        if (anime) animer(canvas, u)
+        // Sans ambiance (carte sans date), les nuages passent quand même.
+        if (anime) animer(canvas, u) else if (motif.nuagesEnRoute) relancer()
         if (vivantDessous) sujet?.let { canvas.drawRenderNode(it) }
+        lumiereDuSujet(canvas, u)
         if (motif.irise) {
             canvas.save()
             canvas.scale(u, u)
             motif.dessusDuLieu(canvas, pinceau, roulis, decoupe, avecSujet = false, avecIris = true)
             canvas.restore()
         }
+        refletDuVerre(canvas, u)
         canvas.drawRenderNode(haut)
         return true
     }
@@ -4261,6 +4547,12 @@ class CarteOrnee(
  * à chaque trame, dans la boîte 100 × 66 du paysage, et l'irisation d'une très
  * rare passe par-dessus le tout quand l'appareil tourne.
  */
+/** Le temps que mettent les nuages à traverser la fenêtre. */
+private const val PERIODE_NUAGES = 75_000L
+
+/** Où sont les nuages sur une image figée (carte imprimée, partage) : à leur place dans la maquette. */
+private const val PHASE_FIGEE = 0f
+
 class Motif(
     mot: String,
     rarete: Rarete,
@@ -4286,6 +4578,8 @@ class Motif(
     private val visible = if (zone == Ornement.FENETRE)
         RectF(zone.left, zone.top, zone.right, min(zone.bottom, Ornement.PLAQUE.top + 4f)) else RectF(zone)
     private val cadrage = Paysages.cadrage(visible.width(), visible.height())
+    /** Le carton peint à la gouache sur la carte ouverte, des aplats en vignette. */
+    private val facture = if (zone == Ornement.FENETRE) Paysages.Facture.GOUACHE else Paysages.Facture.VIGNETTE
     private val iris = Irisation.pour(rarete, zone, Ornement.teinteDe(mot, blason.champ))
     private val peinture = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private var rendu: Bitmap? = null
@@ -4293,7 +4587,7 @@ class Motif(
 
     /**
      * Vrai pour la carte ouverte qui vit (lecteur, pochette) : le lieu se
-     * rend alors en trois plans qui glissent avec l'inclinaison, voir
+     * rend alors en cinq plans qui glissent avec l'inclinaison, voir
      * [Paysages.plans]. À poser avant [preparer].
      */
     var profondeur = false
@@ -4338,6 +4632,16 @@ class Motif(
     }
 
     /**
+     * Ce que [preparer] calcule, sur le fil appelant : les plans de la carte
+     * ouverte, ou son lieu à plat (carte de fête, animations coupées). Le
+     * résultat reste dans le cache de [Paysages].
+     */
+    fun rendreIci(echelle: Float) {
+        if (profondeur && rendrePlans(echelle) != null) return
+        rendreLieu(echelle)
+    }
+
+    /**
      * Demande le lieu à l'échelle [echelle] aux fils de fond de [Paysages],
      * depuis n'importe quel fil, et appelle [pret] quand il est en cache.
      * Une vignette qui se dessine ensuite le trouve, ou rejoint la demande en
@@ -4361,7 +4665,7 @@ class Motif(
         val l = (visible.width() * echelle).toInt()
         val h = (visible.height() * echelle).toInt()
         return try {
-            Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)
+            Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, facture, ouverte = profondeur)
         } catch (e: OutOfMemoryError) {
             null
         }
@@ -4369,8 +4673,8 @@ class Motif(
 
     /** Le lieu rendu à [l] × [h], ou `null` s'il est en route vers une vignette. */
     private fun lieuAPeindre(l: Int, h: Int): Bitmap? {
-        val signal = surPaysage ?: return Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)
-        Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir, ouverte = profondeur)?.let { return it }
+        val signal = surPaysage ?: return Paysages.image(lieu, heure, teinteChamp, l, h, souvenir, facture, ouverte = profondeur)
+        Paysages.enCache(lieu, heure, teinteChamp, l, h, souvenir, facture, ouverte = profondeur)?.let { return it }
         val taille = "${l}x$h"
         if (demande == taille) return null
         demande = taille
@@ -4388,8 +4692,16 @@ class Motif(
      * bruit, ce qui permet à l'actif et à la bibliothèque d'avancer chacun à
      * son rythme.
      */
-    private val sujet: Sujet =
-        blason.meuble?.let { Enluminure.pour(it, heure) } ?: Trace.pour(mot, heure)
+    private val sujet: Sujet = (facture == Paysages.Facture.VIGNETTE).let { vignette ->
+        blason.meuble?.let { Enluminure.pour(it, heure, vignette) } ?: Trace.pour(mot, heure, vignette)
+    }
+
+    /**
+     * Vrai quand la lumière du dessin suit l'inclinaison, à chaque trame
+     * ([lumiereDuSujet]) ; faux, elle est peinte au repos avec lui. À poser
+     * avant le premier dessin : voir [CarteOrnee.avecAmbiance].
+     */
+    var lumiereVivante = false
 
     /**
      * Peint le motif dans son ouverture. [echelle] est le nombre de pixels par
@@ -4454,6 +4766,7 @@ class Motif(
     private fun peindrePlans(c: Canvas, etages: Array<Bitmap>, l: Int, h: Int, regardX: Float, regardY: Float) {
         val sx = visible.width() / l
         val sy = visible.height() / h
+        val ombres = Paysages.ombres(lieu, heure, teinteChamp, l, h, souvenir)
         for (i in etages.indices) {
             val dx = Paysages.GLISSEMENT[i] * visible.width() * regardX
             val dy = Paysages.GLISSEMENT[i] * visible.height() * regardY
@@ -4463,9 +4776,112 @@ class Motif(
                 visible.left - mx + dx, visible.top - my + dy,
                 visible.right + mx + dx, visible.bottom + my + dy
             )
-            c.drawBitmap(etages[i], null, ouPlan, peinture)
+            if (i == Paysages.NUAGES) peindreNuages(c, etages[i], regardX, regardY)
+            else {
+                ombres?.getOrNull(i)?.let { o -> peindreOmbre(c, o, i, regardX, regardY) }
+                c.drawBitmap(etages[i], null, ouPlan, peinture)
+                if (i == Paysages.MILIEU && Paysages.PAPIER && lieu == Lieu.MARIE_GALANTE) peindreAiles(c, i, regardX, regardY)
+                if (!c.isHardwareAccelerated) poserBetes(c, i)
+            }
         }
     }
+
+    private val atelierFige by lazy { Paysages.Atelier(heure) }
+
+    /**
+     * Les bêtes du lieu, au repos, sur le plan [i] qui les porte : les calques
+     * les taisent pour que la carte ouverte les anime ([Ambiance]), mais une
+     * image figée (partage, carte imprimée) n'a pas d'ambiance et doit garder
+     * ce qui fait le lieu, l'iguane de Petite-Terre ou le pélican sur sa bitte.
+     */
+    private fun poserBetes(c: Canvas, i: Int) {
+        val betes = Paysages.BETES[lieu] ?: return
+        val k = cadrage[0]
+        c.save()
+        c.translate(visible.left + cadrage[1], visible.top + cadrage[2])
+        c.scale(k, k)
+        betes.forEachIndexed { n, b -> if (b.plan + 2 == i) atelierFige.poser(c, b, n) }
+        c.restore()
+    }
+
+    private val peintureAiles = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /**
+     * Les ailes du moulin de Marie-Galante, sur le plan [i] qui porte la
+     * tour et sous celui de devant : les calques les taisent
+     * ([Paysages.dessiner] avec `faune` faux) pour qu'elles tournent ici, un
+     * tour en [Paysages.TOUR_MOULIN], à l'horloge comme les nuages. Une image
+     * figée (partage, carte imprimée) les pose à l'angle de la vignette.
+     * Leur ombre tombe sur la tour, comme celle d'un carton.
+     */
+    private fun peindreAiles(c: Canvas, i: Int, regardX: Float, regardY: Float) {
+        val k = cadrage[0]
+        val tour = if (c.isHardwareAccelerated)
+            (android.os.SystemClock.uptimeMillis() % Paysages.TOUR_MOULIN) * 360f / Paysages.TOUR_MOULIN else 0f
+        val ailes = Paysages.ailesMoulin(Paysages.ANGLE_MOULIN + tour)
+        c.save()
+        c.translate(visible.left + cadrage[1] + Paysages.GLISSEMENT[i] * visible.width() * regardX,
+            visible.top + cadrage[2] + Paysages.GLISSEMENT[i] * visible.height() * regardY)
+        c.scale(k, k)
+        c.save()
+        c.translate(Paysages.OMBRE_PORTEE_X, Paysages.OMBRE_PORTEE_Y)
+        peintureAiles.color = Paysages.couleurOmbrePortee(heure)
+        c.drawPath(ailes, peintureAiles)
+        c.restore()
+        peintureAiles.color = Paysages.couleurAiles(heure)
+        c.drawPath(ailes, peintureAiles)
+        peintureAiles.color = Paysages.couleurMoyeu(heure)
+        c.drawCircle(Paysages.MOULIN[0], Paysages.MOULIN[1], 1.1f, peintureAiles)
+        c.restore()
+    }
+
+    private val peintureOmbre by lazy {
+        Paint(Paint.FILTER_BITMAP_FLAG).apply { color = Paysages.couleurOmbrePortee(heure) }
+    }
+    private val ouOmbre = RectF()
+
+    /**
+     * L'ombre portée du plan [i] ([Paysages.ombres]), juste avant lui : elle
+     * tombe sur le plan de derrière et glisse avec lui, pas avec le plan qui
+     * la porte. Pencher la carte fait donc varier l'écart entre la découpe et
+     * son ombre, comme dans un théâtre de papier.
+     */
+    private fun peindreOmbre(c: Canvas, ombre: Bitmap, i: Int, regardX: Float, regardY: Float) {
+        val derriere = if (i - 1 == Paysages.NUAGES) 0 else i - 1
+        val k = cadrage[0]
+        val gx = (Paysages.GLISSEMENT[derriere] - Paysages.GLISSEMENT[i]) * visible.width() * regardX
+        val gy = (Paysages.GLISSEMENT[derriere] - Paysages.GLISSEMENT[i]) * visible.height() * regardY
+        ouOmbre.set(ouPlan)
+        ouOmbre.offset(gx + Paysages.OMBRE_PORTEE_X * k, gy + Paysages.OMBRE_PORTEE_Y * k)
+        c.drawBitmap(ombre, null, ouOmbre, peintureOmbre)
+    }
+
+    /**
+     * Les nuages ([Paysages.plans], calque [Paysages.NUAGES]) : leur bande
+     * traverse la fenêtre de gauche à droite en [PERIODE_NUAGES] et revient
+     * par la gauche, et glisse avec le regard comme les autres cartons. Lent,
+     * et seul de son espèce : la règle 7 de la skill `direction-artistique`.
+     *
+     * Ils avancent avec l'horloge, à chaque trame que la carte demande (voir
+     * [CarteOrnee.couches]) ; une image figée les pose à leur place.
+     */
+    private fun peindreNuages(c: Canvas, bande: Bitmap, regardX: Float, regardY: Float) {
+        val k = cadrage[0]
+        val phase = if (!c.isHardwareAccelerated) PHASE_FIGEE
+            else (android.os.SystemClock.uptimeMillis() % PERIODE_NUAGES) / PERIODE_NUAGES.toFloat()
+        val gl = Paysages.GLISSEMENT[Paysages.NUAGES]
+        val largeur = Paysages.LARGEUR * k
+        val x = visible.left + cadrage[1] + phase * largeur + gl * visible.width() * regardX
+        val y = visible.top + cadrage[2] + gl * visible.height() * regardY
+        val temps = if (c.isHardwareAccelerated) android.os.SystemClock.uptimeMillis() / 1000f else 0f
+        for (x0 in floatArrayOf(x, x - largeur)) {
+            ouPlan.set(x0, y, x0 + largeur, y + Paysages.BANDE_NUAGES * k)
+            c.drawBitmap(bande, null, ouPlan, peinture)
+        }
+    }
+
+    /** Vrai quand des nuages traversent le ciel : la carte doit se redessiner. */
+    val nuagesEnRoute: Boolean get() = enPlans
 
     /**
      * Le lieu seul, en plans décalés selon le regard : ce que [peindre] tait
@@ -4485,7 +4901,22 @@ class Motif(
         c.save()
         c.translate(visible.left + cadrage[1], visible.top + cadrage[2])
         c.scale(cadrage[0], cadrage[0])
-        sujet.peindre(c)
+        sujet.peindre(c, avecLumiere = !lumiereVivante)
+        c.restore()
+    }
+
+    /**
+     * La lumière du dessin pour l'inclinaison [t], dans [-1, 1] : le reflet
+     * de la plaque, son chanfrein, l'éclat de la tige et du socle. Rien si
+     * elle est déjà peinte au repos ([lumiereVivante]).
+     */
+    fun lumiereDuSujet(c: Canvas, t: Float, decoupe: Path) {
+        if (!lumiereVivante) return
+        c.save()
+        c.clipPath(decoupe)
+        c.translate(visible.left + cadrage[1], visible.top + cadrage[2])
+        c.scale(cadrage[0], cadrage[0])
+        sujet.lumiere(c, t)
         c.restore()
     }
 
@@ -4506,6 +4937,86 @@ class Motif(
         if (avecSujet) peindreSujet(c)
         if (avecIris) iris?.dessus(c, p, roulis)
         c.restore()
+    }
+}
+
+/**
+ * La vitre de la fenêtre : la carte ouverte devient une petite vitrine.
+ *
+ * Deux choses, et seulement deux, parce qu'un verre se reconnaît à elles :
+ *
+ * - **l'encastrement**, une ombre douce au bord intérieur de l'ouverture,
+ *   plus épaisse en haut, où le cadre fait de l'ombre à la lumière qui
+ *   vient d'en haut. Elle ne bouge pas : elle part dans la couche du métal ;
+ * - **le reflet**, une seule bande oblique, large et à peine visible, qui
+ *   glisse avec l'inclinaison. Un peu plus loin que le
+ *   reflet du métal ([Ornement.ETALEMENT]) : la vitre est en retrait du
+ *   cadre, et ce décalage de vitesse est ce qui la fait lire comme une
+ *   surface à part.
+ *
+ * ## Pourquoi si faible
+ *
+ * Le reflet du métal est coupé sur la fenêtre parce qu'une bande blanche sur
+ * un ciel de nuit se lit comme du brouillard. Le verre tient sous ce seuil
+ * par deux moyens : des opacités basses, et des bords nets, puisque c'est le
+ * flou qui fait la brume et l'arête qui fait le verre.
+ *
+ * ## Le même verre pour toutes
+ *
+ * Un vernis gradué par palier a été essayé (filets nets, puis doublés, puis
+ * plus francs) : le propriétaire a préféré, sur toutes les cartes, le trait
+ * qu'on devine de la commune (2026-10-19). La gradation est passée sur le
+ * cadre, où elle suit la noblesse du métal : voir [Ornement.dessinerReflet].
+ *
+ * Carte ouverte seulement : une vignette ne suit pas la lumière, et un reflet
+ * figé sur trente vignettes se lirait comme une tache répétée.
+ */
+private class Verre(private val zone: RectF, private val decoupe: Path) {
+
+    private val reflet = LinearGradient(
+        zone.left, zone.bottom, zone.right, zone.top,
+        intArrayOf(Color.TRANSPARENT, Color.argb(12, 255, 255, 255), Color.argb(15, 255, 255, 255), Color.TRANSPARENT),
+        floatArrayOf(0.50f, 0.555f, 0.60f, 0.645f),
+        Shader.TileMode.CLAMP
+    )
+    private val matrice = Matrix()
+    private val bord = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+
+    /** L'ombre d'encastrement : à tracer une fois, sous le métal. */
+    fun encastrement(c: Canvas) {
+        c.save()
+        c.clipPath(decoupe)
+        // Le trait est centré sur le bord : la découpe n'en laisse que la
+        // moitié intérieure. Décalé vers le bas, il s'épaissit en haut et
+        // s'amincit en bas, comme l'ombre d'un cadre éclairé d'en haut.
+        c.translate(0f, DESCENTE)
+        for (i in EPAISSEURS.indices) {
+            bord.strokeWidth = EPAISSEURS[i]
+            bord.color = Color.argb(OMBRES[i], 0, 0, 0)
+            c.drawPath(decoupe, bord)
+        }
+        c.restore()
+    }
+
+    /** Le reflet, à chaque trame, entre le paysage et le métal. */
+    fun reflet(c: Canvas, p: Paint, roulis: Float) {
+        c.save()
+        c.clipPath(decoupe)
+        matrice.setTranslate(roulis * zone.width() * GLISSEMENT, 0f)
+        reflet.setLocalMatrix(matrice)
+        p.style = Paint.Style.FILL
+        p.shader = reflet
+        c.drawRect(zone, p)
+        p.shader = null
+        c.restore()
+    }
+
+    private companion object {
+        /** Plus que le métal (0,55) : la vitre est en retrait, elle glisse plus loin. */
+        const val GLISSEMENT = 0.75f
+        const val DESCENTE = 1.4f
+        val EPAISSEURS = floatArrayOf(9f, 5f, 2f)
+        val OMBRES = intArrayOf(16, 22, 34)
     }
 }
 
@@ -4589,6 +5100,223 @@ private class Irisation private constructor(private val zone: RectF, private val
 }
 
 /**
+ * Le dessin du mot en **plaque épaisse sur un pied de métal**, posée sur le
+ * plancher de la scène (skill `direction-artistique`, décisions du
+ * propriétaire du 2026-11-01, maquette `anim.html`, fonction `plaque`).
+ *
+ * - **La plaque est fixe.** Sa tranche d'environ 1,3 unité se voit en bas à
+ *   droite, plus sombre vers l'arrière, et elle porte une ombre sur le décor.
+ *   Ni balancement ni épaisseur qui change de côté : le balancement, essayé,
+ *   a été écarté.
+ * - **La face suit l'échelle de matière du support du nom** : nacre teintée
+ *   d'acier ou de bronze pour la commune et la peu commune, qu'on voit le
+ *   plus et qui doivent rester lumineuses ; argent et or pleins pour la rare
+ *   et la très rare. Le bord, la tige et le socle sont dans le métal du
+ *   palier ([Ornement.metal]), comme le cadre.
+ * - **Seule la lumière bouge** ([lumiere]) : un reflet en bande traverse la
+ *   face, plus vif sur le métal plein ; le chanfrein du bord s'éclaire du
+ *   côté de la source, qui tourne avec le geste ; un éclat glisse le long de
+ *   la tige et sur le socle.
+ *
+ * Tout le reste se peint une fois ([peindre]) et part dans la couche fixe du
+ * sujet de la carte ouverte ([CarteOrnee.couches]).
+ */
+private class Plaque(private val trace: Path, private val cadre: RectF, heure: Heure, vignette: Boolean) {
+
+    private val metal = Ornement.metal(Rarete.values()[heure.rang.coerceIn(0, Rarete.values().size - 1)])
+    private val plein = heure.rang >= Rarete.RARE.ordinal
+    private val nuit = heure.nuit
+    private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val face: LinearGradient
+    private val lisere: Int
+    /** Moins de tranches dans une vignette : l'épaisseur n'y fait que trois pixels. */
+    private val tranches = if (vignette) 3 else 10
+    private val tige: LinearGradient
+    private val socle: LinearGradient
+    private val bande: LinearGradient
+    private val place = Matrix()
+    private val axeX = cadre.width()
+    private val axeY = cadre.height() * 1.6f
+
+    /**
+     * Où le pied tient la plaque : l'axe de la tige, et le haut de ce qu'on en
+     * voit, juste sous le bord bas de la plaque à cet endroit. Au milieu de la
+     * fenêtre si la plaque y passe ; sinon sous le morceau le plus proche du
+     * milieu (les enfants de « Kand », les cubes de « Alphabet ») : une tige
+     * qui monte dans le vide ne tient rien.
+     */
+    private val pied: FloatArray = run {
+        // La plaque en région, à un quart d'unité près : une seule
+        // rastérisation, puis chaque colonne essayée n'est qu'une intersection
+        // de rectangles.
+        val agrandie = Path(trace)
+        agrandie.transform(Matrix().apply { setScale(4f, 4f) })
+        val plaque = android.graphics.Region()
+        plaque.setPath(agrandie, android.graphics.Region(0, 0, 4 * 100, 4 * 66))
+        val essai = android.graphics.Region()
+        val colonne = android.graphics.Rect()
+        for (k in 0..60) {
+            val dx = (if (k % 2 == 0) 1f else -1f) * ((k + 1) / 2) * 0.5f
+            colonne.set(((CX + dx - TIGE / 2f) * 4f).toInt(), 0, ((CX + dx + TIGE / 2f) * 4f).toInt(), (SOCLE * 4f).toInt())
+            essai.set(plaque)
+            if (essai.op(colonne, android.graphics.Region.Op.INTERSECT)) {
+                return@run floatArrayOf(CX + dx, essai.bounds.bottom / 4f - 1.5f)
+            }
+        }
+        floatArrayOf(CX, cadre.centerY())
+    }
+    private val xPied = pied[0]
+
+    init {
+        val n = heure.nacre
+        val couleurs = if (plein) intArrayOf(metal.hi, metal.mid, metal.lo)
+        else intArrayOf(
+            Heure.melange(n[0], metal.hi, 0.35f), Heure.melange(n[1], metal.mid, 0.4f), Heure.melange(n[2], metal.lo, 0.3f)
+        )
+        face = LinearGradient(
+            cadre.left, cadre.top, cadre.left + cadre.width() * 0.7f, cadre.bottom,
+            couleurs, floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP
+        )
+        lisere = if (plein) Color.argb(166, 40, 28, 10) else (heure.encre and 0xFFFFFF) or (199 shl 24)
+        tige = LinearGradient(
+            xPied - TIGE / 2f, 0f, xPied + TIGE / 2f, 0f,
+            intArrayOf(metal.mid, metal.hi, metal.lo), floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP
+        )
+        socle = LinearGradient(
+            0f, SOCLE - 2.2f, 0f, SOCLE + 0.6f,
+            intArrayOf(metal.hi, metal.mid, metal.lo), floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP
+        )
+        // La bande du reflet, au repos au milieu de la face : [lumiere] la
+        // fait glisser le long de son axe, sans rien allouer à chaque trame.
+        val fort = if (plein) 0.7f else 0.5f
+        fun blanc(a: Float) = Color.argb((a * 255f).toInt(), 255, 255, 255)
+        bande = LinearGradient(
+            cadre.left, cadre.top, cadre.left + axeX, cadre.top + axeY,
+            intArrayOf(0x00FFFFFF, blanc(fort * 0.25f), blanc(fort), blanc(fort * 0.9f), 0x00FFFFFF),
+            floatArrayOf(0.28f, 0.40f, 0.47f, 0.51f, 0.56f), Shader.TileMode.CLAMP
+        )
+        p.strokeJoin = Paint.Join.ROUND
+    }
+
+    /** Le pied, l'ombre, l'épaisseur et la face : ce qui ne bouge pas. */
+    fun peindre(c: Canvas) {
+        // L'ombre du socle sur le plancher.
+        p.style = Paint.Style.FILL
+        p.shader = null
+        p.color = Color.argb(if (nuit) 102 else 71, 0, 0, 0)
+        c.drawOval(xPied - 7f, SOCLE + 0.6f - 1.5f, xPied + 7f, SOCLE + 0.6f + 1.5f, p)
+        // La tige, un cylindre fin, de derrière la plaque jusqu'au socle.
+        p.shader = tige
+        p.color = Color.BLACK
+        c.drawRect(xPied - TIGE / 2f, pied[1], xPied + TIGE / 2f, SOCLE - 1.3f, p)
+        // Le socle rond, et son petit dôme.
+        p.shader = socle
+        c.drawOval(xPied - 6f, SOCLE - 0.4f - 1.4f, xPied + 6f, SOCLE - 0.4f + 1.4f, p)
+        c.drawArc(xPied - 2.4f, SOCLE - 1.3f - 1.2f, xPied + 2.4f, SOCLE - 1.3f + 1.2f, 180f, 180f, true, p)
+        p.shader = null
+        // L'ombre portée de la plaque sur le décor.
+        c.save()
+        c.translate(0.9f, 1.3f)
+        p.color = Color.argb(if (nuit) 115 else 77, 0, 0, 0)
+        c.drawPath(trace, p)
+        c.restore()
+        // L'épaisseur, vue un peu d'en haut à gauche : la plaque extrudée vers
+        // l'arrière, plus sombre à mesure qu'elle s'éloigne ; la tranche
+        // proche de la face prend la lumière.
+        for (k in tranches downTo 1) {
+            val f = k / tranches.toFloat()
+            c.save()
+            c.translate(EPAISSEUR * 0.45f * f, EPAISSEUR * 0.75f * f)
+            val col = Heure.melange(metal.mid, metal.lo, f)
+            p.color = if (f <= 0.2f) Heure.melange(col, metal.hi, 0.5f) else col
+            c.drawPath(trace, p)
+            c.restore()
+        }
+        // La face.
+        p.shader = face
+        p.color = Color.BLACK
+        c.drawPath(trace, p)
+        p.shader = null
+    }
+
+    /** Le liseré qui borde la face : par-dessus tout, la lumière comprise. */
+    fun ourler(c: Canvas) {
+        p.shader = null
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.35f
+        p.color = lisere
+        c.drawPath(trace, p)
+        p.style = Paint.Style.FILL
+    }
+
+    /**
+     * La lumière, pour une inclinaison [t] dans [-1, 1] (0 au repos) : le
+     * chanfrein, le reflet de la face, l'éclat de la tige et du socle.
+     */
+    fun lumiere(c: Canvas, t: Float) {
+        p.shader = null
+        // L'éclat de la tige, là où elle se voit : hors de la plaque.
+        c.save()
+        if (android.os.Build.VERSION.SDK_INT >= 26) c.clipOutPath(trace)
+        else @Suppress("DEPRECATION") c.clipPath(trace, android.graphics.Region.Op.DIFFERENCE)
+        p.style = Paint.Style.FILL
+        p.color = Color.argb(150, 255, 255, 255)
+        val xe = xPied - TIGE / 2f + TIGE * (0.35f - t * 0.25f).coerceIn(0.1f, 0.9f)
+        c.drawRect(xe - 0.18f, pied[1], xe + 0.18f, SOCLE - 1.4f, p)
+        c.restore()
+        // L'éclat du socle, qui glisse avec l'inclinaison.
+        p.color = Color.argb(140, 255, 255, 255)
+        val xs = xPied - 2.5f - t * 2.2f
+        c.drawOval(xs - 1.6f, SOCLE - 0.9f - 0.22f, xs + 1.6f, SOCLE - 0.9f + 0.22f, p)
+        // La face : le chanfrein éclairé du côté de la source, sombre de
+        // l'autre, puis la bande du reflet qui la traverse.
+        c.save()
+        c.clipPath(trace)
+        val lx = -0.35f + t * 0.25f
+        val ly = -0.35f
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 1f
+        c.save()
+        c.translate(-lx, -ly)
+        p.color = Color.argb(191, 255, 255, 255)
+        c.drawPath(trace, p)
+        c.restore()
+        c.save()
+        c.translate(lx, ly)
+        p.color = Color.argb(77, 0, 0, 0)
+        c.drawPath(trace, p)
+        c.restore()
+        p.style = Paint.Style.FILL
+        val glisse = t * 0.55f
+        place.setTranslate(glisse * axeX, glisse * axeY)
+        bande.setLocalMatrix(place)
+        p.shader = bande
+        p.color = Color.BLACK
+        c.drawRect(cadre.left - 2f, cadre.top - 2f, cadre.right + 2f, cadre.bottom + 2f, p)
+        p.shader = null
+        c.restore()
+        ourler(c)
+    }
+
+    companion object {
+        /** L'axe du pied, au milieu de la fenêtre. */
+        const val CX = AbscissesDuTrace.AXE
+
+        /**
+         * Où le socle se pose sur le plancher, en unités du paysage : sur la
+         * carte ouverte, le bandeau du nom cache le bas de la fenêtre sous 62
+         * unités environ (voir `Paysages.DEVANT`). La maquette, qui montre la
+         * fenêtre entière, le pose à 62,6.
+         */
+        const val SOCLE = 61f
+
+        /** La largeur de la tige, l'épaisseur de la plaque. */
+        const val TIGE = 1.6f
+        const val EPAISSEUR = 1.3f
+    }
+}
+
+/**
  * Ce que le **mot** met dans la fenêtre, devant le paysage, dans la boîte
  * 100 × 66 de [Paysages].
  *
@@ -4597,7 +5325,11 @@ private class Irisation private constructor(private val zone: RectF, private val
  * vient d'en haut à gauche), et une **nacre** dont la couleur suit l'heure,
  * blanche le matin, dorée la nuit.
  */
-private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
+private abstract class Sujet(
+    protected val heure: Heure, cadre: RectF,
+    /** Le halo derrière le sujet : centre et rayon, dans la boîte 100 × 66 du paysage. */
+    private val haloX: Float = 50f, private val haloY: Float = 38f, private val haloR: Float = 27f
+) {
 
     protected val plume = Paint(Paint.ANTI_ALIAS_FLAG)
     protected val nacre: LinearGradient
@@ -4619,7 +5351,7 @@ private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
         }
         val opacite = intArrayOf(107, 115, 110, 64)[heure.rang]
         halo = RadialGradient(
-            50f, 38f, 27f,
+            haloX, haloY, haloR,
             intArrayOf((opacite shl 24) or couleurHalo, couleurHalo),
             null, Shader.TileMode.CLAMP
         )
@@ -4627,16 +5359,25 @@ private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
 
     protected abstract fun tracer(c: Canvas)
 
-    fun peindre(c: Canvas) {
+    /**
+     * Le halo puis le dessin. [avecLumiere] : la lumière au repos est peinte
+     * avec lui (vignette, image figée, animations coupées) ; sinon elle suit
+     * l'inclinaison, à chaque trame, par [lumiere].
+     */
+    fun peindre(c: Canvas, avecLumiere: Boolean = true) {
         plume.style = Paint.Style.FILL
         plume.shader = halo
         c.save()
-        c.scale(1f, 24f / 27f, 50f, 38f)
-        c.drawCircle(50f, 38f, 27f, plume)
+        c.scale(1f, 24f / 27f, haloX, haloY)
+        c.drawCircle(haloX, haloY, haloR, plume)
         c.restore()
         plume.shader = null
         tracer(c)
+        if (avecLumiere) lumiere(c, 0f)
     }
+
+    /** La lumière qui suit l'inclinaison [t], dans [-1, 1], sur le dessin déjà peint. */
+    open fun lumiere(c: Canvas, t: Float) {}
 
     protected companion object {
         fun argb(a: Int, r: Int, g: Int, b: Int) = (a shl 24) or (r shl 16) or (g shl 8) or b
@@ -4644,7 +5385,8 @@ private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
 }
 
 /**
- * L'enluminure : le meuble du mot, en nacre, posé au sol devant le paysage.
+ * L'enluminure : le meuble du mot, en plaque sur un pied de métal posé sur le
+ * plancher, devant le paysage (voir [Plaque]).
  *
  * C'est le sujet des cartes qu'on collectionne pour elles-mêmes — cent vingt
  * mots sur deux mille huit cents, à peu près quatre sur cent. La rareté
@@ -4658,83 +5400,123 @@ private abstract class Sujet(protected val heure: Heure, cadre: RectF) {
 private class Enluminure private constructor(
     private val trace: Path,
     private val nom: String,
-    heure: Heure
-) : Sujet(heure, RectF(CX - TAILLE / 2f, CY - TAILLE / 2f, CX + TAILLE / 2f, CY + TAILLE / 2f)) {
+    heure: Heure,
+    /** Le dessin tel qu'il est posé : sa boîte réelle, qui oriente la face et le halo. */
+    private val cadre: RectF,
+    /** Où le carré de [Meubles] a été posé, pour y placer l'œil du chat. */
+    private val pose: Matrix? = null,
+    vignette: Boolean = false
+) : Sujet(heure, cadre, cadre.centerX(), cadre.centerY() - 0.16f * cadre.height(),
+    minOf(0.87f * maxOf(cadre.width(), cadre.height()), 40f)) {
+
+    /** Le dessin en plaque sur son pied de métal (2026-11-02) : voir [Plaque]. */
+    private val plaque = Plaque(trace, cadre, heure, vignette)
+
+    override fun lumiere(c: Canvas, t: Float) = plaque.lumiere(c, t)
 
     override fun tracer(c: Canvas) {
-        // L'ombre au sol, qui pose le dessin dans le lieu au lieu de le coller dessus.
-        plume.style = Paint.Style.FILL
-        plume.color = argb(if (heure.nuit) 115 else 64, 0, 0, 0)
-        c.drawOval(CX - 13f, SOL - 1.8f, CX + 13f, SOL + 1.8f, plume)
+        plaque.peindre(c)
 
-        c.save()
-        c.translate(0.6f, 1f)
-        plume.color = ombre
-        c.drawPath(trace, plume)
-        c.restore()
-
-        plume.color = Color.BLACK
-        plume.shader = nacre
-        c.drawPath(trace, plume)
-        plume.shader = null
-
-        plume.style = Paint.Style.STROKE
-        plume.strokeWidth = 0.35f
-        plume.strokeJoin = Paint.Join.ROUND
-        plume.color = heure.encre
-        plume.alpha = 200
-        c.drawPath(trace, plume)
-        plume.style = Paint.Style.FILL
-        plume.alpha = 255
-
-        // Le chat de la nuit a les yeux qui brillent.
-        if (nom == "chat" && heure.nuit) {
-            val e = TAILLE / Meubles.COTE
-            for (s in floatArrayOf(-1f, 1f)) {
-                val x = CX + s * 13f * e
-                val y = CY - 2f * e
-                plume.color = argb(64, 0xFF, 0xD3, 0x4D)
-                c.drawCircle(x, y, 2.6f, plume)
-                plume.color = argb(255, 0xFF, 0xD3, 0x4D)
-                c.drawOval(x - 1.1f, y - 0.75f, x + 1.1f, y + 0.75f, plume)
-            }
+        // Le chat de la nuit a l'œil qui brille : un seul, il marche de
+        // profil (la silhouette de PhyloPic, depuis le 2026-10-31). L'œil est
+        // posé derrière l'arête du nez, en unités du carré de Meubles.
+        if (nom == "chat" && heure.nuit && pose != null) {
+            val oeil = floatArrayOf(39.8f, 0.2f)
+            pose.mapPoints(oeil)
+            val x = oeil[0]
+            val y = oeil[1]
+            plume.color = argb(64, 0xFF, 0xD3, 0x4D)
+            c.drawCircle(x, y, 1.6f, plume)
+            plume.color = argb(255, 0xFF, 0xD3, 0x4D)
+            c.drawOval(x - 0.75f, y - 0.5f, x + 0.75f, y + 0.5f, plume)
         }
     }
 
     companion object {
-        /** Le dessin tient dans un carré de [TAILLE] centré en ([CX], [CY]), posé sur [SOL]. */
-        private const val TAILLE = 31f
+        /**
+         * Le dessin tient dans une boîte de [LARGEUR] × [TAILLE], centrée en
+         * ([CX], [CY]) : il prend toute la hauteur s'il est haut, toute la
+         * largeur s'il est long, et reste centré dans la fenêtre.
+         *
+         * Depuis le 2026-11-01 (propriétaire, sur les cartes imprimées « Kaz »
+         * puis « Bus ») : le sujet porte le mot, le décor est là pour le mettre
+         * en avant. Avant, chaque dessin était mis à l'échelle du carré de
+         * [Meubles] et non de son tracé réel : un bus, long et bas, restait
+         * petit et posé bas dans la fenêtre. La largeur reste dans ce qu'une
+         * vignette garde une fois rognée (16 à 84, voir [Trace]).
+         */
+        private const val TAILLE = 46f
+        private const val LARGEUR = 66f
         private const val CX = 50f
-        private const val CY = 43f
         private const val SOL = 59f
+        private const val CY = SOL - TAILLE / 2f - 0.5f
+
+        /** Le dessin mis à l'échelle de sa boîte réelle, et centré. */
+        private fun poser(brut: Path, hauteur: Float, largeur: Float): Pair<Matrix, RectF> {
+            val b = RectF()
+            brut.computeBounds(b, true)
+            val e = minOf(hauteur / b.height().coerceAtLeast(1f), largeur / b.width().coerceAtLeast(1f))
+            val m = Matrix()
+            m.setTranslate(-b.centerX(), -b.centerY())
+            m.postScale(e, e)
+            m.postTranslate(CX, CY)
+            val cadre = RectF()
+            m.mapRect(cadre, b)
+            return m to cadre
+        }
 
         /** `null` si la bibliothèque ne connaît pas ce meuble. */
-        fun pour(nom: String, heure: Heure): Enluminure? {
+        fun pour(nom: String, heure: Heure, vignette: Boolean = false): Enluminure? {
             val forme = Meubles.chemin(nom) ?: return null
-            val m = Matrix()
-            m.setScale(TAILLE / Meubles.COTE, TAILLE / Meubles.COTE)
-            m.postTranslate(CX, CY)
+            val (m, cadre) = poser(forme, TAILLE, LARGEUR)
             val trace = Path()
             forme.transform(m, trace)
             // Sans « pair-impair », la porte d'une maison cesse d'être un trou.
             trace.fillType = Path.FillType.EVEN_ODD
-            return Enluminure(trace, nom, heure)
+            return Enluminure(trace, nom, heure, cadre, m, vignette)
+        }
+
+        /** La hauteur des chiffres d'une carte de nombre (26 jusqu'au 2026-11-01, grandis avec les meubles). */
+        private const val HAUTEUR_CHIFFRES = 40f
+
+        /** La largeur au-delà de laquelle « 100 » rapetisse, dans la largeur que garde une vignette. */
+        private const val LARGEUR_CHIFFRES = 60f
+
+        /**
+         * Les chiffres d'une carte de nombre, en nacre, centrés comme un
+         * meuble. Une capitale à empattements, pour ne pas ressembler au
+         * chiffre blanc et gras de la pastille, qui dit la Force.
+         */
+        fun chiffres(texte: String, heure: Heure, vignette: Boolean = false): Enluminure {
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                textSize = 100f
+                textAlign = Paint.Align.CENTER
+            }
+            val brut = Path()
+            p.getTextPath(texte, 0, texte.length, 0f, 0f, brut)
+            val (m, cadre) = poser(brut, HAUTEUR_CHIFFRES, LARGEUR_CHIFFRES)
+            val trace = Path()
+            brut.transform(m, trace)
+            return Enluminure(trace, "chiffres", heure, cadre, vignette = vignette)
         }
     }
 }
 
 /**
- * Le tracé du mot : sa sonorité, lue lettre à lettre, posée en ruban de nacre
- * devant le paysage.
+ * Le tracé du mot : sa sonorité, lue lettre à lettre, découpée en ruban dans
+ * une plaque sur un pied de métal, devant le paysage (voir [Plaque]).
  *
  * ## La règle
  *
  * Voyelle en haut, consonne en bas, la hauteur affinée par le code du
  * caractère ; un nœud sur chaque voyelle, qui donne la scansion. Le pas est
- * **constant et calé à gauche**, jamais étiré sur la largeur : deux formes qui
- * partagent leur début partagent alors leurs points *exactement*, au lieu de
- * seulement se ressembler. Dans une grille, `Woch`, `Wochen` et `Woche` se
- * lisent comme un seul mot à trois états.
+ * **constant**, jamais étiré sur la largeur, et le tracé est **centré sur la
+ * tige** de son pied ([Plaque.CX]) : une plaque posée de travers sur son pied
+ * se lit comme une erreur (propriétaire, 2026-11-07). Calé à gauche jusque-là,
+ * il faisait partager à deux formes de même début leurs points exactement
+ * (`Woch`, `Wochen`, `Woche`) ; centrées, elles gardent la même courbe,
+ * décalée d'un demi-pas par lettre de plus.
  *
  * La règle n'a pas changé avec les paysages, seule la matière du trait a
  * changé : nacre de l'heure, ombre portée, fil de lumière, et à partir de
@@ -4746,11 +5528,35 @@ private class Enluminure private constructor(
  * formes du carnet. C'est un monogramme, pas
  * une illustration : il montre **le mot**, pas **la chose**.
  */
+/**
+ * Où tombent les lettres du [Trace] d'un mot, en x : à pas constant, et
+ * toujours centrées sur la tige du pied ([Plaque.CX]), quelle que soit la
+ * longueur du mot (propriétaire, 2026-11-07 : « veille à ce que les tracés
+ * des mots soient toujours centrés »). Sans `Path` ni `Canvas`, pour que
+ * `TraceCentreTest` le vérifie sur la JVM.
+ */
+internal object AbscissesDuTrace {
+    /** L'axe de la tige, au milieu de la fenêtre : le même que [Plaque.CX]. */
+    const val AXE = 50f
+
+    /**
+     * Les x des [n] lettres, sur au plus [largeur] unités autour de l'axe.
+     * Un mot de sept lettres occupe toute la largeur ; un plus court est
+     * plus étroit, un plus long resserre son pas.
+     */
+    fun de(n: Int, largeur: Float): FloatArray {
+        val pas = largeur / (maxOf(n, 7) - 1).toFloat()
+        val debut = AXE - pas * (n - 1) / 2f
+        return FloatArray(n) { i -> debut + pas * i }
+    }
+}
+
 private class Trace private constructor(
     private val xs: FloatArray,
     private val ys: FloatArray,
     private val voyelle: BooleanArray,
-    heure: Heure
+    heure: Heure,
+    vignette: Boolean
 ) : Sujet(heure, boite(xs, ys)) {
 
     private val chemin = Path()
@@ -4761,9 +5567,16 @@ private class Trace private constructor(
      * est la longueur de référence.
      */
     private val maigreur = (7f / maxOf(xs.size, 7)).coerceAtMost(1f)
-    private val epaisseur = 3.2f * maigreur
-    private val rayon = 2.5f * maigreur
-    private val coeur = 1.05f * maigreur
+    // Épaissi avec les meubles le 2026-11-01 (3,2 / 2,5 / 1,05 avant) : le sujet porte le mot.
+    private val epaisseur = 4.2f * maigreur
+    private val rayon = 3.3f * maigreur
+    private val coeur = 1.4f * maigreur
+
+    /**
+     * Le ruban et ses nœuds découpés d'une seule plaque, sur son pied de
+     * métal comme les meubles (2026-11-02) : voir [Plaque].
+     */
+    private val plaque: Plaque
 
     init {
         val n = xs.size
@@ -4780,57 +5593,41 @@ private class Trace private constructor(
         }
         plume.strokeCap = Paint.Cap.ROUND
         plume.strokeJoin = Paint.Join.ROUND
+        val ruban = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = epaisseur
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+        val silhouette = Path()
+        if (n >= 2) ruban.getFillPath(chemin, silhouette)
+        val noeuds = Path()
+        for (i in 0 until n) if (voyelle[i] || n == 1) noeuds.addCircle(xs[i], ys[i], rayon, Path.Direction.CW)
+        silhouette.op(noeuds, Path.Op.UNION)
+        val cadre = RectF()
+        silhouette.computeBounds(cadre, true)
+        plaque = Plaque(silhouette, cadre, heure, vignette)
     }
+
+    override fun lumiere(c: Canvas, t: Float) = plaque.lumiere(c, t)
 
     override fun tracer(c: Canvas) {
         val n = xs.size
         if (n == 0) return
         plume.shader = null
-        plume.style = Paint.Style.STROKE
-
         if (luit && n >= 2) {
+            plume.style = Paint.Style.STROKE
             plume.color = heure.fenetre
             plume.alpha = 71
             plume.strokeWidth = epaisseur * 2.1f
             c.drawPath(chemin, plume)
             plume.alpha = 255
         }
-
-        // L'ombre, puis le ruban, puis son fil de lumière.
-        c.save()
-        c.translate(0.5f, 0.9f)
-        plume.color = ombre
-        plume.strokeWidth = epaisseur
-        if (n >= 2) c.drawPath(chemin, plume)
+        plaque.peindre(c)
+        // Un nœud sur chaque voyelle, gravé dans la plaque : la scansion du mot.
         plume.style = Paint.Style.FILL
-        for (i in 0 until n) if (voyelle[i] || n == 1) c.drawCircle(xs[i], ys[i], rayon, plume)
-        c.restore()
-
-        if (n >= 2) {
-            plume.style = Paint.Style.STROKE
-            plume.color = Color.BLACK
-            plume.shader = nacre
-            c.drawPath(chemin, plume)
-            plume.shader = null
-            c.save()
-            c.translate(-0.4f, -0.5f)
-            plume.color = argb(191, 255, 255, 255)
-            plume.strokeWidth = 0.8f * maigreur
-            c.drawPath(chemin, plume)
-            c.restore()
-        }
-
-        // Un nœud sur chaque voyelle : la scansion du mot.
-        plume.style = Paint.Style.FILL
-        for (i in 0 until n) {
-            if (!voyelle[i] && n > 1) continue
-            plume.color = Color.BLACK
-            plume.shader = nacre
-            c.drawCircle(xs[i], ys[i], rayon, plume)
-            plume.shader = null
-            plume.color = heure.encre
-            c.drawCircle(xs[i], ys[i], coeur, plume)
-        }
+        plume.color = heure.encre
+        for (i in 0 until n) if (voyelle[i] || n == 1) c.drawCircle(xs[i], ys[i], coeur, plume)
     }
 
     companion object {
@@ -4847,30 +5644,25 @@ private class Trace private constructor(
         /**
          * Où tombe le tracé dans la boîte 100 × 66 du paysage : entre l'arche
          * des paliers hauts et le sol, et dans la largeur qu'une vignette
-         * garde une fois rognée sur les côtés.
+         * garde une fois rognée sur les côtés (de 16 à 84), centré sur la tige.
          */
-        private const val X0 = 16f
         private const val LARGEUR = 68f
-        private const val MILIEU = 36f
-        private const val AMPLITUDE = 13f
+        private const val MILIEU = 35f
+        private const val AMPLITUDE = 17f
 
-        fun pour(mot: String, heure: Heure): Trace {
+        fun pour(mot: String, heure: Heure, vignette: Boolean = false): Trace {
             val lettres = mot.toCharArray()
             val n = lettres.size
-            // Un mot de sept lettres occupe toute la largeur ; un plus court
-            // s'arrête avant, un plus long resserre son pas.
-            val pas = LARGEUR / (maxOf(n, 7) - 1).toFloat()
-            val xs = FloatArray(n)
+            val xs = AbscissesDuTrace.de(n, LARGEUR)
             val ys = FloatArray(n)
             val voyelle = BooleanArray(n)
             for (i in 0 until n) {
                 val ch = lettres[i]
                 voyelle[i] = ch.lowercaseChar() in VOYELLES
-                xs[i] = if (n == 1) 50f else X0 + pas * i
                 ys[i] = MILIEU + (if (voyelle[i]) -1f else 1f) *
                     AMPLITUDE * (0.42f + 0.58f * ((ch.code % 7) / 6f))
             }
-            return Trace(xs, ys, voyelle, heure)
+            return Trace(xs, ys, voyelle, heure, vignette)
         }
 
         /** La boîte des lettres, qui oriente la nacre du ruban. */
