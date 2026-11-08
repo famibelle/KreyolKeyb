@@ -5,6 +5,31 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [24.0.0] - 2026-11-08
+
+Les trente lieux de Guadeloupe des cartes sont peints en papier découpé.
+
+### ✨ Ajouté
+
+- **Des paysages en papier découpé** : la fenêtre de chaque carte de Sanblé
+  montre son lieu en feuilles de papier colorées posées en couches, avec leur
+  grain, une fine tranche de papier kraft et une ombre douce de l'une à
+  l'autre. Les trente lieux ont été redessinés d'après des photos : la Grande
+  Anse, les Saintes, la Soufrière, les Chutes du Carbet, Sofaïa et ses
+  douches, le moulin de Marie-Galante, le cimetière de Morne-à-l'Eau, la
+  Pointe de la Grande Vigie, Petite-Terre et ses iguanes, la forêt de Matouba
+  et la stèle de Delgrès, le Mémorial ACTe, et tous les autres.
+- **Des paysages qui bougent** : sur la carte ouverte, l'eau tombe des
+  cascades et des douches, la mer scintille, la vapeur monte des bains, les
+  ailes du moulin tournent, le faisceau du phare balaie la nuit, et les bêtes
+  vivent : touloulous, écrevisses, iguane, baleine, pic de Guadeloupe.
+- **Les bêtes sur l'image partagée** : une carte envoyée garde les animaux
+  de son lieu.
+- **La rareté en étoiles** : chaque carte montre sa rareté en quatre étoiles
+  et son niveau de révision en jauge.
+- **Des dessins pour 43 mots** : des mots du carnet reçoivent un petit
+  dessin, et une nouvelle série, « Les illustrations », invite à les réunir.
+
 ## [23.4.0] - 2026-10-22
 
 La visite guidée s'ouvre d'un « ? » en haut de l'écran.

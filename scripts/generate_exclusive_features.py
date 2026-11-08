@@ -40,6 +40,25 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "24.0.0": [
+        {
+            "emoji": "✂️",
+            "title": "Des paysages en papier découpé",
+            "description": "Les trente lieux de Guadeloupe des cartes de Sanblé sont redessinés d'après des photos, en feuilles de papier colorées posées en couches, avec leur grain et une fine tranche de papier kraft. Sur la carte ouverte, l'eau tombe, la mer scintille, la vapeur monte des bains et les bêtes vivent : touloulous, écrevisses, iguane, baleine, pic de Guadeloupe.",
+            "image": "Screenshots/gif_papier_decoupe.gif",
+            "image_alt": (
+                "Animation : le carnet Sanblé et ses douze cartes, puis "
+                "les cartes ouvertes l'une après l'autre. « fanm » (femme) "
+                "montre l'îlet du Gosier et son phare, « solèy » (soleil) "
+                "la baie des Saintes, « osi » (itou) la forêt de Matouba "
+                "et son carbet, « a-y » (son, sa, ses) les falaises de la "
+                "Grande Vigie, « men » (main) les Bains Jaunes, « moun » "
+                "(personne) Petite-Terre et son iguane, « gadé » (garder) "
+                "la Cascade aux Écrevisses et « nou » (nous) les douches "
+                "de Sofaïa, chacun en papier découpé."
+            ),
+        },
+    ],
     "23.4.0": [
         {
             "emoji": "❓",
