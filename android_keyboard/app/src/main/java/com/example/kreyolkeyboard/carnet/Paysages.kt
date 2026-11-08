@@ -973,8 +973,19 @@ object Paysages {
         return y0 + (x - x0) / (x1 - x0) * (y1 - y0) + 1.1f
     }
 
-    /** Les douches de Sofaïa : x de chaque pommeau et l'endroit où son filet touche l'eau. Le dessin les peint, [Ambiance] y fait tomber les gouttes. */
-    internal val DOUCHES = arrayOf(36f to 54f, 36.8f to 53f, 45f to 55f, 46f to 54.4f, 50.5f to 51f, 58f to 55.5f, 58.8f to 54f)
+    /**
+     * Où le filet de x [x] touche l'eau : sous le tuyau, sur la ligne qui va
+     * du pied du poteau (30 ; 61) vers le fond du bassin. Les filets du
+     * devant sont donc plus longs que ceux du fond, en perspective.
+     */
+    internal fun doucheBas(x: Float): Float = 61f - (x - 30f) * 0.3f
+
+    /**
+     * Les douches de Sofaïa : x de chaque pommeau et l'endroit où son filet
+     * touche l'eau, en deux groupes de part et d'autre du mot, pour qu'il
+     * n'en cache aucun. Le dessin les peint, [Ambiance] y fait tomber les gouttes.
+     */
+    internal val DOUCHES = floatArrayOf(23f, 25.8f, 28.4f, 63f, 65.8f, 68.4f).map { it to doucheBas(it) }.toTypedArray()
 
     /** Les fumées du bassin de Ravine Chaude, sur le plan de devant : x, pied, haut, largeur et dérive de chacune. */
     internal val VAPEURS_RAVINE = arrayOf(floatArrayOf(40f, 57f, 49f, 1.4f, -2f), floatArrayOf(58f, 58f, 51f, 1.2f, 2f))
@@ -2959,14 +2970,17 @@ object Paysages {
             // Les filets d'eau chaude qui tombent des pommeaux du tuyau.
             val filet = papier(0xFFDCEAE8.toInt())
             for ((x, y1) in DOUCHES) {
+                // L'échelle de la perspective : 1 pour le filet le plus long, au devant.
+                val k = (y1 - doucheHaut(x)) / (doucheBas(23f) - doucheHaut(23f))
                 var y = doucheHaut(x)
                 while (y < y1) {
-                    val l = min(1.2f + r() * 1.6f, y1 - y)
-                    val dx = sin(y * 1.7f + x) * 0.15f
-                    barre(x + dx, y, x + dx + 0.05f, y + l, 0.22f + r() * 0.12f, filet, 0f)
-                    y += l + 0.3f + r() * 0.5f
+                    val l = min((1.2f + r() * 1.2f) * k, y1 - y)
+                    val dx = sin(y * 1.7f + x) * 0.15f * k
+                    barre(x + dx, y, x + dx + 0.05f, y + l, 0.3f * k, filet, 0f)
+                    y += l + (0.3f + r() * 0.4f) * k
                 }
-                pieceD("M${x - 1.6f} ${y1 + 0.5f}Q${x + 0.2f} ${y1 - 0.3f} ${x + 1.8f} ${y1 + 0.5f}Q${x + 0.2f} ${y1 + 1f} ${x - 1.6f} ${y1 + 0.5f}Z",
+                val w = 1.7f * k
+                pieceD("M${x - w} ${y1 + 0.5f * k}Q${x + 0.2f} ${y1 - 0.3f * k} ${x + w} ${y1 + 0.5f * k}Q${x + 0.2f} ${y1 + k} ${x - w} ${y1 + 0.5f * k}Z",
                     papier(0xFF6F928A.toInt()), 0f)
             }
             // L'ombre des barreaux de la rambarde blanche, en travers du béton à droite.

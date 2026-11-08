@@ -1008,20 +1008,22 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
         Paysages.DOUCHES.forEachIndexed { i, (x, bas) ->
             val haut = Paysages.doucheHaut(x)
             val chute = bas - haut
+            // La perspective : les filets du fond sont plus courts, leurs gouttes plus fines.
+            val k = chute / (Paysages.doucheBas(23f) - Paysages.doucheHaut(23f))
             // Trois gouttes par filet, également espacées dans le cycle.
             for (k in 0 until 3) {
                 val t = ((temps / periode[i] + phase[i] + k / 3f) % 1f)
                 val y = haut + chute * t * t
-                val l = 0.6f + 1.6f * t
-                p.strokeWidth = 0.42f
+                val l = (0.6f + 1.6f * t) * k
+                p.strokeWidth = 0.42f * k
                 p.color = 0xE6FFFFFF.toInt()
                 c.drawLine(x, (y - l).coerceAtLeast(haut), x, y, p)
             }
             // Deux ronds par filet, décalés d'un demi-cycle.
             for (k in 0 until 2) {
                 val t = ((temps / (periode[i] * 1.6f) + phase[i] + k / 2f) % 1f)
-                val r = 0.5f + 2.2f * t
-                p.strokeWidth = 0.22f
+                val r = (0.5f + 2.2f * t) * k
+                p.strokeWidth = 0.22f * k
                 p.color = (((1f - t) * 170f).toInt() shl 24) or 0xDDEEEA
                 c.drawOval(x - r, bas + 0.5f - r * 0.32f, x + r, bas + 0.5f + r * 0.32f, p)
             }
