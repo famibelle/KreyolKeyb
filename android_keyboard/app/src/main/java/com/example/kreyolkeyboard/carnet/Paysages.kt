@@ -894,7 +894,7 @@ object Paysages {
         Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 28f, 62f, taille = 1.5f), Bete(Espece.ECREVISSE, 50f, 63.6f, taille = 1.7f),
             Bete(Espece.ECREVISSE, 68f, 61.6f, taille = 1.3f), Bete(Espece.LIBELLULE, 33f, 43f)),
         Lieu.SAUT_LEZARDE to listOf(Bete(Espece.LIBELLULE, 44f, 50f, plan = 1)),
-        Lieu.GRANDE_VIGIE to listOf(Bete(Espece.BALEINE, 78f, 42f, plan = 1)),
+        Lieu.GRANDE_VIGIE to listOf(Bete(Espece.BALEINE, 26f, 46f, plan = 1)),
         Lieu.PORTE_ENFER to listOf(Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
         Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 9.6f, 50.6f, taille = 1.5f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
         Lieu.ILET_GOSIER to listOf(Bete(Espece.PELICAN, 22f, 47f, plan = 1), Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
@@ -1047,6 +1047,9 @@ object Paysages {
 
     /** L'océan sous Gueule Grand Gouffre, sur le plan du fond : x0, x1, y0, y1. */
     internal val EAU_GOUFFRE = floatArrayOf(-2f, 66f, 16f, 42f)
+
+    /** L'océan de la Grande Vigie, à gauche de la falaise, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val EAU_VIGIE = floatArrayOf(-2f, 56f, 32f, 56f)
 
     internal val EAU_GOSIER = floatArrayOf(-2f, 60f, 46f, 58f)
 
@@ -5504,8 +5507,95 @@ object Paysages {
             anthurium(36f, 48f)
         }
 
+        // ------------------------------------------- la Pointe de la Grande Vigie en papier
+
+        /**
+         * La Pointe de la Grande Vigie en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : les falaises de calcaire qui se suivent
+         * en caps de plus en plus pâles vers le large, le plateau vert de la
+         * Grande-Terre au-dessus ; la grande falaise sombre à droite du mot,
+         * coiffée de broussaille, l'aiguille de roche détachée devant elle
+         * dans l'écume ; l'océan bleu profond à gauche, où la baleine souffle ;
+         * les raisiniers devant. La mer scintille sur la carte ouverte.
+         */
+        fun grandeVigiePapier() {
+            cumulus(4f, 8f, 18f, 1901)
+            // Le plateau au loin, ses falaises pâles, le cap du milieu.
+            pieceD("M-2 12Q50 10.6 102 11L102 30L-2 30Z", mix(papier(0xFF6E9A4E.toInt()), P.cielBas, 0.4f), 0.3f)
+            pieceD("M-2 17Q20 16.4 46 17.6L46 23.4Q20 22.6 -2 23Z", mix(papier(0xFFD8C4A4.toInt()), P.cielBas, 0.3f), 0.4f)
+            // Des pans plus sombres dans la craie, pas des barreaux : en barres, la falaise faisait une palissade.
+            for ((x0, l) in arrayOf(4f to 5f, 17f to 7f, 33f to 6f))
+                pieceD("M$x0 17.6Q${x0 + l / 2f} 19 ${x0 + l} 17.8L${x0 + l - 1f} 23Q${x0 + l / 2f} 22.4 ${x0 + 0.6f} 23Z", mix(papier(0xFFB8A488.toInt()), P.cielBas, 0.3f), 0f)
+            pieceD("M-2 22.6L102 22.6L102 68L-2 68Z", papier(0xFF1E5A9A.toInt()), 0.2f)
+            pieceD("M-2 23Q20 22.4 46 23.4", papier(0xFFF2F6F6.toInt()), 0f)
+            val cap = brisee(42f, 26f, 50f, 22.4f, 70f, 21.6f, 90f, 22f, 102f, 21.4f)
+            val c = sousLaCrete(42f, 102f, cap)
+            c.op(chemin("M40 0L104 0L104 30.6Q70 31 44 30Z"), Path.Op.INTERSECT)
+            piece(c, mix(papier(0xFF6A645C.toInt()), P.cielBas, 0.2f))
+            pieceD("M72 22.4L80 22.2L79 28L73 28.6Z", mix(papier(0xFFC89A72.toInt()), P.cielBas, 0.2f), 0f)
+            pieceD("M44 22.6Q60 21 80 21.4Q92 21.4 102 20.6L102 22.4Q80 23 60 23Q50 23.4 44 24Z", mix(papier(0xFF5E9440.toInt()), P.cielBas, 0.2f), 0f)
+            pieceD("M42 30Q60 29.4 102 30.4L102 31.2Q60 30.4 42 30.8Z", papier(0xFFF2F6F6.toInt()), 0f)
+            plan(1)
+            // L'océan, ses longues houles, ses moutons.
+            pieceD("M-2 30L102 30L102 68L-2 68Z", papier(0xFF1E5A9A.toInt()), 0.2f)
+            val rm = Alea(1902)
+            val houle = intArrayOf(papier(0xFF2A70B0.toInt()), papier(0xFF184E8A.toInt()), papier(0xFF3A86C0.toInt()))
+            repeat(24) {
+                val y = 31f + rm() * 30f; val x = -2f + rm() * 70f; val l = (5f + rm() * 9f) * (0.5f + y / 50f)
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.4f} $x ${y}Z", houle[min((rm() * 3f).toInt(), 2)], 0f)
+            }
+            repeat(18) {
+                val x = -2f + rm() * 64f; val y = 32f + rm() * 26f; val l = 0.8f + rm() * 1.4f
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.3f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.2f} $x ${y}Z", papier(0xFFF2F6F6.toInt()), 0f)
+            }
+            // La grande falaise sombre, sa broussaille, ses strates.
+            val crete = brisee(60f, 33f, 64f, 29.6f, 74f, 28.4f, 88f, 27.4f, 102f, 26.6f)
+            val face = Path()
+            face.moveTo(58f, 53f); face.lineTo(57.4f, 44f); face.quadTo(57f, 38f, 60f, 36f); face.lineTo(60f, crete(60f))
+            var x = 60f
+            while (x <= 102f) { face.lineTo(x, crete(x)); x += 2f }
+            face.lineTo(102f, 53f); face.close()
+            piece(face, papier(0xFF5A5650.toInt()))
+            val rr = Alea(1903)
+            repeat(16) {
+                val sx = 60f + rr() * 40f; val sy = crete(sx) + 3f + rr() * 18f; val l = 3f + rr() * 6f
+                pieceD("M$sx ${sy}Q${sx + l * 0.4f} ${sy - 0.8f} ${sx + l} ${sy - 0.2f}Q${sx + l * 0.6f} ${sy + 0.6f} $sx ${sy}Z",
+                    papier(if (rr() < 0.6f) 0xFF6E6862.toInt() else 0xFF46423E.toInt()), 0f)
+            }
+            pieceD("M66 ${crete(66f) + 0.6f}L72 ${crete(72f) + 0.6f}L71 36L67 36.4Z", papier(0xFFB88A66.toInt()), 0f)
+            val brousse = Path()
+            x = 60f
+            brousse.moveTo(60f, crete(60f) + 1.4f)
+            while (x <= 102f) { brousse.lineTo(x, crete(x) + 1.2f); x += 2f }
+            x = 102f
+            while (x >= 60f) { brousse.lineTo(x, crete(x) - 0.3f); x -= 2f }
+            brousse.close()
+            brousse.op(bosses(60f, 102f, { v -> crete(v) - 0.1f }, 0.6f, 1.1f, Alea(1904)), Path.Op.UNION)
+            piece(brousse, papier(0xFF6E9A44.toInt()), 0.4f)
+            // L'aiguille détachée devant la falaise, l'écume au pied de tout.
+            pieceD("M64 54L64.6 46Q65.6 41.6 68.6 41.2Q72 41.6 73 45L74 54Z", papier(0xFF4E4A46.toInt()), 0.7f)
+            pieceD("M68.6 41.2Q72 41.6 73 45L74 54L71 54Q71.6 46 68.6 41.2Z", papier(0xFF6A645E.toInt()), 0f)
+            val ecume = papier(0xFFF4F8F8.toInt())
+            for ((ex, ey, el) in arrayOf(Triple(55f, 53f, 9f), Triple(62f, 54.2f, 14f), Triple(76f, 53.4f, 12f), Triple(88f, 53f, 14f), Triple(70f, 55.4f, 8f)))
+                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 1.1f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.6f} $ex ${ey}Z", ecume, 0.2f)
+            plan(2)
+            // Les raisiniers de devant, leurs feuilles rondes.
+            for ((x0, x1, y0) in arrayOf(Triple(-2f, 36f, 60f), Triple(62f, 102f, 57f))) {
+                val haut = { v: Float -> y0 + sin(v * 0.3f) * 1.2f + ((v - (x0 + x1) / 2f) / (x1 - x0)).let { it * it } * 8f }
+                val masse = sousLaCrete(x0, x1, haut)
+                masse.op(bosses(x0, x1, { v -> haut(v) + 0.3f }, 1.4f, 2.4f, Alea((x0 * 7f).toInt() + 1905)), Path.Op.UNION)
+                piece(masse, papier(0xFF4E8A34.toInt()))
+                val rf = Alea((x1 * 3f).toInt() + 1906)
+                repeat(22) {
+                    val fx = x0 + rf() * (x1 - x0); val fy = haut(fx) + 0.6f + rf() * 7f
+                    piece(disque(fx, fy, 0.9f + rf() * 0.6f), papier(if (rf() < 0.5f) 0xFF7AB84A.toInt() else 0xFF5E9E3A.toInt()), 0.3f)
+                }
+            }
+        }
+
         /** La Pointe de la Grande Vigie : la falaise au nord de la Grande-Terre, la houle, Antigua au loin, une baleine. */
         fun grandeVigie() {
+            if (PAPIER) { grandeVigiePapier(); return }
             forme("M76 34Q80 31.4 84 31.4Q88 31.4 92 34Z", P.loin)
             plan(1)
             eau(34f, 291)
