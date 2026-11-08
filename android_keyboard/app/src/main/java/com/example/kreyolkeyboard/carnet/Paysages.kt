@@ -1034,6 +1034,9 @@ object Paysages {
     /** Le lagon de la Porte d'Enfer, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_PORTE_ENFER = floatArrayOf(-2f, 102f, 42f, 56f)
 
+    /** Le lagon devant l'Îlet du Gosier, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val EAU_GOSIER = floatArrayOf(-2f, 60f, 46f, 58f)
+
     internal val EAU_CUL_DE_SAC = floatArrayOf(-2f, 60f, 44f, 62f)
 
     /** L'eau de la baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1. */
@@ -5240,8 +5243,87 @@ object Paysages {
             ovale(28f, 57.5f, 11f, 3.6f, mix(P.pierre, P.sol, 0.35f))
         }
 
+        // ------------------------------------------- l'Îlet du Gosier en papier
+
+        /**
+         * L'Îlet du Gosier en papier découpé, d'après l'affiche envoyée par le
+         * propriétaire (2026-11-08) : l'îlet posé sur le lagon, son anneau de
+         * sable blanc, ses buissons, le phare blanc à lanterne rouge qui sort
+         * de la verdure à droite du mot ; les cocotiers de l'affiche deviennent
+         * des arbres à houppier rond (pas de cocotier). Une barque de bois sur
+         * l'eau à gauche, le sable du rivage devant pour les touloulous. Le
+         * lagon scintille sur la carte ouverte, la lanterne s'allume le soir.
+         */
+        fun iletGosierPapier() {
+            cumulus(-4f, 24f, 22f, 2201)
+            cumulus(58f, 15f, 24f, 2202)
+            // Le large, bleu profond, à l'horizon.
+            pieceD("M-2 38.6L102 38.6L102 44L-2 44Z", papier(0xFF2A7AB0.toInt()), 0.2f)
+            lanieresMer(39f, 43.4f, 2203, intArrayOf(papier(0xFF3A8ABE.toInt()), papier(0xFF2068A0.toInt())))
+            plan(1)
+            // Le lagon turquoise, en lanières, plus clair vers soi.
+            pieceD("M-2 43.6L102 43.6L102 68L-2 68Z", papier(0xFF3EB8B4.toInt()), 0.2f)
+            pieceD("M-2 52Q50 50.6 102 52L102 68L-2 68Z", papier(0xFF5ACCC0.toInt()), 0f)
+            lanieresMer(44.2f, 60f, 2204, intArrayOf(papier(0xFF4EC2BA.toInt()), papier(0xFF78D6C8.toInt()), papier(0xFF34A8AA.toInt())))
+            // Le reflet de l'îlet, d'une seule pièce au bord ondulé.
+            val ondes = Alea(2205)
+            val reflet = StringBuilder("M52 45.6L102 45.6")
+            var oy = 46f
+            while (oy < 51f) { reflet.append("L${102f - (oy - 46f) * 0.6f} $oy"); oy += 1f }
+            while (oy > 46f) { oy -= 1f; reflet.append("L${56f + (oy - 46f) * 1.8f + ondes() * 3f} $oy") }
+            reflet.append("Z")
+            pieceD(reflet.toString(), papier(0xFF8ACFB4.toInt()), 0f)
+            // L'anneau de sable.
+            pieceD("M50 44.4Q54 41.6 64 41Q84 40.4 102 41L102 46.2Q80 46.8 60 46.2Q52 45.8 50 44.4Z", papier(0xFFF2E8CE.toInt()), 0.5f)
+            pieceD("M50 44.4Q52 45.8 60 46.2Q80 46.8 102 46.2L102 45.4Q80 46 60 45.4Q53 45 50 44.4Z", papier(0xFFD8C8A4.toInt()), 0f)
+            // Les buissons de derrière, puis le phare qui en sort.
+            val crete = brisee(55f, 41.6f, 62f, 38.4f, 70f, 36.4f, 80f, 35.2f, 90f, 36f, 98f, 38f, 102f, 39.4f)
+            val dos = sousLaCrete(55f, 102f, crete)
+            dos.op(bosses(56f, 103f, { x -> crete(x) + 0.3f }, 1.4f, 2.2f, Alea(2206)), Path.Op.UNION)
+            dos.op(chemin("M50 0L104 0L104 43L50 43Z"), Path.Op.INTERSECT)
+            piece(dos, papier(0xFF2E6A2E.toInt()))
+            val px = 82f
+            val blancTour = papier(0xFFF2F0EA.toInt())
+            val rouge = papier(0xFFD03A2E.toInt())
+            pieceD("M${px - 2.2f} 37L${px - 1.6f} 20.6L${px + 1.6f} 20.6L${px + 2.2f} 37Z", blancTour, 0.8f)
+            pieceD("M${px + 0.6f} 37L${px + 0.5f} 20.6L${px + 1.6f} 20.6L${px + 2.2f} 37Z", papier(0xFFCFCBC2.toInt()), 0f)
+            pieceD("M${px - 0.3f} 27L${px + 0.3f} 27L${px + 0.3f} 28.6L${px - 0.3f} 28.6Z", papier(0xFF3C4450.toInt()), 0f)
+            pieceD("M${px - 2.8f} 20.8L${px - 2.8f} 20L${px + 2.8f} 20L${px + 2.8f} 20.8Z", papier(0xFF2E2E34.toInt()), 0.3f)
+            val vitre = if (P.allume) duJour(0xFFFFE08A.toInt()) else papier(0xFF3C4450.toInt())
+            pieceD("M${px - 1.5f} 20L${px - 1.4f} 17.6L${px + 1.4f} 17.6L${px + 1.5f} 20Z", vitre, 0.3f)
+            barre(px, 20f, px, 17.6f, 0.15f, rouge, 0f)
+            pieceD("M${px - 1.9f} 17.8L$px 15L${px + 1.9f} 17.8Z", rouge, 0.4f)
+            barre(px, 15.2f, px, 13.8f, 0.2f, rouge, 0f)
+            // Les buissons de devant, deux arbres ronds, des taches de lumière.
+            val avant = brisee(52f, 44f, 60f, 41.4f, 70f, 39.6f, 82f, 38.4f, 94f, 39.6f, 102f, 41.4f)
+            val bas = sousLaCrete(52f, 102f, avant)
+            bas.op(bosses(53f, 103f, { x -> avant(x) + 0.3f }, 1.2f, 2f, Alea(2207)), Path.Op.UNION)
+            bas.op(chemin("M50 0L104 0L104 43.8Q80 44.4 60 43.8Q54 43.6 52 44Z"), Path.Op.INTERSECT)
+            piece(bas, papier(0xFF4E8E3A.toInt()))
+            taches(54f, 102f, 42.6f, 10, 2208, papier(0xFF6EAA48.toInt()), avant)
+            val tronc = papier(0xFF6A4A35.toInt())
+            arbreRond(64f, 41.6f, 3.2f, papier(0xFF5A9A40.toInt()), tronc)
+            arbreRond(96f, 42f, 2.8f, papier(0xFF4E8E3A.toInt()), tronc)
+            // La barque de bois sur l'eau, à gauche.
+            val bois = papier(0xFF8A5A34.toInt())
+            pieceD("M4 52.4L22 52.4L19.6 55Q12 55.8 6 55Z", bois, 0.6f)
+            pieceD("M4 52.4L22 52.4L21.8 53L4.2 53Z", papier(0xFFB07A48.toInt()), 0f)
+            for (k in 0 until 3) barre(7f + k * 5f, 52.6f, 7.6f + k * 5f, 54.8f, 0.25f, papier(0xFF5E3C22.toInt()), 0f)
+            pieceD("M5 55.6Q13 56.6 21 55.6Q13 57.4 5 55.6Z", papier(0xFF2E9A98.toInt()), 0f)
+            plan(2)
+            // Le sable du rivage, devant.
+            pieceD("M-2 60.2Q50 58.8 102 60L102 68L-2 68Z", papier(0xFFEEDDB8.toInt()), 0.5f)
+            pieceD("M-2 60.2Q50 58.8 102 60L102 60.8Q50 59.8 -2 61Z", papier(0xFFF8F0DC.toInt()), 0f)
+            val rs = Alea(2209)
+            repeat(40) {
+                val x = -2f + rs() * 104f; val y = 61.6f + rs() * 5.6f
+                piece(disque(x, y, 0.16f + rs() * 0.18f), papier(if (rs() < 0.5f) 0xFFCCB68C.toInt() else 0xFFFAF2E0.toInt()), 0f)
+            }
+        }
+
         /** L'îlet du Gosier : l'îlet et son phare tout proches, un canot, un pélican, des touloulous. */
         fun iletGosier() {
+            if (PAPIER) { iletGosierPapier(); return }
             plan(1)
             eau(36f, 321)
             forme("M28 41Q50 33 74 41Z", sable())
