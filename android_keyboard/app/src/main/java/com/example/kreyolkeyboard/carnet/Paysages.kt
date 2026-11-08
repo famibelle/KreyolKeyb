@@ -1030,6 +1030,9 @@ object Paysages {
     /** L'eau de la mangrove de l'Îlet Macou, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_MACOU = floatArrayOf(-2f, 102f, 48f, 64f)
 
+    /** L'eau de la baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1. */
+    internal val EAU_ACTE = floatArrayOf(-2f, 76f, 52f, 64f)
+
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
 
@@ -5204,8 +5207,244 @@ object Paysages {
             ovale(61.5f, 56f, 6f, 1.4f, blanc(), 0.7f)
         }
 
+        // ------------------------------------------- la Traversée en papier
+
+        /**
+         * Une fougère basse : une tige qui s'arque et retombe, ses folioles
+         * pliées de plus en plus courtes vers la pointe. Toujours couchée :
+         * dressée, elle se lirait comme un sapin.
+         */
+        private fun fougere(x: Float, y: Float, l: Float, angle: Float, col: Int) {
+            val a = Math.toRadians(angle.toDouble()).toFloat()
+            val sens = if (cos(a) >= 0f) 1f else -1f
+            val tige = mix(col, 0xFF000000.toInt(), 0.25f)
+            val n = 9
+            var px = x; var py = y
+            for (k in 1..n) {
+                val u = k / n.toFloat()
+                val ang = a + sens * u * 1.1f
+                val nx = px + cos(ang) * l / n; val ny = py + sin(ang) * l / n
+                barre(px, py, nx, ny, 0.28f * (1f - u * 0.5f), tige, 0f)
+                val f = l * 0.3f * (1f - u * 0.7f)
+                val deg = Math.toDegrees(ang.toDouble()).toFloat()
+                feuillePliee(nx, ny, f, deg - 65f * sens, col, 0.38f)
+                feuillePliee(nx, ny, f * 0.9f, deg + 75f * sens, mix(col, 0xFF000000.toInt(), 0.1f), 0.38f)
+                px = nx; py = ny
+            }
+        }
+
+        /** Une rambarde de bois en perspective, de ([ax], [ay]) loin à ([bx], [by]) près : poteaux, deux lisses. */
+        private fun rambardeFuyante(ax: Float, ay: Float, bx: Float, by: Float, ha: Float, hb: Float, poteaux: Int, col: Int) {
+            fun pt(u: Float) = floatArrayOf(ax + (bx - ax) * u * u, ay + (by - ay) * u * u, ha + (hb - ha) * u * u)
+            val sombre = mix(col, 0xFF000000.toInt(), 0.2f)
+            for (lisse in floatArrayOf(0.45f, 1f)) {
+                var prec = pt(0f)
+                for (k in 1..24) {
+                    val q = pt(k / 24f)
+                    barre(prec[0], prec[1] - prec[2] * lisse, q[0], q[1] - q[2] * lisse, 0.15f + q[2] * 0.09f,
+                        if (lisse < 1f) sombre else col, 0.3f)
+                    prec = q
+                }
+            }
+            for (k in 0..poteaux) {
+                val q = pt(k / poteaux.toFloat())
+                val e = 0.25f + q[2] * 0.14f
+                barre(q[0], q[1], q[0], q[1] - q[2] * 1.08f, e, col, 0.5f)
+                pieceD("M${q[0] - e / 2f} ${q[1] - q[2] * 1.08f}L${q[0] + e / 2f} ${q[1] - q[2] * 1.08f}L${q[0] + e / 2f} ${q[1]}L${q[0] + e * 0.2f} ${q[1]}Z",
+                    sombre, 0f)
+            }
+        }
+
+        /**
+         * La route de la Traversée en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : le chemin pavé du parc national qui
+         * s'enfonce sous la forêt entre ses deux rambardes de bois et tourne
+         * à gauche au fond, la lumière qui tombe au bout, les grands troncs,
+         * un très gros à droite du mot, pris de lianes ; les fougères et les
+         * grandes feuilles des deux bords. Personne sur le chemin : l'agouti
+         * le traverse sur la carte ouverte. Balisiers pour le colibri.
+         */
+        fun traverseePapier() {
+            // Le fond baigné de lumière, des troncs pâles dans la brume.
+            morneBoise(6f, 2.4f, 2501, mix(papier(0xFF9CCB84.toInt()), P.cielBas, 0.5f), 2.6f)
+            val pale = mix(papier(0xFF7E8E70.toInt()), P.cielBas, 0.4f)
+            for ((x, e) in arrayOf(30f to 0.7f, 38f to 0.5f, 61f to 0.6f, 66f to 0.8f)) barre(x, 44f, x + 0.8f, 2f, e, pale, 0f)
+            morneBoise(17f, 2.6f, 2504, mix(papier(0xFF7DB666.toInt()), P.cielBas, 0.35f), 3f)
+            brumePapier(30f, 72f, 24f, 5f, 2505)
+            morneBoise(27f, 2f, 2502, mix(papier(0xFF5E9E52.toInt()), P.cielBas, 0.25f), 2.8f)
+            morneBoise(35f, 1.6f, 2506, mix(papier(0xFF7AB868.toInt()), P.cielBas, 0.2f), 2.4f)
+            brumePapier(30f, 72f, 39f, 3.4f, 2503)
+            plan(1)
+            // Les deux bords de forêt, en lisières, qui descendent vers le chemin.
+            val verts = intArrayOf(papier(0xFF4E8E46.toInt()), papier(0xFF2E6A3A.toInt()), papier(0xFF6FA84E.toInt()))
+            for (k in 0 until 3) {
+                rive(true, 8f + k * 9f, 42f + k * 3f, 40f - k * 5f, 2510 + k, verts[k], 3.4f + k * 0.5f)
+                rive(false, 10f + k * 9f, 42f + k * 3f, 60f + k * 5f, 2520 + k, verts[(k + 1) % 3], 3.4f + k * 0.5f)
+            }
+            // Un tronc fin qui monte en biais à gauche.
+            val ecorce = papier(0xFF5A4E3E.toInt())
+            barre(33f, 47f, 25f, -2f, 1.3f, ecorce, 0.5f)
+            barre(33.2f, 47f, 25.4f, -2f, 0.35f, mix(ecorce, 0xFFFFFFFF.toInt(), 0.2f), 0f)
+            // Le gros tronc à droite du mot : ses contreforts, sa mousse, ses lianes.
+            val gros = papier(0xFF4A4036.toInt())
+            pieceD("M70.4 -2L77.6 -2Q77 20 78 34Q79 42 84 47L64 47Q69 42 70 34Q71 20 70.4 -2Z", gros, 0.8f)
+            pieceD("M75.6 -2L77.6 -2Q77 20 78 34Q79 42 84 47L80.4 47Q77 40 76.2 30Q75.6 14 75.6 -2Z", mix(gros, 0xFFFFFFFF.toInt(), 0.12f), 0f)
+            for ((y, l) in arrayOf(8f to 5f, 18f to 4f, 30f to 6f)) feuillePliee(71f, y, l, 95f, papier(0xFF5E9A44.toInt()), 0.35f)
+            val liane = papier(0xFF6A7A48.toInt())
+            barre(72.2f, -2f, 71.4f, 30f, 0.35f, liane, 0.2f)
+            barre(74.4f, -2f, 75.6f, 22f, 0.3f, liane, 0.2f)
+            barre(82f, -2f, 81.2f, 26f, 0.3f, liane, 0.2f)
+            // Le chemin pavé, qui tourne à gauche au fond.
+            val pave = papier(0xFF8C8478.toInt())
+            pieceD("M20 68L44.4 48Q43.4 45.6 40 44.6L48.6 44.6Q52 45.6 54.2 48L80 68Z", pave, 0.5f)
+            fun gauche(y: Float) = 44.4f - (y - 48f) / 20f * 24.4f
+            fun droite(y: Float) = 54.2f + (y - 48f) / 20f * 25.8f
+            val pierres = intArrayOf(papier(0xFFA49A8C.toInt()), papier(0xFF9A9284.toInt()), papier(0xFF7A7266.toInt()))
+            val rp = Alea(2530)
+            var y = 48.6f
+            while (y < 67f) {
+                val p = (y - 48f) / 20f
+                val e = 0.4f + 1.2f * p
+                var x = gauche(y) + 0.4f + rp() * 1.2f
+                while (x < droite(y) - 1f) {
+                    val l = (1.4f + rp() * 1.6f) * (0.5f + p * 1.4f)
+                    val t = Path()
+                    t.addRoundRect(RectF(x, y, min(x + l, droite(y) - 0.4f), y + e), e * 0.4f, e * 0.4f, Path.Direction.CW)
+                    piece(t, pierres[min((rp() * 3f).toInt(), 2)], 0.3f)
+                    x += l + 0.3f + p * 0.4f
+                }
+                y += e + 0.25f + 0.3f * p
+            }
+            // Les taches de soleil sur les pavés, le jour.
+            if (!P.allume) for ((tx, ty, tl) in arrayOf(Triple(47f, 51f, 3f), Triple(40f, 57f, 5f), Triple(56f, 61f, 6f)))
+                pieceD("M$tx ${ty}Q${tx + tl / 2f} ${ty - tl * 0.18f} ${tx + tl} ${ty}Q${tx + tl / 2f} ${ty + tl * 0.18f} $tx ${ty}Z",
+                    mix(papier(0xFFE8E0B8.toInt()), pave, 0.25f), 0f)
+            val bois = papier(0xFF8A5634.toInt())
+            rambardeFuyante(43.4f, 46.4f, 17f, 70f, 1.6f, 9f, 9, bois)
+            rambardeFuyante(55f, 46.6f, 83f, 70f, 1.6f, 9f, 9, bois)
+            plan(2)
+            // Les deux bords de sous-bois : fougères, grandes feuilles, balisiers.
+            val fougeres = intArrayOf(papier(0xFF5EA04A.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF7AB654.toInt()))
+            for ((fx, fy, fl, fa) in arrayOf(
+                floatArrayOf(-2f, 54f, 14f, -25f), floatArrayOf(2f, 60f, 15f, -15f), floatArrayOf(6f, 66f, 13f, -30f),
+                floatArrayOf(102f, 55f, 14f, -155f), floatArrayOf(98f, 61f, 15f, -165f), floatArrayOf(95f, 67f, 12f, -150f)))
+                fougere(fx, fy, fl, fa, fougeres[((fx + fy).toInt() and 0xFF) % 3])
+            feuilleBananier(-2f, 66f, 13f, -40f, papier(0xFF4FB06A.toInt()))
+            feuilleCoeur(18f, 67f, 4f, -10f, papier(VERT_PROFOND))
+            feuilleBananier(102f, 66f, 12f, -142f, papier(0xFF3FA86A.toInt()))
+            feuilleCoeur(84f, 67f, 3.6f, 14f, papier(VERT_PROFOND))
+            balisier(12f, 61f, 14f, feuille())
+            balisier(88f, 61f, 14f, feuille())
+        }
+
+        // ------------------------------------------- la Grivelière en papier
+
+        /**
+         * L'habitation La Grivelière en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : la grande case de bois gris sur son
+         * soubassement de pierre, le toit de tôle rouillée à trois lucarnes,
+         * l'aile basse au toit rayé rouge et blanc, à droite du mot ; à gauche
+         * le petit oratoire blanc à niche cintrée et son pot de fleurs ; le
+         * jardin de crotons sur son mur de pierres sèches, le chemin pavé
+         * devant, le morne boisé derrière. Balisiers pour le colibri.
+         */
+        fun grivelierePapier() {
+            morneBoise(8f, 3f, 2601, mix(papier(0xFF6EA866.toInt()), P.cielBas, 0.45f), 2.4f)
+            morneBoise(18f, 2.6f, 2602, mix(papier(0xFF3E7A44.toInt()), P.cielBas, 0.22f), 2.8f)
+            plan(1)
+            morneBoise(29f, 2.2f, 2603, papier(0xFF2E6236.toInt()), 3f)
+            val tronc = papier(0xFF4A3A2E.toInt())
+            arbreRond(6f, 40f, 5f, papier(0xFF4E8E46.toInt()), tronc)
+            arbreRond(30f, 41f, 3.6f, papier(0xFF6FA84E.toInt()), tronc)
+            arbreRond(58f, 40f, 3.2f, papier(0xFF3E7A44.toInt()), tronc)
+            // L'herbe de la cour.
+            pieceD("M-2 44Q40 41 102 44L102 68L-2 68Z", papier(0xFF5E9446.toInt()), 0.5f)
+            // L'aile basse à droite : mur de planches, toit rayé rouge et blanc.
+            val gris = papier(0xFF8A8276.toInt())
+            pieceD("M88 39.6L97.6 41L97.6 47.4L88 47Z", mix(gris, 0xFF000000.toInt(), 0.1f), 0.5f)
+            pieceD("M91 42L94 42.4L94 47.2L91 47.1Z", papier(0xFF2E2620.toInt()), 0f)
+            val rouge = papier(0xFFB4443A.toInt()); val blanc = papier(0xFFDCD4C8.toInt())
+            pieceD("M86.6 39.8L98.6 41.6L97 34.6L87.4 33.4Z", rouge, 0.7f)
+            for (k in 0 until 4) {
+                val u0 = 0.12f + k * 0.22f; val u1 = u0 + 0.09f
+                val bx0 = 86.6f + 12f * u0; val by0 = 39.8f + 1.8f * u0; val bx1 = 86.6f + 12f * u1; val by1 = 39.8f + 1.8f * u1
+                val hx0 = 87.4f + 9.6f * u0; val hy0 = 33.4f + 1.2f * u0; val hx1 = 87.4f + 9.6f * u1; val hy1 = 33.4f + 1.2f * u1
+                pieceD("M$bx0 ${by0}L$bx1 ${by1}L$hx1 ${hy1}L$hx0 ${hy0}Z", blanc, 0f)
+            }
+            // La grande case : soubassement de pierre, murs de planches grises, volets ouverts.
+            val pierre = papier(0xFF8E8A82.toInt())
+            pieceD("M66 45.2L89 45.2L89 48L66 48Z", pierre, 0.6f)
+            val rs = Alea(2604)
+            repeat(12) { galet(66.6f + rs() * 22f, 45.8f + rs() * 1.8f, 0.5f + rs() * 0.4f, papier(if (rs() < 0.5f) 0xFF7A766E.toInt() else 0xFFA29E94.toInt())) }
+            pieceD("M67 37.6L88.4 37.6L88.4 45.4L67 45.4Z", gris, 0.6f)
+            var px = 68f
+            while (px < 88f) { barre(px, 37.8f, px, 45.2f, 0.12f, mix(gris, 0xFF000000.toInt(), 0.18f), 0f); px += 1.1f }
+            val ouverture = if (P.allume) P.fenetre else papier(0xFF2E2620.toInt())
+            val volet = papier(0xFF9C9284.toInt())
+            for (ox in floatArrayOf(69f, 74.4f, 79.8f, 85f)) {
+                pieceD("M$ox 39L${ox + 2.2f} 39L${ox + 2.2f} 45.2L$ox 45.2Z", ouverture, 0.2f)
+                pieceD("M${ox - 1f} 39L$ox 39L$ox 45L${ox - 1f} 44.8Z", volet, 0.3f)
+                pieceD("M${ox + 2.2f} 39L${ox + 3.1f} 39L${ox + 3.1f} 44.8L${ox + 2.2f} 45Z", volet, 0.3f)
+            }
+            // Le toit de tôle rouillée, ses ondes, ses trois lucarnes.
+            val tole = papier(0xFF6E4834.toInt())
+            pieceD("M65.4 38L90 38L86.6 28L69 28Z", tole, 0.9f)
+            for (k in 1 until 14) {
+                val u = k / 14f
+                barre(65.4f + 24.6f * u, 38f, 69f + 17.6f * u, 28f, 0.1f, mix(tole, 0xFF000000.toInt(), 0.15f), 0f)
+            }
+            pieceD("M65.4 37.4L90 37.4L90 38.4L65.4 38.4Z", mix(tole, 0xFF000000.toInt(), 0.25f), 0f)
+            val lucarne = papier(0xFFB4AC9E.toInt())
+            for (lx in floatArrayOf(71.6f, 77.8f, 84f)) {
+                pieceD("M${lx - 1.7f} 34.4L${lx + 1.7f} 34.4L${lx + 1.7f} 30.6L$lx 28.8L${lx - 1.7f} 30.6Z", lucarne, 0.5f)
+                pieceD("M${lx - 0.8f} 33.8L${lx + 0.8f} 33.8L${lx + 0.8f} 31.2L${lx - 0.8f} 31.2Z", if (P.allume) P.fenetre else papier(0xFF3A322A.toInt()), 0f)
+                pieceD("M${lx - 2.3f} 31L$lx 28.2L${lx + 2.3f} 31L${lx + 1.8f} 31.3L$lx 29.2L${lx - 1.8f} 31.3Z", tole, 0.4f)
+            }
+            plan(2)
+            // L'oratoire blanc à gauche du mot, sa niche cintrée, le pot de fleurs.
+            val chaux = papier(0xFFEEEAE2.toInt())
+            fun cintre(x0: Float, x1: Float, haut: Float, bas: Float) = Path().apply {
+                moveTo(x0, bas); lineTo(x0, haut)
+                arcTo(RectF(x0, haut - (x1 - x0) / 2f, x1, haut + (x1 - x0) / 2f), 180f, 180f)
+                lineTo(x1, bas); close()
+            }
+            piece(cintre(18f, 27.2f, 44f, 54f), chaux, 0.8f)
+            pieceD("M26 44L27.2 44L27.2 54L26 54Z", papier(0xFFC8C4BA.toInt()), 0f)
+            piece(cintre(19.8f, 25.4f, 45f, 51.6f), papier(0xFFB4B0A6.toInt()), 0.3f)
+            pieceD("M21.4 51.6L21.8 49.4L23.4 49.4L23.8 51.6Z", papier(0xFFC0602E.toInt()), 0.2f)
+            for (a in floatArrayOf(-150f, -110f, -70f, -30f)) feuillePliee(22.6f, 49.4f, 2f, a, papier(0xFF3E8A44.toInt()), 0.4f)
+            pieceD("M16.8 54L28.4 54L28.4 55.4L16.8 55.4Z", papier(0xFFD8D4CA.toInt()), 0.4f)
+            // Le jardin de crotons sur son mur de pierres sèches.
+            pieceD("M-2 54Q30 53 60 55Q80 56 102 54L102 58.6L-2 58.6Z", papier(0xFF4E8A3E.toInt()), 0.4f)
+            val crotons = intArrayOf(papier(0xFFC8402A.toInt()), papier(0xFFE0A030.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF9A2E2A.toInt()))
+            val rc = Alea(2605)
+            for (cx in floatArrayOf(32f, 36f, 41f, 62f, 67f, 72f, 77f, 94f)) repeat(3) {
+                feuilleCoeur(cx + (rc() - 0.5f) * 3f, 55.6f + rc(), 1.6f + rc() * 1f, (rc() - 0.5f) * 70f, crotons[min((rc() * 4f).toInt(), 3)])
+            }
+            val mur = Path()
+            mur.moveTo(-2f, 57.6f); mur.quadTo(50f, 56.6f, 102f, 57.8f); mur.lineTo(102f, 63.6f); mur.quadTo(50f, 62.4f, -2f, 63.4f); mur.close()
+            piece(mur, papier(0xFF6E6A62.toInt()), 0.6f)
+            val rm = Alea(2606)
+            val moellons = intArrayOf(papier(0xFF9A968C.toInt()), papier(0xFF84807A.toInt()), papier(0xFFB0ACA2.toInt()))
+            var my = 58.6f
+            while (my < 63f) {
+                var mx = -2f + rm() * 2f
+                while (mx < 102f) { val l = 1.6f + rm() * 2.2f; galet(mx + l / 2f, my, l / 2f, moellons[min((rm() * 3f).toInt(), 2)]); mx += l + 0.3f }
+                my += 1.4f
+            }
+            // Le chemin pavé au pied du mur.
+            pieceD("M-2 63.4Q50 62.4 102 63.6L102 68L-2 68Z", papier(0xFF6A6A62.toInt()), 0.4f)
+            val rpv = Alea(2607)
+            repeat(40) {
+                galet(-2f + rpv() * 104f, 64.4f + rpv() * 3f, 1f + rpv() * 0.8f, papier(if (rpv() < 0.5f) 0xFF8C8C82.toInt() else 0xFF7A7A70.toInt()))
+            }
+            balisier(10f, 60f, 14f, feuille())
+            balisier(88f, 60f, 14f, feuille())
+        }
+
         /** La route de la Traversée : sous la canopée, les grands troncs, une Mamelle boisée dans la trouée, un agouti. */
         fun traversee() {
+            if (PAPIER) { traverseePapier(); return }
             forme("M30 36Q36 22 43 19Q49 18 52 24Q56 16 62 16Q69 18 72 36Z", mix(P.milieu, P.loin, 0.3f))
             bosquet(34f, 70f, 26f, 2f, 351, mix(P.milieu, P.loin, 0.15f))
             brume(50f, 31f, 20f, 2.4f, 0.4f)
@@ -5239,6 +5478,7 @@ object Paysages {
 
         /** L'habitation La Grivelière : la case à galerie dans sa clairière, le glacis à café, les caféiers sous les arbres. */
         fun griveliere() {
+            if (PAPIER) { grivelierePapier(); return }
             forme("M0 16Q20 4 42 12Q62 2 82 10Q92 6 100 10L100 66L0 66Z", mix(P.milieu, P.loin, 0.45f))
             bosquet(-2f, 102f, 14f, 3f, 361, mix(P.milieu, P.loin, 0.35f))
             brume(40f, 16f, 26f, 2.2f)
@@ -5342,8 +5582,83 @@ object Paysages {
             forme("M0 62Q8 59 18 62L18 66L0 66Z", P.pres)
         }
 
+        // ------------------------------------------- le Mémorial ACTe en papier
+
+        /**
+         * Le Mémorial ACTe en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : le long bâtiment de granit noir sous sa
+         * résille d'argent, des barres blanches entrecroisées qui montent en
+         * perspective vers la droite, à côté du mot, avec la grande croix au
+         * bout ; le parvis, l'enrochement de la darse, l'eau claire de la baie
+         * devant à gauche, le quai et sa bitte où se tient le pélican. L'eau
+         * scintille sur la carte ouverte (`Reflets` dans [Ambiance]).
+         */
+        fun memorialActePapier() {
+            plan(1)
+            val haut = brisee(-2f, 31f, 102f, 19f)
+            val bas = brisee(-2f, 35.6f, 102f, 29f)
+            val sol = brisee(-2f, 40.4f, 102f, 42f)
+            // Le granit noir, ses joints, ses vitrages, le bloc clair.
+            val granit = papier(0xFF26282E.toInt())
+            pieceD("M-2 ${bas(-2f)}L102 ${bas(102f)}L102 ${sol(102f)}L-2 ${sol(-2f)}Z", granit, 0.6f)
+            for ((x0, x1, col) in arrayOf(Triple(30f, 38f, 0xFF3A4048), Triple(62f, 67f, 0xFFC8C8C0), Triple(80f, 92f, 0xFF3A4450)))
+                pieceD("M$x0 ${bas(x0) + 0.4f}L$x1 ${bas(x1) + 0.4f}L$x1 ${sol(x1)}L$x0 ${sol(x0)}Z", papier(col.toInt()), 0.2f)
+            var jx = 4f
+            while (jx < 100f) { barre(jx, bas(jx) + 0.4f, jx, sol(jx), 0.15f, papier(0xFF3A3C44.toInt()), 0f); jx += 5.5f }
+            if (P.allume) for (x0 in floatArrayOf(31f, 81f)) {
+                val x1 = x0 + 6f
+                pieceD("M$x0 ${bas(x0) + 1.4f}L$x1 ${bas(x1) + 1.4f}L$x1 ${sol(x1) - 0.4f}L$x0 ${sol(x0) - 0.4f}Z", P.fenetre, 0f)
+            }
+            // La résille : l'ombre sous elle, puis les barres blanches
+            // entrecroisées, découpées à la forme de la bande.
+            val bande = chemin("M-2 ${haut(-2f)}L102 ${haut(102f)}L102 ${bas(102f) + 0.6f}L-2 ${bas(-2f) + 0.6f}Z")
+            piece(Path(bande), papier(0xFF3A3E46.toInt()), 0.6f)
+            val barres = Path()
+            val rb = Alea(2901)
+            var bx = -6f
+            while (bx < 106f) {
+                val h = bas(bx) - haut(bx) + 2f
+                val incl = (if (rb() < 0.5f) -1f else 1f) * (2f + rb() * 5f)
+                val e = 0.3f + rb() * 0.5f
+                barres.op(chemin("M${bx - e} ${haut(bx) - 1f}L${bx + e} ${haut(bx) - 1f}L${bx + incl + e} ${haut(bx) + h}L${bx + incl - e} ${haut(bx) + h}Z"), Path.Op.UNION)
+                bx += 0.9f + rb() * 1.3f
+            }
+            repeat(10) {
+                val x = rb() * 100f
+                barres.op(chemin("M${x - 4f} ${haut(x) + 1f + rb() * 2f}L${x + 4f} ${haut(x) + 0.6f + rb() * 2f}L${x + 4f} ${haut(x) + 1.1f + rb() * 2f}L${x - 4f} ${haut(x) + 1.5f + rb() * 2f}Z"), Path.Op.UNION)
+            }
+            barres.op(chemin("M84.6 ${haut(84.6f)}L86 ${haut(86f)}L92.6 ${bas(92.6f)}L91.2 ${bas(91.2f)}Z"), Path.Op.UNION)
+            barres.op(chemin("M91 ${haut(91f)}L92.4 ${haut(92.4f)}L86 ${bas(86f)}L84.6 ${bas(84.6f)}Z"), Path.Op.UNION)
+            barres.op(bande, Path.Op.INTERSECT)
+            piece(barres, papier(0xFFE8ECEE.toInt()), 0.4f)
+            // Le parvis, ses lampadaires, l'enrochement de la darse à droite.
+            pieceD("M-2 ${sol(-2f)}L102 ${sol(102f)}L102 ${sol(102f) + 2.6f}L-2 ${sol(-2f) + 2.6f}Z", papier(0xFFB4B2AC.toInt()), 0.4f)
+            for (lx in floatArrayOf(22f, 48f, 70f)) barre(lx, sol(lx) + 0.6f, lx, sol(lx) - 4.4f, 0.25f, papier(0xFF4A4C50.toInt()), 0f)
+            pieceD("M36 ${sol(36f) + 2.6f}L102 ${sol(102f) + 2.6f}L102 54L60 52Z", papier(0xFF8C8A84.toInt()), 0.6f)
+            val rg = Alea(2902)
+            repeat(60) {
+                val x = 40f + rg() * 62f
+                val yh = sol(x) + 2.8f
+                val yb = 52f + (x - 60f).coerceAtLeast(0f) * 0.05f
+                val y = yh + rg() * (yb - yh)
+                galet(x, y, 0.5f + rg() * 0.6f, papier(if (rg() < 0.5f) 0xFFA8A6A0.toInt() else 0xFF78766E.toInt()))
+            }
+            plan(2)
+            // L'eau claire de la baie, le quai et sa bitte d'amarrage.
+            val (ex0, ex1, ey0, ey1) = EAU_ACTE
+            pieceD("M-2 ${ey0 - 4f}L36 ${ey0 - 4f}Q60 ${ey0 - 1f} $ex1 ${ey0 + 2f}L${ex1 + 4f} 68L-2 68Z", papier(0xFF7EC4C6.toInt()), 0.4f)
+            lanieresMer(ey0 - 3.4f, ey1, 2903, intArrayOf(papier(0xFF8ED0D0.toInt()), papier(0xFF6AB4BA.toInt()), papier(0xFFA6DCD8.toInt())))
+            pieceD("M-2 ${ey0 - 4.6f}L30 ${ey0 - 4.6f}L32 ${ey0 - 3.4f}L-2 ${ey0 - 3.4f}Z", papier(0xFF5A5C60.toInt()), 0.5f)
+            pieceD("M80 50L104 50L104 68L76 68Q78 58 80 50Z", papier(0xFFA8A49C.toInt()), 0.7f)
+            pieceD("M80 50L104 50L104 51.2L79.8 51.2Z", papier(0xFFC8C4BC.toInt()), 0f)
+            val fonte = papier(0xFF2B2D33.toInt())
+            pieceD("M91.1 50L91.1 52.6L92.9 52.6L92.9 50Z", fonte, 0.4f)
+            piece(Path().apply { addOval(RectF(90.7f, 49.5f, 93.3f, 50.5f), Path.Direction.CW) }, fonte, 0.2f)
+        }
+
         /** Le Mémorial ACTe : le granit noir pris dans ses racines d'argent, la passerelle, la baie, un pélican. */
         fun memorialActe() {
+            if (PAPIER) { memorialActePapier(); return }
             forme("M0 38Q50 34.4 100 38L100 41L0 41Z", P.loin)
             plan(1)
             rect(0f, 40.6f, 100f, 10f, P.eau)

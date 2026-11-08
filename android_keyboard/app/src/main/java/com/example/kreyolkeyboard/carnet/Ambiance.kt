@@ -146,6 +146,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
+                enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
                 else -> null
@@ -1339,13 +1340,14 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
 /**
  * L'eau calme de l'anse de Bouillante ([Paysages.REFLETS_BOUILLANTE], plan du
  * milieu), ou celle de la mangrove de l'Îlet Macou ([Paysages.EAU_MACOU],
- * avec moins d'éclats) : des éclats de soleil qui s'allument et s'éteignent, plus serrés
+ * avec moins d'éclats) ou celle de la baie du Mémorial ACTe ([Paysages.EAU_ACTE],
+ * plan de devant) : des éclats de soleil qui s'allument et s'éteignent, plus serrés
  * du côté du soleil, à gauche, comme sur la photo ; et de longues rides qui
  * glissent lentement. La nuit, les éclats sont rares et pâles.
  */
 private class Reflets(
     zone: RectF, graine: Int, nuit: Boolean,
-    private val eau: FloatArray = Paysages.REFLETS_BOUILLANTE, eclatsDuJour: Int = 34
+    private val eau: FloatArray = Paysages.REFLETS_BOUILLANTE, eclatsDuJour: Int = 34, private val plan: Int = 3
 ) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val nEclats = if (nuit) eclatsDuJour / 3 else eclatsDuJour
@@ -1375,8 +1377,8 @@ private class Reflets(
         val e = cadre[0]
         val (x0, x1, y0, y1) = eau
         c.save()
-        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
-            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[plan] * largeur * regardX,
+            zone.top + cadre[2] + Paysages.GLISSEMENT[plan] * hauteur * regardY)
         c.scale(e, e)
         p.style = Paint.Style.FILL
         for (k in 0 until nRides) {
