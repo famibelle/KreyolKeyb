@@ -1030,6 +1030,12 @@ object Paysages {
     /** L'eau de la mangrove de l'Îlet Macou, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_MACOU = floatArrayOf(-2f, 102f, 48f, 64f)
 
+    /** Le lagon du Grand Cul-de-Sac Marin, à gauche de l'îlet, sur le plan du milieu : x0, x1, y0, y1. */
+    /** Le lagon de la Porte d'Enfer, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val EAU_PORTE_ENFER = floatArrayOf(-2f, 102f, 42f, 56f)
+
+    internal val EAU_CUL_DE_SAC = floatArrayOf(-2f, 60f, 44f, 62f)
+
     /** L'eau de la baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1. */
     internal val EAU_ACTE = floatArrayOf(-2f, 76f, 52f, 64f)
 
@@ -5123,6 +5129,7 @@ object Paysages {
 
         /** La Porte d'Enfer : le lagon entre deux bras de falaise, la passe, la plage et ses touloulous. */
         fun porteEnfer() {
+            if (PAPIER) { porteEnferPapier(); return }
             plan(1)
             eau(30f, 301)
             val falaise = mix(P.pierre, P.milieu, 0.3f)
@@ -5136,6 +5143,84 @@ object Paysages {
             forme("M0 58Q50 54 100 58L100 66L0 66Z", sable())
             raisinier(14f, 56f, 1.3f)
             amandier(86f, 58f, 12f)
+        }
+
+        // ------------------------------------------- la Porte d'Enfer en papier
+
+        /**
+         * La Porte d'Enfer en papier découpé, d'après la photo du propriétaire
+         * (2026-11-08) : le lagon clair fermé par deux bras de terre boisés,
+         * la falaise de calcaire du bras droit, à droite du mot, qui tombe
+         * dans la passe où l'océan bleu sombre écume ; le rivage de roche
+         * rousse au pied du morne, un bateau à cabine bleue au mouillage ;
+         * la plage de sable devant, sa laisse d'algues, les touloulous. L'eau
+         * du lagon scintille sur la carte ouverte.
+         */
+        fun porteEnferPapier() {
+            cumulus(-4f, 22f, 24f, 2001)
+            cumulus(56f, 16f, 18f, 2002)
+            // L'océan, dans la passe entre les deux bras.
+            pieceD("M20 36.8L80 36.8L80 41L20 41Z", papier(0xFF1E4E8A.toInt()), 0.2f)
+            lanieresMer(37.2f, 40.4f, 2003, intArrayOf(papier(0xFF2A5E9A.toInt()), papier(0xFF183E74.toInt())))
+            plan(1)
+            // Le bras de droite : le morne boisé, sa falaise face à la passe.
+            val crete = brisee(64f, 27.6f, 70f, 25.6f, 78f, 24.6f, 88f, 23.4f, 102f, 22.4f)
+            val morne = sousLaCrete(64f, 102f, crete)
+            morne.op(bosses(66f, 103f, { x -> crete(x) + 0.4f }, 1.2f, 2f, Alea(2004)), Path.Op.UNION)
+            piece(morne, papier(0xFF3E7A2E.toInt()))
+            taches(70f, 102f, 36f, 12, 2005, papier(0xFF5E9A3A.toInt()), crete)
+            taches(74f, 102f, 36f, 6, 2006, papier(0xFF2A5A24.toInt()), crete)
+            val calcaire = papier(0xFFA89C88.toInt())
+            pieceD("M63.4 41L63 30.4Q63.6 27.6 66 27.2L70 26.8Q71 32 74 34.4Q76.4 37 80 38.4L80 41Z", calcaire, 0.7f)
+            for ((x0, y0, x1) in arrayOf(Triple(64.6f, 29f, 64.2f), Triple(66.4f, 28f, 66.8f), Triple(68.4f, 28.4f, 68f), Triple(70.6f, 31f, 71f)))
+                barre(x0, y0, x1, 40.6f, 0.45f, papier(0xFF7E7262.toInt()), 0f)
+            pieceD("M63 39.2Q66 38.2 70 39.4L70 41L63 41Z", papier(0xFF4E463E.toInt()), 0f)
+            // Le rivage de roche rousse au pied du morne.
+            pieceD("M72 39.4Q86 37.6 102 38.2L102 42.4Q86 42 72 41.4Z", papier(0xFFB0805A.toInt()), 0.5f)
+            val rr = Alea(2007)
+            repeat(14) { galet(73f + rr() * 29f, 39.6f + rr() * 2.2f, 0.6f + rr() * 0.6f, papier(if (rr() < 0.5f) 0xFF8E6A4E.toInt() else 0xFF9E9282.toInt())) }
+            // Le bras de gauche : bas, boisé, bordé de roche grise.
+            val creteG = brisee(-2f, 29f, 12f, 30.4f, 24f, 33.4f, 34f, 36.6f, 38f, 38.4f)
+            val gauche = sousLaCrete(-2f, 38f, creteG)
+            gauche.op(bosses(-3f, 36f, { x -> creteG(x) + 0.4f }, 1.2f, 2.2f, Alea(2008)), Path.Op.UNION)
+            piece(gauche, papier(0xFF2E6A2C.toInt()))
+            taches(-2f, 34f, 40f, 9, 2009, papier(0xFF4E8A34.toInt()), creteG)
+            pieceD("M31.6 39L32.6 35.6Q33.6 34.4 34.6 35.8L35.4 39.4Z", papier(0xFFB4A890.toInt()), 0.4f)
+            pieceD("M-2 40.6Q14 39.4 28 39.6Q36 39.4 40 40.6L36 42.6Q20 44 6 46.6L-2 47.4Z", papier(0xFF8A847A.toInt()), 0.5f)
+            repeat(12) { galet(-1f + rr() * 36f, 41f + rr() * 3.4f, 0.6f + rr() * 0.7f, papier(if (rr() < 0.5f) 0xFF6E6860.toInt() else 0xFFA29C90.toInt())) }
+            // Le lagon : bleu au fond, turquoise, puis clair sur le sable.
+            pieceD("M-2 47.4L6 46.6Q20 44 36 42.6L40 40.6Q60 41 72 41.4Q86 42 102 42.4L102 58L-2 58Z", papier(0xFF5AAEC8.toInt()), 0.3f)
+            pieceD("M-2 50Q50 48 102 49L102 58L-2 58Z", papier(0xFF7CC6CC.toInt()), 0f)
+            pieceD("M-2 53.6Q50 52.4 102 53.4L102 58L-2 58Z", papier(0xFFA8DCD2.toInt()), 0f)
+            lanieresMer(43f, 56f, 2010, intArrayOf(papier(0xFF6ABACC.toInt()), papier(0xFF8ED0D0.toInt()), papier(0xFF4E9EC0.toInt())))
+            // L'écume au pied de la falaise, dans la passe.
+            for ((ex, ey, el) in arrayOf(Triple(60f, 40.6f, 3.4f), Triple(56f, 40.8f, 2f), Triple(66f, 41f, 2.4f)))
+                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.7f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.3f} $ex ${ey}Z", papier(0xFFF2F4F2.toInt()), 0f)
+            // Le bateau au mouillage : coque blanche, cabine bleue.
+            pieceD("M74 44.2L88 44.2L86.8 46.4Q81 47 75.6 46.4Z", papier(0xFFE8ECEE.toInt()), 0.5f)
+            pieceD("M74 44.2L88 44.2L87.8 44.8L74.2 44.8Z", papier(0xFF4A5868.toInt()), 0f)
+            pieceD("M80 44.2L80.6 41.6L85 41.6L85.4 44.2Z", papier(0xFF3A8ACC.toInt()), 0.4f)
+            pieceD("M79.6 41.8L86 41.8L85.8 41L79.8 41Z", papier(0xFF2A5E8A.toInt()), 0f)
+            pieceD("M86.6 43.4L88.4 43.4L88.4 45.6L86.6 45.6Z", papier(0xFF2E2E34.toInt()), 0.2f)
+            plan(2)
+            // La plage, sa laisse d'algues, le sable piqué.
+            pieceD("M-2 56.6Q50 55.2 102 56L102 68L-2 68Z", papier(0xFFE6D2A8.toInt()), 0.5f)
+            pieceD("M-2 56.6Q50 55.2 102 56L102 56.8Q50 56.2 -2 57.4Z", papier(0xFFF2E4C4.toInt()), 0f)
+            val rs = Alea(2011)
+            var lx = -2f
+            while (lx < 102f) {
+                // Des paquets d'algues de taille inégale, pas un trait.
+                repeat(1 + (rs() * 4f).toInt()) {
+                    val ax = lx + rs() * 2.4f; val ay = 57.4f + rs() * 1.2f; val ar = 0.25f + rs() * 0.45f
+                    piece(Path().apply { addOval(RectF(ax - ar * 1.6f, ay - ar * 0.6f, ax + ar * 1.6f, ay + ar * 0.6f), Path.Direction.CW) },
+                        papier(if (rs() < 0.6f) 0xFF6E6A4A.toInt() else 0xFF8A7A52.toInt()), 0f)
+                }
+                lx += 1f + rs() * 4f
+            }
+            repeat(60) {
+                val x = -2f + rs() * 104f; val y = 59f + rs() * 8f
+                piece(disque(x, y, 0.18f + rs() * 0.2f), papier(if (rs() < 0.5f) 0xFFC8B48C.toInt() else 0xFFF4EAD2.toInt()), 0f)
+            }
         }
 
         /** Petite-Terre : les deux îlets, le lagon, le phare, l'iguane des Petites Antilles, des touloulous. */
@@ -5174,8 +5259,109 @@ object Paysages {
             amandier(90f, 58f, 10f)
         }
 
+        // ------------------------------------------- le Grand Cul-de-Sac Marin en papier
+
+        /** Une frégate posée, de profil vers la droite : le corps noir, la queue en ciseaux, le bec crochu. */
+        private fun fregatePosee(x: Float, y: Float, s: Float, teteBlanche: Boolean) {
+            val noir = papier(0xFF1E1C20.toInt())
+            pieceD("M${x - s * 0.9f} ${y + s * 0.2f}L${x - s * 1.9f} ${y + s * 1.3f}L${x - s * 1.6f} ${y + s * 1.4f}L${x - s * 0.5f} ${y + s * 0.5f}Z", noir, 0.2f)
+            piece(Path().apply { addOval(RectF(x - s, y - s * 0.55f, x + s * 0.6f, y + s * 0.5f), Path.Direction.CW) }, noir, 0.4f)
+            if (teteBlanche) piece(Path().apply { addOval(RectF(x - s * 0.1f, y - s * 0.3f, x + s * 0.6f, y + s * 0.45f), Path.Direction.CW) },
+                papier(0xFFEDEBE4.toInt()), 0f)
+            val tete = if (teteBlanche) papier(0xFFEDEBE4.toInt()) else noir
+            piece(disque(x + s * 0.55f, y - s * 0.5f, s * 0.32f), tete, 0.2f)
+            pieceD("M${x + s * 0.8f} ${y - s * 0.6f}L${x + s * 1.5f} ${y - s * 0.5f}L${x + s * 1.5f} ${y - s * 0.32f}L${x + s * 0.8f} ${y - s * 0.4f}Z",
+                papier(0xFF7A7A80.toInt()), 0f)
+        }
+
+        /**
+         * Le Grand Cul-de-Sac Marin en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : un îlet de palétuviers posé sur l'eau
+         * du lagon, à droite du mot, son dôme de feuillage sombre où les
+         * frégates sont posées en rang, l'enchevêtrement de branches et de
+         * racines-échasses dessous, des aigrettes blanches dedans ; au loin la
+         * ligne basse de la mangrove et un petit îlet à gauche. Les frégates
+         * volent au-dessus et l'eau bouge sur la carte ouverte ; la tortue
+         * verte nage dans le lagon.
+         */
+        fun grandCulDeSacPapier() {
+            // L'horizon : la ligne basse de la mangrove, le petit îlet à gauche.
+            val loin = mix(papier(0xFF3E5A44.toInt()), P.cielBas, 0.45f)
+            pieceD("M70 41.4Q84 40.2 102 40.6L102 42.4L70 42.4Z", loin, 0.3f)
+            val ilot = Path()
+            val ri = Alea(2301)
+            repeat(7) { ilot.op(disque(2f + ri() * 10f, 40.6f + ri() * 1.2f, 0.9f + ri() * 1f), Path.Op.UNION) }
+            ilot.op(chemin("M-2 41.6L16 41.6L16 42.6L-2 42.6Z"), Path.Op.UNION)
+            piece(ilot, loin, 0.3f)
+            plan(1)
+            // Le lagon gris-vert, en lanières, plus sombre vers soi.
+            pieceD("M-2 41.8L102 41.8L102 68L-2 68Z", papier(0xFF5E8E88.toInt()), 0.2f)
+            lanieresMer(42.4f, 64f, 2302, intArrayOf(papier(0xFF6E9E96.toInt()), papier(0xFF4E7E7A.toInt()), papier(0xFF8AB4AC.toInt()), papier(0xFF5A8A84.toInt())))
+            // Le reflet sombre de l'îlet, d'une seule pièce au bord ondulé.
+            val ondes = Alea(2303)
+            val reflet = StringBuilder("M60 46.4L100 46.4L102 46.6")
+            var oy = 46.6f
+            while (oy < 54f) { reflet.append("L${100f - (oy - 46f) * 0.8f + ondes() * 3f} $oy"); oy += 1f }
+            while (oy > 46.6f) { oy -= 1f; reflet.append("L${64f + (oy - 46f) * 1.4f + ondes() * 3f} $oy") }
+            reflet.append("Z")
+            pieceD(reflet.toString(), papier(0xFF2E4A44.toInt()), 0f)
+            // Le dôme de feuillage : un petit lobe bas, un grand à droite.
+            fun crete(x: Float): Float {
+                val a = 33f + ((x - 68f) / 6f).let { it * it } * 4f
+                val b = 21f + ((x - 85f) / 15f).let { it * it } * 13f
+                return min(a, b)
+            }
+            val rc = Alea(2304)
+            // Les branches et les racines-échasses sous le feuillage.
+            val bois = papier(0xFF4E4440.toInt())
+            val boisClair = papier(0xFF8A7C70.toInt())
+            var bx = 63f
+            while (bx < 99f) {
+                val haut = crete(bx) + 4f + rc() * 3f
+                val mx = bx + (rc() - 0.5f) * 8f
+                val my = (haut + 46f) / 2f
+                barre(bx + (rc() - 0.5f) * 4f, 46.4f, mx, my, 0.35f + rc() * 0.25f, if (rc() < 0.3f) boisClair else bois, 0.2f)
+                barre(mx, my, mx + (rc() - 0.5f) * 10f, haut, 0.3f + rc() * 0.2f, if (rc() < 0.3f) boisClair else bois, 0.2f)
+                bx += 1.2f + rc() * 1.4f
+            }
+            val feuillage = Path()
+            var fx = 62f
+            while (fx < 103f) {
+                val c = crete(fx)
+                repeat(3) { feuillage.op(disque(fx + (rc() - 0.5f) * 2f, c + 2f + rc() * 6f, 2f + rc() * 1.8f), Path.Op.UNION) }
+                fx += 1.6f
+            }
+            piece(feuillage, papier(0xFF2A4A2C.toInt()), 0.8f)
+            repeat(30) {
+                val x = 63f + rc() * 38f
+                rosette(x, crete(x) + 1.6f + rc() * 3f, 1.4f, papier(if (rc() < 0.5f) 0xFF4E7A3A.toInt() else 0xFF3E6A34.toInt()), rc)
+            }
+            // Les frégates posées en rang sur le dôme.
+            for (x in floatArrayOf(66f, 71.4f, 77f, 82.4f, 88f, 93f, 98f))
+                fregatePosee(x, crete(x) + 0.6f + rc() * 0.8f, 1.7f + rc() * 0.3f, rc() < 0.35f)
+            // Les aigrettes blanches dans les branches, à gauche de l'îlet.
+            val aigrette = papier(0xFFF2F0EA.toInt())
+            for ((ax, ay) in arrayOf(66f to 40f, 69.4f to 42.4f, 72f to 38.6f, 75f to 41.8f, 80f to 40.4f)) {
+                piece(Path().apply { addOval(RectF(ax - 0.6f, ay - 0.9f, ax + 0.6f, ay + 0.9f), Path.Direction.CW) }, aigrette, 0.3f)
+                piece(disque(ax + 0.2f, ay - 1.2f, 0.35f), aigrette, 0f)
+            }
+            // Les racines-échasses au ras de l'eau.
+            val racines = intArrayOf(papier(0xFF5A4A40.toInt()), papier(0xFF7A6658.toInt()))
+            var rx = 61f
+            while (rx < 100f) {
+                val l = 3f + rc() * 6f
+                racine(rx, 46.6f, rx + l, 46.4f + rc() * 0.4f, 2.4f + rc() * 3f, 0.3f + rc() * 0.2f, racines[(rc() * 2f).toInt().coerceAtMost(1)])
+                rx += 1.2f + rc() * 2f
+            }
+            plan(2)
+            // L'eau du devant, plus sombre, ses rides.
+            pieceD("M-2 62.6Q50 61.8 102 62.8L102 68L-2 68Z", papier(0xFF3E6A66.toInt()), 0.3f)
+            lanieresMer(63.2f, 67f, 2305, intArrayOf(papier(0xFF4E7E78.toInt()), papier(0xFF6A9A92.toInt())))
+        }
+
         /** Le Grand Cul-de-Sac Marin : le lagon, la mangrove, le banc de sable de l'îlet Caret, une tortue verte. */
         fun grandCulDeSac() {
+            if (PAPIER) { grandCulDeSacPapier(); return }
             forme("M0 30Q10 22 22 26Q34 16 48 24Q60 20 72 28Q86 24 100 30L100 40L0 40Z", P.loin)
             plan(1)
             forme("M0 38.6Q50 35.6 100 38.6L100 42L0 42Z", P.milieu)

@@ -146,6 +146,8 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
+                enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
