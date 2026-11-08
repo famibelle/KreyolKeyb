@@ -6336,8 +6336,107 @@ object Paysages {
                 rond(cx, cy, 0.45f, cerise)
         }
 
+        // ------------------------------------------- Matouba en papier
+
+        /** Un pied de bananier : le faux tronc, et ses grandes feuilles qui montent puis retombent. */
+        private fun pied(x: Float, y: Float, h: Float, graine: Int) {
+            val r = Alea(graine)
+            barre(x, y, x + (r() - 0.5f) * 1f, y - h * 0.55f, 1.1f, papier(0xFF8AA046.toInt()), 0.4f)
+            val tx = x; val ty = y - h * 0.55f
+            for (a in floatArrayOf(-150f, -120f, -95f, -70f, -40f)) {
+                feuilleBananier(tx, ty, h * (0.5f + r() * 0.25f), a + (r() - 0.5f) * 14f,
+                    papier(if (r() < 0.5f) 0xFF7AB848.toInt() else 0xFF5EA03E.toInt()))
+            }
+        }
+
+        /**
+         * Les bains de Matouba en papier découpé, d'après la photo du
+         * propriétaire (2026-11-08) : le flanc du morne couvert de forêt qui
+         * monte à pic vers la droite, en bandes de lisières ; le carbet de bois
+         * ouvert à gauche, son toit gris et sa rambarde en croix, sous un grand
+         * arbre dont le tronc porte le pic de Guadeloupe ; le petit bassin de
+         * pierre dans l'herbe à droite du mot, la clôture de piquets, les
+         * bananiers et les fougères à droite ; l'herbe et les marches de bois
+         * devant. Balisiers pour le colibri.
+         */
+        fun matoubaPapier() {
+            cumulus(-6f, 18f, 24f, 2701)
+            cumulus(22f, 8f, 16f, 2702)
+            // Le flanc du morne, en bandes de forêt.
+            val flanc = brisee(20f, 44f, 34f, 30f, 46f, 18f, 58f, 10f, 70f, 4f, 82f, -1f, 102f, -4f)
+            val verts = intArrayOf(papier(0xFF3E7A34.toInt()), papier(0xFF5A9440.toInt()), papier(0xFF2E6A2E.toInt()),
+                papier(0xFF6EA44A.toInt()), papier(0xFF4A8638.toInt()))
+            for (k in 0 until 5) {
+                val c = { x: Float -> flanc(x - k * 5f) + k * 4f }
+                val bande = sousLaCrete(20f + k * 5f, 104f, c)
+                bande.op(bosses(20f + k * 5f, 104f, { x -> c(x) + 0.4f }, 1.4f, 2.4f, Alea(2703 + k)), Path.Op.UNION)
+                piece(bande, if (k == 0) mix(verts[k], P.cielBas, 0.2f) else verts[k], 0.6f)
+            }
+            plan(1)
+            // Le grand arbre de gauche : son tronc pour le pic, son houppier en haut.
+            val ecorce = papier(0xFF5A4A3A.toInt())
+            barre(14.4f, 46f, 13.8f, 6f, 1.4f, ecorce, 0.5f)
+            barre(14f, 18f, 24f, 10f, 0.5f, ecorce, 0.3f)
+            val houppier = Path()
+            val rh = Alea(2704)
+            repeat(12) { houppier.op(disque(-2f + rh() * 30f, -1f + rh() * 12f, 3f + rh() * 2.4f), Path.Op.UNION) }
+            piece(houppier, papier(0xFF3E7A30.toInt()))
+            taches(-2f, 28f, 12f, 8, 2705, papier(0xFF6EA846.toInt())) { 0f }
+            // L'herbe de la clairière.
+            pieceD("M-2 46Q30 44 60 45.4Q80 46 102 44L102 68L-2 68Z", papier(0xFF7EAE44.toInt()), 0.4f)
+            pieceD("M-2 52Q40 50 102 52.6L102 68L-2 68Z", papier(0xFF8CBA4C.toInt()), 0f)
+            // Le carbet de bois, ouvert, à gauche.
+            val bois = papier(0xFF8A7458.toInt()); val sombre = papier(0xFF4E4234.toInt())
+            pieceD("M4 39.4L24 38.8L24 46L4 46.6Z", sombre, 0.2f)
+            pieceD("M4 45.8L24.6 45.2L24.6 46.6L4 47.2Z", bois, 0.4f)
+            for (px in floatArrayOf(5f, 14.4f, 23.6f)) barre(px, 46.6f - (px - 4f) * 0.03f, px, 38.6f, 0.6f, bois, 0.4f)
+            for ((x0, x1) in arrayOf(5f to 14.4f, 14.4f to 23.6f)) {
+                barre(x0, 41f, x1, 44.6f, 0.3f, bois, 0f)
+                barre(x0, 44.6f, x1, 41f, 0.3f, bois, 0f)
+                barre(x0, 41f, x1, 41f, 0.35f, bois, 0f)
+            }
+            val tole = papier(0xFF8E9290.toInt())
+            pieceD("M2.2 39.2L25 38.4L21.6 33L6.6 33.4Z", tole, 0.8f)
+            pieceD("M21.6 33L25 38.4L27.4 38.2Z", papier(0xFF6E7270.toInt()), 0.4f)
+            for (k in 1 until 8) {
+                val u = k / 8f
+                barre(2.2f + 22.8f * u, 39.2f - 0.8f * u, 6.6f + 15f * u, 33.4f - 0.4f * u, 0.1f, papier(0xFF6E7270.toInt()), 0f)
+            }
+            pieceD("M26.4 39.6L28.6 39.6L28.6 42.6L26.4 42.6Z", papier(0xFFE8E6E0.toInt()), 0.3f)
+            barre(27.5f, 42.6f, 27.5f, 46f, 0.2f, sombre, 0f)
+            // La clôture de piquets, au fond de la clairière.
+            val piquet = papier(0xFF7A6A56.toInt())
+            var fx = 38f
+            while (fx < 84f) { barre(fx, 45.6f, fx, 42f, 0.35f, piquet, 0.2f); fx += 4.6f }
+            barre(38f, 43f, 84f, 42.6f, 0.08f, papier(0xFF5A5450.toInt()), 0f)
+            // Le petit bassin de pierre, creusé dans l'herbe, à droite du mot.
+            val pierre = papier(0xFF8E8A82.toInt())
+            pieceD("M62 47.4L76 47L78 50L60 50.4Z", papier(0xFF2A2E2A.toInt()), 0.2f)
+            pieceD("M60.4 46.4L64 45.6L64 47.8L60.4 48.6Z", pierre, 0.5f)
+            pieceD("M74 45.4L78.6 46.8L78.6 48.6L74 47.6Z", pierre, 0.5f)
+            pieceD("M64 45.6L74 45.4L74 46.4L64 46.6Z", papier(0xFF6E6A64.toInt()), 0.3f)
+            barre(69f, 47f, 69f, 43f, 0.3f, papier(0xFF9E9A94.toInt()), 0.2f)
+            barre(69f, 43.2f, 71.6f, 44.2f, 0.25f, papier(0xFF9E9A94.toInt()), 0.2f)
+            // Les bananiers à droite.
+            pied(90f, 50f, 18f, 2706)
+            pied(98f, 52f, 16f, 2707)
+            pied(84f, 50f, 12f, 2708)
+            plan(2)
+            // L'herbe de devant, les marches de bois, les fougères de droite.
+            pieceD("M-2 58Q30 56 60 58.6Q80 60 102 57L102 68L-2 68Z", papier(0xFF96C054.toInt()), 0.4f)
+            val planche = papier(0xFF9A8A70.toInt())
+            pieceD("M4 56.6L16 54.6L16.6 56L4.6 58Z", planche, 0.5f)
+            pieceD("M0 62.6L22 60L22.6 61.6L0.6 64.2Z", planche, 0.5f)
+            val fougeres = intArrayOf(papier(0xFF5EA04A.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF7AB654.toInt()))
+            for ((fx2, fy, fl, fa) in arrayOf(floatArrayOf(102f, 56f, 13f, -160f), floatArrayOf(100f, 62f, 12f, -150f), floatArrayOf(96f, 67f, 11f, -140f)))
+                fougere(fx2, fy, fl, fa, fougeres[(fy.toInt() and 0xFF) % 3])
+            balisier(9f, 63f, 13f, feuille())
+            balisier(86f, 62f, 13f, feuille())
+        }
+
         /** Matouba : la stèle de Delgrès et de ses compagnons, dans sa clairière, au cœur de la forêt. */
         fun matouba() {
+            if (PAPIER) { matoubaPapier(); return }
             val fut = mix(P.pierre, P.sol, 0.65f)
             rect(0f, 0f, 100f, 66f, mix(P.milieu, P.loin, 0.4f))
             bosquet(-2f, 102f, 10f, 4f, 371, mix(P.milieu, P.loin, 0.3f))
