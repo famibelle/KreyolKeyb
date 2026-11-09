@@ -1013,7 +1013,7 @@ object Paysages {
      * sable mouillé et la frange d'écume, [Ambiance] y fait monter et
      * redescendre les vagues.
      */
-    internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(1.2f)
+    internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 34f) / 32f).coerceIn(0f, 1f).pow(1.2f)
 
     /** La mer de Grande Anse visible sur le plan du milieu, au-dessus des raisiniers du bas : x0, x1, y0, y1, à droite du rivage. */
     internal val EAU_GRANDE_ANSE = floatArrayOf(57f, 102f, 34.6f, 49f)
@@ -2254,8 +2254,10 @@ object Paysages {
             piece(Path().apply { addOval(RectF(65.5f, 31.8f, 69f, 34.4f), Path.Direction.CW) }, papier(0xFF3F4A44.toInt()), 0.6f)
             plan(1)
             // La mer, du bleu profond au large au turquoise clair près du bord.
+            // Elle ne commence qu'à la pointe de la plage : à gauche, le vert
+            // du morne descend jusqu'à l'horizon.
             val mer = Path()
-            mer.moveTo(57f, 34f); mer.lineTo(LARGEUR + 2f, 33.8f); mer.lineTo(LARGEUR + 2f, BAS + 2f); mer.lineTo(57f, BAS + 2f); mer.close()
+            mer.moveTo(61f, 34f); mer.lineTo(LARGEUR + 2f, 33.8f); mer.lineTo(LARGEUR + 2f, BAS + 2f); mer.lineTo(61f, BAS + 2f); mer.close()
             piece(mer, papier(0xFF2F8FD0.toInt()), 0.3f)
             val bleus = arrayOf(
                 intArrayOf(papier(0xFF2F8FD0.toInt()), papier(0xFF3FA3DA.toInt())),
@@ -2268,7 +2270,7 @@ object Paysages {
                 val p = (y - 34f) / 30f
                 val e = 0.35f + 0.8f * p
                 val teintes = bleus[min((p * 3f).toInt(), 2)]
-                var xx = 58f + r() * 3f
+                var xx = 61f + r() * 3f
                 while (xx < LARGEUR + 2f) {
                     val l = (4f + r() * 9f) * (0.6f + p)
                     val t = Path()
@@ -2286,16 +2288,18 @@ object Paysages {
             // pied du morne, et sur le plan de devant sa pointe lointaine se
             // décollait de la mer quand la carte penche.
             fun bord(y: Float) = rivageGrandeAnse(y)
-            fun dos(y: Float) = 58f - 46f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(0.9f)
+            // Le dos de la plage part du même point que le bord de l'eau : elle
+            // finit en pointe sur l'horizon, comme une plage qui file au loin.
+            fun dos(y: Float) = 61f - 49f * ((y - 34f) / 32f).coerceIn(0f, 1f).pow(0.9f)
             val mouille = Path()
-            mouille.moveTo(dos(35f), 35f)
-            y = 35f
+            mouille.moveTo(dos(34f), 34f)
+            y = 34f
             while (y <= BAS + 2f) { mouille.lineTo(bord(y) + 1.2f + 1.5f * (y - 34f) / 32f, y); y += 1f }
             mouille.lineTo(dos(BAS + 2f), BAS + 2f); mouille.close()
             piece(mouille, papier(0xFFD9B077.toInt()), 0.3f)
             val sable = Path()
-            sable.moveTo(dos(35f), 35f)
-            y = 35f
+            sable.moveTo(dos(34f), 34f)
+            y = 34f
             while (y <= BAS + 2f) { sable.lineTo(bord(y) - 0.4f * (y - 34f) / 32f, y); y += 1f }
             sable.lineTo(dos(BAS + 2f), BAS + 2f); sable.close()
             piece(sable, papier(0xFFEBCB92.toInt()), 0.5f)
