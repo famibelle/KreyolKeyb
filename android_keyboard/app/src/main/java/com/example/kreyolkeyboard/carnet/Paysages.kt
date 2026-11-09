@@ -118,7 +118,9 @@ enum class Espece {
     TOULOULOU, TORTUE, PELICAN_PIEU, PELICAN, PELICAN_QUAI, LIBELLULE, ANOLI, PIC, AGOUTI, RATON,
     SIFFLEUR, PARULINE, BALEINE, ECREVISSE, IGUANE,
     /** Pas une bête : une barque au mouillage, qui se balance comme elles bougent (voir [Paysages.BETES]). */
-    BARQUE
+    BARQUE,
+    /** Pas une bête : la guirlande de fanions de la place de la Victoire, qui flotte au vent. */
+    FANIONS
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -896,11 +898,12 @@ object Paysages {
      * la carte ouverte les fait bouger au même endroit ([Atelier]). Une ou
      * deux par lieu, pas plus (propriétaire, 2026-10-19).
      *
-     * Les barques des Saintes y sont aussi, sans être des bêtes : ce qui
+     * Les barques des Saintes et les fanions de la Victoire y sont aussi, sans être des bêtes : ce qui
      * bouge sur la carte ouverte doit être tu dans ses calques et peint au
      * même endroit sur la vignette, et cette table fait exactement cela.
      */
     internal val BETES: Map<Lieu, List<Bete>> = mapOf(
+        Lieu.PLACE_VICTOIRE to listOf(Bete(Espece.FANIONS, 50f, 3f, plan = 0)),
         Lieu.LES_SAINTES to listOf(Bete(Espece.BARQUE, 30f, 40f, plan = 1), Bete(Espece.BARQUE, 47f, 42.5f, plan = 1),
             Bete(Espece.BARQUE, 64f, 39.5f, plan = 1)),
         Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
@@ -4251,96 +4254,256 @@ object Paysages {
 
         /**
          * La statue de Vélo, place de la Victoire, en papier découpé, d'après
-         * la photo du propriétaire (2026-11-08) : Marcel Lollia, le
-         * tambouyé, en bronze, assis sur son tabouret, les deux mains sur la
-         * peau de son ka debout devant lui, sur son socle de pierre ; à
-         * droite du mot. Derrière, la façade blanche aux auvents rouges et
-         * le poteau rouge, des fanions tendus en haut, les pavés et le
-         * passage piéton devant. Ni voiture ni enseigne lisible.
+         * les photos du propriétaire (2026-11-08 et 2026-11-09) : Marcel
+         * Lollia, le tambouyé, en bronze, à califourchon sur son ka couché,
+         * les deux mains sur la peau, sur son socle de pierre ; à gauche du
+         * mot, la tête tournée vers la droite.
+         *
+         * Derrière, une rue de Pointe-à-Pitre vue de biais, comme sur la photo
+         * du propriétaire (2026-11-09) : les façades fuient vers la gauche,
+         * on voit le dessous des avant-toits et la tôle qui monte, et chaque
+         * maison a son carton, la plus proche à droite. Les deux plus loin,
+         * la case crème et la case de bois patiné, partagent le lointain : la
+         * carte n'a que trois cartons. Le poteau rouge sur le trottoir, des
+         * fanions tendus en haut. Ni voiture ni enseigne lisible.
          */
         fun placeVictoirePapier() {
-            // La façade : l'étage et ses fenêtres à volets, les vitrines, les auvents rouges.
-            pieceD("M-4 -4L104 -4L104 46L-4 46Z", papier(0xFFF0EDE6.toInt()), 0.3f)
-            pieceD("M-4 -4L104 -4L104 1.6L-4 1.6Z", papier(0xFFA84038.toInt()), 0.3f)
-            val volet = papier(0xFF6E8C9A.toInt())
-            for (fx in floatArrayOf(6f, 22f, 40f, 58f)) {
-                pieceD("M$fx 4L${fx + 5f} 4L${fx + 5f} 12L$fx 12Z", papier(0xFF3C4450.toInt()), 0.3f)
-                pieceD("M${fx - 2f} 4L$fx 4L$fx 12L${fx - 2f} 12Z", volet, 0.2f)
-                pieceD("M${fx + 5f} 4L${fx + 7f} 4L${fx + 7f} 12L${fx + 5f} 12Z", volet, 0.2f)
+            // La rue en perspective : u court le long des façades, y est la
+            // hauteur telle qu'on la lit au bord droit, d l'avancée vers la
+            // rue. Plus u est petit, plus c'est loin, et tout se resserre
+            // vers l'horizon, à hauteur d'œil (y 38).
+            val oeil = 38f
+            fun s(u: Float) = (u + 150f) / 254f
+            fun ex(u: Float, d: Float) = u - d * 0.6f * s(u)
+            fun ey(u: Float, y: Float, d: Float) = oeil + (y - oeil) * s(u) * (1f + d * 0.02f)
+            // Une pièce de la rue, ses sommets donnés en triplets (u, y, d).
+            fun rue(col: Int, ombre: Float, vararg p: Float) {
+                val t = Path()
+                var i = 0
+                while (i < p.size) {
+                    val x = ex(p[i], p[i + 2])
+                    val y = ey(p[i], p[i + 1], p[i + 2])
+                    if (i == 0) t.moveTo(x, y) else t.lineTo(x, y)
+                    i += 3
+                }
+                t.close()
+                piece(t, col, ombre)
             }
-            pieceD("M76 6.6L80 6.6L80 9.2L76 9.2Z", papier(0xFF2A5AA8.toInt()), 0.2f)
-            val rouge = papier(0xFFC23A30.toInt())
-            for ((ax, al) in arrayOf(-4f to 30f, 34f to 30f, 68f to 36f)) {
-                pieceD("M${ax + 1f} 23.6L${ax + al - 1f} 23.6L${ax + al - 0.6f} 26.4L$ax 26.4Z", papier(0xFF3A4048.toInt()), 0.2f)
-                pieceD("M$ax 15.6L${ax + al} 15.6L${ax + al + 1.4f} 20.6L${ax - 1.4f} 20.6Z", rouge, 0.6f)
-                pieceD("M${ax - 1.4f} 20.6L${ax + al + 1.4f} 20.6L${ax + al + 1.4f} 21.4L${ax - 1.4f} 21.4Z", papier(0xFF9A2C26.toInt()), 0f)
-                pieceD("M${ax + 1f} 23.4L${ax + al - 1f} 23.4L${ax + al - 1f} 44L${ax + 1f} 44Z", papier(0xFF4A5662.toInt()), 0.3f)
-                var mx = ax + 1f + al / 3f
-                while (mx < ax + al - 2f) { barre(mx, 23.4f, mx, 44f, 0.5f, papier(0xFFE8E4DC.toInt()), 0f); mx += al / 3f }
+            fun mur(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, ombre: Float = 0f, d: Float = 0f) =
+                rue(col, ombre, u0, y0, d, u1, y0, d, u1, y1, d, u0, y1, d)
+            // Des planches couchées, qui filent vers l'horizon.
+            fun lattes(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, pas: Float = 1.3f) {
+                var y = y0 + pas
+                while (y < y1 - 0.2f) { mur(u0, y, u1, y + 0.16f, col); y += pas }
             }
-            if (P.allume) for ((ax, al) in arrayOf(-4f to 30f, 34f to 30f, 68f to 36f))
-                pieceD("M${ax + 2f} 25L${ax + al - 2f} 25L${ax + al - 2f} 42L${ax + 2f} 42Z", (0x60 shl 24) or (P.fenetre and 0xFFFFFF), 0f)
-            // Les fanions tendus en haut, d'un bord à l'autre.
-            val fanions = intArrayOf(papier(0xFFD8402E.toInt()), papier(0xFF3A9A4A.toInt()), papier(0xFFF0C030.toInt()), papier(0xFF2A6AB8.toInt()))
-            val corde = { x: Float -> 3f + ((x - 50f) / 52f).let { 1f - it * it } * 4f }
-            var fx = -2f
-            var k = 0
-            while (fx < 102f) {
-                val y = corde(fx)
-                pieceD("M$fx ${y}L${fx + 2.4f} ${corde(fx + 2.4f)}L${fx + 1.3f} ${y + 2.8f}Z", fanions[k % 4], 0.3f)
-                fx += 3.4f; k++
+            // Une persienne : le cadre, puis les lames.
+            fun persienne(u0: Float, y0: Float, u1: Float, y1: Float, cadre: Int, lame: Int, fond: Int) {
+                mur(u0 - 0.5f, y0 - 0.5f, u1 + 0.5f, y1 + 0.3f, cadre, 0.3f)
+                mur(u0, y0, u1, y1, fond)
+                var y = y0 + 0.6f
+                while (y < y1 - 0.3f) { mur(u0 + 0.2f, y, u1 - 0.2f, y + 0.35f, lame); y += 0.9f }
+                mur((u0 + u1) / 2f - 0.12f, y0, (u0 + u1) / 2f + 0.12f, y1, cadre)
             }
+            // Une console de fer sous un balcon, dans le plan qui avance vers la rue.
+            fun console(u: Float, y: Float, avance: Float, col: Int) {
+                val t = Path().apply {
+                    moveTo(ex(u, avance), ey(u, y, avance))
+                    lineTo(ex(u, 0f), ey(u, y, 0f))
+                    lineTo(ex(u, 0f), ey(u, y + 3.4f, 0f))
+                    quadTo(ex(u, avance * 0.3f), ey(u, y + 1.2f, avance * 0.3f), ex(u, avance), ey(u, y, avance))
+                    close()
+                }
+                piece(t, col, 0.2f)
+            }
+            // Un balcon : les consoles, le dessous de la dalle, sa tranche, le
+            // garde-corps devant et son retour sur le côté.
+            fun balcon(u0: Float, u1: Float, y: Float, fer: Int, dalle: Int, avance: Float = 3f) {
+                for (cu in floatArrayOf(u0 + 1.5f, (u0 + u1) / 2f, u1 - 1.5f)) console(cu, y + 1.1f, avance * 0.9f, fer)
+                rue(mix(dalle, 0xFF000000.toInt(), 0.25f), 0.4f,
+                    u0 - 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, avance, u0 - 0.6f, y + 1.1f, avance)
+                mur(u0 - 0.6f, y, u1 + 0.6f, y + 1.1f, dalle, 0.5f, avance)
+                rue(fer, 0.2f, u0 - 0.6f, y - 5.4f, 0f, u0 - 0.6f, y - 5.4f, avance, u0 - 0.6f, y - 4.9f, avance, u0 - 0.6f, y - 4.9f, 0f)
+                for (d in floatArrayOf(1f, 2f)) mur(u0 - 0.7f, y - 5f, u0 - 0.5f, y, fer, 0f, d)
+                mur(u0 - 0.6f, y - 5.4f, u1 + 0.6f, y - 4.9f, fer, 0.3f, avance)
+                var u = u0
+                while (u <= u1 + 0.01f) { mur(u - 0.1f, y - 5f, u + 0.1f, y, fer, 0f, avance); u += 1.1f }
+                mur(u0 - 0.6f, y - 0.6f, u1 + 0.6f, y - 0.3f, fer, 0f, avance)
+            }
+            // Un toit de tôle : le dessous de l'avant-toit et ses chevrons, la
+            // planche de rive, et la tôle qui monte vers le faîte.
+            fun toit(u0: Float, u1: Float, y: Float, tole: Int, sous: Int, avance: Float = 5f) {
+                rue(tole, 0.7f, u0 - 1f, y - 0.6f, avance, u1 + 1f, y - 0.6f, avance, u1 + 1f, y - 12f, -4f, u0 - 1f, y - 12f, -4f)
+                var u = u0 - 0.4f
+                val onde = mix(tole, 0xFF000000.toInt(), 0.22f)
+                while (u < u1 + 0.6f) {
+                    rue(onde, 0f, u, y - 0.6f, avance, u + 0.3f, y - 0.6f, avance, u + 0.3f, y - 12f, -4f, u, y - 12f, -4f)
+                    u += 1.2f
+                }
+                rue(sous, 0.5f, u0 - 1f, y, 0f, u1 + 1f, y, 0f, u1 + 1f, y - 0.6f, avance, u0 - 1f, y - 0.6f, avance)
+                u = u0
+                val chevron = mix(sous, 0xFF000000.toInt(), 0.3f)
+                while (u < u1) {
+                    rue(chevron, 0f, u, y, 0f, u + 0.3f, y, 0f, u + 0.3f, y - 0.6f, avance, u, y - 0.6f, avance)
+                    u += 2.4f
+                }
+                mur(u0 - 1f, y - 1.6f, u1 + 1f, y - 0.4f, mix(tole, 0xFFFFFFFF.toInt(), 0.25f), 0.3f, avance)
+            }
+            // Le trottoir devant une maison et sa bordure.
+            fun trottoir(u0: Float, u1: Float, col: Int) {
+                rue(col, 0.3f, u0, 52f, 0f, u1, 52f, 0f, u1, 52f, 6f, u0, 52f, 6f)
+                mur(u0, 52f, u1, 53f, mix(col, 0xFF000000.toInt(), 0.2f), 0.3f, 6f)
+            }
+            val lueur = (0x60 shl 24) or (P.fenetre and 0xFFFFFF)
+
+            // 1. Au plus loin, la case crème au balcon blanc et sa boutique jaune,
+            // puis la case de bois patiné au balcon de fer noir.
+            trottoir(-12f, 18f, papier(0xFFC8C4BA.toInt()))
+            mur(-12f, 12f, 18f, 52f, papier(0xFFEDE3C8.toInt()), 0.3f)
+            rue(papier(0xFFF2EAD4.toInt()), 0.5f, -13f, 12f, 0f, 19f, 12f, 0f, 19f, 11.2f, 4f, -13f, 11.2f, 4f)
+            mur(-13f, 10f, 19f, 11.2f, papier(0xFFD8CCAE.toInt()), 0.4f, 4f)
+            mur(3f, 15f, 15f, 25f, papier(0xFFF4F1EA.toInt()), 0.2f)
+            for (k in 0 until 9) mur(3f, 15.6f + k * 1f, 15f, 15.8f + k * 1f, papier(0xFFD6D0C4.toInt()))
+            balcon(-11f, 16f, 27f, papier(0xFFF2F0EC.toInt()), papier(0xFFE0D8C4.toInt()))
+            mur(2f, 31f, 15f, 49f, papier(0xFFE8C840.toInt()), 0.3f)
+            mur(2f, 31f, 15f, 32.6f, papier(0xFF4E8A3E.toInt()))
+            val fer = papier(0xFF2A2624.toInt())
+            trottoir(18f, 37f, papier(0xFFB8B4AA.toInt()))
+            mur(18f, 10f, 37f, 28f, papier(0xFF8A6A4E.toInt()), 0.4f)
+            lattes(18f, 10f, 37f, 28f, papier(0xFF6E523C.toInt()))
+            mur(18f, 28f, 37f, 52f, papier(0xFF9A948A.toInt()), 0.4f)
+            lattes(18f, 28f, 37f, 52f, papier(0xFF7E786E.toInt()))
+            toit(18f, 37f, 10f, papier(0xFF7E5A44.toInt()), papier(0xFF5E4636.toInt()), 4f)
+            for (fu in floatArrayOf(20.5f, 28.5f)) {
+                mur(fu, 13f, fu + 5.5f, 26.4f, papier(0xFF6A3E30.toInt()), 0.3f)
+                mur(fu + 2.65f, 13f, fu + 2.85f, 26.4f, papier(0xFF4A2A20.toInt()))
+            }
+            if (P.allume) for (fu in floatArrayOf(20.5f, 28.5f)) mur(fu + 0.4f, 13.6f, fu + 5.1f, 26f, lueur)
+            balcon(19f, 36f, 27f, fer, papier(0xFF6E6860.toInt()))
+            for (fu in floatArrayOf(20f, 28.5f)) {
+                mur(fu, 31f, fu + 6.5f, 51f, papier(0xFF86807A.toInt()), 0.3f)
+                mur(fu + 3.15f, 31f, fu + 3.35f, 51f, papier(0xFF5E5A54.toInt()))
+            }
+            mur(36.6f, 10f, 37.4f, 52f, papier(0xFF8E8A84.toInt()), 0.2f, 0.6f)
+
+            // 2. Au milieu, la case jaune aux encadrements rouges, sa lucarne,
+            // son balcon fleuri, le damier de son soubassement.
             plan(1)
-            // Le poteau rouge et les pavés.
-            barre(31f, 14f, 31f, 50f, 1.4f, rouge, 0.6f)
-            pieceD("M-4 44.6L104 44.6L104 68L-4 68Z", papier(0xFF9C9890.toInt()), 0.6f)
-            pieceD("M-4 44.6L104 44.6L104 46L-4 46Z", papier(0xFFC8C4BA.toInt()), 0.3f)
-            val rp = Alea(2301)
-            repeat(40) {
-                val x = -2f + rp() * 104f
-                val y = 47f + rp() * 18f
-                val l = 1.4f + (y - 46f) * 0.08f
-                pieceD("M$x ${y}L${x + l} ${y}L${x + l} ${y + l * 0.5f}L$x ${y + l * 0.5f}Z", papier(0xFFB2AEA6.toInt()), 0f)
+            val rougeCase = papier(0xFF9A2E2A.toInt())
+            trottoir(37f, 62f, papier(0xFFC2BEB4.toInt()))
+            val rt = Alea(2302)
+            repeat(14) {
+                val u = 38f + rt() * 22f
+                val d = 0.6f + rt() * 4.6f
+                val tesselle = papier(intArrayOf(0xFF7A9AB8.toInt(), 0xFFD8A040.toInt(), 0xFFB85A48.toInt(), 0xFFE8E4DA.toInt())[(rt() * 4f).toInt().coerceAtMost(3)])
+                rue(tesselle, 0f, u, 52f, d, u + 1.2f, 52f, d, u + 1.2f, 52f, d + 0.8f, u, 52f, d + 0.8f)
             }
-            for (k2 in 0 until 4) pieceD("M${-4f + k2 * 7f} 66L${1.4f + k2 * 7f} 66L${4.4f + k2 * 7f} 58L${-1f + k2 * 7f} 58Z", papier(0xFFF0EEE8.toInt()), 0f)
+            mur(37f, 7f, 62f, 52f, papier(0xFFF0C84A.toInt()), 0.5f)
+            toit(37f, 62f, 7f, papier(0xFF9C9890.toInt()), papier(0xFF7A3A2E.toInt()))
+            // La lucarne posée sur la tôle : sa joue blanche, sa fenêtre, son pignon.
+            mur(46f, -1f, 53f, 6f, papier(0xFFF2EEE4.toInt()), 0.4f, -2f)
+            mur(47.6f, 0.4f, 51.4f, 5f, rougeCase, 0f, -2f)
+            rue(papier(0xFF8A8680.toInt()), 0.3f, 45.4f, -1f, -2f, 49.5f, -4.6f, -2f, 53.6f, -1f, -2f)
+            for (fu in floatArrayOf(40.5f, 52f)) persienne(fu, 11f, fu + 6f, 25f, rougeCase, papier(0xFF7A2420.toInt()), papier(0xFFB8403A.toInt()))
+            if (P.allume) for (fu in floatArrayOf(40.5f, 52f)) mur(fu, 11f, fu + 6f, 25f, lueur)
+            for (pu in floatArrayOf(42f, 45f, 53.5f, 56.5f)) mur(pu, 14f, pu + 1.2f, 15.2f, papier(0xFFD8402E.toInt()), 0.2f)
+            balcon(38.5f, 60.5f, 26f, papier(0xFF5A2A22.toInt()), rougeCase)
+            mur(43f, 30f, 57f, 51f, rougeCase, 0.4f)
+            mur(43.8f, 30.8f, 49.8f, 51f, papier(0xFFE2B040.toInt()))
+            mur(50.2f, 30.8f, 56.2f, 51f, papier(0xFFE2B040.toInt()))
+            for (zu in floatArrayOf(37.6f, 57.6f)) {
+                mur(zu, 46f, zu + 4.6f, 51.4f, papier(0xFF6A3A2E.toInt()), 0.2f)
+                for (k in 0 until 3) rue(papier(0xFFE8E2D4.toInt()), 0f,
+                    zu + k * 1.5f, 51f, 0f, zu + k * 1.5f + 0.75f, 47f, 0f, zu + k * 1.5f + 1.5f, 51f, 0f)
+            }
+            // Le poteau rouge, sur la bordure du trottoir.
+            barre(ex(36f, 6f), ey(36f, 12f, 6f), ex(36f, 6f), ey(36f, 53f, 6f), 1.2f, papier(0xFFC23A30.toInt()), 0.6f)
+
+            // 3. Devant, la grande case de planches blanches aux boiseries
+            // vertes, et la chaussée.
             plan(2)
-            // Le socle, le tabouret, le ka, Vélo.
-            pieceD("M70 60L98 60L98 54L70 54Z", papier(0xFF6E6A64.toInt()), 0.8f)
-            pieceD("M70 54L98 54L97 52.6L71 52.6Z", papier(0xFF8E8A84.toInt()), 0.3f)
+            pieceD("M${ex(-20f, 6f)} ${ey(-20f, 53f, 6f)}L${ex(120f, 6f)} ${ey(120f, 53f, 6f)}L110 70L-10 70Z",
+                papier(0xFF6E6C68.toInt()), 0.6f)
+            for (k2 in 0 until 4) pieceD("M${-4f + k2 * 7f} 66L${1.4f + k2 * 7f} 66L${4.4f + k2 * 7f} 58L${-1f + k2 * 7f} 58Z", papier(0xFFF0EEE8.toInt()), 0f)
+            val vert = papier(0xFF3E7A5A.toInt())
+            val vitre = papier(0xFF2E3A40.toInt())
+            trottoir(62f, 112f, papier(0xFFC8C4BA.toInt()))
+            mur(62f, 7f, 112f, 52f, papier(0xFFE6E2D8.toInt()), 0.5f)
+            lattes(62f, 7f, 112f, 52f, papier(0xFFCAC4B8.toInt()), 1.5f)
+            toit(62f, 112f, 7f, papier(0xFF8C7A66.toInt()), papier(0xFF6E5E4E.toInt()), 6f)
+            mur(66.4f, 10.4f, 76.6f, 24.4f, vert, 0.3f)
+            mur(67f, 11f, 71.4f, 15f, vitre)
+            mur(71.6f, 11f, 76f, 15f, vitre)
+            persienne(67f, 15.6f, 76f, 24f, vert, papier(0xFF2E5E44.toInt()), papier(0xFF5E9A76.toInt()))
+            mur(85.4f, 9.4f, 97.6f, 24.4f, vert, 0.3f)
+            mur(86f, 10f, 97f, 24.4f, papier(0xFFEEEAE2.toInt()))
+            mur(91.4f, 10f, 91.6f, 24.4f, papier(0xFFC2BCB0.toInt()))
+            if (P.allume) { mur(67f, 11f, 76f, 15f, lueur); mur(86f, 10f, 97f, 24.4f, lueur) }
+            mur(65.4f, 29.4f, 72.6f, 51f, vert, 0.3f)
+            mur(66f, 30f, 72f, 51f, papier(0xFFEEEAE2.toInt()))
+            persienne(77.6f, 31f, 81.4f, 46f, vert, papier(0xFF2E5E44.toInt()), papier(0xFF5E9A76.toInt()))
+            mur(87.4f, 28.4f, 101.6f, 51f, vert, 0.3f)
+            mur(88f, 29f, 101f, 51f, papier(0xFFEEEAE2.toInt()))
+            mur(94.4f, 29f, 94.6f, 51f, papier(0xFFC2BCB0.toInt()))
+            for (pu in floatArrayOf(88f, 92f)) {
+                mur(pu, 22.6f, pu + 1.6f, 24.6f, papier(0xFF9A5A3A.toInt()), 0.2f, 2.6f)
+                mur(pu - 0.4f, 20.6f, pu + 2f, 22.8f, papier(0xFF4E8A3E.toInt()), 0.2f, 2.6f)
+            }
+            balcon(63f, 108f, 25f, papier(0xFFF2F0EC.toInt()), papier(0xFFD6D0C4.toInt()), 3.5f)
+            // Les fanions tendus en haut, d'un bord à l'autre, sont dans [BETES] : ils flottent sur la carte ouverte.
+            // Le socle, le ka couché, Vélo à califourchon dessus : à gauche de la
+            // fenêtre, la tête tournée vers la droite (propriétaire,
+            // 2026-11-09). Le groupe, dessiné tourné vers la gauche, est
+            // retourné en miroir et un peu réduit, pour que la peau du ka reste
+            // à gauche du dessin du mot.
+            tasser(84f, 52.6f, -0.85f, 1f, dx = -72.6f) {
+                pieceD("M70 60L98 60L98 54L70 54Z", papier(0xFF6E6A64.toInt()), 0.8f)
+                pieceD("M70 54L98 54L97 52.6L71 52.6Z", papier(0xFF8E8A84.toInt()), 0.3f)
+            }
+            tasser(84.3f, 52.6f, -0.8f, 0.8f, dx = -74.9f) { veloSurSonKa() }
+        }
+
+        /**
+         * Vélo et son ka sur la plinthe de bronze, dessinés tournés vers la
+         * gauche, posés sur y 52.6 entre x 72.6 et 96 ; [placeVictoirePapier]
+         * les retourne et les place.
+         */
+        private fun veloSurSonKa() {
             pieceD("M72.6 52.6L96 52.6L96 49.4L72.6 49.4Z", papier(0xFF5A4A3A.toInt()), 0.6f)
             val bronze = papier(0xFF9C7440.toInt())
             val sombre = papier(0xFF5E4426.toInt())
             val clair = papier(0xFFCCA466.toInt())
-            pieceD("M89.6 49.4L89.6 40.4L96 40.4L96 49.4L94.6 49.4L94.6 44L91 44L91 49.4Z", sombre, 0.5f)
-            // Le ka : le fût, les cercles, les cordes en zigzag, la peau.
-            pieceD("M74.4 49.4Q73.2 41 74.4 32.6L83.4 32.6Q84.6 41 83.4 49.4Z", bronze, 0.7f)
-            pieceD("M74.4 32.6L83.4 32.6L83.6 34.4L74.2 34.4Z", sombre, 0f)
-            pieceD("M74.2 47.6L83.6 47.6L83.4 49.4L74.4 49.4Z", sombre, 0f)
-            for (k2 in 0 until 4) {
-                val x0 = 75.4f + k2 * 2.2f
-                barre(x0, 34.6f, x0 + 1.1f, 47.4f, 0.25f, clair, 0f)
-                barre(x0 + 1.1f, 34.6f, x0, 47.4f, 0.25f, clair, 0f)
+            // Le ka couché sur le socle, la peau tournée vers la gauche : au
+            // gwoka, le joueur s'assied à califourchon sur le tambour
+            // (propriétaire, 2026-11-09). Le fût, ses cercles, les cordes en
+            // zigzag, puis la peau vue de trois quarts.
+            pieceD("M75 40.6Q84 38.6 93 40.8Q94.4 44.8 93 48.8Q84 50.6 75 49.2Z", bronze, 0.7f)
+            pieceD("M76.4 40.2L78 40.1L78 49.3L76.4 49.3Z", sombre, 0f)
+            pieceD("M91 40.6L92.6 40.7L92.6 48.9L91 49Z", sombre, 0f)
+            for (k2 in 0 until 3) {
+                val x0 = 78.6f + k2 * 4f
+                barre(x0, 40.6f, x0 + 2f, 49f, 0.25f, clair, 0f)
+                barre(x0 + 2f, 49f, x0 + 4f, 40.6f, 0.25f, clair, 0f)
             }
-            piece(Path().apply { addOval(RectF(74.2f, 31.6f, 83.6f, 33.6f), Path.Direction.CW) }, clair, 0.3f)
-            // Vélo, tourné vers la gauche : la jambe et le pied, le short
-            // roulé, le dos rond aux épaules larges, la tête penchée sur le
-            // ka, les bras qui descendent jusqu'à la peau. La lumière vient
-            // de droite, comme sur la photo.
-            pieceD("M83.8 40.8Q83.4 45 84.4 48.8L86 48.8Q85.6 45 85.8 41.4Z", bronze, 0.4f)
-            pieceD("M82.8 50.2Q83.2 48.6 85.8 48.6L86.6 50.2Z", bronze, 0.2f)
-            pieceD("M90.4 38Q86 37.8 83.6 39.8Q83.4 41.6 84.6 42.4Q87.6 41.6 91.8 42.6Z", sombre, 0.4f)
-            pieceD("M86.4 40.6Q85.2 34 86.2 29Q87 26 89.6 25.4Q92.8 25.2 93.6 28Q94.6 33 93.4 40.6Z", bronze, 0.7f)
-            pieceD("M86.4 40.6Q85.2 34 86.2 29Q86.8 27 88.2 26Q87.2 30 87.4 34Q87.6 38 88.6 40.6Z", sombre, 0f)
-            pieceD("M91.4 26Q93.4 26.4 93.8 29Q94.4 34 93 40L92 40Q93 33 91.4 26Z", clair, 0f)
-            pieceD("M88.4 24.4L90.4 24.6L90.6 26.4L88.2 26.6Z", bronze, 0.2f)
-            piece(Path().apply { addOval(RectF(87.2f, 20.1f, 91f, 24.7f), Path.Direction.CW) }, bronze, 0.5f)
-            piece(Path().apply { addOval(RectF(88.8f, 20.4f, 90.8f, 22.6f), Path.Direction.CW) }, clair, 0f)
-            piece(disque(90.3f, 22.6f, 0.42f), sombre, 0f)
-            pieceD("M89.4 27.4Q86 27.4 84.2 31L85.6 31.8Q87 29.4 90 29.2Z", clair, 0.3f)
-            pieceD("M84.2 31Q82 31.6 79.6 31.8L79.8 33Q82.4 33 85.6 31.8Z", bronze, 0.3f)
-            pieceD("M88.4 27Q85.6 27 84.4 29.8L85.4 30.4Q86.6 28.4 88.8 28.4Z", bronze, 0.2f)
-            piece(Path().apply { addOval(RectF(78.2f, 31.6f, 81.2f, 33.2f), Path.Direction.CW) }, clair, 0.2f)
-            piece(Path().apply { addOval(RectF(80.4f, 31.4f, 83.2f, 32.8f), Path.Direction.CW) }, bronze, 0.2f)
+            piece(Path().apply { addOval(RectF(73.6f, 40.4f, 76.6f, 49.3f), Path.Direction.CW) }, clair, 0.3f)
+            // Vélo à califourchon, tourné vers la peau : la jambe le long du
+            // fût et le pied sur le socle, le dos rond, la tête penchée sur le
+            // ka, les mains sur la peau. Dessinée éclairée de droite, retournée elle l'est de gauche.
+            pieceD("M88.6 41.4Q84 41 80 42.8L80.6 45.4Q84.4 43.8 89 44.6Z", sombre, 0.4f)
+            pieceD("M79.8 44Q79 46.8 79.6 49.4L81.4 49.4Q81 46.8 81.8 44.6Z", bronze, 0.4f)
+            pieceD("M77.8 50.2Q78.2 49 81.2 49L81.8 50.2Z", bronze, 0.2f)
+            pieceD("M85.4 41.6Q84.2 35.6 85.4 31Q86.4 28.6 89 28.2Q92 28.2 92.6 31Q93.4 36 92.4 41.6Z", bronze, 0.7f)
+            pieceD("M85.4 41.6Q84.2 35.6 85.4 31Q86 29.4 87.2 28.6Q86.4 32 86.6 35.6Q86.8 39 87.6 41.6Z", sombre, 0f)
+            pieceD("M90.4 28.6Q92.2 29 92.6 31.4Q93.2 36 92 41L91 41Q92 35.4 90.4 28.6Z", clair, 0f)
+            pieceD("M85.8 28.9L87.8 28.7L87.4 26.8L85.4 27.1Z", bronze, 0.2f)
+            piece(Path().apply { addOval(RectF(83.2f, 22.4f, 87f, 27.2f), Path.Direction.CW) }, bronze, 0.5f)
+            piece(Path().apply { addOval(RectF(84.8f, 22.7f, 86.8f, 25f), Path.Direction.CW) }, clair, 0f)
+            piece(disque(84.2f, 25.2f, 0.4f), sombre, 0f)
+            // Le bras de derrière, dans l'ombre, puis celui de devant.
+            pieceD("M86 31Q82.6 33.6 80.6 37.6Q78.6 41.4 77 45L78.2 45.8Q80 42.2 81.8 38.4Q83.6 34.8 86.8 32.4Z", sombre, 0.2f)
+            pieceD("M88 30.2Q84 31.6 81.8 35.6L83.2 36.4Q85.2 33 88.6 31.8Z", clair, 0.3f)
+            pieceD("M81.8 35.6Q79.4 39 77.4 42.4L78.8 43.2Q80.8 39.6 83.2 36.4Z", bronze, 0.3f)
+            piece(Path().apply { addOval(RectF(75.8f, 42f, 78.6f, 44.4f), Path.Direction.CW) }, clair, 0.2f)
+            piece(Path().apply { addOval(RectF(75.6f, 45.2f, 78f, 47.2f), Path.Direction.CW) }, bronze, 0.2f)
         }
 
         // ------------------------------------------- le Figuier maudit en papier
@@ -4864,6 +5027,7 @@ object Paysages {
                     Espece.ECREVISSE -> ecrevisse(x, y, b.taille)
                     Espece.IGUANE -> iguane(x, y, 0f, b.taille)
                     Espece.BARQUE -> barque(x, y)
+                    Espece.FANIONS -> fanions(0f)
                 }
                 return@aplat
             }
@@ -4959,6 +5123,26 @@ object Paysages {
                 }
                 // La houle soulève la barque et la fait tanguer, chacune à son rythme.
                 Espece.BARQUE -> barque(x, y + sin(t * 1.1f + ph) * 0.25f, sin(t * 0.8f + ph * 1.3f) * 0.35f)
+                Espece.FANIONS -> fanions(t)
+            }
+        }
+
+        /**
+         * Les fanions de la place de la Victoire, tendus d'un bord à l'autre.
+         * Au vent ([t] > 0), la guirlande se creuse et se relève lentement et
+         * chaque fanion flotte à son rythme ; à zéro, ils pendent droit.
+         */
+        fun fanions(t: Float) {
+            val couleurs = intArrayOf(papier(0xFFD8402E.toInt()), papier(0xFF3A9A4A.toInt()), papier(0xFFF0C030.toInt()), papier(0xFF2A6AB8.toInt()))
+            val creux = 4f + sin(t * 0.8f) * 0.35f
+            val corde = { x: Float -> 3f + ((x - 50f) / 52f).let { 1f - it * it } * creux }
+            var fx = -2f
+            var k = 0
+            while (fx < 102f) {
+                val y = corde(fx)
+                val vent = sin(t * 2.3f + k * 0.8f) * 0.55f * min(t, 1f)
+                forme("M$fx ${y}L${fx + 2.4f} ${corde(fx + 2.4f)}L${fx + 1.3f + vent} ${y + 2.8f - abs(vent) * 0.25f}Z", couleurs[k % 4])
+                fx += 3.4f; k++
             }
         }
 
