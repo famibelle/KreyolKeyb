@@ -120,7 +120,13 @@ enum class Espece {
     /** Pas une bête : une barque au mouillage, qui se balance comme elles bougent (voir [Paysages.BETES]). */
     BARQUE,
     /** Pas une bête : la guirlande de fanions de la place de la Victoire, qui flotte au vent. */
-    FANIONS
+    FANIONS,
+    /** La tourterelle à queue carrée, posée sur les balcons de la place de la Victoire. */
+    TOURTERELLE,
+    /** Pas une bête : une jardinière de feuillage accrochée à un garde-corps, qui tremble à la secousse. */
+    PLANTE,
+    /** La même, fleurie de géraniums rouges. */
+    FLEURS
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -902,8 +908,35 @@ object Paysages {
      * bouge sur la carte ouverte doit être tu dans ses calques et peint au
      * même endroit sur la vignette, et cette table fait exactement cela.
      */
+    /**
+     * Les persiennes de la place de la Victoire qui battent quand on secoue
+     * le téléphone ([Peintre.persienneBattante]) : u0, y0, u1, y1 dans la rue
+     * en perspective, le plan de leur maison, et leur plus grande ouverture
+     * en radians (le garde-corps de l'étage arrête les battants). Les deux
+     * premières sont celles de la case jaune, les deux autres de la case
+     * blanche.
+     */
+    internal val PERSIENNES_VICTOIRE = arrayOf(
+        floatArrayOf(40.5f, 11f, 46.5f, 25f, 1f, 1.3f),
+        floatArrayOf(52f, 11f, 58f, 25f, 1f, 1.3f),
+        floatArrayOf(67f, 15.6f, 76f, 24f, 2f, 0.8f),
+        floatArrayOf(77.6f, 31f, 81.4f, 46f, 2f, 1.7f)
+    )
+
+    /** Le centre de la peau du ka de Vélo, une fois la statue retournée et placée : d'où il résonne. */
+    internal val PEAU_KA = floatArrayOf(16.8f, 46.4f)
+
     internal val BETES: Map<Lieu, List<Bete>> = mapOf(
-        Lieu.PLACE_VICTOIRE to listOf(Bete(Espece.FANIONS, 50f, 3f, plan = 0)),
+        // Les tourterelles, plus petites au loin : sur le bord du toit et le
+        // garde-corps de la case de bois, et sur celui de la case blanche ;
+        // hors du milieu, que le dessin du mot couvre. Les jardinières sont
+        // accrochées dehors, aux garde-corps.
+        Lieu.PLACE_VICTOIRE to listOf(Bete(Espece.FANIONS, 50f, 3f, plan = 0),
+            Bete(Espece.TOURTERELLE, 22.4f, 16.1f, plan = 0, taille = 0.8f),
+            Bete(Espece.TOURTERELLE, 29.7f, 25.6f, plan = 0, taille = 0.8f),
+            Bete(Espece.TOURTERELLE, 96.9f, 18.7f, plan = 2, taille = 1.1f),
+            Bete(Espece.FLEURS, 53.5f, 23.1f, plan = 1, taille = 0.85f),
+            Bete(Espece.PLANTE, 84f, 19.7f, plan = 2), Bete(Espece.PLANTE, 91.9f, 19f, plan = 2)),
         Lieu.LES_SAINTES to listOf(Bete(Espece.BARQUE, 30f, 40f, plan = 1), Bete(Espece.BARQUE, 47f, 42.5f, plan = 1),
             Bete(Espece.BARQUE, 64f, 39.5f, plan = 1)),
         Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
@@ -954,16 +987,36 @@ object Paysages {
     internal class Atelier(heure: Heure) {
         private val peintre = Peintre(Canvas(), heure, decoupe = false)
 
-        /** Peint [b] à l'instant [t], en secondes ; [i] décale son rythme de celui des autres. */
-        fun peindre(c: Canvas, b: Bete, t: Float, i: Int) {
+        /**
+         * Peint [b] à l'instant [t], en secondes ; [i] décale son rythme de
+         * celui des autres. [rafale] est ce qui reste d'une secousse, de 0 à
+         * 1, et [depuis] le temps écoulé depuis elle : les fanions claquent,
+         * les jardinières tremblent.
+         */
+        fun peindre(c: Canvas, b: Bete, t: Float, i: Int, rafale: Float = 0f, depuis: Float = 0f) {
             peintre.c = c
+            peintre.rafale = rafale
+            peintre.depuisRafale = depuis
             peintre.bete(b, t, i, immobile = false)
         }
 
         /** Peint [b] au repos, à sa place : pour une image figée, qui n'a pas d'ambiance. */
         fun poser(c: Canvas, b: Bete, i: Int) {
             peintre.c = c
+            peintre.rafale = 0f
             peintre.bete(b, 0f, i, immobile = true)
+        }
+
+        /** Une tourterelle [b] en vol, les ailes à [aile] (1 levées, négatif baissées), tournée vers [sens]. */
+        fun envol(c: Canvas, b: Bete, aile: Float, sens: Float) {
+            peintre.c = c
+            peintre.aplat { peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille) }
+        }
+
+        /** La persienne [k] de [PERSIENNES_VICTOIRE], ses battants ouverts de [angle] radians. */
+        fun persienne(c: Canvas, k: Int, angle: Float) {
+            peintre.c = c
+            peintre.aplat { peintre.persienneBattante(k, angle) }
         }
     }
 
@@ -4267,92 +4320,143 @@ object Paysages {
          * carte n'a que trois cartons. Le poteau rouge sur le trottoir, des
          * fanions tendus en haut. Ni voiture ni enseigne lisible.
          */
+        // ------------------------------------------- la rue de Pointe-à-Pitre
+
+        // La rue derrière Vélo, en perspective : u court le long des façades,
+        // y est la hauteur telle qu'on la lit au bord droit, d l'avancée vers
+        // la rue. Plus u est petit, plus c'est loin, et tout se resserre vers
+        // l'horizon, à hauteur d'œil (y 38). [placeVictoirePapier] y peint les
+        // façades, [persienneBattante] les persiennes qui battent.
+        private fun recul(u: Float) = (u + 150f) / 254f
+        private fun ex(u: Float, d: Float) = u - d * 0.6f * recul(u)
+        private fun ey(u: Float, y: Float, d: Float) = 38f + (y - 38f) * recul(u) * (1f + d * 0.02f)
+        // Une pièce de la rue, ses sommets donnés en triplets (u, y, d).
+        private fun rue(col: Int, ombre: Float, vararg p: Float) {
+            val t = Path()
+            var i = 0
+            while (i < p.size) {
+                val x = ex(p[i], p[i + 2])
+                val y = ey(p[i], p[i + 1], p[i + 2])
+                if (i == 0) t.moveTo(x, y) else t.lineTo(x, y)
+                i += 3
+            }
+            t.close()
+            piece(t, col, ombre)
+        }
+        private fun mur(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, ombre: Float = 0f, d: Float = 0f) =
+            rue(col, ombre, u0, y0, d, u1, y0, d, u1, y1, d, u0, y1, d)
+        // Des planches couchées, qui filent vers l'horizon.
+        private fun lattes(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, pas: Float = 1.3f) {
+            var y = y0 + pas
+            while (y < y1 - 0.2f) { mur(u0, y, u1, y + 0.16f, col); y += pas }
+        }
+        // Une persienne : le cadre, puis les lames.
+        private fun persienne(u0: Float, y0: Float, u1: Float, y1: Float, cadre: Int, lame: Int, fond: Int) {
+            mur(u0 - 0.5f, y0 - 0.5f, u1 + 0.5f, y1 + 0.3f, cadre, 0.3f)
+            mur(u0, y0, u1, y1, fond)
+            var y = y0 + 0.6f
+            while (y < y1 - 0.3f) { mur(u0 + 0.2f, y, u1 - 0.2f, y + 0.35f, lame); y += 0.9f }
+            mur((u0 + u1) / 2f - 0.12f, y0, (u0 + u1) / 2f + 0.12f, y1, cadre)
+        }
+        // Une console de fer sous un balcon, dans le plan qui avance vers la rue.
+        private fun console(u: Float, y: Float, avance: Float, col: Int) {
+            val t = Path().apply {
+                moveTo(ex(u, avance), ey(u, y, avance))
+                lineTo(ex(u, 0f), ey(u, y, 0f))
+                lineTo(ex(u, 0f), ey(u, y + 3.4f, 0f))
+                quadTo(ex(u, avance * 0.3f), ey(u, y + 1.2f, avance * 0.3f), ex(u, avance), ey(u, y, avance))
+                close()
+            }
+            piece(t, col, 0.2f)
+        }
+        // Un balcon : les consoles, le dessous de la dalle, sa tranche, le
+        // garde-corps devant et son retour sur le côté.
+        private fun balcon(u0: Float, u1: Float, y: Float, fer: Int, dalle: Int, avance: Float = 3f) {
+            for (cu in floatArrayOf(u0 + 1.5f, (u0 + u1) / 2f, u1 - 1.5f)) console(cu, y + 1.1f, avance * 0.9f, fer)
+            rue(mix(dalle, 0xFF000000.toInt(), 0.25f), 0.4f,
+                u0 - 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, avance, u0 - 0.6f, y + 1.1f, avance)
+            mur(u0 - 0.6f, y, u1 + 0.6f, y + 1.1f, dalle, 0.5f, avance)
+            rue(fer, 0.2f, u0 - 0.6f, y - 5.4f, 0f, u0 - 0.6f, y - 5.4f, avance, u0 - 0.6f, y - 4.9f, avance, u0 - 0.6f, y - 4.9f, 0f)
+            for (d in floatArrayOf(1f, 2f)) mur(u0 - 0.7f, y - 5f, u0 - 0.5f, y, fer, 0f, d)
+            gardeCorps(u0, u1, y, fer, avance)
+        }
+        // Le garde-corps d'un balcon, vu de face ; [de] et [a] n'en gardent
+        // qu'un tronçon, celui qui passe devant une persienne qui bat.
+        private fun gardeCorps(u0: Float, u1: Float, y: Float, fer: Int, avance: Float, de: Float = -1e9f, a: Float = 1e9f) {
+            val g = max(u0 - 0.6f, de)
+            val dr = min(u1 + 0.6f, a)
+            mur(g, y - 5.4f, dr, y - 4.9f, fer, 0.3f, avance)
+            var u = u0
+            while (u <= u1 + 0.01f) { if (u in de..a) mur(u - 0.1f, y - 5f, u + 0.1f, y, fer, 0f, avance); u += 1.1f }
+            mur(g, y - 0.6f, dr, y - 0.3f, fer, 0f, avance)
+        }
+
+        /** Les couleurs de la persienne [k] : cadre, lames, fond. La case jaune les a rouges, la blanche vertes. */
+        private fun couleursPersienne(k: Int) = if (k < 2)
+            intArrayOf(papier(0xFF9A2E2A.toInt()), papier(0xFF7A2420.toInt()), papier(0xFFB8403A.toInt()))
+        else intArrayOf(papier(0xFF3E7A5A.toInt()), papier(0xFF2E5E44.toInt()), papier(0xFF5E9A76.toInt()))
+
+        /**
+         * La persienne [k] de [PERSIENNES_VICTOIRE] ouverte de [angle]
+         * radians : la pièce sombre derrière, allumée le soir, les deux
+         * battants pivotés vers la rue sur leurs gonds, et devant eux le
+         * tronçon du garde-corps qui les arrête.
+         */
+        fun persienneBattante(k: Int, angle: Float) {
+            voile = 1f
+            val q = PERSIENNES_VICTOIRE[k]
+            val (cadre, lame, fond) = couleursPersienne(k).toList()
+            val sombre = papier(0xFF3A302A.toInt())
+            mur(q[0], q[1], q[2], q[3], if (P.allume) mix(sombre, P.fenetre or 0xFF000000.toInt(), 0.55f) else sombre)
+            val w = (q[2] - q[0]) / 2f
+            battant(q[0], w, 1f, angle, q[1], q[3], cadre, lame, fond)
+            battant(q[2], w, -1f, angle * 0.92f, q[1], q[3], cadre, lame, fond)
+            when (k) {
+                0, 1 -> gardeCorps(38.5f, 60.5f, 26f, papier(0xFF5A2A22.toInt()), 3f, q[0] - 1.2f, q[2] + 1.2f)
+                2 -> gardeCorps(63f, 108f, 25f, papier(0xFFF2F0EC.toInt()), 3.5f, q[0] - 1.2f, q[2] + 1.2f)
+            }
+        }
+
+        // Un battant de [w] de large, son gond en [gond], qui s'ouvre vers
+        // [sens] (1 : il pivote depuis la gauche) de [angle] radians.
+        private fun battant(gond: Float, w: Float, sens: Float, angle: Float, y0: Float, y1: Float, cadre: Int, lame: Int, fond: Int) {
+            val cu = cos(angle)
+            val sd = sin(angle)
+            fun u(f: Float) = gond + sens * f * w * cu
+            fun d(f: Float) = f * w * sd
+            fun bande(f0: Float, f1: Float, ya: Float, yb: Float, col: Int) =
+                rue(col, 0f, u(f0), ya, d(f0), u(f1), ya, d(f1), u(f1), yb, d(f1), u(f0), yb, d(f0))
+            bande(0f, 1f, y0, y1, cadre)
+            bande(0.1f, 0.9f, y0 + 0.3f, y1 - 0.3f, fond)
+            var y = y0 + 0.6f
+            while (y < y1 - 0.4f) { bande(0.1f, 0.9f, y, y + 0.35f, lame); y += 0.9f }
+        }
+        // Un toit de tôle : le dessous de l'avant-toit et ses chevrons, la
+        // planche de rive, et la tôle qui monte vers le faîte.
+        private fun toit(u0: Float, u1: Float, y: Float, tole: Int, sous: Int, avance: Float = 5f) {
+            rue(tole, 0.7f, u0 - 1f, y - 0.6f, avance, u1 + 1f, y - 0.6f, avance, u1 + 1f, y - 12f, -4f, u0 - 1f, y - 12f, -4f)
+            var u = u0 - 0.4f
+            val onde = mix(tole, 0xFF000000.toInt(), 0.22f)
+            while (u < u1 + 0.6f) {
+                rue(onde, 0f, u, y - 0.6f, avance, u + 0.3f, y - 0.6f, avance, u + 0.3f, y - 12f, -4f, u, y - 12f, -4f)
+                u += 1.2f
+            }
+            rue(sous, 0.5f, u0 - 1f, y, 0f, u1 + 1f, y, 0f, u1 + 1f, y - 0.6f, avance, u0 - 1f, y - 0.6f, avance)
+            u = u0
+            val chevron = mix(sous, 0xFF000000.toInt(), 0.3f)
+            while (u < u1) {
+                rue(chevron, 0f, u, y, 0f, u + 0.3f, y, 0f, u + 0.3f, y - 0.6f, avance, u, y - 0.6f, avance)
+                u += 2.4f
+            }
+            mur(u0 - 1f, y - 1.6f, u1 + 1f, y - 0.4f, mix(tole, 0xFFFFFFFF.toInt(), 0.25f), 0.3f, avance)
+        }
+        // Le trottoir devant une maison et sa bordure.
+        private fun trottoir(u0: Float, u1: Float, col: Int) {
+            rue(col, 0.3f, u0, 52f, 0f, u1, 52f, 0f, u1, 52f, 6f, u0, 52f, 6f)
+            mur(u0, 52f, u1, 53f, mix(col, 0xFF000000.toInt(), 0.2f), 0.3f, 6f)
+        }
+
         fun placeVictoirePapier() {
-            // La rue en perspective : u court le long des façades, y est la
-            // hauteur telle qu'on la lit au bord droit, d l'avancée vers la
-            // rue. Plus u est petit, plus c'est loin, et tout se resserre
-            // vers l'horizon, à hauteur d'œil (y 38).
-            val oeil = 38f
-            fun s(u: Float) = (u + 150f) / 254f
-            fun ex(u: Float, d: Float) = u - d * 0.6f * s(u)
-            fun ey(u: Float, y: Float, d: Float) = oeil + (y - oeil) * s(u) * (1f + d * 0.02f)
-            // Une pièce de la rue, ses sommets donnés en triplets (u, y, d).
-            fun rue(col: Int, ombre: Float, vararg p: Float) {
-                val t = Path()
-                var i = 0
-                while (i < p.size) {
-                    val x = ex(p[i], p[i + 2])
-                    val y = ey(p[i], p[i + 1], p[i + 2])
-                    if (i == 0) t.moveTo(x, y) else t.lineTo(x, y)
-                    i += 3
-                }
-                t.close()
-                piece(t, col, ombre)
-            }
-            fun mur(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, ombre: Float = 0f, d: Float = 0f) =
-                rue(col, ombre, u0, y0, d, u1, y0, d, u1, y1, d, u0, y1, d)
-            // Des planches couchées, qui filent vers l'horizon.
-            fun lattes(u0: Float, y0: Float, u1: Float, y1: Float, col: Int, pas: Float = 1.3f) {
-                var y = y0 + pas
-                while (y < y1 - 0.2f) { mur(u0, y, u1, y + 0.16f, col); y += pas }
-            }
-            // Une persienne : le cadre, puis les lames.
-            fun persienne(u0: Float, y0: Float, u1: Float, y1: Float, cadre: Int, lame: Int, fond: Int) {
-                mur(u0 - 0.5f, y0 - 0.5f, u1 + 0.5f, y1 + 0.3f, cadre, 0.3f)
-                mur(u0, y0, u1, y1, fond)
-                var y = y0 + 0.6f
-                while (y < y1 - 0.3f) { mur(u0 + 0.2f, y, u1 - 0.2f, y + 0.35f, lame); y += 0.9f }
-                mur((u0 + u1) / 2f - 0.12f, y0, (u0 + u1) / 2f + 0.12f, y1, cadre)
-            }
-            // Une console de fer sous un balcon, dans le plan qui avance vers la rue.
-            fun console(u: Float, y: Float, avance: Float, col: Int) {
-                val t = Path().apply {
-                    moveTo(ex(u, avance), ey(u, y, avance))
-                    lineTo(ex(u, 0f), ey(u, y, 0f))
-                    lineTo(ex(u, 0f), ey(u, y + 3.4f, 0f))
-                    quadTo(ex(u, avance * 0.3f), ey(u, y + 1.2f, avance * 0.3f), ex(u, avance), ey(u, y, avance))
-                    close()
-                }
-                piece(t, col, 0.2f)
-            }
-            // Un balcon : les consoles, le dessous de la dalle, sa tranche, le
-            // garde-corps devant et son retour sur le côté.
-            fun balcon(u0: Float, u1: Float, y: Float, fer: Int, dalle: Int, avance: Float = 3f) {
-                for (cu in floatArrayOf(u0 + 1.5f, (u0 + u1) / 2f, u1 - 1.5f)) console(cu, y + 1.1f, avance * 0.9f, fer)
-                rue(mix(dalle, 0xFF000000.toInt(), 0.25f), 0.4f,
-                    u0 - 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, 0f, u1 + 0.6f, y + 1.1f, avance, u0 - 0.6f, y + 1.1f, avance)
-                mur(u0 - 0.6f, y, u1 + 0.6f, y + 1.1f, dalle, 0.5f, avance)
-                rue(fer, 0.2f, u0 - 0.6f, y - 5.4f, 0f, u0 - 0.6f, y - 5.4f, avance, u0 - 0.6f, y - 4.9f, avance, u0 - 0.6f, y - 4.9f, 0f)
-                for (d in floatArrayOf(1f, 2f)) mur(u0 - 0.7f, y - 5f, u0 - 0.5f, y, fer, 0f, d)
-                mur(u0 - 0.6f, y - 5.4f, u1 + 0.6f, y - 4.9f, fer, 0.3f, avance)
-                var u = u0
-                while (u <= u1 + 0.01f) { mur(u - 0.1f, y - 5f, u + 0.1f, y, fer, 0f, avance); u += 1.1f }
-                mur(u0 - 0.6f, y - 0.6f, u1 + 0.6f, y - 0.3f, fer, 0f, avance)
-            }
-            // Un toit de tôle : le dessous de l'avant-toit et ses chevrons, la
-            // planche de rive, et la tôle qui monte vers le faîte.
-            fun toit(u0: Float, u1: Float, y: Float, tole: Int, sous: Int, avance: Float = 5f) {
-                rue(tole, 0.7f, u0 - 1f, y - 0.6f, avance, u1 + 1f, y - 0.6f, avance, u1 + 1f, y - 12f, -4f, u0 - 1f, y - 12f, -4f)
-                var u = u0 - 0.4f
-                val onde = mix(tole, 0xFF000000.toInt(), 0.22f)
-                while (u < u1 + 0.6f) {
-                    rue(onde, 0f, u, y - 0.6f, avance, u + 0.3f, y - 0.6f, avance, u + 0.3f, y - 12f, -4f, u, y - 12f, -4f)
-                    u += 1.2f
-                }
-                rue(sous, 0.5f, u0 - 1f, y, 0f, u1 + 1f, y, 0f, u1 + 1f, y - 0.6f, avance, u0 - 1f, y - 0.6f, avance)
-                u = u0
-                val chevron = mix(sous, 0xFF000000.toInt(), 0.3f)
-                while (u < u1) {
-                    rue(chevron, 0f, u, y, 0f, u + 0.3f, y, 0f, u + 0.3f, y - 0.6f, avance, u, y - 0.6f, avance)
-                    u += 2.4f
-                }
-                mur(u0 - 1f, y - 1.6f, u1 + 1f, y - 0.4f, mix(tole, 0xFFFFFFFF.toInt(), 0.25f), 0.3f, avance)
-            }
-            // Le trottoir devant une maison et sa bordure.
-            fun trottoir(u0: Float, u1: Float, col: Int) {
-                rue(col, 0.3f, u0, 52f, 0f, u1, 52f, 0f, u1, 52f, 6f, u0, 52f, 6f)
-                mur(u0, 52f, u1, 53f, mix(col, 0xFF000000.toInt(), 0.2f), 0.3f, 6f)
-            }
             val lueur = (0x60 shl 24) or (P.fenetre and 0xFFFFFF)
 
             // 1. Au plus loin, la case crème au balcon blanc et sa boutique jaune,
@@ -4403,9 +4507,8 @@ object Paysages {
             mur(46f, -1f, 53f, 6f, papier(0xFFF2EEE4.toInt()), 0.4f, -2f)
             mur(47.6f, 0.4f, 51.4f, 5f, rougeCase, 0f, -2f)
             rue(papier(0xFF8A8680.toInt()), 0.3f, 45.4f, -1f, -2f, 49.5f, -4.6f, -2f, 53.6f, -1f, -2f)
-            for (fu in floatArrayOf(40.5f, 52f)) persienne(fu, 11f, fu + 6f, 25f, rougeCase, papier(0xFF7A2420.toInt()), papier(0xFFB8403A.toInt()))
+            for (k in 0..1) PERSIENNES_VICTOIRE[k].let { q -> couleursPersienne(k).let { c -> persienne(q[0], q[1], q[2], q[3], c[0], c[1], c[2]) } }
             if (P.allume) for (fu in floatArrayOf(40.5f, 52f)) mur(fu, 11f, fu + 6f, 25f, lueur)
-            for (pu in floatArrayOf(42f, 45f, 53.5f, 56.5f)) mur(pu, 14f, pu + 1.2f, 15.2f, papier(0xFFD8402E.toInt()), 0.2f)
             balcon(38.5f, 60.5f, 26f, papier(0xFF5A2A22.toInt()), rougeCase)
             mur(43f, 30f, 57f, 51f, rougeCase, 0.4f)
             mur(43.8f, 30.8f, 49.8f, 51f, papier(0xFFE2B040.toInt()))
@@ -4433,23 +4536,18 @@ object Paysages {
             mur(66.4f, 10.4f, 76.6f, 24.4f, vert, 0.3f)
             mur(67f, 11f, 71.4f, 15f, vitre)
             mur(71.6f, 11f, 76f, 15f, vitre)
-            persienne(67f, 15.6f, 76f, 24f, vert, papier(0xFF2E5E44.toInt()), papier(0xFF5E9A76.toInt()))
+            for (k in 2..3) PERSIENNES_VICTOIRE[k].let { q -> couleursPersienne(k).let { c -> persienne(q[0], q[1], q[2], q[3], c[0], c[1], c[2]) } }
             mur(85.4f, 9.4f, 97.6f, 24.4f, vert, 0.3f)
             mur(86f, 10f, 97f, 24.4f, papier(0xFFEEEAE2.toInt()))
             mur(91.4f, 10f, 91.6f, 24.4f, papier(0xFFC2BCB0.toInt()))
             if (P.allume) { mur(67f, 11f, 76f, 15f, lueur); mur(86f, 10f, 97f, 24.4f, lueur) }
             mur(65.4f, 29.4f, 72.6f, 51f, vert, 0.3f)
             mur(66f, 30f, 72f, 51f, papier(0xFFEEEAE2.toInt()))
-            persienne(77.6f, 31f, 81.4f, 46f, vert, papier(0xFF2E5E44.toInt()), papier(0xFF5E9A76.toInt()))
             mur(87.4f, 28.4f, 101.6f, 51f, vert, 0.3f)
             mur(88f, 29f, 101f, 51f, papier(0xFFEEEAE2.toInt()))
             mur(94.4f, 29f, 94.6f, 51f, papier(0xFFC2BCB0.toInt()))
-            for (pu in floatArrayOf(88f, 92f)) {
-                mur(pu, 22.6f, pu + 1.6f, 24.6f, papier(0xFF9A5A3A.toInt()), 0.2f, 2.6f)
-                mur(pu - 0.4f, 20.6f, pu + 2f, 22.8f, papier(0xFF4E8A3E.toInt()), 0.2f, 2.6f)
-            }
             balcon(63f, 108f, 25f, papier(0xFFF2F0EC.toInt()), papier(0xFFD6D0C4.toInt()), 3.5f)
-            // Les fanions tendus en haut, d'un bord à l'autre, sont dans [BETES] : ils flottent sur la carte ouverte.
+            // Les fanions, les tourterelles et les jardinières sont dans [BETES] : ils bougent sur la carte ouverte.
             // Le socle, le ka couché, Vélo à califourchon dessus : à gauche de la
             // fenêtre, la tête tournée vers la droite (propriétaire,
             // 2026-11-09). Le groupe, dessiné tourné vers la gauche, est
@@ -5028,6 +5126,9 @@ object Paysages {
                     Espece.IGUANE -> iguane(x, y, 0f, b.taille)
                     Espece.BARQUE -> barque(x, y)
                     Espece.FANIONS -> fanions(0f)
+                    Espece.TOURTERELLE -> if (!P.nuit) tourterelle(x, y, if (x < 50f) 1f else -1f, 0f, b.taille)
+                    Espece.PLANTE -> jardiniere(x, y, 0f, false, b.taille)
+                    Espece.FLEURS -> jardiniere(x, y, 0f, true, b.taille)
                 }
                 return@aplat
             }
@@ -5124,8 +5225,22 @@ object Paysages {
                 // La houle soulève la barque et la fait tanguer, chacune à son rythme.
                 Espece.BARQUE -> barque(x, y + sin(t * 1.1f + ph) * 0.25f, sin(t * 0.8f + ph * 1.3f) * 0.35f)
                 Espece.FANIONS -> fanions(t)
+                // Posée, elle picore de temps en temps le garde-corps. La
+                // nuit elle dort ailleurs.
+                Espece.TOURTERELLE -> if (!P.nuit) {
+                    val u = (t + ph) % 5.5f
+                    tourterelle(x, y, if (x < 50f) 1f else -1f, if (u < 0.5f) sin(u / 0.5f * PI.toFloat()) else 0f, b.taille)
+                }
+                // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
+                Espece.PLANTE, Espece.FLEURS -> jardiniere(x, y,
+                    sin(t * 1.1f + ph) * 2f + rafale * 16f * sin(depuisRafale * 2f * PI.toFloat() * 2.6f),
+                    b.espece == Espece.FLEURS, b.taille)
             }
         }
+
+        /** Ce qui reste d'une secousse, de 0 à 1, et depuis quand elle a eu lieu : voir [Atelier.peindre]. */
+        var rafale = 0f
+        var depuisRafale = 0f
 
         /**
          * Les fanions de la place de la Victoire, tendus d'un bord à l'autre.
@@ -5134,16 +5249,85 @@ object Paysages {
          */
         fun fanions(t: Float) {
             val couleurs = intArrayOf(papier(0xFFD8402E.toInt()), papier(0xFF3A9A4A.toInt()), papier(0xFFF0C030.toInt()), papier(0xFF2A6AB8.toInt()))
-            val creux = 4f + sin(t * 0.8f) * 0.35f
+            // Une secousse est une rafale : la guirlande rebondit et les fanions claquent.
+            val creux = 4f + sin(t * 0.8f) * 0.35f + rafale * 1.4f * sin(depuisRafale * 7f)
             val corde = { x: Float -> 3f + ((x - 50f) / 52f).let { 1f - it * it } * creux }
             var fx = -2f
             var k = 0
             while (fx < 102f) {
                 val y = corde(fx)
-                val vent = sin(t * 2.3f + k * 0.8f) * 0.55f * min(t, 1f)
-                forme("M$fx ${y}L${fx + 2.4f} ${corde(fx + 2.4f)}L${fx + 1.3f + vent} ${y + 2.8f - abs(vent) * 0.25f}Z", couleurs[k % 4])
+                val vent = sin(t * 2.3f + k * 0.8f) * 0.55f * min(t, 1f) + rafale * 1.8f * sin(depuisRafale * 13f + k * 1.1f)
+                forme("M$fx ${y}L${fx + 2.4f} ${corde(fx + 2.4f)}L${fx + 1.3f + vent} ${y + 2.8f - abs(vent) * 0.3f}Z", couleurs[k % 4])
                 fx += 3.4f; k++
             }
+        }
+
+        /**
+         * Une tourterelle à queue carrée posée, les pattes en ([x], [y]),
+         * tournée vers la droite ([sens] -1 : vers la gauche). [picore]
+         * penche la tête vers l'avant, de 0 à 1.
+         */
+        fun tourterelle(x: Float, y: Float, sens: Float, picore: Float, taille: Float) {
+            c.save()
+            c.scale(sens * taille, taille, x, y)
+            val aile = duJour(0xFF8A7262.toInt())
+            val noir = duJour(0xFF2A2420.toInt())
+            forme("M${x - 0.6f} ${y - 1.1f}L${x - 3f} ${y - 0.2f}L${x - 2.8f} ${y + 0.3f}L${x - 0.4f} ${y - 0.5f}Z", aile)
+            forme("M${x - 1.2f} ${y - 1f}Q${x - 0.6f} ${y - 2.3f} ${x + 0.8f} ${y - 1.9f}Q${x + 1.4f} ${y - 0.6f} ${x + 0.4f} ${y - 0.2f}" +
+                "Q${x - 0.8f} ${y - 0.2f} ${x - 1.2f} ${y - 1f}Z", duJour(0xFFA48A78.toInt()))
+            forme("M${x - 1.4f} ${y - 1.1f}Q${x - 0.2f} ${y - 2f} ${x + 0.6f} ${y - 1.4f}Q${x - 0.2f} ${y - 0.6f} ${x - 1.4f} ${y - 1.1f}Z", aile)
+            rond(x - 0.3f, y - 1.35f, 0.14f, noir)
+            rond(x + 0.2f, y - 1.25f, 0.12f, noir)
+            rect(x - 0.1f, y - 0.35f, 0.14f, 0.4f, duJour(0xFFC0504A.toInt()))
+            rect(x + 0.3f, y - 0.35f, 0.14f, 0.4f, duJour(0xFFC0504A.toInt()))
+            val hx = x + 1.1f + picore * 0.5f
+            val hy = y - 2.3f + picore * 0.9f
+            rond(hx, hy, 0.55f, duJour(0xFFB49C8A.toInt()))
+            forme("M${hx + 0.45f} ${hy - 0.05f}L${hx + 1f} ${hy + 0.15f}L${hx + 0.45f} ${hy + 0.25f}Z", duJour(0xFF3A3030.toInt()))
+            rond(hx + 0.18f, hy - 0.12f, 0.12f, duJour(0xFF141414.toInt()))
+            c.restore()
+        }
+
+        /**
+         * La même en vol, de profil : le corps fuselé, la queue étalée, et
+         * l'aile proche levée ([aile] 1) ou baissée (négatif) ; l'aile
+         * lointaine suit, plus courte.
+         */
+        fun tourterelleEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float) {
+            voile = 1f
+            c.save()
+            c.scale(sens * taille, taille, x, y)
+            val plume = duJour(0xFF8A7262.toInt())
+            val cy = y - 1.2f
+            forme("M${x - 0.6f} ${cy}L${x + 0.5f} ${cy}L${x - 0.6f} ${cy - 2.2f * aile}Z", duJour(0xFF6E5A4C.toInt()))
+            forme("M${x - 1f} ${cy - 0.3f}L${x - 3f} ${cy - 0.6f}L${x - 3f} ${cy + 0.5f}L${x - 1f} ${cy + 0.3f}Z", plume)
+            forme("M${x - 1.4f} ${cy}Q${x - 0.4f} ${cy - 0.7f} ${x + 1.2f} ${cy - 0.3f}Q${x + 1.4f} ${cy + 0.4f} ${x}" +
+                " ${cy + 0.55f}Q${x - 1f} ${cy + 0.5f} ${x - 1.4f} ${cy}Z", duJour(0xFFA48A78.toInt()))
+            rond(x + 1.45f, cy - 0.3f, 0.48f, duJour(0xFFB49C8A.toInt()))
+            forme("M${x + 1.85f} ${cy - 0.35f}L${x + 2.35f} ${cy - 0.15f}L${x + 1.85f} ${cy - 0.05f}Z", duJour(0xFF3A3030.toInt()))
+            forme("M${x - 0.9f} ${cy - 0.1f}L${x + 0.7f} ${cy - 0.1f}L${x - 0.5f} ${cy - 2.8f * aile}Z", plume)
+            rond(x - 0.45f, cy - 2.5f * aile, 0.22f, duJour(0xFF2A2420.toInt()))
+            c.restore()
+        }
+
+        /**
+         * Une jardinière de terre cuite accrochée dehors au garde-corps, son
+         * bord en ([x], [y]), et sa touffe de feuilles penchée de [penche]
+         * degrés ; [fleurs] : des géraniums rouges au bout des tiges.
+         */
+        fun jardiniere(x: Float, y: Float, penche: Float, fleurs: Boolean, taille: Float) {
+            voile = 1f
+            val l = taille
+            c.save()
+            c.rotate(penche, x, y)
+            for (k in -3..3) feuillePliee(x, y + 0.2f, (2.6f - abs(k) * 0.25f) * l, -90f + k * 24f, duJour(0xFF4E8A3E.toInt()), 0.45f)
+            if (fleurs) for (k in -2..2 step 2) {
+                val a = (-90f + k * 24f) * PI.toFloat() / 180f
+                rond(x + cos(a) * 2.3f * l, y + 0.2f + sin(a) * 2.3f * l, 0.5f * l, duJour(0xFFD8402E.toInt()))
+            }
+            c.restore()
+            forme("M${x - 1.2f * l} ${y}L${x + 1.2f * l} ${y}L${x + 0.9f * l} ${y + 1.8f * l}L${x - 0.9f * l} ${y + 1.8f * l}Z", duJour(0xFFB0603E.toInt()))
+            rect(x - 1.3f * l, y - 0.15f, 2.6f * l, 0.4f * l, duJour(0xFF8E4A30.toInt()))
         }
 
         /** Une barque blanche au mouillage, l'étrave à droite ; [tangage] lève l'étrave et baisse la poupe. */

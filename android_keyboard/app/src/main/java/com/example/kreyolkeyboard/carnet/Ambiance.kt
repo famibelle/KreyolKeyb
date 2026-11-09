@@ -11,6 +11,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -181,6 +182,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
+                enPlans && lieu == Lieu.PLACE_VICTOIRE && heure != null -> RueVictoire(zone, heure)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1582,6 +1584,11 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * ils en ressortent, attendent un peu et reviennent à leur place
  * (propriétaire, 2026-11-09). Pas plus loin : en courant jusqu'au bord de la
  * fenêtre, ils traversaient la mer et passaient devant les feuillages.
+ *
+ * Place de la Victoire (propriétaire, 2026-11-09), la secousse est une
+ * rafale : les fanions claquent et les jardinières tremblent avant de
+ * s'apaiser, et les tourterelles s'envolent de leur garde-corps, font une
+ * boucle au-dessus de la rue et reviennent s'y poser.
  */
 private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone, 0) {
     private val atelier = Paysages.Atelier(heure)
@@ -1595,6 +1602,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private val dehors = FloatArray(betes.size) { 1f }
     /** L'horloge de son geste habituel, arrêtée pendant la fuite pour qu'elle reparte d'où elle était. */
     private val geste = FloatArray(betes.size)
+    /** Depuis quand une rafale secoue chaque bête, ou -1 ; et sa force. */
+    private val rafale = FloatArray(betes.size) { -1f }
+    private var forceRafale = 0f
+    /** Depuis quand chaque tourterelle a pris peur, ou -1 si elle est posée. */
+    private val envol = FloatArray(betes.size) { -1f }
     private var temps = 0f
     private var regardX = 0f
     private var regardY = 0f
@@ -1605,8 +1617,19 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     }
 
     override fun secouer(force: Float) {
-        betes.forEachIndexed { i, b -> if (b.espece == Espece.TOULOULOU && fuite[i] < 0f) fuite[i] = 0f }
+        forceRafale = max(force, if (rafale.any { it >= 0f }) forceRafale else 0f)
+        betes.forEachIndexed { i, b ->
+            when (b.espece) {
+                Espece.TOULOULOU -> if (fuite[i] < 0f) fuite[i] = 0f
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS -> rafale[i] = 0f
+                Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
+                else -> Unit
+            }
+        }
     }
+
+    /** La tourterelle [i] ne part pas avec les autres : un battement de cœur de retard chacune. */
+    private fun retard(i: Int) = (i % 3) * 0.15f
 
     /** Où est le trou de [b] : quelques pas de côté, en s'écartant du milieu de la fenêtre. */
     private fun trou(b: Bete) = if (b.x < 50f) -TROU else TROU
@@ -1614,6 +1637,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     override fun avancer(dt: Float) {
         temps += dt
         betes.forEachIndexed { i, b ->
+            if (rafale[i] >= 0f) { rafale[i] += dt; if (rafale[i] > RAFALE) rafale[i] = -1f }
+            if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + VOL) envol[i] = -1f }
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
             fuite[i] += dt
             val loin = trou(b)
@@ -1660,7 +1685,29 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 // S'enfoncer : la bête s'écrase vers le sol, à ses pattes.
                 c.scale(1f, dehors[i], b.x, b.y + 1.1f)
             }
-            if (dehors[i] > 0.02f) atelier.peindre(c, b, geste[i], i)
+            val vol = envol[i] - retard(i)
+            when {
+                vol >= 0f -> {
+                    // Une boucle au-dessus de la rue, partie de son côté, qui la ramène à son perchoir.
+                    val tau = vol / VOL
+                    val cote = if (b.x < 50f) 1f else -1f
+                    val large = 20f + 4f * (i % 3)
+                    val haut = 10f + 3f * (i % 2)
+                    val a = 2f * PI.toFloat() * tau
+                    c.translate(cote * large * sin(a), -haut * (1f - cos(a)) / 2f)
+                    val aile = when {
+                        tau > 0.94f -> 0.9f
+                        tau in 0.42f..0.58f -> 0.35f
+                        else -> sin(vol * 26f) * 0.8f + 0.2f
+                    }
+                    atelier.envol(c, b, aile, if (cos(a) >= 0f) cote else -cote)
+                }
+                dehors[i] > 0.02f -> {
+                    val r = rafale[i]
+                    if (r >= 0f) atelier.peindre(c, b, geste[i], i, forceRafale * exp(-r * 1.6f), r)
+                    else atelier.peindre(c, b, geste[i], i)
+                }
+            }
             c.restore()
         }
         c.restore()
@@ -1679,6 +1726,100 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val GUET = 1.2f
         /** Sa vitesse quand il revient à sa place, prudent. */
         const val PETITS_PAS = 3f
+        /** Combien de temps une rafale agite les fanions et les jardinières, en secondes. */
+        const val RAFALE = 3f
+        /** La durée de la boucle d'une tourterelle, de l'envol au retour sur son garde-corps. */
+        const val VOL = 6.5f
+    }
+}
+
+/**
+ * La rue de Pointe-à-Pitre derrière Vélo, quand on secoue le téléphone
+ * (propriétaire, 2026-11-09). Les persiennes battent : leurs battants
+ * s'ouvrent d'un coup vers la rue, claquent deux ou trois fois de moins en
+ * moins fort et se referment, l'une après l'autre. Et le ka de Vélo résonne :
+ * trois coups, des cercles qui partent de sa peau et s'effacent ; la statue,
+ * elle, ne bouge pas.
+ *
+ * Les fanions, les jardinières et les tourterelles sont dans [BetesDuLieu],
+ * parce que la vignette les peint au repos.
+ */
+private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
+    private val atelier = Paysages.Atelier(heure)
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val anneau = if (heure.nuit) 0xFFFFE6A8.toInt() else 0xFFFFF6E0.toInt()
+    private var depuis = -1f
+    private var force = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        // Une deuxième secousse pendant que tout claque encore ne relance rien.
+        if (depuis in 0f..1.2f) return
+        depuis = 0f
+        this.force = force
+    }
+
+    override fun avancer(dt: Float) {
+        if (depuis < 0f) return
+        depuis += dt
+        if (depuis > DUREE) depuis = -1f
+    }
+
+    /** L'ouverture de la persienne [k] : chacune part un peu après la précédente. */
+    private fun ouverture(k: Int): Float {
+        val t = depuis - k * 0.13f
+        if (t < 0f || t > BATTEMENTS) return 0f
+        val q = Paysages.PERSIENNES_VICTOIRE[k]
+        return q[5] * (0.55f + force * 0.45f) * abs(sin(t * PI.toFloat() / CLAQUE)) * exp(-t * 1.3f)
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        if (depuis < 0f) return
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left + cadre[1], zone.top + cadre[2])
+        c.scale(e, e)
+        Paysages.PERSIENNES_VICTOIRE.forEachIndexed { k, q ->
+            val a = ouverture(k)
+            if (a < 0.01f) return@forEachIndexed
+            val g = Paysages.GLISSEMENT[q[4].toInt() + 2]
+            c.save()
+            c.translate(g * largeur * regardX / e, g * hauteur * regardY / e)
+            atelier.persienne(c, k, a)
+            c.restore()
+        }
+        val g = Paysages.GLISSEMENT[Paysages.DEVANT]
+        c.translate(g * largeur * regardX / e, g * hauteur * regardY / e)
+        val (kx, ky) = Paysages.PEAU_KA
+        p.style = Paint.Style.STROKE
+        for (coup in COUPS) for (r in 0..1) {
+            val q = (depuis - coup - r * 0.14f) / ECHO
+            if (q < 0f || q > 1f) continue
+            p.strokeWidth = 0.15f + 0.4f * (1f - q)
+            p.color = anneau
+            p.alpha = ((1f - q) * (1f - q) * (0.5f + force * 0.3f) * 255f).toInt().coerceIn(0, 255)
+            c.drawCircle(kx, ky, 3.6f + q * 11f, p)
+        }
+        p.style = Paint.Style.FILL
+        c.restore()
+    }
+
+    private companion object {
+        /** Le temps qu'un battant met à s'ouvrir et à claquer, en secondes. */
+        const val CLAQUE = 0.45f
+        /** Au bout de combien de temps les persiennes se sont refermées. */
+        const val BATTEMENTS = 2.6f
+        /** Les trois coups du ka, en secondes après la secousse. */
+        val COUPS = floatArrayOf(0f, 0.28f, 0.75f)
+        /** Combien de temps un cercle met à s'effacer. */
+        const val ECHO = 1.1f
+        const val DUREE = 3f
     }
 }
 
