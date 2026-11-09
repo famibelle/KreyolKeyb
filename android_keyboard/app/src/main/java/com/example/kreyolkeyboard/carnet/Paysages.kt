@@ -942,6 +942,9 @@ object Paysages {
             Bete(Espece.TOURTERELLE, 96.9f, 18.7f, plan = 2, taille = 1.1f),
             Bete(Espece.FLEURS, 53.5f, 23.1f, plan = 1, taille = 0.85f),
             Bete(Espece.PLANTE, 84f, 19.7f, plan = 2), Bete(Espece.PLANTE, 91.9f, 19f, plan = 2)),
+        // L'iguane des Petites Antilles, dont la Désirade garde l'une des
+        // dernières grandes populations : sur le plateau, à gauche du mot.
+        Lieu.DESIRADE to listOf(Bete(Espece.IGUANE, 8f, 57.5f, taille = 1.1f)),
         Lieu.MARIE_GALANTE to listOf(1f to 39.4f, 7.5f to 40.6f, 13.6f to 38.6f, 17.2f to 37.2f).map { (x, y) ->
             // Sous le manguier réduit et poussé vers le bord, comme lui.
             Bete(Espece.MANGUE, 4f + (x - 4f) * MANGUIER_REDUCTION + MANGUIER_DECALAGE, 58.6f + (y - 58.6f) * MANGUIER_REDUCTION)
@@ -3725,9 +3728,11 @@ object Paysages {
          * lanterne rouge et l'échelle qui y monte, à droite pour rester à côté
          * du dessin du mot ; le morne de broussaille et de blocs bruns sur
          * lequel il est posé, la mer de l'Atlantique à gauche et son ressac,
-         * le plateau de terre sèche semé de pierres devant. Le ressac bouge
-         * sur la carte ouverte, et le soir et la nuit le faisceau du phare
-         * tourne (`Ressac` dans [Ambiance]).
+         * le plateau de terre sèche semé de pierres et de têtes-à-l'anglais
+         * devant (photo du propriétaire, 2026-11-09), et l'iguane des
+         * Petites Antilles qui s'y chauffe ([BETES]). Le ressac bouge sur la
+         * carte ouverte, et le soir et la nuit le faisceau du phare tourne
+         * (`Ressac` dans [Ambiance]).
          */
         fun desiradePapier() {
             cumulus(-6f, 16f, 30f, 1700)
@@ -3770,6 +3775,8 @@ object Paysages {
             for ((gx, gy, gr) in arrayOf(Triple(60f, 39.6f, 1.2f), Triple(66f, 37.8f, 1.6f), Triple(73.4f, 37.2f, 1.1f),
                     Triple(80f, 35.8f, 1.8f), Triple(95.6f, 35.4f, 1.5f), Triple(50f, 42.4f, 0.9f), Triple(32f, 44.6f, 0.8f)))
                 galet(gx, gy, gr, papier(0xFF8E5E44.toInt()))
+            teteALAnglais(70f, 37.6f, 1f)
+            teteALAnglais(84.4f, 35.6f, 0.85f)
             // Le phare : la tour blanche et son ombre, l'échelle sur sa face
             // gauche, la porte rouge, la lanterne rouge, sa vitre et l'antenne.
             // Il tient sous le plein cintre des cartes rares (voir
@@ -3814,6 +3821,49 @@ object Paysages {
                 repeat(5) { t.op(disque(tx + (rt() - 0.5f) * 4f, ty + (rt() - 0.5f) * 0.8f, 0.9f + rt() * 0.8f), Path.Op.UNION) }
                 piece(t, papier(0xFF5E7A2E.toInt()), 0.5f)
             }
+            // Les têtes-à-l'anglais du plateau, hors du dessin du mot.
+            teteALAnglais(24.6f, 53.6f, 1.6f)
+            teteALAnglais(93.6f, 54f, 2.4f)
+            teteALAnglais(82.6f, 59f, 3.3f)
+        }
+
+        /**
+         * Une tête-à-l'anglais (Melocactus), d'après la photo du propriétaire
+         * (2026-11-09) : le globe vert à côtes, ses épines claires, et la
+         * coiffe de laine brun rouge qui le surmonte, blanche au sommet, où
+         * pointent de petites fleurs roses. Posée en ([x], [y]), le globe de
+         * rayon [r].
+         */
+        private fun teteALAnglais(x: Float, y: Float, r: Float) {
+            val cy = y - 0.8f * r
+            pieceD("M${x - r} ${cy}Q${x - r} ${y + 0.05f * r} $x ${y + 0.05f * r}Q${x + r} ${y + 0.05f * r} ${x + r} ${cy}" +
+                "Q${x + r} ${y - 1.65f * r} $x ${y - 1.65f * r}Q${x - r} ${y - 1.65f * r} ${x - r} ${cy}Z", papier(0xFF3E6A2A.toInt()), 0.5f)
+            // Les côtes, larges et claires, séparées par le creux sombre du
+            // globe, qui suivent son galbe ; une arête d'épines blondes au milieu.
+            for (k in -3..3) {
+                val u = k / 3.5f
+                val bas = x + u * r * 0.42f
+                val ventre = x + u * r * 0.98f
+                val haut = x + u * r * 0.48f
+                val l = 0.27f * r * (1f - abs(u) * 0.55f)
+                pieceD("M$bas ${y - 0.05f * r}Q${ventre - l} $cy $haut ${y - 1.55f * r}Q${ventre + l} $cy $bas ${y - 0.05f * r}Z",
+                    papier(if (k % 2 == 0) 0xFF9CC050.toInt() else 0xFF7EAA40.toInt()), 0f)
+                pieceD("M$bas ${y - 0.1f * r}Q$ventre $cy $haut ${y - 1.5f * r}Q${ventre + 0.03f * r} $cy $bas ${y - 0.1f * r}Z",
+                    papier(0xFFE6D8A0.toInt()), 0f)
+            }
+            // La coiffe de laine, ses soies sombres, son sommet blanc et ses fleurs.
+            val w = 0.52f * r
+            pieceD("M${x - w} ${y - 1.45f * r}L${x - w * 0.92f} ${y - 2.7f * r}Q$x ${y - 2.95f * r} ${x + w * 0.92f} ${y - 2.7f * r}" +
+                "L${x + w} ${y - 1.45f * r}Q$x ${y - 1.3f * r} ${x - w} ${y - 1.45f * r}Z", papier(0xFF8A3A2A.toInt()), 0.5f)
+            for (k in -2..2) {
+                val sx = x + k * w * 0.36f
+                pieceD("M${sx - 0.04f * r} ${y - 1.5f * r}L${sx + 0.04f * r} ${y - 1.5f * r}L${sx + 0.03f * r} ${y - 2.65f * r}" +
+                    "L${sx - 0.03f * r} ${y - 2.65f * r}Z", papier(0xFF5E2418.toInt()), 0f)
+            }
+            pieceD("M${x - w * 0.9f} ${y - 2.66f * r}Q$x ${y - 3.15f * r} ${x + w * 0.9f} ${y - 2.66f * r}Q$x ${y - 2.5f * r} ${x - w * 0.9f} ${y - 2.66f * r}Z",
+                papier(0xFFEDE4DC.toInt()), 0.2f)
+            piece(disque(x - w * 0.45f, y - 2.82f * r, 0.13f * r + 0.06f), papier(0xFFE0408A.toInt()), 0f)
+            piece(disque(x + w * 0.35f, y - 2.86f * r, 0.11f * r + 0.06f), papier(0xFFE0408A.toInt()), 0f)
         }
 
         /** La Désirade vue de la côte : la longue île en table, un gommier tiré sur le sable. */

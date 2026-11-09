@@ -1257,6 +1257,9 @@ private class Vagues(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * lanterne ([Paysages.PHARE_DESIRADE]). Vu de côté, il s'allonge vers la
  * gauche puis rapetisse, éclate en lueur quand il passe face à nous, et
  * repart plus pâle, de dos. Il balaie le ciel au-dessus du dessin du mot.
+ *
+ * Une secousse est un coup de mer : une gerbe haute jaillit de chaque point
+ * d'écume au pied du morne, de proche en proche, et retombe.
  */
 private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
@@ -1268,6 +1271,15 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
     private val rythmeGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { 2.6f + hasard() * 1.6f }
     private val phaseGerbe = FloatArray(Paysages.GERBES_DESIRADE.size) { hasard() }
     private var temps = 0f
+    /** Depuis quand la mer a donné son coup, ou -1 ; et sa force. */
+    private var coup = -1f
+    private var forceCoup = 0f
+
+    override fun secouer(force: Float) {
+        if (coup in 0f..0.8f) return
+        coup = 0f
+        forceCoup = force
+    }
     private var regardX = 0f
     private var regardY = 0f
 
@@ -1278,6 +1290,7 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
 
     override fun avancer(dt: Float) {
         temps += dt
+        if (coup >= 0f) { coup += dt; if (coup > 2.5f) coup = -1f }
     }
 
     private fun blanc(t: Float, force: Float) = ((t.coerceIn(0f, 1f) * force).toInt() shl 24) or 0xFFFFFF
@@ -1311,6 +1324,16 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
                 p.color = blanc(1f - t, 200f)
                 c.drawCircle(x + (j - 1.5f) * 1.1f * t, y - sin(PI.toFloat() * t) * 2.4f * (1f - abs(j - 1.5f) * 0.25f),
                     0.5f + 1.1f * t, p)
+            }
+            // Le coup de mer, de gauche à droite le long du pied du morne.
+            val u = (coup - i * 0.12f) / GERBE_HAUTE
+            if (coup >= 0f && u in 0f..1f) {
+                val haut = (4f + 4f * forceCoup) * sin(PI.toFloat() * u)
+                for (j in 0 until 7) {
+                    val ouvert = (j - 3f) / 3f
+                    p.color = blanc(1f - u * u, 230f)
+                    c.drawCircle(x + ouvert * 2.6f * u, y - haut * (1f - ouvert * ouvert * 0.45f), 0.6f + 1.2f * u, p)
+                }
             }
         }
         if (phare) faisceau(c, p)
@@ -1350,6 +1373,8 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
     private companion object {
         /** Un tour du faisceau, en secondes. */
         const val TOUR_PHARE = 9f
+        /** Le temps qu'une gerbe du coup de mer met à monter et retomber, en secondes. */
+        const val GERBE_HAUTE = 1.3f
     }
 }
 
@@ -1591,6 +1616,9 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * s'apaiser, et les tourterelles s'envolent de leur garde-corps, font une
  * boucle au-dessus de la rue et reviennent s'y poser.
  *
+ * L'iguane, à la Désirade comme à Petite-Terre, fait demi-tour et file se
+ * mettre à couvert hors de la fenêtre, puis revient à pas comptés.
+ *
  * À Marie-Galante, chaque secousse décroche une ou deux mangues du
  * manguier : elles tombent, rebondissent dans l'herbe, roulent un peu et y
  * restent. Quand les quatre sont tombées, elles s'y fanent et repoussent à
@@ -1631,7 +1659,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         forceRafale = max(force, if (rafale.any { it >= 0f }) forceRafale else 0f)
         betes.forEachIndexed { i, b ->
             when (b.espece) {
-                Espece.TOULOULOU -> if (fuite[i] < 0f) fuite[i] = 0f
+                Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
@@ -1676,6 +1704,18 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
+            if (b.espece == Espece.IGUANE) {
+                fuite[i] += dt
+                val f = fuite[i]
+                ecart[i] = when {
+                    f < FILE -> COUVERT * (f / FILE).let { it * it }
+                    f < FILE + A_COUVERT -> COUVERT
+                    f < FILE + A_COUVERT + REVIENT -> COUVERT * (1f - (f - FILE - A_COUVERT) / REVIENT).let { 1f - (1f - it) * (1f - it) }
+                    else -> 0f
+                }
+                if (f >= FILE + A_COUVERT + REVIENT) fuite[i] = -1f
+                return@forEachIndexed
+            }
             fuite[i] += dt
             val loin = trou(b)
             val f = fuite[i]
@@ -1710,7 +1750,14 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             c.save()
             c.translate(Paysages.GLISSEMENT[b.plan + 2] * largeur * regardX / e,
                 Paysages.GLISSEMENT[b.plan + 2] * hauteur * regardY / e)
-            if (fuite[i] >= 0f) {
+            if (fuite[i] >= 0f && b.espece == Espece.IGUANE) {
+                // Il file tête vers le bord, puis revient tête vers sa pierre,
+                // le corps qui ondule à chaque foulée.
+                val f = fuite[i]
+                val bouge = f < FILE || f > FILE + A_COUVERT
+                c.translate(ecart[i], if (bouge) -abs(sin(f * 18f)) * 0.3f * b.taille else 0f)
+                if (f < FILE) c.scale(-1f, 1f, b.x + 5f * b.taille, b.y)
+            } else if (fuite[i] >= 0f) {
                 // Le trou, ouvert le temps que la bête y entre et en ressorte.
                 val tx = b.x + trou(b)
                 val ouvert = (1f - abs(ecart[i] - trou(b)) / TROU).coerceIn(0f, 1f)
@@ -1800,6 +1847,12 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val GUET = 1.2f
         /** Sa vitesse quand il revient à sa place, prudent. */
         const val PETITS_PAS = 3f
+        /** Où l'iguane va se mettre à couvert, en unités de carte : hors de la fenêtre, vers la gauche. */
+        const val COUVERT = -42f
+        /** Le temps qu'il met à y filer, celui qu'il y reste, celui qu'il met à revenir. */
+        const val FILE = 0.9f
+        const val A_COUVERT = 4f
+        const val REVIENT = 4.5f
         /** Combien de temps une rafale agite les fanions et les jardinières, en secondes. */
         const val RAFALE = 3f
         /** La durée de la boucle d'une tourterelle, de l'envol au retour sur son garde-corps. */
