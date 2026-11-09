@@ -4231,6 +4231,7 @@ class CarteOrnee(
             val force = ((m - SEUIL_SECOUSSE) / 20f).coerceIn(0.3f, 1f)
             a.secouer(force)
             motif.bruisser(force)
+            motif.emballerAiles(force)
             invalidate()
         }
 
@@ -4840,6 +4841,32 @@ class Motif(
 
     private val peintureAiles = Paint(Paint.ANTI_ALIAS_FLAG)
 
+    /** La vitesse que la secousse la plus forte donne aux ailes du moulin, en degrés par seconde, et comment elle retombe. */
+    private val ELAN_AILES = 540f
+    private val FREIN_AILES = 0.9f
+
+    /** Les tours d'ailes gagnés aux secousses déjà retombées, en degrés. */
+    private var ailesAcquis = 0f
+    /** La dernière secousse : quand, en millisecondes d'horloge, et sa force (0 : aucune). */
+    private var ailesDepuis = 0L
+    private var ailesForce = 0f
+
+    /**
+     * Ce qu'une secousse ajoute aux ailes, en degrés, [ms] après elle : une
+     * rafale qui les emballe d'un tour et demi par seconde, et qui retombe
+     * en deux ou trois secondes (propriétaire, 2026-11-09).
+     */
+    private fun elanAiles(ms: Long): Float =
+        if (ailesForce <= 0f) 0f else ailesForce * ELAN_AILES / FREIN_AILES * (1f - kotlin.math.exp(-FREIN_AILES * ms / 1000f))
+
+    fun emballerAiles(force: Float) {
+        if (lieu != Lieu.MARIE_GALANTE) return
+        val maintenant = android.os.SystemClock.uptimeMillis()
+        ailesAcquis = (ailesAcquis + elanAiles(maintenant - ailesDepuis)) % 360f
+        ailesDepuis = maintenant
+        ailesForce = force
+    }
+
     /**
      * Les ailes du moulin de Marie-Galante, sur le plan [i] qui porte la
      * tour et sous celui de devant : les calques les taisent
@@ -4850,8 +4877,9 @@ class Motif(
      */
     private fun peindreAiles(c: Canvas, i: Int, regardX: Float, regardY: Float) {
         val k = cadrage[0]
+        val maintenant = android.os.SystemClock.uptimeMillis()
         val tour = if (c.isHardwareAccelerated)
-            (android.os.SystemClock.uptimeMillis() % Paysages.TOUR_MOULIN) * 360f / Paysages.TOUR_MOULIN else 0f
+            (maintenant % Paysages.TOUR_MOULIN) * 360f / Paysages.TOUR_MOULIN + ailesAcquis + elanAiles(maintenant - ailesDepuis) else 0f
         val ailes = Paysages.ailesMoulin(Paysages.ANGLE_MOULIN + tour)
         c.save()
         c.translate(visible.left + cadrage[1] + Paysages.GLISSEMENT[i] * visible.width() * regardX,

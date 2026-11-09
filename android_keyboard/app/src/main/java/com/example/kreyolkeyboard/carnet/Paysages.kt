@@ -126,7 +126,9 @@ enum class Espece {
     /** Pas une bête : une jardinière de feuillage accrochée à un garde-corps, qui tremble à la secousse. */
     PLANTE,
     /** La même, fleurie de géraniums rouges. */
-    FLEURS
+    FLEURS,
+    /** Pas une bête : une mangue du manguier de Marie-Galante, qui tombe quand on secoue le téléphone. */
+    MANGUE
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -923,6 +925,9 @@ object Paysages {
         floatArrayOf(77.6f, 31f, 81.4f, 46f, 2f, 1.7f)
     )
 
+    /** Le bougainvillier de Marie-Galante, sur le plan du milieu : x0, x1, y0, y1 de ses fleurs. */
+    internal val BOUGAINVILLIER = floatArrayOf(8f, 22f, 50f, 55f)
+
     /** Le centre de la peau du ka de Vélo, une fois la statue retournée et placée : d'où il résonne. */
     internal val PEAU_KA = floatArrayOf(16.8f, 46.4f)
 
@@ -937,6 +942,10 @@ object Paysages {
             Bete(Espece.TOURTERELLE, 96.9f, 18.7f, plan = 2, taille = 1.1f),
             Bete(Espece.FLEURS, 53.5f, 23.1f, plan = 1, taille = 0.85f),
             Bete(Espece.PLANTE, 84f, 19.7f, plan = 2), Bete(Espece.PLANTE, 91.9f, 19f, plan = 2)),
+        Lieu.MARIE_GALANTE to listOf(1f to 39.4f, 7.5f to 40.6f, 13.6f to 38.6f, 17.2f to 37.2f).map { (x, y) ->
+            // Sous le manguier réduit et poussé vers le bord, comme lui.
+            Bete(Espece.MANGUE, 4f + (x - 4f) * MANGUIER_REDUCTION + MANGUIER_DECALAGE, 58.6f + (y - 58.6f) * MANGUIER_REDUCTION)
+        },
         Lieu.LES_SAINTES to listOf(Bete(Espece.BARQUE, 30f, 40f, plan = 1), Bete(Espece.BARQUE, 47f, 42.5f, plan = 1),
             Bete(Espece.BARQUE, 64f, 39.5f, plan = 1)),
         Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
@@ -1011,6 +1020,18 @@ object Paysages {
         fun envol(c: Canvas, b: Bete, aile: Float, sens: Float) {
             peintre.c = c
             peintre.aplat { peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille) }
+        }
+
+        /** La mangue [b] détachée, son fruit décalé de ([dx], [dy]), tourné de [angle] degrés et fané à [opacite]. */
+        fun mangueTombee(c: Canvas, b: Bete, dx: Float, dy: Float, angle: Float, opacite: Float = 1f) {
+            peintre.c = c
+            peintre.aplat { peintre.mangue(b.x, b.y, dx, dy, angle, false, opacite) }
+        }
+
+        /** La mangue [b] qui repousse à sa branche, à [grosseur] de sa taille. */
+        fun mangueQuiPousse(c: Canvas, b: Bete, grosseur: Float) {
+            peintre.c = c
+            peintre.aplat { peintre.mangue(b.x, b.y, 0f, 0f, 0f, true, grosseur = grosseur) }
         }
 
         /** La persienne [k] de [PERSIENNES_VICTOIRE], ses battants ouverts de [angle] radians. */
@@ -1210,6 +1231,14 @@ object Paysages {
      */
     internal const val MOULIN_REDUCTION = 0.8f
 
+    /**
+     * La réduction du manguier de Marie-Galante autour du pied de son tronc
+     * (4, 58,6), et son décalage vers le bord : la place qu'il laisse à
+     * l'Habitation Murat, entre lui et le mot (propriétaire, 2026-11-09).
+     */
+    internal const val MANGUIER_REDUCTION = 0.85f
+    internal const val MANGUIER_DECALAGE = -3f
+
     /** Le moulin de Marie-Galante, sur le plan du milieu : le moyeu (x, y) et la longueur d'une aile, une fois réduit. */
     internal val MOULIN = floatArrayOf(86f + (87.4f - 86f) * MOULIN_REDUCTION + 1.4f,
         57f - (57f - 23.4f) * MOULIN_REDUCTION, 14f * MOULIN_REDUCTION)
@@ -1223,6 +1252,10 @@ object Paysages {
     /** Le bois des ailes à l'heure [heure], teinté comme le reste du lieu (`Peintre.duJour`). */
     internal fun couleurAiles(heure: Heure): Int =
         Heure.melange(0xFFCDB890.toInt(), heure.pres, floatArrayOf(0.04f, 0.14f, 0.42f, 0.72f)[heure.rang])
+
+    /** Une couleur du lieu à l'heure [heure], comme `Peintre.duJour` : pour ce que les ambiances peignent. */
+    internal fun aLHeure(col: Int, heure: Heure): Int =
+        Heure.melange(col, heure.pres, floatArrayOf(0.04f, 0.14f, 0.42f, 0.72f)[heure.rang])
 
     /** Le moyeu, foncé, à l'heure [heure]. */
     internal fun couleurMoyeu(heure: Heure): Int =
@@ -3483,18 +3516,18 @@ object Paysages {
             val l = sousLaCrete(-2f, 102f, lisiere)
             l.op(bosses(-2f, 102f, lisiere, 1.6f, 2.6f, Alea(1602)), Path.Op.UNION)
             piece(l, papier(0xFF3E7A3A.toInt()))
+            // À gauche du mot, pour que le moulin reste seul à droite
+            // (propriétaire, 2026-11-09) : la sucrerie est dessinée à droite,
+            // puis réduite et ramenée entre le manguier et le mot.
+            tasser(86f, 53f, 0.9f, 0.9f, dx = -52f) { habitationMurat() }
             plan(1)
-            // La pelouse du fond, l'abri et son rôle, le bougainvillier.
+            // La pelouse du fond, la cheminée ronde de Murat, le bougainvillier.
             pieceD("M-2 54Q40 52.6 102 53.4L102 68L-2 68Z", papier(0xFF62A83E.toInt()), 0.4f)
-            val bois = papier(0xFF8A7458.toInt())
-            barre(64.8f, 43f, 64.8f, 56.6f, 0.7f, bois, 0.4f)
-            barre(75.2f, 43f, 75.2f, 56.6f, 0.7f, bois, 0.4f)
-            pieceD("M67 56.6L67 51.6Q70 50.6 73 51.6L73 56.6Z", papier(0xFF5A4232.toInt()), 0.5f)
-            pieceD("M63 43.8L77 43.8L75.4 40.4L64.6 40.4Z", papier(0xFF6E6A62.toInt()), 0.8f)
-            for (k in 1 until 4) barre(64f + k * 0.4f, 43.8f - k * 0.85f, 76f - k * 0.4f, 43.8f - k * 0.85f, 0.12f, papier(0xFF55524C.toInt()), 0f)
+            chemineeRonde()
             val rose = papier(0xFFD0407A.toInt())
             val bougain = Path()
             val rb = Alea(1603)
+            // Ses fleurs s'envolent quand on secoue le téléphone : voir [BOUGAINVILLIER].
             repeat(14) { bougain.op(disque(8f + rb() * 14f, 51f + rb() * 4f, 1.4f + rb() * 1.6f), Path.Op.UNION) }
             piece(bougain, papier(0xFF3E7A34.toInt()))
             repeat(16) { piece(disque(8f + rb() * 14f, 50f + rb() * 4.5f, 0.5f + rb() * 0.7f), rose, 0f) }
@@ -3532,47 +3565,117 @@ object Paysages {
             // Le manguier au bord gauche : tronc court et épais qui se divise
             // tôt, grand dôme plus large que haut, d'un vert sombre et luisant,
             // des pousses bronze, quelques mangues qui pendent sous le feuillage.
-            val ecorce = papier(0xFF4E3C2E.toInt())
-            pieceD("M1 58.6Q3 50 3.4 44Q1.8 40 -2 37L0.4 35.6Q3.8 38.6 5.2 41.6Q7 37.6 11 35L12.4 36.6Q8.4 40 7.6 44Q8 51 10.4 58.6Z", ecorce, 0.7f)
-            val dome = Path()
-            val rm = Alea(1605)
-            val bord = { x: Float -> 9f + ((x - 4f) / 15f).let { it * it } * 14f }
-            repeat(22) {
-                val x = -9f + rm() * 28f
-                val y = bord(x) + 2f + rm() * (33f - bord(x)).coerceAtLeast(1f)
-                dome.op(disque(x, y, 3.4f + rm() * 2.6f), Path.Op.UNION)
+            // Réduit et poussé contre le bord, pour laisser l'Habitation Murat
+            // entre lui et le mot ; [BETES] place les mangues en conséquence.
+            tasser(4f, 58.6f, MANGUIER_REDUCTION, MANGUIER_REDUCTION, MANGUIER_DECALAGE) {
+                val ecorce = papier(0xFF4E3C2E.toInt())
+                pieceD("M1 58.6Q3 50 3.4 44Q1.8 40 -2 37L0.4 35.6Q3.8 38.6 5.2 41.6Q7 37.6 11 35L12.4 36.6Q8.4 40 7.6 44Q8 51 10.4 58.6Z", ecorce, 0.7f)
+                val dome = Path()
+                val rm = Alea(1605)
+                val bord = { x: Float -> 9f + ((x - 4f) / 15f).let { it * it } * 14f }
+                repeat(22) {
+                    val x = -9f + rm() * 28f
+                    val y = bord(x) + 2f + rm() * (33f - bord(x)).coerceAtLeast(1f)
+                    dome.op(disque(x, y, 3.4f + rm() * 2.6f), Path.Op.UNION)
+                }
+                dome.op(chemin("M-10 38Q4 41 20 37L20 34L-10 34Z"), Path.Op.UNION)
+                piece(dome, papier(0xFF1F4A22.toInt()))
+                val lumiere = Path()
+                repeat(9) { lumiere.op(disque(-4f + rm() * 18f, bord(4f) + 1.5f + rm() * 9f, 2f + rm() * 1.8f), Path.Op.UNION) }
+                piece(lumiere, papier(0xFF2F6630.toInt()), 0.3f)
+                // Les feuilles en lance au bord du dôme, et quelques pousses bronze.
+                val feuilles = intArrayOf(papier(0xFF1F4A22.toInt()), papier(0xFF2A5E2A.toInt()), papier(0xFF16381A.toInt()))
+                repeat(26) {
+                    val a = rm() * PI.toFloat()
+                    val x = 4f + cos(a) * 15f * (0.9f + rm() * 0.15f)
+                    val y = 23f - sin(a) * 14f * (0.9f + rm() * 0.15f)
+                    feuillePliee(x, y, 2.6f + rm() * 1.2f, -Math.toDegrees(a.toDouble()).toFloat() + (rm() - 0.5f) * 50f,
+                        feuilles[(rm() * 3f).toInt().coerceAtMost(2)], 0.26f)
+                }
+                repeat(5) {
+                    val x = -2f + rm() * 18f; val y = bord(x) + 0.4f
+                    for (k in 0 until 3) feuillePliee(x, y, 2.2f, -110f + k * 25f, papier(0xFFA0522D.toInt()), 0.25f)
+                }
             }
-            dome.op(chemin("M-10 38Q4 41 20 37L20 34L-10 34Z"), Path.Op.UNION)
-            piece(dome, papier(0xFF1F4A22.toInt()))
-            val lumiere = Path()
-            repeat(9) { lumiere.op(disque(-4f + rm() * 18f, bord(4f) + 1.5f + rm() * 9f, 2f + rm() * 1.8f), Path.Op.UNION) }
-            piece(lumiere, papier(0xFF2F6630.toInt()), 0.3f)
-            // Les feuilles en lance au bord du dôme, et quelques pousses bronze.
-            val feuilles = intArrayOf(papier(0xFF1F4A22.toInt()), papier(0xFF2A5E2A.toInt()), papier(0xFF16381A.toInt()))
-            repeat(26) {
-                val a = rm() * PI.toFloat()
-                val x = 4f + cos(a) * 15f * (0.9f + rm() * 0.15f)
-                val y = 23f - sin(a) * 14f * (0.9f + rm() * 0.15f)
-                feuillePliee(x, y, 2.6f + rm() * 1.2f, -Math.toDegrees(a.toDouble()).toFloat() + (rm() - 0.5f) * 50f,
-                    feuilles[(rm() * 3f).toInt().coerceAtMost(2)], 0.26f)
-            }
-            repeat(5) {
-                val x = -2f + rm() * 18f; val y = bord(x) + 0.4f
-                for (k in 0 until 3) feuillePliee(x, y, 2.2f, -110f + k * 25f, papier(0xFFA0522D.toInt()), 0.25f)
-            }
-            for ((mx, my) in arrayOf(1f to 39.4f, 7.5f to 40.6f, 13.6f to 38.6f, 17.2f to 37.2f)) {
-                barre(mx, my - 2.2f, mx, my - 0.8f, 0.18f, ecorce, 0f)
-                val t = Path(); t.addOval(RectF(mx - 0.8f, my - 1.1f, mx + 0.8f, my + 1.1f), Path.Direction.CW)
-                piece(t, papier(0xFFE89A2E.toInt()), 0.4f)
-                val r2 = Path(); r2.addOval(RectF(mx - 0.75f, my - 1.05f, mx + 0.1f, my + 0.2f), Path.Direction.CW)
-                piece(r2, papier(0xFFC8432E.toInt()), 0f)
-            }
+            // Les mangues qui pendent sont dans [BETES] : elles tombent quand on secoue le téléphone.
             pieceD("M-2 58Q50 56 102 57.4L102 68L-2 68Z", papier(0xFF74B842.toInt()), 0.4f)
             for (k in 0 until 4) {
                 val y = 59.5f + k * 1.8f
                 pieceD("M-2 ${y}Q50 ${y - 1f} 102 ${y + 0.2f}L102 ${y + 0.7f}Q50 ${y - 0.3f} -2 ${y + 0.7f}Z", papier(0xFF8CC852.toInt()), 0f)
             }
             pieceD("M-2 58.4Q8 57.6 20 59Q12 60.6 -2 61Z", papier(0xFF4E8E34.toInt()), 0f)
+        }
+
+        // Une baie en plein cintre, ouverte sur le ciel : la ruine n'a plus de toit.
+        private fun baie(x: Float, y0: Float, y1: Float, w: Float, ciel: Int, tableau: Int) {
+            val h = w / 2f
+            pieceD("M${x - h - 0.25f} ${y1}L${x - h - 0.25f} ${y0 + h}Q${x - h - 0.25f} ${y0 - 0.25f} $x ${y0 - 0.25f}" +
+                "Q${x + h + 0.25f} ${y0 - 0.25f} ${x + h + 0.25f} ${y0 + h}L${x + h + 0.25f} ${y1}Z", tableau, 0f)
+            pieceD("M${x - h} ${y1}L${x - h} ${y0 + h}Q${x - h} $y0 $x ${y0}Q${x + h} $y0 ${x + h} ${y0 + h}L${x + h} ${y1}Z", ciel, 0f)
+        }
+
+        /**
+         * Les ruines de l'Habitation Murat, à Grand-Bourg, d'après la photo
+         * du propriétaire (2026-11-09) : la sucrerie sans toit, son pignon
+         * de pierre grise percé de baies en plein cintre qui ouvrent sur le
+         * ciel, son aile basse de pierre claire, et sa haute cheminée carrée.
+         * Au loin, à gauche du mot, l'aile filant derrière lui. Ni les
+         * cocotiers de la photo, ni sa tour de moulin : le moulin de la carte
+         * en tient lieu.
+         */
+        private fun habitationMurat() {
+            val ciel = mix(P.cielBas, P.cielHaut, 0.35f)
+            val tableau = papier(0xFF4E4A42.toInt())
+            val gris = papier(0xFF8E887A.toInt())
+            val clair = papier(0xFFC9BFA2.toInt())
+            val rp = Alea(1606)
+            // L'aile basse, de pierre claire, qui file vers la droite.
+            pieceD("M86 53L86 40.2L89 40L89.6 39.6L94 39.8L95 40.4L102 40.2L102 53Z", clair, 0.5f)
+            for (bx in floatArrayOf(89.5f, 93.5f, 97.5f)) {
+                baie(bx, 42.4f, 45.6f, 1.5f, ciel, tableau)
+                baie(bx, 47.6f, 51.6f, 1.6f, ciel, tableau)
+            }
+            // Le corps principal et son pignon, de pierre grise.
+            pieceD("M72.6 53L72.6 37.4L79.8 32.8L87 37.4L87 53Z", gris, 0.6f)
+            val moellons = intArrayOf(papier(0xFF7A7468.toInt()), papier(0xFFA49C8C.toInt()))
+            repeat(30) {
+                val x = 73.4f + rp() * 12.4f
+                val y = 38.4f + rp() * 13.6f
+                pieceD("M$x ${y}L${x + 1f} ${y}L${x + 1f} ${y + 0.5f}L$x ${y + 0.5f}Z", moellons[(rp() * 2f).toInt().coerceAtMost(1)], 0f)
+            }
+            baie(79.8f, 35f, 37f, 1.1f, ciel, tableau)
+            for (bx in floatArrayOf(75.4f, 79.8f, 84.2f)) baie(bx, 38.8f, 42.2f, 1.5f, ciel, tableau)
+            baie(75.4f, 45f, 49.6f, 1.7f, ciel, tableau)
+            baie(79.8f, 44.4f, 52.6f, 2.2f, ciel, tableau)
+            baie(84.2f, 45f, 49.6f, 1.7f, ciel, tableau)
+            // La haute cheminée carrée, au bout de la sucrerie, sa face à l'ombre et son chapeau.
+            pieceD("M69.6 53L70.2 24L72.4 24L73 53Z", clair, 0.6f)
+            pieceD("M71.8 24L72.4 24L73 53L72.2 53Z", papier(0xFF9C9480.toInt()), 0f)
+            pieceD("M69.8 24.2L72.8 24.2L72.8 23.2L69.8 23.2Z", papier(0xFF9C9480.toInt()), 0.3f)
+            for (k in 0 until 8) {
+                val y = 26f + k * 3.4f
+                pieceD("M${70.2f - k * 0.06f} ${y}L${71.4f} ${y}L${71.4f} ${y + 0.3f}L${70.2f - k * 0.06f} ${y + 0.3f}Z", moellons[k % 2], 0f)
+            }
+        }
+
+        /**
+         * La cheminée ronde de Murat, colonne de moellons seule dans la
+         * pelouse : sur le plan du milieu, entre le manguier et le mot.
+         */
+        private fun chemineeRonde() {
+            val pierre = papier(0xFFCFC6B0.toInt())
+            pieceD("M26 56L26.4 33.6L29.2 33.6L29.6 56Z", pierre, 0.6f)
+            pieceD("M28.4 33.6L29.2 33.6L29.6 56L28.6 56Z", papier(0xFFA89E88.toInt()), 0f)
+            val joints = intArrayOf(papier(0xFF9C9282.toInt()), papier(0xFFB4AA96.toInt()))
+            for (k in 0 until 17) {
+                val y = 34.8f + k * 1.25f
+                val d = if (k % 2 == 0) 0f else 0.7f
+                pieceD("M26.3 ${y}L29.4 ${y}L29.4 ${y + 0.18f}L26.3 ${y + 0.18f}Z", joints[k % 2], 0f)
+                pieceD("M${27.2f + d} ${y - 1.05f}L${27.36f + d} ${y - 1.05f}L${27.36f + d} ${y}L${27.2f + d} ${y}Z", joints[0], 0f)
+            }
+            // Le sommet ébréché, et la touffe d'herbe qui y a poussé.
+            pieceD("M26.4 33.8L26.6 33L27.4 33.4L28.2 32.8L29.2 33.4L29.2 33.8Z", pierre, 0.3f)
+            for (k in 0 until 4) feuillePliee(27.8f, 33.2f, 1.6f, -150f + k * 40f, papier(0xFF5E8E3A.toInt()), 0.3f)
         }
 
         /** Marie-Galante : la plaine de canne, le moulin de pierre et ses ailes. */
@@ -5129,6 +5232,7 @@ object Paysages {
                     Espece.TOURTERELLE -> if (!P.nuit) tourterelle(x, y, if (x < 50f) 1f else -1f, 0f, b.taille)
                     Espece.PLANTE -> jardiniere(x, y, 0f, false, b.taille)
                     Espece.FLEURS -> jardiniere(x, y, 0f, true, b.taille)
+                    Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                 }
                 return@aplat
             }
@@ -5232,6 +5336,8 @@ object Paysages {
                     tourterelle(x, y, if (x < 50f) 1f else -1f, if (u < 0.5f) sin(u / 0.5f * PI.toFloat()) else 0f, b.taille)
                 }
                 // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
+                // Elle se balance un peu au bout de sa queue ; une secousse la secoue plus fort.
+                Espece.MANGUE -> mangue(x, y, 0f, 0f, sin(t * 1.2f + ph) * 3f + rafale * 14f * sin(depuisRafale * 13f), true)
                 Espece.PLANTE, Espece.FLEURS -> jardiniere(x, y,
                     sin(t * 1.1f + ph) * 2f + rafale * 16f * sin(depuisRafale * 2f * PI.toFloat() * 2.6f),
                     b.espece == Espece.FLEURS, b.taille)
@@ -5328,6 +5434,30 @@ object Paysages {
             c.restore()
             forme("M${x - 1.2f * l} ${y}L${x + 1.2f * l} ${y}L${x + 0.9f * l} ${y + 1.8f * l}L${x - 0.9f * l} ${y + 1.8f * l}Z", duJour(0xFFB0603E.toInt()))
             rect(x - 1.3f * l, y - 0.15f, 2.6f * l, 0.4f * l, duJour(0xFF8E4A30.toInt()))
+        }
+
+        /**
+         * Une mangue du manguier de Marie-Galante, pendue en ([x], [y]) sous
+         * sa queue : orange, la joue rouge. Tombée, la queue reste à la
+         * branche ([attachee] faux) et le fruit est décalé de ([dx], [dy]) ;
+         * [angle] la fait pivoter, en degrés, autour de la queue ou sur
+         * elle-même dans l'herbe. [opacite] la fane dans l'herbe, [grosseur]
+         * la fait repousser au bout de sa queue.
+         */
+        fun mangue(x: Float, y: Float, dx: Float, dy: Float, angle: Float, attachee: Boolean,
+                   opacite: Float = 1f, grosseur: Float = 1f) {
+            voile = 1f
+            val queue = duJour(0xFF4E3C2E.toInt())
+            rect(x - 0.09f, y - 2.2f, 0.18f, if (attachee) 1.4f else 0.9f, queue)
+            voile = opacite
+            c.save()
+            if (attachee) c.rotate(angle, x, y - 2.2f) else c.rotate(angle, x + dx, y + dy)
+            if (grosseur < 1f) c.scale(grosseur, grosseur, x, y - 1.1f)
+            c.translate(dx, dy)
+            forme(Path().apply { addOval(RectF(x - 0.8f, y - 1.1f, x + 0.8f, y + 1.1f), Path.Direction.CW) }, duJour(0xFFE89A2E.toInt()))
+            forme(Path().apply { addOval(RectF(x - 0.75f, y - 1.05f, x + 0.1f, y + 0.2f), Path.Direction.CW) }, duJour(0xFFC8432E.toInt()))
+            c.restore()
+            voile = 1f
         }
 
         /** Une barque blanche au mouillage, l'étrave à droite ; [tangage] lève l'étrave et baisse la poupe. */

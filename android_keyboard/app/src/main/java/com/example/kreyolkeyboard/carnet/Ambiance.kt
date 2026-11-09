@@ -183,6 +183,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
                 enPlans && lieu == Lieu.PLACE_VICTOIRE && heure != null -> RueVictoire(zone, heure)
+                enPlans && lieu == Lieu.MARIE_GALANTE && heure != null -> Bractees(zone, graine, heure)
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1589,6 +1590,11 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * rafale : les fanions claquent et les jardinières tremblent avant de
  * s'apaiser, et les tourterelles s'envolent de leur garde-corps, font une
  * boucle au-dessus de la rue et reviennent s'y poser.
+ *
+ * À Marie-Galante, chaque secousse décroche une ou deux mangues du
+ * manguier : elles tombent, rebondissent dans l'herbe, roulent un peu et y
+ * restent. Quand les quatre sont tombées, elles s'y fanent et repoussent à
+ * leur branche (propriétaire, 2026-11-09).
  */
 private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone, 0) {
     private val atelier = Paysages.Atelier(heure)
@@ -1607,6 +1613,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private var forceRafale = 0f
     /** Depuis quand chaque tourterelle a pris peur, ou -1 si elle est posée. */
     private val envol = FloatArray(betes.size) { -1f }
+    /** Depuis quand chaque mangue est tombée, ou -1 si elle pend encore. */
+    private val chute = FloatArray(betes.size) { -1f }
+    /** Depuis quand les mangues tombées se fanent et repoussent, ou -1. */
+    private var repousse = -1f
+    private val mangues = betes.indices.filter { betes[it].espece == Espece.MANGUE }
     private var temps = 0f
     private var regardX = 0f
     private var regardY = 0f
@@ -1622,9 +1633,22 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             when (b.espece) {
                 Espece.TOULOULOU -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS -> rafale[i] = 0f
+                Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
                 else -> Unit
             }
+        }
+        decrocher(force)
+    }
+
+    /**
+     * Décroche les mangues qu'une secousse de [force] fait tomber : la
+     * prochaine qui pend, et une deuxième si la secousse est forte.
+     */
+    private fun decrocher(force: Float) {
+        var n = if (force > 0.6f) 2 else 1
+        betes.forEachIndexed { i, b ->
+            if (n > 0 && b.espece == Espece.MANGUE && chute[i] < 0f) { chute[i] = -2f; n-- }
         }
     }
 
@@ -1636,9 +1660,21 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
 
     override fun avancer(dt: Float) {
         temps += dt
+        if (mangues.isNotEmpty()) {
+            if (repousse < 0f && mangues.all { chute[it] >= AU_SOL }) repousse = 0f
+            if (repousse >= 0f) {
+                repousse += dt
+                if (repousse > FANER + POUSSER) {
+                    mangues.forEach { chute[it] = -1f }
+                    repousse = -1f
+                }
+            }
+        }
         betes.forEachIndexed { i, b ->
             if (rafale[i] >= 0f) { rafale[i] += dt; if (rafale[i] > RAFALE) rafale[i] = -1f }
             if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + VOL) envol[i] = -1f }
+            // -2 : décrochée à l'instant, elle part à la trame suivante.
+            if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
             fuite[i] += dt
             val loin = trou(b)
@@ -1687,6 +1723,17 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             }
             val vol = envol[i] - retard(i)
             when {
+                chute[i] >= 0f -> {
+                    val (dx, dy, a) = mangueAuSol(b, i, chute[i])
+                    if (repousse < 0f) atelier.mangueTombee(c, b, dx, dy, a)
+                    else {
+                        // Celle de l'herbe se fane pendant que la nouvelle grossit à la branche.
+                        val fane = 1f - (repousse / FANER).coerceIn(0f, 1f)
+                        if (fane > 0f) atelier.mangueTombee(c, b, dx, dy, a, fane)
+                        val g = ((repousse - FANER * 0.5f) / POUSSER).coerceIn(0f, 1f)
+                        if (g > 0f) atelier.mangueQuiPousse(c, b, g)
+                    }
+                }
                 vol >= 0f -> {
                     // Une boucle au-dessus de la rue, partie de son côté, qui la ramène à son perchoir.
                     val tau = vol / VOL
@@ -1713,7 +1760,34 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         c.restore()
     }
 
+    /**
+     * Où en est la mangue [b] (rang [i]) [t] secondes après s'être
+     * détachée : sa chute, un rebond dans l'herbe, puis quelques tours en
+     * roulant avant de s'arrêter. Rend le décalage du fruit et son angle.
+     */
+    private fun mangueAuSol(b: Bete, i: Int, t: Float): FloatArray {
+        val sol = SOL_MANGUES + (i % 2) * 0.9f - b.y
+        val tombe = kotlin.math.sqrt(2f * sol / PESANTEUR)
+        if (t < tombe) return floatArrayOf(0f, PESANTEUR * t * t / 2f, t * 120f)
+        val u = t - tombe
+        val roule = (u / ROULADE).coerceAtMost(1f)
+        val avance = (if (i % 2 == 0) 1f else -0.7f) * 2.6f * (1f - (1f - roule) * (1f - roule))
+        val rebond = if (u < 0.3f) -sin(u / 0.3f * PI.toFloat()) * 1.1f else 0f
+        return floatArrayOf(avance, sol + rebond, tombe * 120f + avance * 70f)
+    }
+
     private companion object {
+        /** Où l'herbe reçoit les mangues, sous le manguier de Marie-Galante. */
+        const val SOL_MANGUES = 58.8f
+        /** Leur chute, en unités de carte par seconde au carré. */
+        const val PESANTEUR = 90f
+        /** Le temps qu'une mangue tombée roule avant de s'arrêter. */
+        const val ROULADE = 0.7f
+        /** Combien de temps la dernière tombée reste dans l'herbe avant que la repousse commence. */
+        const val AU_SOL = 4f
+        /** Le temps que les mangues de l'herbe mettent à se faner, puis celles de l'arbre à repousser. */
+        const val FANER = 1.5f
+        const val POUSSER = 2.5f
         /** La distance du touloulou à son trou, en unités de carte. */
         const val TROU = 5f
         /** Sa vitesse quand il détale, en unités de carte par seconde. */
@@ -1820,6 +1894,103 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
         /** Combien de temps un cercle met à s'effacer. */
         const val ECHO = 1.1f
         const val DUREE = 3f
+    }
+}
+
+/**
+ * Les fleurs du bougainvillier de Marie-Galante, quand on secoue le
+ * téléphone : une rafale en arrache une poignée, que le vent emporte vers
+ * la droite en tournoyant ; elles retombent dans l'herbe et s'y fanent en
+ * quelques secondes. Sur le plan du milieu, comme l'arbuste.
+ */
+private class Bractees(zone: RectF, graine: Int, heure: Heure) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val couleurs = intArrayOf(Paysages.aLHeure(0xFFD0407A.toInt(), heure), Paysages.aLHeure(0xFFE0609A.toInt(), heure))
+    private val n = 16
+    private val x = FloatArray(n)
+    private val y = FloatArray(n)
+    private val vx = FloatArray(n)
+    private val vy = FloatArray(n)
+    private val sol = FloatArray(n)
+    private val angle = FloatArray(n)
+    /** L'âge de chaque fleur depuis qu'elle s'est posée, -1 en l'air ; -2 : aucune fleur dans cette case. */
+    private val pose = FloatArray(n) { -2f }
+    private val chemin = Path()
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        val (x0, x1, y0, y1) = Paysages.BOUGAINVILLIER
+        val combien = (5f + force * 8f).toInt()
+        var k = 0
+        for (i in 0 until n) {
+            if (k >= combien) break
+            if (pose[i] == -1f) continue
+            x[i] = x0 + hasard() * (x1 - x0)
+            y[i] = y0 + hasard() * (y1 - y0)
+            vx[i] = 5f + hasard() * 7f * force
+            vy[i] = -3f - hasard() * 4f * force
+            sol[i] = 55.6f + hasard() * 2.4f
+            angle[i] = hasard() * 360f
+            pose[i] = -1f
+            k++
+        }
+    }
+
+    override fun avancer(dt: Float) {
+        for (i in 0 until n) {
+            when {
+                pose[i] == -1f -> {
+                    // Le vent les pousse, freiné ; elles retombent lentement, en papillonnant.
+                    vx[i] *= (1f - 0.6f * dt)
+                    vy[i] = (vy[i] + 6f * dt).coerceAtMost(2.6f)
+                    x[i] += vx[i] * dt
+                    y[i] += (vy[i] + sin(angle[i] * 0.05f) * 1.2f) * dt
+                    angle[i] += 260f * dt
+                    if (y[i] >= sol[i] && vy[i] > 0f) { y[i] = sol[i]; pose[i] = 0f }
+                }
+                pose[i] >= 0f -> { pose[i] += dt; if (pose[i] > FANE) pose[i] = -2f }
+            }
+        }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        if (pose.all { it == -2f }) return
+        val e = cadre[0]
+        val g = Paysages.GLISSEMENT[Paysages.MILIEU]
+        c.save()
+        c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        for (i in 0 until n) {
+            if (pose[i] == -2f) continue
+            p.color = couleurs[i % 2]
+            if (pose[i] > 0f) p.alpha = ((1f - pose[i] / FANE) * 255f).toInt().coerceIn(0, 255)
+            c.save()
+            c.rotate(angle[i], x[i], y[i])
+            // Une bractée : un cœur arrondi, aplati en tournant pour qu'on la voie de profil.
+            c.scale(1f, 0.35f + 0.65f * abs(cos(angle[i] * 0.02f)), x[i], y[i])
+            chemin.rewind()
+            chemin.moveTo(x[i], y[i] + 0.6f)
+            chemin.quadTo(x[i] - 0.9f, y[i] - 0.1f, x[i] - 0.3f, y[i] - 0.55f)
+            chemin.quadTo(x[i], y[i] - 0.6f, x[i], y[i] - 0.3f)
+            chemin.quadTo(x[i], y[i] - 0.6f, x[i] + 0.3f, y[i] - 0.55f)
+            chemin.quadTo(x[i] + 0.9f, y[i] - 0.1f, x[i], y[i] + 0.6f)
+            chemin.close()
+            c.drawPath(chemin, p)
+            c.restore()
+        }
+        c.restore()
+    }
+
+    private companion object {
+        /** Combien de temps une fleur posée met à se faner, en secondes. */
+        const val FANE = 4f
     }
 }
 
