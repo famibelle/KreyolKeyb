@@ -448,6 +448,16 @@ object Paysages {
     /** Le rang du plan du milieu du lieu (son plan 1) parmi les plans. */
     const val MILIEU = 3
 
+    /** Le rang du plan de devant du lieu (son plan 2) parmi les plans. */
+    const val DEVANT = 4
+
+    /**
+     * Les lieux dont le plan de devant n'est que feuillage : une secousse du
+     * téléphone le fait bruisser (`Motif.bruisser`). Ailleurs ce plan porte
+     * aussi le sol, qui ne doit pas onduler.
+     */
+    internal val FEUILLAGE_DEVANT = setOf(Lieu.GRANDE_ANSE)
+
     /**
      * Cinq cartons pour toutes les cartes, six à partir de rare (décision du
      * propriétaire, 2026-11-01, règle 8 de la skill `direction-artistique`) :
@@ -885,7 +895,8 @@ object Paysages {
      * deux par lieu, pas plus (propriétaire, 2026-10-19).
      */
     internal val BETES: Map<Lieu, List<Bete>> = mapOf(
-        Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f), Bete(Espece.TOULOULOU, 46f, 54.6f), Bete(Espece.TOULOULOU, 61f, 52.4f)),
+        Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
+            Bete(Espece.TOULOULOU, 61f, 52.4f, plan = 1)),
         Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 56f, 45f, plan = 1, taille = 4f)),
         Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f)),
         Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
@@ -992,6 +1003,27 @@ object Paysages {
 
     /** Les deux fumées légères du bassin des Bains Jaunes, sur le plan du milieu : x, pied, haut, largeur, dérive. */
     internal val VAPEURS_BAINS = arrayOf(floatArrayOf(76f, 49f, 38f, 1.4f, -2f), floatArrayOf(90f, 55f, 43f, 1.4f, 1.6f))
+
+    /** La fumée du gouffre de la Soufrière, sur le plan du milieu : x, pied, haut, largeur, dérive. */
+    internal val FUMEE_SOUFRIERE = arrayOf(floatArrayOf(85.5f, 41f, 13f, 5.2f, 8f))
+
+    /**
+     * Le bord de l'eau sur la plage de Grande Anse, sur le plan du milieu :
+     * l'abscisse où le sable sec s'arrête, à la hauteur y. Le dessin y pose le
+     * sable mouillé et la frange d'écume, [Ambiance] y fait monter et
+     * redescendre les vagues.
+     */
+    internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(1.2f)
+
+    /** La mer de Grande Anse visible sur le plan du milieu, au-dessus des raisiniers du bas : x0, x1, y0, y1, à droite du rivage. */
+    internal val EAU_GRANDE_ANSE = floatArrayOf(57f, 102f, 34.6f, 49f)
+
+    /**
+     * Les raisiniers de droite de Grande Anse, sur le plan de devant : sous y
+     * (premier nombre), leur feuillage cache la mer à droite de x (second).
+     * L'eau animée s'y arrête, sinon elle passerait devant les feuilles.
+     */
+    internal val FEUILLAGE_GRANDE_ANSE = floatArrayOf(41f, 74f)
 
     /** L'écume du rivage de la Pointe des Châteaux, sur le plan du milieu : sa ligne. */
     internal const val RIVAGE_CHATEAUX = 39.2f
@@ -2249,9 +2281,11 @@ object Paysages {
             // La lisière de forêt qui descend du morne jusqu'au haut de la plage.
             rive(true, 30f, 36f, 60f, 965, papier(0xFF3F8F4A.toInt()), 2.6f)
             rive(true, 34f, 41f, 40f, 966, papier(0xFF5FA84A.toInt()), 3.2f)
-            plan(2)
             // La plage en diagonale, son sable mouillé et sa frange d'écume.
-            fun bord(y: Float) = 61f + 37f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(1.2f)
+            // Sur le plan de la mer : elle file du bas de la fenêtre jusqu'au
+            // pied du morne, et sur le plan de devant sa pointe lointaine se
+            // décollait de la mer quand la carte penche.
+            fun bord(y: Float) = rivageGrandeAnse(y)
             fun dos(y: Float) = 58f - 46f * ((y - 35f) / 31f).coerceIn(0f, 1f).pow(0.9f)
             val mouille = Path()
             mouille.moveTo(dos(35f), 35f)
@@ -2282,6 +2316,7 @@ object Paysages {
                 piece(Path().apply { addOval(RectF(px - 0.6f, py - 0.35f, px + 0.6f, py + 0.35f), Path.Direction.CW) },
                     papier(0xFFD4AE76.toInt()), 0f)
             }
+            plan(2)
             // Les raisiniers bord de mer : un massif à gauche, une branche en bas à droite.
             brancheRaisinier(0f, BAS + 1f, 54f, 5f, 970, 12)
             brancheRaisinier(7f, BAS + 1f, 40f, 7f, 971, 9)
@@ -2600,7 +2635,7 @@ object Paysages {
             piece(sousLaCrete(48f, 102f, flanc), papier(0xFFB39466.toInt()))
             pieceD("M73 27Q84 23.5 97 27.5Q94 34 90 44Q86 47 83 44Q78 34 73 27Z", papier(0xFF6E665C.toInt()))
             pieceD("M73 27Q78 34 83 44Q85 46 86.5 45.5Q82 34 80 25.6Z", papier(0xFF4E4842.toInt()), 0.4f)
-            panache(85.5f, 41f, 13f, 5.2f, 8f, 1203)
+            FUMEE_SOUFRIERE.forEach { (x, pied, haut, w, derive) -> panache(x, pied, haut, w, derive, 1203) }
             // La clôture le long du bord du gouffre.
             val brun = papier(0xFF5A4636.toInt())
             pieceD("M66 26.2Q80 22.4 99 25.6L99 26.1Q80 22.9 66 26.7Z", brun, 0f)

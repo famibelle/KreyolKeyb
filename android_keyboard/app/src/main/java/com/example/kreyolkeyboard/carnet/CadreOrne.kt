@@ -4228,7 +4228,9 @@ class CarteOrnee(
             val maintenant = android.os.SystemClock.uptimeMillis()
             if (maintenant - derniereSecousse < 120L) return
             derniereSecousse = maintenant
-            a.secouer(((m - SEUIL_SECOUSSE) / 20f).coerceIn(0.3f, 1f))
+            val force = ((m - SEUIL_SECOUSSE) / 20f).coerceIn(0.3f, 1f)
+            a.secouer(force)
+            motif.bruisser(force)
             invalidate()
         }
 
@@ -4597,6 +4599,29 @@ class Motif(
 
     /** Vrai quand le lieu est en plans, et donc à peindre à chaque trame. */
     val enPlans: Boolean get() = profondeur && plans != null
+
+    /** Quand le feuillage de devant a été secoué, à l'horloge [android.os.SystemClock.uptimeMillis], et de quelle force. */
+    private var secoueA = 0L
+    private var secoueForce = 0f
+
+    /**
+     * Une secousse du téléphone fait bruisser le plan de devant des lieux
+     * où il n'est que feuillage ([Paysages.FEUILLAGE_DEVANT]) : il ondule,
+     * tenu par le bas comme des branches, et se calme en une seconde et demie.
+     */
+    fun bruisser(force: Float) {
+        if (lieu !in Paysages.FEUILLAGE_DEVANT) return
+        secoueA = android.os.SystemClock.uptimeMillis()
+        secoueForce = force
+    }
+
+    /** L'inclinaison du feuillage à cet instant : un balancement amorti, nul au repos. */
+    private fun bruissement(c: Canvas): Float {
+        if (secoueA == 0L || !c.isHardwareAccelerated) return 0f
+        val t = (android.os.SystemClock.uptimeMillis() - secoueA) / 1000f
+        if (t > 1.6f) return 0f
+        return secoueForce * 0.05f * exp(-t * 2.5f) * sin(2f * Math.PI.toFloat() * 4.5f * t)
+    }
     private val ciel: LinearGradient by lazy {
         LinearGradient(
             0f, visible.top, 0f, visible.bottom,
@@ -4778,8 +4803,17 @@ class Motif(
             )
             if (i == Paysages.NUAGES) peindreNuages(c, etages[i], regardX, regardY)
             else {
+                val bruit = if (i == Paysages.DEVANT) bruissement(c) else 0f
+                if (bruit != 0f) {
+                    // Le feuillage penche, tenu par le bas de la fenêtre.
+                    c.save()
+                    c.translate(0f, visible.bottom)
+                    c.skew(bruit, 0f)
+                    c.translate(0f, -visible.bottom)
+                }
                 ombres?.getOrNull(i)?.let { o -> peindreOmbre(c, o, i, regardX, regardY) }
                 c.drawBitmap(etages[i], null, ouPlan, peinture)
+                if (bruit != 0f) c.restore()
                 if (i == Paysages.MILIEU && Paysages.PAPIER && lieu == Lieu.MARIE_GALANTE) peindreAiles(c, i, regardX, regardY)
                 if (!c.isHardwareAccelerated) poserBetes(c, i)
             }
