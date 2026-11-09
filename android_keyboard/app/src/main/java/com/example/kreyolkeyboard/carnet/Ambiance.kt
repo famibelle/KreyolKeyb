@@ -161,6 +161,10 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     rive = { y -> Paysages.rivageGrandeAnse(y) + 2.5f + 1.5f * (y - 34f) / 32f },
                     devant = { y -> if (y < Paysages.FEUILLAGE_GRANDE_ANSE[0]) 102f else Paysages.FEUILLAGE_GRANDE_ANSE[1] }),
                     Ecume(zone, graine))
+                // Un lac au calme : peu d'éclats, entre ses deux rives de forêt.
+                enPlans && lieu == Lieu.GRAND_ETANG -> Reflets(zone, graine, nuit = heure?.nuit == true,
+                    eau = Paysages.EAU_ETANG, eclatsDuJour = 14,
+                    rive = { y -> Paysages.etangVuGauche(y) + 1.5f }, devant = { y -> Paysages.etangVuDroite(y) - 1.5f })
                 enPlans && lieu == Lieu.LES_SAINTES -> Reflets(zone, graine, nuit = heure?.nuit == true,
                     eau = Paysages.EAU_SAINTES, eclatsDuJour = 24)
                 enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,

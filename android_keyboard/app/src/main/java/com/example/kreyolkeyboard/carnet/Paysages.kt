@@ -1023,6 +1023,26 @@ object Paysages {
      */
     internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 34f) / 32f).coerceIn(0f, 1f).pow(1.2f)
 
+    /** Le bord gauche du Grand Étang à la hauteur y, sur le plan du milieu : le lac naît à l'horizon et s'élargit vers soi. */
+    internal fun etangGauche(y: Float) = 36f - (y - 32f) / 28f * 30f
+
+    /** Le bord droit du Grand Étang à la hauteur y. */
+    internal fun etangDroite(y: Float) = 64f + (y - 32f) / 28f * 30f
+
+    /**
+     * L'eau du Grand Étang qu'on voit vraiment, sur le plan du milieu : x0,
+     * x1, y0, y1. Les lisières des rives mordent sur le lac bien au-delà de
+     * [etangGauche] et [etangDroite] ; ses bords visibles, relevés sur la
+     * carte ouverte (2026-11-09), sont [etangVuGauche] et [etangVuDroite].
+     */
+    internal val EAU_ETANG = floatArrayOf(24f, 77f, 38f, 59f)
+
+    /** Le bord gauche de l'eau visible du Grand Étang, entre les lisières, à la hauteur y. */
+    internal fun etangVuGauche(y: Float) = 33f - (y - 38f) / 22f * 9f
+
+    /** Le bord droit de l'eau visible du Grand Étang. */
+    internal fun etangVuDroite(y: Float) = 72f + (y - 38f) / 22f * 5f
+
     /** La baie des Saintes, sur le plan du milieu, entre le pied du morne et la plage : x0, x1, y0, y1. */
     internal val EAU_SAINTES = floatArrayOf(-2f, 95f, 37.6f, 47f)
 
@@ -2404,6 +2424,32 @@ object Paysages {
         }
 
         /**
+         * Un salako, le chapeau des pêcheurs saintois, vu d'un peu haut et posé
+         * à plat : un large disque à peine bombé, blanc rayé de bleu et de vert
+         * du sommet au bord, et sa petite pointe au milieu (photo du
+         * propriétaire, 2026-11-09). Centré sur [x], posé sur [y], de rayon [r].
+         */
+        fun salako(x: Float, y: Float, r: Float) {
+            val k = r * 0.55f
+            // Le point du bord avant (la courbe du bas) au paramètre t, de 0 (gauche) à 1 (droite).
+            fun bordX(t: Float) = (1 - t) * (1 - t) * (x - r) + 2 * t * (1 - t) * x + t * t * (x + r)
+            fun bordY(t: Float) = (1 - t) * (1 - t) * y + 2 * t * (1 - t) * (y + 0.8f * k) + t * t * y
+            pieceD("M${x - r * 1.05f} ${y + 0.4f * k}Q$x ${y + 1.5f * k} ${x + r * 1.05f} ${y + 0.4f * k}Q$x ${y + 0.9f * k} ${x - r * 1.05f} ${y + 0.4f * k}Z",
+                papier(0xFF6A5A48.toInt()), 0f)
+            pieceD("M${x - r} ${y}Q$x ${y - 1.9f * k} ${x + r} ${y}Q$x ${y + 0.8f * k} ${x - r} ${y}Z", papier(0xFFF1EEE4.toInt()), 0.5f)
+            val sommetY = y - 0.95f * k
+            val raies = intArrayOf(papier(0xFF3A96C4.toInt()), papier(0xFF5FB894.toInt()))
+            for (i in 0..8) {
+                val t = 0.06f + i * 0.11f
+                val d = 0.03f
+                pieceD("M$x ${sommetY}L${bordX(t - d)} ${bordY(t - d)}L${bordX(t + d)} ${bordY(t + d)}Z", raies[i % 2], 0f)
+            }
+            // Le bord, un liseré plus sombre, et la pointe.
+            pieceD("M${x - r} ${y}Q$x ${y + 0.8f * k} ${x + r} ${y}Q$x ${y + 0.95f * k} ${x - r} ${y}Z", papier(0xFF9A9488.toInt()), 0f)
+            piece(disque(x, sommetY - 0.15f, 0.28f), papier(0xFFE4E0D4.toInt()), 0.3f)
+        }
+
+        /**
          * Un amandier pays qui entre par le bord droit : le tronc contre le
          * bord, ses branches en étages plats qui s'avancent au-dessus du bourg.
          */
@@ -2501,6 +2547,8 @@ object Paysages {
             pieceD("M-2 51.4Q30 49 60 50Q82 50.6 102 48.8L102 68L-2 68Z", papier(0xFFB89A6A.toInt()), 0.6f)
             saintoise(66f, 56.5f, 40f, false)
             saintoise(-6f, 62.5f, 62f, true)
+            // Un salako posé sur le banc de la saintoise, à gauche du mot.
+            salako(18f, 51.2f, 4.2f)
             galet(30f, 64.5f, 3f, papier(0xFF8A8478.toInt()))
             amandierPays(98f, 50f)
         }
@@ -5203,8 +5251,8 @@ object Paysages {
             morneBoise(29.5f, 1.6f, 702, papier(0xFF6FCB8A.toInt()), 1.6f)
             plan(1)
             // L'étang, qui naît à l'horizon et s'élargit jusqu'au premier plan.
-            fun gauche(y: Float) = 36f - (y - 32f) / 28f * 30f
-            fun droite(y: Float) = 64f + (y - 32f) / 28f * 30f
+            fun gauche(y: Float) = etangGauche(y)
+            fun droite(y: Float) = etangDroite(y)
             val eau = Path()
             eau.moveTo(gauche(32f) - 2f, 32f); eau.lineTo(droite(32f) + 2f, 32f)
             eau.lineTo(droite(66f) + 4f, BAS); eau.lineTo(gauche(66f) - 4f, BAS); eau.close()
