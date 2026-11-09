@@ -180,7 +180,13 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
-                enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
+                enPlans && lieu == Lieu.MORNE_A_L_EAU && heure != null -> {
+                    // Les fleurs du flamboyant, que la secousse emporte loin sur le cimetière.
+                    val fleurs = Petales(zone, graine, Paysages.FLAMBOYANT_MORNE,
+                        intArrayOf(Paysages.aLHeure(0xFFE8401E.toInt(), heure), Paysages.aLHeure(0xFFF26A2A.toInt(), heure)),
+                        sol0 = 47f, sens = 1f, plan = Paysages.DEVANT, chute = 12f, elan = 2.4f)
+                    if (heure.allume) Ensemble(Bougies(zone, graine), fleurs) else fleurs
+                }
                 enPlans && lieu == Lieu.PLACE_VICTOIRE && heure != null -> RueVictoire(zone, heure)
                 enPlans && lieu == Lieu.MARIE_GALANTE && heure != null -> Petales(zone, graine, Paysages.BOUGAINVILLIER,
                     intArrayOf(Paysages.aLHeure(0xFFD0407A.toInt(), heure), Paysages.aLHeure(0xFFE0609A.toInt(), heure)),
@@ -1561,6 +1567,14 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     private val vitesse = FloatArray(bougies.size) { 5f + hasard() * 4f }
     private val flamme = android.graphics.Path()
     private var temps = 0f
+    /** Depuis quand une secousse couche les flammes, ou -1 ; et sa force. */
+    private var coup = -1f
+    private var forceCoup = 0f
+
+    override fun secouer(force: Float) {
+        forceCoup = max(force, if (coup >= 0f) forceCoup else 0f)
+        coup = 0f
+    }
     private var regardX = 0f
     private var regardY = 0f
 
@@ -1571,11 +1585,15 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 
     override fun avancer(dt: Float) {
         temps += dt
+        if (coup >= 0f) { coup += dt; if (coup > 3f) coup = -1f }
     }
 
     override fun dessiner(c: Canvas, p: Paint) {
         val e = cadre[0]
         p.style = Paint.Style.FILL
+        // Une secousse couche les flammes d'un côté puis de l'autre, les
+        // rapetisse, et elles se redressent en quelques secondes.
+        val souffle = if (coup >= 0f) forceCoup * exp(-coup * 1.5f) else 0f
         for (plan in 0..2) {
             val g = Paysages.GLISSEMENT[plan + 2]
             c.save()
@@ -1584,8 +1602,8 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
             bougies.forEachIndexed { i, (x, y, pl) ->
                 if (pl.toInt() != plan) return@forEachIndexed
                 val t = temps * vitesse[i] + phase[i]
-                val vacille = 0.75f + 0.15f * sin(t) + 0.1f * sin(t * 2.3f + 1f)
-                val penche = 0.25f * sin(t * 0.7f)
+                val vacille = (0.75f + 0.15f * sin(t) + 0.1f * sin(t * 2.3f + 1f)) * (1f - 0.55f * souffle)
+                val penche = 0.25f * sin(t * 0.7f) + souffle * 1.6f * sin(coup * 9f + phase[i] * 0.3f)
                 p.color = ((38f * vacille).toInt() shl 24) or 0xFF9A3C
                 c.drawCircle(x, y - 1.6f, 3.4f + 0.8f * vacille, p)
                 p.color = ((80f * vacille).toInt() shl 24) or 0xFFB050
@@ -1669,7 +1687,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU -> rafale[i] = 0f
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
@@ -1989,11 +2007,12 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
  * [sens] en tournoyant ; elles retombent en papillonnant jusqu'au sol, à
  * [sol] et quelques unités plus bas, et s'y fanent en quelques secondes. Sur
  * le [plan] de l'arbre. [chute] est la hauteur qu'elles ont à descendre
- * au-delà de la source : un grand arbre les laisse tomber plus loin.
+ * au-delà de la source : un grand arbre les laisse tomber plus loin ; [elan]
+ * les fait porter plus loin par le vent.
  */
 private class Petales(zone: RectF, graine: Int, private val source: FloatArray, private val couleurs: IntArray,
                       private val sol0: Float, private val sens: Float, private val plan: Int,
-                      private val chute: Float = 0f) : Ambiance(zone, graine) {
+                      private val chute: Float = 0f, private val elan: Float = 1f) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 16
     private val x = FloatArray(n)
@@ -2022,7 +2041,7 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
             if (pose[i] == -1f) continue
             x[i] = x0 + hasard() * (x1 - x0)
             y[i] = y0 + hasard() * (y1 - y0)
-            vx[i] = sens * (5f + hasard() * 7f * force)
+            vx[i] = sens * elan * (5f + hasard() * 7f * force)
             vy[i] = -3f - hasard() * 4f * force
             sol[i] = sol0 + chute * hasard() + hasard() * 2.4f
             angle[i] = hasard() * 360f

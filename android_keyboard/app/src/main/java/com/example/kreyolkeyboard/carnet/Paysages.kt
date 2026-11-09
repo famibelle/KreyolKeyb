@@ -131,7 +131,9 @@ enum class Espece {
     /** Pas une bête : une mangue du manguier de Marie-Galante, qui tombe quand on secoue le téléphone. */
     MANGUE,
     /** Pas une bête : le bateau de plongée de Bouillante, amarré au ponton, qui tangue. */
-    BATEAU
+    BATEAU,
+    /** Une abeille minuscule qui butine autour de sa fleur. */
+    ABEILLE
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -934,6 +936,9 @@ object Paysages {
     /** Les grappes du flamboyant de Bouillante, sur le plan de devant : x0, x1, y0, y1. */
     internal val FLAMBOYANT_BOUILLANTE = floatArrayOf(80f, 102f, 24f, 33f)
 
+    /** Les grappes du flamboyant de Morne-à-l'Eau, celui de Bouillante retourné : x0, x1, y0, y1. */
+    internal val FLAMBOYANT_MORNE = floatArrayOf(-2f, 20f, 24f, 33f)
+
     /**
      * Les sources chaudes de la plage sombre de Bouillante, sur le plan du
      * milieu, au format de [VAPEURS_RAVINE] : x, pied, haut, largeur, dérive.
@@ -956,6 +961,14 @@ object Paysages {
             Bete(Espece.TOURTERELLE, 96.9f, 18.7f, plan = 2, taille = 1.1f),
             Bete(Espece.FLEURS, 53.5f, 23.1f, plan = 1, taille = 0.85f),
             Bete(Espece.PLANTE, 84f, 19.7f, plan = 2), Bete(Espece.PLANTE, 91.9f, 19f, plan = 2)),
+        // Des pots de fleurs sur les tombes et de minuscules abeilles qui
+        // butinent autour, et dans le flamboyant : tout reste à sa place
+        // quand on secoue, les abeilles s'égaillent et reviennent, les
+        // fleurs tremblent.
+        Lieu.MORNE_A_L_EAU to listOf(Bete(Espece.FLEURS, 17f, 55.2f, plan = 2), Bete(Espece.FLEURS, 95f, 50.8f, plan = 2),
+            Bete(Espece.ABEILLE, 17f, 52.2f, plan = 2), Bete(Espece.ABEILLE, 18.4f, 52.8f, plan = 2),
+            Bete(Espece.ABEILLE, 95f, 47.8f, plan = 2), Bete(Espece.ABEILLE, 93.4f, 48.4f, plan = 2),
+            Bete(Espece.ABEILLE, 11f, 29.6f, plan = 2), Bete(Espece.ABEILLE, 15.6f, 31.4f, plan = 2)),
         // L'iguane des Petites Antilles, dont la Désirade garde l'une des
         // dernières grandes populations : sur le plateau, à gauche du mot.
         Lieu.DESIRADE to listOf(Bete(Espece.IGUANE, 8f, 57.5f, taille = 1.1f)),
@@ -4001,36 +4014,7 @@ object Paysages {
             // dessus, qui entre par le coin haut droit ; le dessous sombre et
             // festonné, le dessus semé de grappes rouges. Une secousse en fait
             // tomber des fleurs : voir [FLAMBOYANT_BOUILLANTE].
-            val brun = papier(0xFF4E3C2E.toInt())
-            pieceD("M97 64Q95.4 52 92.6 42.6L94.4 42Q97.6 50 100.4 56L102 64Z", brun, 0.6f)
-            barre(93.4f, 43f, 84f, 35.4f, 0.8f, brun, 0.4f)
-            barre(94f, 43f, 99f, 33f, 0.8f, brun, 0.4f)
-            barre(90f, 39.6f, 90.6f, 34f, 0.5f, brun, 0.3f)
-            val rf = Alea(1809)
-            val dessus = { x: Float -> 26f - ((x - 96f) / 20f).let { 1f - it * it } * 9f }
-            val dessous = { x: Float -> 34.6f + (x - 78f) * 0.06f + sin(x * 1.3f) * 0.3f }
-            val houppier = Path()
-            houppier.moveTo(76f, dessous(76f))
-            var hx = 76f
-            while (hx < 104f) { houppier.lineTo(hx, dessus(hx)); hx += 1f }
-            houppier.lineTo(104f, dessous(104f))
-            houppier.close()
-            houppier.op(bosses(76f, 104f, dessus, 1.4f, 2.4f, rf), Path.Op.UNION)
-            val festons = Path(houppier).apply { op(bosses(77f, 104f, dessous, 1f, 1.5f, rf), Path.Op.UNION) }
-            piece(festons, papier(0xFF2E6A22.toInt()), 0.7f)
-            piece(houppier, papier(0xFF4E9E2E.toInt()), 0f)
-            piece(bosses(78f, 104f, { x -> dessus(x) + 0.4f }, 1f, 1.6f, rf), papier(0xFF72BE40.toInt()), 0f)
-            pieceD("M80 ${dessous(80f) - 2.4f}Q92 ${dessous(92f) - 3.6f} 104 ${dessous(104f) - 2.6f}L104 ${dessous(104f) - 1.4f}Q92 ${dessous(92f) - 2.2f} 80 ${dessous(80f) - 1.2f}Z",
-                papier(0xFF3A8228.toInt()), 0f)
-            val rouges = intArrayOf(papier(0xFFE8401E.toInt()), papier(0xFFF26A2A.toInt()), papier(0xFFC8301C.toInt()))
-            repeat(14) {
-                val cx = 79f + rf() * 24f
-                val cy = dessus(cx) + 1f + rf() * (dessous(cx) - dessus(cx) - 3f)
-                repeat(6) {
-                    piece(disque(cx + (rf() - 0.5f) * 2.8f, cy + (rf() - 0.5f) * 1.4f, 0.45f + rf() * 0.45f),
-                        rouges[(rf() * 3f).toInt().coerceAtMost(2)], 0.2f)
-                }
-            }
+            flamboyantEnParasol(1809)
         }
 
         /** Bouillante : les îlets Pigeon, une tortue verte, le pavillon de plongée, la plage sombre qui fume. */
@@ -4161,6 +4145,10 @@ object Paysages {
                 bougie(b[0], b[1])
             }
             plan(2)
+            // Un flamboyant en fleurs à gauche, au-dessus des tombes : celui de
+            // Bouillante retourné. Une secousse emporte ses fleurs sur le
+            // cimetière : voir [FLAMBOYANT_MORNE].
+            tasser(50f, 0f, -1f, 1f) { flamboyantEnParasol(2020) }
             // Devant : la dalle d'un caveau en damier à gauche, les grandes
             // dalles grises en gradins à droite.
             pieceD("M-2 55.6L24 54.8L30 57.6L30 68L-2 68Z", papier(0xFF4A4846.toInt()), 0.8f)
@@ -5306,6 +5294,7 @@ object Paysages {
                     Espece.FLEURS -> jardiniere(x, y, 0f, true, b.taille)
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
+                    Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                 }
                 return@aplat
             }
@@ -5415,16 +5404,42 @@ object Paysages {
                     val u = (t + ph) % 5.5f
                     tourterelle(x, y, if (x < 50f) 1f else -1f, if (u < 0.5f) sin(u / 0.5f * PI.toFloat()) else 0f, b.taille)
                 }
-                // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
                 // Il roule doucement à son amarre ; une secousse le fait tanguer fort, puis il se calme.
                 Espece.BATEAU -> bateauPlongee(x, y + sin(t * 1.1f + ph) * 0.15f,
                     sin(t * 0.9f + ph) * 1.2f + rafale * 7f * sin(depuisRafale * 5f), 0f)
                 // Elle se balance un peu au bout de sa queue ; une secousse la secoue plus fort.
                 Espece.MANGUE -> mangue(x, y, 0f, 0f, sin(t * 1.2f + ph) * 3f + rafale * 14f * sin(depuisRafale * 13f), true)
+                // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
                 Espece.PLANTE, Espece.FLEURS -> jardiniere(x, y,
                     sin(t * 1.1f + ph) * 2f + rafale * 16f * sin(depuisRafale * 2f * PI.toFloat() * 2.6f),
                     b.espece == Espece.FLEURS, b.taille)
+                // Elle zigzague autour de sa fleur en vrombissant ; une
+                // secousse l'égaille loin, puis elle revient butiner. La nuit
+                // elle est à la ruche.
+                Espece.ABEILLE -> if (!P.nuit) {
+                    val a = t * 1.9f + ph
+                    val loin = 1f + rafale * 7f
+                    val dx = (sin(a) * 1.8f + sin(a * 2.3f + 1f) * 0.7f) * loin
+                    val dy = (cos(a * 1.4f) * 0.9f + sin(a * 3.7f) * 0.35f) * loin
+                    val vers = cos(a) * 1.8f + cos(a * 2.3f + 1f) * 1.6f
+                    abeille(x + dx, y + dy, if (vers >= 0f) 1f else -1f, sin(t * 90f + ph), b.taille)
+                }
             }
+        }
+
+        /**
+         * Une abeille minuscule vue de profil en ([x], [y]), la tête vers la
+         * droite ([sens] -1 : vers la gauche) ; [aile] de -1 à 1 fait vibrer
+         * ses ailes.
+         */
+        fun abeille(x: Float, y: Float, sens: Float, aile: Float, taille: Float) {
+            val s = taille
+            val noir = duJour(0xFF2A2218.toInt())
+            ovale(x - sens * 0.1f * s, y - 0.32f * s, 0.26f * s, (0.08f + 0.06f * abs(aile)) * s, duJour(0xFFF4F4F0.toInt()), 0.75f)
+            ovale(x, y, 0.42f * s, 0.26f * s, duJour(0xFFE8B428.toInt()))
+            ovale(x - sens * 0.06f * s, y, 0.07f * s, 0.25f * s, noir)
+            ovale(x - sens * 0.26f * s, y, 0.06f * s, 0.2f * s, noir)
+            rond(x + sens * 0.42f * s, y, 0.15f * s, noir)
         }
 
         /** Ce qui reste d'une secousse, de 0 à 1, et depuis quand elle a eu lieu : voir [Atelier.peindre]. */
@@ -5541,6 +5556,45 @@ object Paysages {
             forme(Path().apply { addOval(RectF(x - 0.75f, y - 1.05f, x + 0.1f, y + 0.2f), Path.Direction.CW) }, duJour(0xFFC8432E.toInt()))
             c.restore()
             voile = 1f
+        }
+
+        /**
+         * Un flamboyant en fleurs, celui de Bouillante : un tronc qui monte
+         * du bas et s'ouvre en branches, un houppier en parasol qui entre par
+         * le coin haut droit, semé de grappes rouges tirées de [graine]. Pour
+         * l'avoir à gauche, le peindre retourné avec [tasser].
+         */
+        fun flamboyantEnParasol(graine: Int) {
+            val brun = papier(0xFF4E3C2E.toInt())
+            pieceD("M97 64Q95.4 52 92.6 42.6L94.4 42Q97.6 50 100.4 56L102 64Z", brun, 0.6f)
+            barre(93.4f, 43f, 84f, 35.4f, 0.8f, brun, 0.4f)
+            barre(94f, 43f, 99f, 33f, 0.8f, brun, 0.4f)
+            barre(90f, 39.6f, 90.6f, 34f, 0.5f, brun, 0.3f)
+            val rf = Alea(graine)
+            val dessus = { x: Float -> 26f - ((x - 96f) / 20f).let { 1f - it * it } * 9f }
+            val dessous = { x: Float -> 34.6f + (x - 78f) * 0.06f + sin(x * 1.3f) * 0.3f }
+            val houppier = Path()
+            houppier.moveTo(76f, dessous(76f))
+            var hx = 76f
+            while (hx < 104f) { houppier.lineTo(hx, dessus(hx)); hx += 1f }
+            houppier.lineTo(104f, dessous(104f))
+            houppier.close()
+            houppier.op(bosses(76f, 104f, dessus, 1.4f, 2.4f, rf), Path.Op.UNION)
+            val festons = Path(houppier).apply { op(bosses(77f, 104f, dessous, 1f, 1.5f, rf), Path.Op.UNION) }
+            piece(festons, papier(0xFF2E6A22.toInt()), 0.7f)
+            piece(houppier, papier(0xFF4E9E2E.toInt()), 0f)
+            piece(bosses(78f, 104f, { x -> dessus(x) + 0.4f }, 1f, 1.6f, rf), papier(0xFF72BE40.toInt()), 0f)
+            pieceD("M80 ${dessous(80f) - 2.4f}Q92 ${dessous(92f) - 3.6f} 104 ${dessous(104f) - 2.6f}L104 ${dessous(104f) - 1.4f}Q92 ${dessous(92f) - 2.2f} 80 ${dessous(80f) - 1.2f}Z",
+                papier(0xFF3A8228.toInt()), 0f)
+            val rouges = intArrayOf(papier(0xFFE8401E.toInt()), papier(0xFFF26A2A.toInt()), papier(0xFFC8301C.toInt()))
+            repeat(14) {
+                val cx = 79f + rf() * 24f
+                val cy = dessus(cx) + 1f + rf() * (dessous(cx) - dessus(cx) - 3f)
+                repeat(6) {
+                    piece(disque(cx + (rf() - 0.5f) * 2.8f, cy + (rf() - 0.5f) * 1.4f, 0.45f + rf() * 0.45f),
+                        rouges[(rf() * 3f).toInt().coerceAtMost(2)], 0.2f)
+                }
+            }
         }
 
         /**
