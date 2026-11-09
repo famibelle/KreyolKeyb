@@ -179,7 +179,18 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
-                enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
+                enPlans && lieu == Lieu.ILET_MACOU -> {
+                    val reflets = Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
+                    // Les feuilles jaunies des palétuviers, qu'une secousse fait tomber sur l'eau.
+                    if (heure == null) reflets else {
+                        val jaunes = intArrayOf(Paysages.aLHeure(0xFFD8C040.toInt(), heure), Paysages.aLHeure(0xFFB4B030.toInt(), heure))
+                        Ensemble(reflets,
+                            Petales(zone, graine, Paysages.FEUILLAGE_MACOU_GAUCHE, jaunes, sol0 = 47.4f, sens = 1f,
+                                plan = Paysages.MILIEU, chute = 10f, feuille = true),
+                            Petales(zone, graine + 1, Paysages.FEUILLAGE_MACOU_DROITE, jaunes, sol0 = 47.4f, sens = -1f,
+                                plan = Paysages.MILIEU, chute = 10f, feuille = true))
+                    }
+                }
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure != null -> {
                     // Les fleurs du flamboyant, que la secousse emporte loin sur le cimetière.
                     val fleurs = Petales(zone, graine, Paysages.FLAMBOYANT_MORNE,
@@ -1689,7 +1700,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
-                Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
+                Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
                 else -> Unit
             }
@@ -1707,6 +1718,9 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             if (n > 0 && b.espece == Espece.MANGUE && chute[i] < 0f) { chute[i] = -2f; n-- }
         }
     }
+
+    /** Combien de temps dure le vol de [b] avant qu'il se repose : le pélican fait un plus grand tour. */
+    private fun duree(b: Bete) = if (b.espece == Espece.PELICAN_PIEU) VOL_PELICAN else VOL
 
     /** La tourterelle [i] ne part pas avec les autres : un battement de cœur de retard chacune. */
     private fun retard(i: Int) = (i % 3) * 0.15f
@@ -1728,7 +1742,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         }
         betes.forEachIndexed { i, b ->
             if (rafale[i] >= 0f) { rafale[i] += dt; if (rafale[i] > RAFALE) rafale[i] = -1f }
-            if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + VOL) envol[i] = -1f }
+            if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + duree(b)) envol[i] = -1f }
             if (plongee[i] >= 0f) { plongee[i] += dt; if (plongee[i] > PLONGE + AU_FOND + REMONTE) plongee[i] = -1f }
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
@@ -1812,18 +1826,27 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 }
                 vol >= 0f -> {
                     // Une boucle au-dessus de la rue, partie de son côté, qui la ramène à son perchoir.
-                    val tau = vol / VOL
+                    // Le pélican rase l'eau sous le mot jusqu'à l'autre bord, en battements
+                    // lents entrecoupés de longs planés, et revient à son pieu.
+                    val pelican = b.espece == Espece.PELICAN_PIEU
+                    val tau = vol / duree(b)
                     val cote = if (b.x < 50f) 1f else -1f
                     val large = 20f + 4f * (i % 3)
                     val haut = 10f + 3f * (i % 2)
                     val a = 2f * PI.toFloat() * tau
-                    c.translate(cote * large * sin(a), -haut * (1f - cos(a)) / 2f)
+                    if (pelican) c.translate(cote * TRAVERSEE * (1f - cos(a)) / 2f, 4f * sin(a / 2f))
+                    else c.translate(cote * large * sin(a), -haut * (1f - cos(a)) / 2f)
                     val aile = when {
                         tau > 0.94f -> 0.9f
+                        pelican -> if (vol % 3f < 1.4f) sin(vol * 5.5f) * 0.9f + 0.1f else 0.12f
                         tau in 0.42f..0.58f -> 0.35f
                         else -> sin(vol * 26f) * 0.8f + 0.2f
                     }
-                    atelier.envol(c, b, aile, if (cos(a) >= 0f) cote else -cote)
+                    atelier.envol(c, b, aile, when {
+                        pelican -> if (sin(a) >= 0f) cote else -cote
+                        cos(a) >= 0f -> cote
+                        else -> -cote
+                    })
                 }
                 plongee[i] >= 0f -> {
                     // Elle s'enfonce : plus petite et plus pâle à mesure que
@@ -1907,6 +1930,9 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val RAFALE = 3f
         /** La durée de la boucle d'une tourterelle, de l'envol au retour sur son garde-corps. */
         const val VOL = 6.5f
+        const val VOL_PELICAN = 9f
+        /** Jusqu'où le pélican de l'îlet Macou rase l'eau avant de faire demi-tour. */
+        const val TRAVERSEE = 76f
     }
 }
 
@@ -2008,11 +2034,13 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
  * [sol] et quelques unités plus bas, et s'y fanent en quelques secondes. Sur
  * le [plan] de l'arbre. [chute] est la hauteur qu'elles ont à descendre
  * au-delà de la source : un grand arbre les laisse tomber plus loin ; [elan]
- * les fait porter plus loin par le vent.
+ * les fait porter plus loin par le vent. [feuille] : des feuilles en
+ * amande plutôt que des fleurs en cœur.
  */
 private class Petales(zone: RectF, graine: Int, private val source: FloatArray, private val couleurs: IntArray,
                       private val sol0: Float, private val sens: Float, private val plan: Int,
-                      private val chute: Float = 0f, private val elan: Float = 1f) : Ambiance(zone, graine) {
+                      private val chute: Float = 0f, private val elan: Float = 1f,
+                      private val feuille: Boolean = false) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 16
     private val x = FloatArray(n)
@@ -2084,6 +2112,15 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
             // Une bractée : un cœur arrondi, aplati en tournant pour qu'on la voie de profil.
             c.scale(1f, 0.35f + 0.65f * abs(cos(angle[i] * 0.02f)), x[i], y[i])
             chemin.rewind()
+            if (feuille) {
+                chemin.moveTo(x[i] - 0.8f, y[i])
+                chemin.quadTo(x[i], y[i] - 0.5f, x[i] + 0.8f, y[i])
+                chemin.quadTo(x[i], y[i] + 0.5f, x[i] - 0.8f, y[i])
+                chemin.close()
+                c.drawPath(chemin, p)
+                c.restore()
+                continue
+            }
             chemin.moveTo(x[i], y[i] + 0.6f)
             chemin.quadTo(x[i] - 0.9f, y[i] - 0.1f, x[i] - 0.3f, y[i] - 0.55f)
             chemin.quadTo(x[i], y[i] - 0.6f, x[i], y[i] - 0.3f)

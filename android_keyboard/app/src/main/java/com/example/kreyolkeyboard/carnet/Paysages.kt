@@ -936,6 +936,10 @@ object Paysages {
     /** Les grappes du flamboyant de Bouillante, sur le plan de devant : x0, x1, y0, y1. */
     internal val FLAMBOYANT_BOUILLANTE = floatArrayOf(80f, 102f, 24f, 33f)
 
+    /** Les feuillages de la mangrove de l'îlet Macou, à gauche et à droite, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val FEUILLAGE_MACOU_GAUCHE = floatArrayOf(-2f, 18f, 8f, 36f)
+    internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)
+
     /** Les grappes du flamboyant de Morne-à-l'Eau, celui de Bouillante retourné : x0, x1, y0, y1. */
     internal val FLAMBOYANT_MORNE = floatArrayOf(-2f, 20f, 24f, 33f)
 
@@ -984,7 +988,7 @@ object Paysages {
         // une secousse la fait plonger.
         Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 17f, 54.6f, plan = 1, taille = 5f),
             Bete(Espece.BATEAU, 7.5f, 47.6f, plan = 1)),
-        Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f)),
+        Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f, taille = 1.7f)),
         Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
         Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
         Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 40.4f, plan = 1)),
@@ -1049,10 +1053,13 @@ object Paysages {
             peintre.bete(b, 0f, i, immobile = true)
         }
 
-        /** Une tourterelle [b] en vol, les ailes à [aile] (1 levées, négatif baissées), tournée vers [sens]. */
+        /** Une tourterelle ou un pélican [b] en vol, les ailes à [aile] (1 levées, négatif baissées), tourné vers [sens]. */
         fun envol(c: Canvas, b: Bete, aile: Float, sens: Float) {
             peintre.c = c
-            peintre.aplat { peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille) }
+            peintre.aplat {
+                if (b.espece == Espece.PELICAN_PIEU) peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille)
+                else peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille)
+            }
         }
 
         /** La mangue [b] détachée, son fruit décalé de ([dx], [dy]), tourné de [angle] degrés et fané à [opacite]. */
@@ -2279,6 +2286,28 @@ object Paysages {
             trait("M${x + 0.4f} ${y - 3f}Q${x + 0.8f} ${y - 4.8f} ${x + 0.2f} ${y - 5.2f}", plume, 0.7f)
             rond(x + 0.2f, y - 5.2f, 0.6f, duJour(0xFFE9E2D0.toInt()))
             trait("M${x + 0.6f} ${y - 5.1f}L${x + 2.6f} ${y - 3.4f}", duJour(0xFFC9A24A.toInt()), 0.4f)
+        }
+
+        /**
+         * Le pélican du pieu en vol, de profil, ses pattes en ([x], [y]) :
+         * le corps lourd, la tête rentrée sur les épaules et le long bec
+         * devant, les grandes ailes levées ([aile] 1) ou baissées (négatif),
+         * tourné vers la droite ([sens] -1 : vers la gauche).
+         */
+        fun pelicanEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float) {
+            voile = 1f
+            c.save()
+            c.scale(sens * taille, taille, x, y)
+            // Plus clair qu'à l'arrêt : le dessus des ailes est gris argent.
+            val plume = duJour(0xFFA89C8A.toInt())
+            val cy = y - 3f
+            forme("M${x - 1f} ${cy}L${x + 1f} ${cy}L${x - 1.6f} ${cy - 4f * aile}Z", duJour(0xFF6E6052.toInt()))
+            forme("M${x - 2.4f} ${cy - 0.2f}L${x - 3.6f} ${cy - 0.1f}L${x - 2.4f} ${cy + 0.4f}Z", plume)
+            ovale(x, cy, 2.6f, 0.8f, plume)
+            rond(x + 2.2f, cy - 0.5f, 0.6f, duJour(0xFFE9E2D0.toInt()))
+            forme("M${x + 2.6f} ${cy - 0.7f}L${x + 5.6f} ${cy}L${x + 2.6f} ${cy - 0.1f}Z", duJour(0xFFC9A24A.toInt()))
+            forme("M${x - 1.4f} ${cy - 0.1f}L${x + 1.2f} ${cy - 0.1f}L${x - 0.8f} ${cy - 5.4f * aile}Z", plume)
+            c.restore()
         }
 
         /** Un damier de [n] cases de côté [s], depuis le coin ([x], [y]), dans [w] × [h]. */
@@ -4374,7 +4403,7 @@ object Paysages {
             // Des racines qui entrent par le bas à gauche, et le pieu du pélican.
             for ((x0, x1, h) in arrayOf(Triple(-3f, 9f, 8f), Triple(2f, 15f, 6f), Triple(-2f, 6f, 10f)))
                 racine(x0, 64f, x1, 63.4f, h, 0.8f, racines[2])
-            pieceD("M91.6 56L92.4 56L92.5 63L91.5 63Z", papier(0xFF5E4C3E.toInt()), 0.5f)
+            pieceD("M91.4 56L92.6 56L92.8 64L91.2 64Z", papier(0xFF5E4C3E.toInt()), 0.5f)
         }
 
         // ------------------------------------------- les Roches gravées en papier
@@ -5274,7 +5303,7 @@ object Paysages {
                 when (b.espece) {
                     Espece.TOULOULOU -> touloulou(x, y)
                     Espece.TORTUE -> tortue(x, y, b.taille)
-                    Espece.PELICAN_PIEU -> pelican(x, y)
+                    Espece.PELICAN_PIEU -> { c.save(); c.scale(b.taille, b.taille, x, y); pelican(x, y); c.restore() }
                     Espece.PELICAN -> pelicanPose(x, y)
                     Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y)
                     Espece.LIBELLULE -> libellule(x, y)
@@ -5319,7 +5348,11 @@ object Paysages {
                     val cap = atan2(-sin(a) * 1f, cos(a) * 4f) * 57.3f + 90f
                     tortue(x + sin(a) * 4f, y + cos(a) * 1f, b.taille, cap, sin(t * 1.7f + ph) * 22f)
                 }
-                Espece.PELICAN_PIEU -> pelican(x, y + sin(t * 0.8f + ph) * 0.15f)
+                Espece.PELICAN_PIEU -> {
+                    c.save(); c.scale(b.taille, b.taille, x, y)
+                    pelican(x, y + sin(t * 0.8f + ph) * 0.15f)
+                    c.restore()
+                }
                 // Posé sur l'eau, il monte et descend avec la houle.
                 Espece.PELICAN -> pelicanPose(x + sin(t * 0.15f + ph) * 1.5f, y + sin(t * 1.2f + ph) * 0.35f)
                 Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y + sin(t * 0.7f + ph) * 0.12f)
