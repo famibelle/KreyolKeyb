@@ -172,7 +172,6 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     nappe = floatArrayOf(68f, 30f, 46f, 10f), force = 0.6f)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
-                enPlans && lieu == Lieu.BOUILLANTE -> Reflets(zone, graine, nuit = heure?.nuit == true)
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
                 enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
@@ -183,7 +182,15 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.ILET_MACOU -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                 enPlans && lieu == Lieu.MORNE_A_L_EAU && heure?.allume == true -> Bougies(zone, graine)
                 enPlans && lieu == Lieu.PLACE_VICTOIRE && heure != null -> RueVictoire(zone, heure)
-                enPlans && lieu == Lieu.MARIE_GALANTE && heure != null -> Bractees(zone, graine, heure)
+                enPlans && lieu == Lieu.MARIE_GALANTE && heure != null -> Petales(zone, graine, Paysages.BOUGAINVILLIER,
+                    intArrayOf(Paysages.aLHeure(0xFFD0407A.toInt(), heure), Paysages.aLHeure(0xFFE0609A.toInt(), heure)),
+                    sol0 = 55.6f, sens = 1f, plan = Paysages.MILIEU)
+                enPlans && lieu == Lieu.BOUILLANTE && heure != null -> Ensemble(Reflets(zone, graine, nuit = heure.nuit),
+                    Vapeurs(zone, graine, Paysages.VAPEURS_BOUILLANTE, plan = Paysages.MILIEU, nappe = null,
+                        force = 0.4f, taille = 0.7f),
+                    Petales(zone, graine, Paysages.FLAMBOYANT_BOUILLANTE,
+                        intArrayOf(Paysages.aLHeure(0xFFE8401E.toInt(), heure), Paysages.aLHeure(0xFFF26A2A.toInt(), heure)),
+                        sol0 = 50f, sens = -1f, plan = Paysages.DEVANT, chute = 9f))
                 else -> null
             }
             return listOfNotNull(ciel, eau, faune, temps).let {
@@ -1641,6 +1648,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private var forceRafale = 0f
     /** Depuis quand chaque tourterelle a pris peur, ou -1 si elle est posée. */
     private val envol = FloatArray(betes.size) { -1f }
+    /** Depuis quand chaque tortue a plongé, ou -1 si elle nage sous la surface. */
+    private val plongee = FloatArray(betes.size) { -1f }
     /** Depuis quand chaque mangue est tombée, ou -1 si elle pend encore. */
     private val chute = FloatArray(betes.size) { -1f }
     /** Depuis quand les mangues tombées se fanent et repoussent, ou -1. */
@@ -1660,9 +1669,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS -> rafale[i] = 0f
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE -> if (envol[i] < 0f) envol[i] = 0f
+                Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
                 else -> Unit
             }
         }
@@ -1701,6 +1711,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             if (rafale[i] >= 0f) { rafale[i] += dt; if (rafale[i] > RAFALE) rafale[i] = -1f }
             if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + VOL) envol[i] = -1f }
+            if (plongee[i] >= 0f) { plongee[i] += dt; if (plongee[i] > PLONGE + AU_FOND + REMONTE) plongee[i] = -1f }
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
@@ -1796,6 +1807,23 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                     }
                     atelier.envol(c, b, aile, if (cos(a) >= 0f) cote else -cote)
                 }
+                plongee[i] >= 0f -> {
+                    // Elle s'enfonce : plus petite et plus pâle à mesure que
+                    // l'eau la recouvre, invisible au fond, puis elle remonte.
+                    val f = plongee[i]
+                    val vue = when {
+                        f < PLONGE -> 1f - f / PLONGE
+                        f < PLONGE + AU_FOND -> 0f
+                        else -> (f - PLONGE - AU_FOND) / REMONTE
+                    }.coerceIn(0f, 1f)
+                    if (vue > 0.01f) {
+                        val l = 8f * b.taille
+                        c.scale(0.6f + 0.4f * vue, 0.6f + 0.4f * vue, b.x, b.y)
+                        c.saveLayerAlpha(b.x - l, b.y - l, b.x + l, b.y + l, (vue * vue * 255f).toInt())
+                        atelier.peindre(c, b, geste[i], i)
+                        c.restore()
+                    }
+                }
                 dehors[i] > 0.02f -> {
                     val r = rafale[i]
                     if (r >= 0f) atelier.peindre(c, b, geste[i], i, forceRafale * exp(-r * 1.6f), r)
@@ -1824,6 +1852,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     }
 
     private companion object {
+        /** Le temps que la tortue met à disparaître en plongeant, qu'elle reste au fond, qu'elle met à remonter. */
+        const val PLONGE = 1.2f
+        const val AU_FOND = 5f
+        const val REMONTE = 2.5f
         /** Où l'herbe reçoit les mangues, sous le manguier de Marie-Galante. */
         const val SOL_MANGUES = 58.8f
         /** Leur chute, en unités de carte par seconde au carré. */
@@ -1951,14 +1983,18 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
 }
 
 /**
- * Les fleurs du bougainvillier de Marie-Galante, quand on secoue le
- * téléphone : une rafale en arrache une poignée, que le vent emporte vers
- * la droite en tournoyant ; elles retombent dans l'herbe et s'y fanent en
- * quelques secondes. Sur le plan du milieu, comme l'arbuste.
+ * Des fleurs qu'une secousse arrache à un arbre : les bractées du
+ * bougainvillier de Marie-Galante, les fleurs du flamboyant de Bouillante.
+ * La rafale en emporte une poignée de la [source] (x0, x1, y0, y1) vers
+ * [sens] en tournoyant ; elles retombent en papillonnant jusqu'au sol, à
+ * [sol] et quelques unités plus bas, et s'y fanent en quelques secondes. Sur
+ * le [plan] de l'arbre. [chute] est la hauteur qu'elles ont à descendre
+ * au-delà de la source : un grand arbre les laisse tomber plus loin.
  */
-private class Bractees(zone: RectF, graine: Int, heure: Heure) : Ambiance(zone, graine) {
+private class Petales(zone: RectF, graine: Int, private val source: FloatArray, private val couleurs: IntArray,
+                      private val sol0: Float, private val sens: Float, private val plan: Int,
+                      private val chute: Float = 0f) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
-    private val couleurs = intArrayOf(Paysages.aLHeure(0xFFD0407A.toInt(), heure), Paysages.aLHeure(0xFFE0609A.toInt(), heure))
     private val n = 16
     private val x = FloatArray(n)
     private val y = FloatArray(n)
@@ -1978,7 +2014,7 @@ private class Bractees(zone: RectF, graine: Int, heure: Heure) : Ambiance(zone, 
     }
 
     override fun secouer(force: Float) {
-        val (x0, x1, y0, y1) = Paysages.BOUGAINVILLIER
+        val (x0, x1, y0, y1) = source
         val combien = (5f + force * 8f).toInt()
         var k = 0
         for (i in 0 until n) {
@@ -1986,9 +2022,9 @@ private class Bractees(zone: RectF, graine: Int, heure: Heure) : Ambiance(zone, 
             if (pose[i] == -1f) continue
             x[i] = x0 + hasard() * (x1 - x0)
             y[i] = y0 + hasard() * (y1 - y0)
-            vx[i] = 5f + hasard() * 7f * force
+            vx[i] = sens * (5f + hasard() * 7f * force)
             vy[i] = -3f - hasard() * 4f * force
-            sol[i] = 55.6f + hasard() * 2.4f
+            sol[i] = sol0 + chute * hasard() + hasard() * 2.4f
             angle[i] = hasard() * 360f
             pose[i] = -1f
             k++
@@ -2015,7 +2051,7 @@ private class Bractees(zone: RectF, graine: Int, heure: Heure) : Ambiance(zone, 
     override fun dessiner(c: Canvas, p: Paint) {
         if (pose.all { it == -2f }) return
         val e = cadre[0]
-        val g = Paysages.GLISSEMENT[Paysages.MILIEU]
+        val g = Paysages.GLISSEMENT[plan]
         c.save()
         c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
         c.scale(e, e)

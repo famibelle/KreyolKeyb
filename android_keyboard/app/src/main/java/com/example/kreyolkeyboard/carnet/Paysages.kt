@@ -19,6 +19,7 @@ import android.os.Looper
 import android.util.LruCache
 import java.util.concurrent.Executors
 import kotlin.math.PI
+import kotlin.math.atan2
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -128,7 +129,9 @@ enum class Espece {
     /** La même, fleurie de géraniums rouges. */
     FLEURS,
     /** Pas une bête : une mangue du manguier de Marie-Galante, qui tombe quand on secoue le téléphone. */
-    MANGUE
+    MANGUE,
+    /** Pas une bête : le bateau de plongée de Bouillante, amarré au ponton, qui tangue. */
+    BATEAU
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -928,6 +931,17 @@ object Paysages {
     /** Le bougainvillier de Marie-Galante, sur le plan du milieu : x0, x1, y0, y1 de ses fleurs. */
     internal val BOUGAINVILLIER = floatArrayOf(8f, 22f, 50f, 55f)
 
+    /** Les grappes du flamboyant de Bouillante, sur le plan de devant : x0, x1, y0, y1. */
+    internal val FLAMBOYANT_BOUILLANTE = floatArrayOf(80f, 102f, 24f, 33f)
+
+    /**
+     * Les sources chaudes de la plage sombre de Bouillante, sur le plan du
+     * milieu, au format de [VAPEURS_RAVINE] : x, pied, haut, largeur, dérive.
+     * Seule la carte ouverte les fait fumer, et à peine.
+     */
+    internal val VAPEURS_BOUILLANTE = arrayOf(floatArrayOf(51f, 40.8f, 34f, 0.9f, -1.2f),
+        floatArrayOf(58.4f, 41.4f, 35.4f, 0.8f, 1f), floatArrayOf(79.4f, 44.2f, 38.6f, 0.9f, -1.4f))
+
     /** Le centre de la peau du ka de Vélo, une fois la statue retournée et placée : d'où il résonne. */
     internal val PEAU_KA = floatArrayOf(16.8f, 46.4f)
 
@@ -953,7 +967,10 @@ object Paysages {
             Bete(Espece.BARQUE, 64f, 39.5f, plan = 1)),
         Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
             Bete(Espece.TOULOULOU, 61f, 52.4f, plan = 1)),
-        Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 56f, 45f, plan = 1, taille = 4f)),
+        // Une tortue verte de Malendure nage dans l'eau claire du bord, à gauche du mot ;
+        // une secousse la fait plonger.
+        Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 17f, 54.6f, plan = 1, taille = 5f),
+            Bete(Espece.BATEAU, 7.5f, 47.6f, plan = 1)),
         Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f)),
         Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
         Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
@@ -2215,17 +2232,28 @@ object Paysages {
             rond(x + 1.4f, y - 0.7f, 0.45f, rouge)
         }
 
-        /** Une tortue verte qui nage sous la surface, vue d'en haut. */
-        fun tortue(x: Float, y: Float, l: Float) {
+        /**
+         * Une tortue verte qui nage sous la surface, vue d'en haut, la tête
+         * vers le haut tournée de [cap] degrés ; [brasse] fait battre ses
+         * nageoires avant, de tant de degrés vers l'arrière.
+         */
+        fun tortue(x: Float, y: Float, l: Float, cap: Float = 0f, brasse: Float = 0f) {
             val dos = mix(duJour(0xFF5E6B3A.toInt()), P.eau, 0.35f)
             val nageoire = mix(dos, P.eau, 0.3f)
-            ovale(x - l * 0.5f, y - l * 0.32f, l * 0.32f, l * 0.11f, nageoire)
-            ovale(x + l * 0.5f, y - l * 0.32f, l * 0.32f, l * 0.11f, nageoire)
+            c.save()
+            c.rotate(cap, x, y)
+            for (cote in intArrayOf(-1, 1)) {
+                c.save()
+                c.rotate(-cote * brasse, x + cote * l * 0.25f, y - l * 0.3f)
+                ovale(x + cote * l * 0.5f, y - l * 0.32f, l * 0.32f, l * 0.11f, nageoire)
+                c.restore()
+            }
             ovale(x - l * 0.3f, y + l * 0.36f, l * 0.18f, l * 0.08f, nageoire)
             ovale(x + l * 0.3f, y + l * 0.36f, l * 0.18f, l * 0.08f, nageoire)
             ovale(x, y - l * 0.55f, l * 0.13f, l * 0.15f, nageoire)
             ovale(x, y, l * 0.38f, l * 0.48f, dos)
             trait("M$x ${y - l * 0.4f}L$x ${y + l * 0.4f}M${x - l * 0.3f} ${y}L${x + l * 0.3f} $y", mix(dos, P.pres, 0.35f), l * 0.04f)
+            c.restore()
         }
 
         /** Le pieu où se pose le pélican de l'îlet Macou. */
@@ -3958,14 +3986,7 @@ object Paysages {
             }
             barre(j0, jy0, j1, jy1, 0.8f, deck, 0.5f)
             barre(j0, jy0 - 0.35f, j1, jy1 - 0.35f, 0.18f, papier(0xFFB4AC9C.toInt()), 0f)
-            // Le bateau de plongée amarré au bout : coque rouge, cabine blanche.
-            pieceD("M0.4 44.6L14.6 44.6L13.4 48.4Q8 49.2 2 48.4Z", papier(0xFFB8322C.toInt()), 0.6f)
-            pieceD("M0.4 44.6L14.6 44.6L14.4 45.4L0.6 45.4Z", papier(0xFFF4F1EA.toInt()), 0f)
-            pieceD("M2 44.6L2.4 40.8L10.2 40.8L10.6 44.6Z", papier(0xFFF2EFE8.toInt()), 0.5f)
-            pieceD("M1.6 41L10.8 41L10.6 40.2L1.8 40.2Z", papier(0xFF3A3A3A.toInt()), 0f)
-            for (k in 0 until 4) pieceD("M${3f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 43L${3f + k * 1.8f} 43Z", papier(0xFF3C4450.toInt()), 0f)
-            barre(11.6f, 44.6f, 12.4f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
-            barre(12.4f, 40.6f, 14.6f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            // Le bateau de plongée amarré au bout est dans [BETES] : il tangue sur la carte ouverte.
             pieceD("M37 44.2Q39 43.4 41.6 44.2Q39.4 44.9 37 44.2Z", papier(0xFFF0C030.toInt()), 0.2f)
             plan(2)
             // Les roches et l'herbe du bord, le flamboyant en fleurs à droite.
@@ -3978,7 +3999,8 @@ object Paysages {
             // Le flamboyant : un tronc qui monte des roches et s'ouvre en
             // branches, un houppier en parasol, large, plat dessous et bombé
             // dessus, qui entre par le coin haut droit ; le dessous sombre et
-            // festonné, le dessus semé de grappes rouges.
+            // festonné, le dessus semé de grappes rouges. Une secousse en fait
+            // tomber des fleurs : voir [FLAMBOYANT_BOUILLANTE].
             val brun = papier(0xFF4E3C2E.toInt())
             pieceD("M97 64Q95.4 52 92.6 42.6L94.4 42Q97.6 50 100.4 56L102 64Z", brun, 0.6f)
             barre(93.4f, 43f, 84f, 35.4f, 0.8f, brun, 0.4f)
@@ -5283,6 +5305,7 @@ object Paysages {
                     Espece.PLANTE -> jardiniere(x, y, 0f, false, b.taille)
                     Espece.FLEURS -> jardiniere(x, y, 0f, true, b.taille)
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
+                    Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
                 }
                 return@aplat
             }
@@ -5299,7 +5322,14 @@ object Paysages {
                     }
                     touloulou(x + dx, y)
                 }
-                Espece.TORTUE -> tortue(x + sin(t * 0.25f + ph) * 3f, y + sin(t * 0.5f + ph) * 0.3f, b.taille)
+                // Elle nage devant elle sur une boucle lente, aplatie par la
+                // perspective de l'eau, la tête dans le sens de la marche, en
+                // battant des nageoires avant.
+                Espece.TORTUE -> {
+                    val a = t * 0.16f + ph
+                    val cap = atan2(-sin(a) * 1f, cos(a) * 4f) * 57.3f + 90f
+                    tortue(x + sin(a) * 4f, y + cos(a) * 1f, b.taille, cap, sin(t * 1.7f + ph) * 22f)
+                }
                 Espece.PELICAN_PIEU -> pelican(x, y + sin(t * 0.8f + ph) * 0.15f)
                 // Posé sur l'eau, il monte et descend avec la houle.
                 Espece.PELICAN -> pelicanPose(x + sin(t * 0.15f + ph) * 1.5f, y + sin(t * 1.2f + ph) * 0.35f)
@@ -5386,6 +5416,9 @@ object Paysages {
                     tourterelle(x, y, if (x < 50f) 1f else -1f, if (u < 0.5f) sin(u / 0.5f * PI.toFloat()) else 0f, b.taille)
                 }
                 // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
+                // Il roule doucement à son amarre ; une secousse le fait tanguer fort, puis il se calme.
+                Espece.BATEAU -> bateauPlongee(x, y + sin(t * 1.1f + ph) * 0.15f,
+                    sin(t * 0.9f + ph) * 1.2f + rafale * 7f * sin(depuisRafale * 5f), 0f)
                 // Elle se balance un peu au bout de sa queue ; une secousse la secoue plus fort.
                 Espece.MANGUE -> mangue(x, y, 0f, 0f, sin(t * 1.2f + ph) * 3f + rafale * 14f * sin(depuisRafale * 13f), true)
                 Espece.PLANTE, Espece.FLEURS -> jardiniere(x, y,
@@ -5508,6 +5541,27 @@ object Paysages {
             forme(Path().apply { addOval(RectF(x - 0.75f, y - 1.05f, x + 0.1f, y + 0.2f), Path.Direction.CW) }, duJour(0xFFC8432E.toInt()))
             c.restore()
             voile = 1f
+        }
+
+        /**
+         * Le bateau de plongée de Bouillante, coque rouge et cabine blanche,
+         * amarré au bout du ponton : ([x], [y]) est le milieu de sa ligne de
+         * flottaison, autour duquel il roule de [angle] degrés. [dy] le
+         * soulève.
+         */
+        fun bateauPlongee(x: Float, y: Float, angle: Float, dy: Float) {
+            voile = 1f
+            c.save()
+            c.rotate(angle, x, y)
+            c.translate(x - 7.5f, y - 47.6f + dy)
+            pieceD("M0.4 44.6L14.6 44.6L13.4 48.4Q8 49.2 2 48.4Z", papier(0xFFB8322C.toInt()), 0.6f)
+            pieceD("M0.4 44.6L14.6 44.6L14.4 45.4L0.6 45.4Z", papier(0xFFF4F1EA.toInt()), 0f)
+            pieceD("M2 44.6L2.4 40.8L10.2 40.8L10.6 44.6Z", papier(0xFFF2EFE8.toInt()), 0.5f)
+            pieceD("M1.6 41L10.8 41L10.6 40.2L1.8 40.2Z", papier(0xFF3A3A3A.toInt()), 0f)
+            for (k in 0 until 4) pieceD("M${3f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 43L${3f + k * 1.8f} 43Z", papier(0xFF3C4450.toInt()), 0f)
+            barre(11.6f, 44.6f, 12.4f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            barre(12.4f, 40.6f, 14.6f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            c.restore()
         }
 
         /** Une barque blanche au mouillage, l'étrave à droite ; [tangage] lève l'étrave et baisse la poupe. */
