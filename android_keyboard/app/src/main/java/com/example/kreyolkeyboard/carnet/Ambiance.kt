@@ -179,6 +179,10 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
+                // Des feuilles mortes que la secousse détache de la voûte.
+                enPlans && lieu == Lieu.ROCHES_GRAVEES && heure != null -> Petales(zone, graine, Paysages.VOUTE_ROCHES,
+                    intArrayOf(Paysages.aLHeure(0xFFB08A3A.toInt(), heure), Paysages.aLHeure(0xFF8A9A3A.toInt(), heure)),
+                    sol0 = 49f, sens = 1f, plan = Paysages.MILIEU, chute = 5f, elan = 0.4f, feuille = true)
                 enPlans && lieu == Lieu.ILET_MACOU -> {
                     val reflets = Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_MACOU, eclatsDuJour = 8)
                     // Les feuilles jaunies des palétuviers, qu'une secousse fait tomber sur l'eau.
@@ -1698,7 +1702,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE -> rafale[i] = 0f
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE, Espece.LIANE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
@@ -2221,33 +2225,54 @@ private class Colibri(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     private val cibles = arrayOf(
         floatArrayOf(0.12f, 0.74f), floatArrayOf(0.86f, 0.74f), floatArrayOf(0.5f, 0.42f), floatArrayOf(0.3f, 0.6f)
     )
-    private var de = 0
-    private var vers = 1
+    private var vers = 0
     private var trajet = 1f
+    private var duree = 0.45f
     private var attente = 1f + hasard()
     private var temps = 0f
     private var x = zone.left + cibles[0][0] * largeur
     private var y = zone.top + cibles[0][1] * hauteur
+    private var depX = x
+    private var depY = y
+    private var arrX = x
+    private var arrY = y
     private var regard = 1f
+    /** Effrayé par une secousse : il a filé hors de la fenêtre et attend d'y revenir. */
+    private var dehors = false
+
+    /** Part de là où il est vers ([bx], [by]), en [d] secondes. */
+    private fun partir(bx: Float, by: Float, d: Float) {
+        depX = x; depY = y; arrX = bx; arrY = by
+        duree = d
+        trajet = 0f
+    }
+
+    /** Une secousse l'effraie : il file d'un trait hors de la fenêtre, par le haut, et y reste un moment. */
+    override fun secouer(force: Float) {
+        if (dehors) return
+        dehors = true
+        val gauche = x < zone.left + largeur / 2f
+        partir(zone.left + (if (gauche) -0.12f else 1.12f) * largeur, zone.top + 0.04f * hauteur, 0.3f)
+        attente = 2.5f + hasard() * 1.5f
+    }
 
     override fun avancer(dt: Float) {
         temps += dt
         if (trajet < 1f) {
-            trajet = (trajet + dt / 0.45f).coerceAtMost(1f)
+            trajet = (trajet + dt / duree).coerceAtMost(1f)
             val e = 1f - (1f - trajet) * (1f - trajet)
-            val ax = zone.left + cibles[de][0] * largeur; val ay = zone.top + cibles[de][1] * hauteur
-            val bx = zone.left + cibles[vers][0] * largeur; val by = zone.top + cibles[vers][1] * hauteur
-            x = ax + (bx - ax) * e
-            y = ay + (by - ay) * e - sin(e * PI.toFloat()) * 6f * u
-            regard = if (bx >= ax) 1f else -1f
+            x = depX + (arrX - depX) * e
+            y = depY + (arrY - depY) * e - sin(e * PI.toFloat()) * 6f * u
+            regard = if (arrX >= depX) 1f else -1f
         } else {
             attente -= dt
             if (attente <= 0f) {
-                de = vers
+                // D'une fleur à une autre ; au retour de sa fuite, vers n'importe laquelle.
                 var suivant = (hasard() * cibles.size).toInt().coerceAtMost(cibles.size - 1)
-                if (suivant == de) suivant = (suivant + 1) % cibles.size
+                if (suivant == vers && !dehors) suivant = (suivant + 1) % cibles.size
                 vers = suivant
-                trajet = 0f
+                partir(zone.left + cibles[vers][0] * largeur, zone.top + cibles[vers][1] * hauteur, if (dehors) 0.8f else 0.45f)
+                dehors = false
                 attente = 1.2f + hasard() * 1.8f
             }
         }

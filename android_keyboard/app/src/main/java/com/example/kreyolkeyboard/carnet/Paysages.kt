@@ -133,7 +133,9 @@ enum class Espece {
     /** Pas une bête : le bateau de plongée de Bouillante, amarré au ponton, qui tangue. */
     BATEAU,
     /** Une abeille minuscule qui butine autour de sa fleur. */
-    ABEILLE
+    ABEILLE,
+    /** Pas une bête : une liane qui pend de la voûte, aux Roches gravées, et se balance. */
+    LIANE
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -938,6 +940,9 @@ object Paysages {
 
     /** Les feuillages de la mangrove de l'îlet Macou, à gauche et à droite, sur le plan du milieu : x0, x1, y0, y1. */
     internal val FEUILLAGE_MACOU_GAUCHE = floatArrayOf(-2f, 18f, 8f, 36f)
+
+    /** La voûte de la forêt des Roches gravées, d'où tombent les feuilles : x0, x1, y0, y1. */
+    internal val VOUTE_ROCHES = floatArrayOf(4f, 80f, 6f, 16f)
     internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)
 
     /** Les grappes du flamboyant de Morne-à-l'Eau, celui de Bouillante retourné : x0, x1, y0, y1. */
@@ -990,6 +995,10 @@ object Paysages {
             Bete(Espece.BATEAU, 7.5f, 47.6f, plan = 1)),
         Lieu.ILET_MACOU to listOf(Bete(Espece.PELICAN_PIEU, 92f, 56f, taille = 1.7f)),
         Lieu.SOUFRIERE to listOf(Bete(Espece.SIFFLEUR, 72f, 54f)),
+        // Les lianes qui pendent de la voûte, jusqu'à leur bout ; une secousse les balance.
+        Lieu.ROCHES_GRAVEES to listOf(34f to 30f, 38f to 24f, 52f to 34f, 66f to 26f, 18f to 28f).map { (x, y) ->
+            Bete(Espece.LIANE, x, y, plan = 0)
+        },
         Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
         Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 40.4f, plan = 1)),
         Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 28f, 62f, taille = 1.5f), Bete(Espece.ECREVISSE, 50f, 63.6f, taille = 1.7f),
@@ -4436,9 +4445,22 @@ object Paysages {
          * dessous ; à gauche un rocher plus petit garde un visage effacé.
          * Balisiers pour le colibri.
          */
+        /** La lisière de la voûte des Roches gravées, d'où pendent les lianes. */
+        private val vouteRoches = brisee(-2f, 14f, 20f, 18f, 40f, 12f, 60f, 16f, 80f, 10f, 102f, 13f)
+
+        /** Une liane des Roches gravées, de la voûte jusqu'à ([lx], [ly]), balancée de [angle] degrés autour de son attache. */
+        fun liane(lx: Float, ly: Float, angle: Float) {
+            val haut = vouteRoches(lx)
+            c.save()
+            c.rotate(angle, lx, haut)
+            pieceD("M$lx ${haut}Q${lx + 1.6f} ${(haut + ly) / 2f} $lx ${ly}L${lx + 0.35f} ${ly}Q${lx + 1.95f} ${(haut + ly) / 2f} ${lx + 0.35f} ${haut}Z",
+                papier(0xFF4E5A34.toInt()), 0f)
+            c.restore()
+        }
+
         fun rochesGraveesPapier() {
             // La forêt de l'intérieur : la voûte, des troncs à contreforts, des lianes.
-            val voute = brisee(-2f, 14f, 20f, 18f, 40f, 12f, 60f, 16f, 80f, 10f, 102f, 13f)
+            val voute = vouteRoches
             val v = Path().apply { addRect(-4f, -4f, 104f, 6f, Path.Direction.CW) }
             v.op(bosses(-2f, 102f, voute, 2.4f, 3.6f, Alea(2201)), Path.Op.UNION)
             v.op(chemin("M-4 -4L104 -4L104 ${voute(102f)}L-4 ${voute(-2f)}Z"), Path.Op.UNION)
@@ -4452,9 +4474,7 @@ object Paysages {
             for ((k, col) in listOf(0xFF3C7232, 0xFF4E8A3A).withIndex()) {
                 piece(bosses(-2f, 102f, { x -> voute(x) - 2f - k * 2.4f }, 1.8f, 2.8f, Alea(2202 + k)), papier(col.toInt()), 0.2f)
             }
-            val liane = papier(0xFF4E5A34.toInt())
-            for ((lx, ly) in arrayOf(34f to 30f, 38f to 24f, 52f to 34f, 66f to 26f, 18f to 28f))
-                pieceD("M$lx ${voute(lx)}Q${lx + 1.6f} ${(voute(lx) + ly) / 2f} $lx ${ly}L${lx + 0.35f} ${ly}Q${lx + 1.95f} ${(voute(lx) + ly) / 2f} ${lx + 0.35f} ${voute(lx)}Z", liane, 0f)
+            // Les lianes sont dans [BETES] : elles se balancent sur la carte ouverte.
             plan(1)
             // Le sol de la forêt, des fougères basses.
             pieceD("M-2 50Q30 47.6 60 49Q80 50 102 48L102 68L-2 68Z", papier(0xFF3E4A2A.toInt()), 0.5f)
@@ -5324,6 +5344,7 @@ object Paysages {
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
+                    Espece.LIANE -> liane(x, y, 0f)
                 }
                 return@aplat
             }
@@ -5446,6 +5467,9 @@ object Paysages {
                 Espece.PLANTE, Espece.FLEURS -> jardiniere(x, y,
                     sin(t * 1.1f + ph) * 2f + rafale * 16f * sin(depuisRafale * 2f * PI.toFloat() * 2.6f),
                     b.espece == Espece.FLEURS, b.taille)
+                // Elle se balance à peine dans l'air de la forêt ; une secousse
+                // la fait osciller, de moins en moins.
+                Espece.LIANE -> liane(x, y, sin(t * 0.7f + ph) * 1.5f + rafale * 12f * sin(depuisRafale * 3.4f + ph * 0.3f))
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
