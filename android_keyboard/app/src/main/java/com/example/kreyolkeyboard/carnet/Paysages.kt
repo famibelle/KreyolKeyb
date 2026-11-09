@@ -116,7 +116,9 @@ enum class Lieu(val nom: String) {
 /** Les espèces que les lieux peignent, et que la carte ouverte fait bouger : voir [Paysages.BETES]. */
 enum class Espece {
     TOULOULOU, TORTUE, PELICAN_PIEU, PELICAN, PELICAN_QUAI, LIBELLULE, ANOLI, PIC, AGOUTI, RATON,
-    SIFFLEUR, PARULINE, BALEINE, ECREVISSE, IGUANE
+    SIFFLEUR, PARULINE, BALEINE, ECREVISSE, IGUANE,
+    /** Pas une bête : une barque au mouillage, qui se balance comme elles bougent (voir [Paysages.BETES]). */
+    BARQUE
 }
 
 /** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
@@ -893,8 +895,14 @@ object Paysages {
      * Une seule table pour les deux rendus : la vignette les peint au repos,
      * la carte ouverte les fait bouger au même endroit ([Atelier]). Une ou
      * deux par lieu, pas plus (propriétaire, 2026-10-19).
+     *
+     * Les barques des Saintes y sont aussi, sans être des bêtes : ce qui
+     * bouge sur la carte ouverte doit être tu dans ses calques et peint au
+     * même endroit sur la vignette, et cette table fait exactement cela.
      */
     internal val BETES: Map<Lieu, List<Bete>> = mapOf(
+        Lieu.LES_SAINTES to listOf(Bete(Espece.BARQUE, 30f, 40f, plan = 1), Bete(Espece.BARQUE, 47f, 42.5f, plan = 1),
+            Bete(Espece.BARQUE, 64f, 39.5f, plan = 1)),
         Lieu.GRANDE_ANSE to listOf(Bete(Espece.TOULOULOU, 38f, 53f, plan = 1), Bete(Espece.TOULOULOU, 46f, 54.6f, plan = 1),
             Bete(Espece.TOULOULOU, 61f, 52.4f, plan = 1)),
         Lieu.BOUILLANTE to listOf(Bete(Espece.TORTUE, 56f, 45f, plan = 1, taille = 4f)),
@@ -1014,6 +1022,9 @@ object Paysages {
      * redescendre les vagues.
      */
     internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 34f) / 32f).coerceIn(0f, 1f).pow(1.2f)
+
+    /** La baie des Saintes, sur le plan du milieu, entre le pied du morne et la plage : x0, x1, y0, y1. */
+    internal val EAU_SAINTES = floatArrayOf(-2f, 95f, 37.6f, 47f)
 
     /** La mer de Grande Anse visible sur le plan du milieu, au-dessus des raisiniers du bas : x0, x1, y0, y1, à droite du rivage. */
     internal val EAU_GRANDE_ANSE = floatArrayOf(57f, 102f, 34.6f, 49f)
@@ -2471,10 +2482,7 @@ object Paysages {
             pieceD("M6.5 31Q8 35 10 38.4L21.5 38.4L21.5 31Z", blancCase)
             for (k in 0 until 4) pieceD("M${10.6f + k * 2.2f} 28.4L${11.8f + k * 2.2f} 28.4L${11.8f + k * 2.2f} 29.8L${10.6f + k * 2.2f} 29.8Z", papier(0xFF3A4A5A.toInt()), 0f)
             for (k in 0 until 4) piece(disque(12.5f + k * 2.4f, 33.5f, 0.4f), papier(0xFF3A4A5A.toInt()), 0f)
-            // Des barques au mouillage.
-            for ((bx, by) in arrayOf(30f to 40f, 47f to 42.5f, 64f to 39.5f)) {
-                pieceD("M${bx - 2.2f} ${by}L${bx + 2.4f} ${by - 0.3f}Q${bx + 2f} ${by + 0.9f} ${bx + 1.6f} ${by + 0.9f}L${bx - 1.8f} ${by + 0.9f}Z", blanc(), 0.4f)
-            }
+            // Les barques au mouillage sont dans [BETES] : elles se balancent sur la carte ouverte.
             // Le bourg : la grande case blanche au toit de tôle rouge, ses voisines, le kiosque.
             pieceD("M75 37L75 33.5L80 33.5L80 37Z", papier(0xFFC9B79A.toInt()), 0.6f)
             pieceD("M74.3 33.8L77.5 31.4L80.7 33.8Z", papier(0xFF8A5A3A.toInt()), 0.6f)
@@ -4807,6 +4815,7 @@ object Paysages {
                     Espece.BALEINE -> baleine(x, y)
                     Espece.ECREVISSE -> ecrevisse(x, y, b.taille)
                     Espece.IGUANE -> iguane(x, y, 0f, b.taille)
+                    Espece.BARQUE -> barque(x, y)
                 }
                 return@aplat
             }
@@ -4900,7 +4909,16 @@ object Paysages {
                     val u = (t + ph) % 5f
                     iguane(x, y, if (u < 1.4f) -abs(sin(u / 1.4f * PI.toFloat() * 3f)) * 0.6f else 0f, b.taille)
                 }
+                // La houle soulève la barque et la fait tanguer, chacune à son rythme.
+                Espece.BARQUE -> barque(x, y + sin(t * 1.1f + ph) * 0.25f, sin(t * 0.8f + ph * 1.3f) * 0.35f)
             }
+        }
+
+        /** Une barque blanche au mouillage, l'étrave à droite ; [tangage] lève l'étrave et baisse la poupe. */
+        fun barque(x: Float, y: Float, tangage: Float = 0f) {
+            val a = tangage
+            forme("M${x - 2.2f} ${y + a}L${x + 2.4f} ${y - 0.3f - a}Q${x + 2f} ${y + 0.9f - a * 0.6f} ${x + 1.6f} ${y + 0.9f - a * 0.5f}" +
+                "L${x - 1.8f} ${y + 0.9f + a * 0.5f}Z", blanc())
         }
 
         // ------------------------------------------------------ les quinze lieux de la deuxième vague

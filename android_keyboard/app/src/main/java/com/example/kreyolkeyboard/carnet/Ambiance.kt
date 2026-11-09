@@ -161,6 +161,8 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     rive = { y -> Paysages.rivageGrandeAnse(y) + 2.5f + 1.5f * (y - 34f) / 32f },
                     devant = { y -> if (y < Paysages.FEUILLAGE_GRANDE_ANSE[0]) 102f else Paysages.FEUILLAGE_GRANDE_ANSE[1] }),
                     Ecume(zone, graine))
+                enPlans && lieu == Lieu.LES_SAINTES -> Reflets(zone, graine, nuit = heure?.nuit == true,
+                    eau = Paysages.EAU_SAINTES, eclatsDuJour = 24)
                 enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
                     nappe = floatArrayOf(68f, 30f, 46f, 10f), force = 0.6f)
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
