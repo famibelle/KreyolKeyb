@@ -1417,6 +1417,19 @@ object Paysages {
     /** Le lagon de Petite-Terre, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_PETITE_TERRE = floatArrayOf(-2f, 102f, 41f, 52f)
 
+    /** Le bord de l'eau sur la plage de Petite-Terre, à l'abscisse [x] (plan de devant) : la courbe peinte de la plage. */
+    internal fun bordPlagePetiteTerre(x: Float): Float {
+        // x(t) = 30 + 60t + 12t² sur la quadratique (30, 56) → (60, 53.6) → (102, 54.4).
+        val t = ((-60f + sqrt(3600f + 48f * (x - 30f).coerceAtLeast(0f))) / 24f).coerceIn(0f, 1f)
+        return (1f - t) * (1f - t) * 56f + 2f * t * (1f - t) * 53.6f + t * t * 54.4f
+    }
+
+    /** Le récif où la houle se brise, au bord du lagon de Petite-Terre (plan du milieu) : x0, x1, y. */
+    internal val RECIF_PETITE_TERRE = floatArrayOf(-2f, 38f, 40.8f)
+
+    /** La lanterne du phare de Terre-de-Bas, sur le plan du fond : x, y. */
+    internal val PHARE_PETITE_TERRE = floatArrayOf(86f, 22.4f)
+
     /** L'océan sous Gueule Grand Gouffre, sur le plan du fond : x0, x1, y0, y1. */
     internal val EAU_GOUFFRE = floatArrayOf(-2f, 66f, 16f, 42f)
 

@@ -204,7 +204,12 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                         rive = { y -> Paysages.rivePorteEnfer(y) + 1f }),
                     Embruns(zone, graine + 1, nuit = heure?.nuit == true, points = Paysages.RESSAC_PORTE_ENFER),
                     Lame(zone, graine + 2, nuit = heure?.nuit == true))
-                enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
+                // La houle se brise sur le récif, une vague lèche la plage, le phare tourne le soir.
+                enPlans && lieu == Lieu.PETITE_TERRE -> Ensemble(
+                    Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22),
+                    Brisants(zone, graine + 1, nuit = heure?.nuit == true),
+                    Lame(zone, graine + 2, nuit = heure?.nuit == true, bord = Paysages::bordPlagePetiteTerre, debut = 36f),
+                    if (heure?.allume == true) Phare(zone, graine + 3) else Ensemble())
                 enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
                 enPlans && lieu == Lieu.GRANDE_VIGIE -> Ensemble(
                     Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26,
@@ -1746,37 +1751,166 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
 
     private fun faisceau(c: Canvas, p: Paint) {
         val (lx, ly) = Paysages.PHARE_DESIRADE
-        val a = 2f * PI.toFloat() * (temps / TOUR_PHARE % 1f)
-        val face = sin(a).coerceAtLeast(0f)
-        val longueur = 92f * abs(cos(a))
-        val force = 0.3f + 0.7f * face
-        if (longueur > 1.5f) {
-            val sens = if (cos(a) < 0f) -1f else 1f
-            val bout = lx + sens * longueur
-            val demi = 0.7f + 0.055f * longueur
-            cone.rewind()
-            cone.moveTo(lx, ly - 0.7f)
-            cone.lineTo(bout, ly - demi)
-            cone.lineTo(bout, ly + demi)
-            cone.lineTo(lx, ly + 0.7f)
-            cone.close()
-            p.color = 0xFFFFFFFF.toInt()
-            p.shader = LinearGradient(lx, ly, bout, ly, ((force * 150f).toInt() shl 24) or 0xFFF2C4, 0x00FFF2C4,
-                Shader.TileMode.CLAMP)
-            c.drawPath(cone, p)
-            p.shader = null
-        }
-        // L'éclat, quand le faisceau passe face à nous.
-        val eclat = face * face * face * face
-        p.color = ((40f + eclat * 170f).toInt() shl 24) or 0xFFF2C4
-        c.drawCircle(lx, ly, 1.6f + eclat * 3.4f, p)
+        faisceauDePhare(c, p, cone, lx, ly, temps)
     }
 
     private companion object {
-        /** Un tour du faisceau, en secondes. */
-        const val TOUR_PHARE = 9f
         /** Le temps qu'une gerbe du coup de mer met à monter et retomber, en secondes. */
         const val GERBE_HAUTE = 1.3f
+    }
+}
+
+/** Un tour du faisceau d'un phare, en secondes. */
+private const val TOUR_PHARE = 9f
+
+/**
+ * Le faisceau d'un phare dont la lanterne est en ([lx], [ly]), [temps] secondes
+ * après le début : il tourne, s'allonge vers un côté puis rapetisse, éclate en
+ * lueur quand il passe face à nous et repart plus pâle, de dos.
+ */
+private fun faisceauDePhare(c: Canvas, p: Paint, cone: Path, lx: Float, ly: Float, temps: Float) {
+    val a = 2f * PI.toFloat() * (temps / TOUR_PHARE % 1f)
+    val face = sin(a).coerceAtLeast(0f)
+    val longueur = 92f * abs(cos(a))
+    val force = 0.3f + 0.7f * face
+    if (longueur > 1.5f) {
+        val sens = if (cos(a) < 0f) -1f else 1f
+        val bout = lx + sens * longueur
+        val demi = 0.7f + 0.055f * longueur
+        cone.rewind()
+        cone.moveTo(lx, ly - 0.7f)
+        cone.lineTo(bout, ly - demi)
+        cone.lineTo(bout, ly + demi)
+        cone.lineTo(lx, ly + 0.7f)
+        cone.close()
+        p.color = 0xFFFFFFFF.toInt()
+        p.shader = LinearGradient(lx, ly, bout, ly, ((force * 150f).toInt() shl 24) or 0xFFF2C4, 0x00FFF2C4,
+            Shader.TileMode.CLAMP)
+        c.drawPath(cone, p)
+        p.shader = null
+    }
+    // L'éclat, quand le faisceau passe face à nous.
+    val eclat = face * face * face * face
+    p.color = ((40f + eclat * 170f).toInt() shl 24) or 0xFFF2C4
+    c.drawCircle(lx, ly, 1.6f + eclat * 3.4f, p)
+}
+
+/**
+ * Le phare de Terre-de-Bas, à Petite-Terre ([Paysages.PHARE_PETITE_TERRE],
+ * plan du fond), allumé le soir et la nuit : son faisceau tourne au-dessus
+ * de l'île.
+ */
+private class Phare(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    /** Le plan du fond du lieu (son plan 0), juste derrière [Paysages.MILIEU]. */
+    private val rang = Paysages.MILIEU - 1
+    // Calé comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
+    private val cone = Path()
+    private var temps = hasard() * TOUR_PHARE
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun avancer(dt: Float) { temps += dt }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        val (lx, ly) = Paysages.PHARE_PETITE_TERRE
+        faisceauDePhare(c, p, cone, lx, ly, temps)
+        c.restore()
+    }
+}
+
+/**
+ * La houle qui se brise au loin sur le récif de Petite-Terre
+ * ([Paysages.RECIF_PETITE_TERRE], plan du milieu) : au repos, des traits
+ * d'écume naissent et s'effacent le long du récif ; à la secousse, un
+ * rouleau blanc court d'un bout à l'autre, se gonfle et retombe.
+ */
+private class Brisants(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+    private val rang = Paysages.MILIEU
+    // Calés comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
+    private val n = 7
+    private val xTrait = FloatArray(n) { hasard() }
+    private val rythme = FloatArray(n) { 2.6f + hasard() * 2f }
+    private val phase = FloatArray(n) { hasard() }
+    private val teinte = if (nuit) 0x9FB3D8 else 0xFFFFFF
+    private var temps = 0f
+    /** Depuis quand le rouleau est parti, ou -1 ; et sa force. */
+    private var coup = -1f
+    private var forceCoup = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        if (coup in 0f..0.8f) return
+        coup = 0f
+        forceCoup = force
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+        if (coup >= 0f) { coup += dt; if (coup > COURSE + RETOMBE) coup = -1f }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        val (x0, x1, y) = Paysages.RECIF_PETITE_TERRE
+        // Au repos, des traits d'écume qui naissent, s'allongent et s'effacent.
+        for (k in 0 until n) {
+            val t = (temps / rythme[k] + phase[k]) % 1f
+            val x = x0 + 3f + (x1 - x0 - 6f) * xTrait[k]
+            val rx = 1.2f + 2.2f * t
+            p.color = ((sin(PI.toFloat() * t) * 200f).toInt() shl 24) or teinte
+            c.drawOval(x - rx, y - 0.3f, x + rx, y + 0.3f, p)
+        }
+        // À la secousse, le rouleau court le long du récif et retombe derrière lui.
+        if (coup >= 0f) {
+            val front = x0 + (x1 - x0) * (coup / COURSE).coerceAtMost(1f)
+            val haut = 0.8f + 1f * forceCoup
+            var x = x0
+            while (x <= front) {
+                // Depuis combien de temps l'écume s'est levée à cet endroit.
+                val age = coup - (x - x0) / (x1 - x0) * COURSE
+                val u = (age / RETOMBE).coerceIn(0f, 1f)
+                val h = haut * sin(PI.toFloat() * (0.15f + 0.85f * u)) * (1f - u * 0.5f)
+                p.color = (((1f - u) * 230f).toInt() shl 24) or teinte
+                val r = 0.5f + 0.5f * h
+                c.drawOval(x - r * 1.6f, y - h - r * 0.5f, x + r * 1.6f, y + r * 0.4f, p)
+                x += 1.4f
+            }
+        }
+        c.restore()
+    }
+
+    private companion object {
+        /** Le temps que le rouleau met à courir le long du récif, puis à retomber là où il est passé, en secondes. */
+        const val COURSE = 1.4f
+        const val RETOMBE = 1.6f
     }
 }
 
@@ -1850,12 +1984,15 @@ private class Embruns(zone: RectF, graine: Int, nuit: Boolean,
 }
 
 /**
- * Le bord du lagon de la Porte d'Enfer sur sa plage ([Paysages.bordPlagePorteEnfer],
- * plan de devant) : au repos, l'eau clapote d'un rien et son liseré d'écume
+ * Le bord d'un lagon sur sa plage ([bord], plan de devant ; la Porte d'Enfer
+ * par défaut) : au repos, l'eau clapote d'un rien et son liseré d'écume
  * respire ; à la secousse, une vague monte sur le sable, s'étale, puis se
- * retire en laissant une ligne d'écume qui s'efface.
+ * retire en laissant une ligne d'écume qui s'efface. À gauche de [debut] il
+ * n'y a pas de plage, et la vague s'y amincit jusqu'à rien.
  */
-private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+private class Lame(zone: RectF, graine: Int, nuit: Boolean,
+                   private val bord: (Float) -> Float = Paysages::bordPlagePorteEnfer,
+                   private val debut: Float = -4f) : Ambiance(zone, graine) {
     private val rang = Paysages.DEVANT
     // Calée comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
     private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
@@ -1915,11 +2052,11 @@ private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, gra
         val r = portee()
         // La nappe : du bord de l'eau jusqu'à sa lèvre, qui ondule.
         nappe.rewind()
-        var x = -4f
-        nappe.moveTo(x, Paysages.bordPlagePorteEnfer(x) - 0.2f)
-        while (x <= 104f) { nappe.lineTo(x, Paysages.bordPlagePorteEnfer(x) - 0.2f); x += 4f }
+        var x = debut
+        nappe.moveTo(x, bord(x) - 0.2f)
+        while (x <= 104f) { nappe.lineTo(x, bord(x) - 0.2f); x += 4f }
         x = 104f
-        while (x >= -4f) { nappe.lineTo(x, levre(x, r)); x -= 2f }
+        while (x >= debut) { nappe.lineTo(x, levre(x, r)); x -= 2f }
         nappe.close()
         p.color = (150 shl 24) or eau
         c.drawPath(nappe, p)
@@ -1929,7 +2066,7 @@ private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, gra
         p.strokeWidth = 0.6f
         p.color = (200 shl 24) or ecume
         nappe.rewind()
-        x = -4f
+        x = debut
         nappe.moveTo(x, levre(x, r))
         while (x <= 104f) { x += 2f; nappe.lineTo(x, levre(x, r)) }
         c.drawPath(nappe, p)
@@ -1940,7 +2077,7 @@ private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, gra
             p.strokeWidth = 0.3f
             p.color = ((o * 170f).toInt() shl 24) or ecume
             nappe.rewind()
-            x = -4f
+            x = debut
             nappe.moveTo(x, levre(x, 0.35f + laisse))
             while (x <= 104f) { x += 2f; nappe.lineTo(x, levre(x, 0.35f + laisse)) }
             c.drawPath(nappe, p)
@@ -1950,13 +2087,15 @@ private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, gra
     }
 
     private fun levre(x: Float, r: Float) =
-        Paysages.bordPlagePorteEnfer(x) + r * (1f + 0.18f * sin(x * 0.35f + phase) + 0.1f * sin(x * 0.9f))
+        bord(x) + r * ((x - debut) / AMINCI).coerceIn(0f, 1f) * (1f + 0.18f * sin(x * 0.35f + phase) + 0.1f * sin(x * 0.9f))
 
     private companion object {
         /** Le temps que la vague met à monter, à se retirer, puis que sa laisse s'efface, en secondes. */
         const val MONTE = 0.9f
         const val RETIRE = 1.6f
         const val EFFACE = 2f
+        /** La largeur sur laquelle la vague s'amincit à gauche de la plage, en unités. */
+        const val AMINCI = 10f
     }
 }
 
