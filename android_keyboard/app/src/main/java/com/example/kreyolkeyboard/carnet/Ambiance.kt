@@ -179,8 +179,12 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 }
                 enPlans && lieu == Lieu.LES_SAINTES -> Reflets(zone, graine, nuit = heure?.nuit == true,
                     eau = Paysages.EAU_SAINTES, eclatsDuJour = 24)
-                enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
-                    nappe = floatArrayOf(68f, 30f, 46f, 10f), force = 0.6f)
+                // Une secousse fait tomber des feuilles de bambou dans le bassin, qui y font des ronds.
+                enPlans && lieu == Lieu.BAINS_JAUNES -> Ensemble(Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
+                    nappe = floatArrayOf(2f, 30f, 36f, 10f), force = 0.6f),
+                    Petales(zone, graine + 1, Paysages.BAMBOUS_BAINS, intArrayOf(0xFFE0C848.toInt(), 0xFFB8C040.toInt()),
+                        sol0 = 32f, sens = 1f, plan = Paysages.MILIEU, chute = 30f, elan = 0.5f, feuille = true,
+                        grandeur = 1.5f, surLEau = { x, y -> Paysages.dansLeBassin(x, y) }))
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
@@ -1851,7 +1855,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         forceRafale = max(force, if (rafale.any { it >= 0f }) forceRafale else 0f)
         betes.forEachIndexed { i, b ->
             when (b.espece) {
-                Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
+                Espece.TOULOULOU, Espece.IGUANE, Espece.RATON -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE, Espece.LIANE,
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
@@ -1880,6 +1884,9 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     /** La tourterelle [i] ne part pas avec les autres : un battement de cœur de retard chacune. */
     private fun retard(i: Int) = (i % 3) * 0.15f
 
+    /** Jusqu'où [b] file à couvert : l'iguane vers la gauche, le raton des Bains Jaunes vers le rocher noir, à gauche aussi. */
+    private fun couvert(b: Bete) = if (b.espece == Espece.RATON) RATON_COUVERT else COUVERT
+
     /** Où est le trou de [b] : quelques pas de côté, en s'écartant du milieu de la fenêtre. */
     private fun trou(b: Bete) = if (b.x < 50f) -TROU else TROU
 
@@ -1902,13 +1909,14 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
-            if (b.espece == Espece.IGUANE) {
+            if (b.espece == Espece.IGUANE || b.espece == Espece.RATON) {
                 fuite[i] += dt
                 val f = fuite[i]
+                val couvert = couvert(b)
                 ecart[i] = when {
-                    f < FILE -> COUVERT * (f / FILE).let { it * it }
-                    f < FILE + A_COUVERT -> COUVERT
-                    f < FILE + A_COUVERT + REVIENT -> COUVERT * (1f - (f - FILE - A_COUVERT) / REVIENT).let { 1f - (1f - it) * (1f - it) }
+                    f < FILE -> couvert * (f / FILE).let { it * it }
+                    f < FILE + A_COUVERT -> couvert
+                    f < FILE + A_COUVERT + REVIENT -> couvert * (1f - (f - FILE - A_COUVERT) / REVIENT).let { 1f - (1f - it) * (1f - it) }
                     else -> 0f
                 }
                 if (f >= FILE + A_COUVERT + REVIENT) fuite[i] = -1f
@@ -1948,13 +1956,21 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             c.save()
             c.translate(Paysages.GLISSEMENT[b.plan + 2] * largeur * regardX / e,
                 Paysages.GLISSEMENT[b.plan + 2] * hauteur * regardY / e)
-            if (fuite[i] >= 0f && b.espece == Espece.IGUANE) {
+            if (fuite[i] >= 0f && (b.espece == Espece.IGUANE || b.espece == Espece.RATON)) {
                 // Il file tête vers le bord, puis revient tête vers sa pierre,
                 // le corps qui ondule à chaque foulée.
                 val f = fuite[i]
                 val bouge = f < FILE || f > FILE + A_COUVERT
                 c.translate(ecart[i], if (bouge) -abs(sin(f * 18f)) * 0.3f * b.taille else 0f)
-                if (f < FILE) c.scale(-1f, 1f, b.x + 5f * b.taille, b.y)
+                if (b.espece == Espece.RATON) {
+                    // Le raton se tourne selon sa marche, arrêtée là où la secousse l'a surpris :
+                    // il faut le remettre tête vers le rocher, puis tête vers sa place.
+                    val a = geste[i] * 0.3f + i * 1.7f
+                    val tourne = if (cos(a) >= 0f) 1f else -1f
+                    val versLeRocher = if (RATON_COUVERT > 0f) 1f else -1f
+                    val veut = if (f < FILE) versLeRocher else -versLeRocher
+                    if (tourne != veut) c.scale(-1f, 1f, b.x + sin(a) * 6f, b.y)
+                } else if (f < FILE) c.scale(-1f, 1f, b.x + 5f * b.taille, b.y)
             } else if (fuite[i] >= 0f) {
                 // Le trou, ouvert le temps que la bête y entre et en ressorte.
                 val tx = b.x + trou(b)
@@ -2077,6 +2093,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val PETITS_PAS = 3f
         /** Où l'iguane va se mettre à couvert, en unités de carte : hors de la fenêtre, vers la gauche. */
         const val COUVERT = -42f
+        const val RATON_COUVERT = -30f
         /** Le temps qu'il met à y filer, celui qu'il y reste, celui qu'il met à revenir. */
         const val FILE = 0.9f
         const val A_COUVERT = 4f
