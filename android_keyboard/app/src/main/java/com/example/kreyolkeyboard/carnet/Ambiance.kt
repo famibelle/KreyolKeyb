@@ -153,7 +153,7 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
                 enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
                 enPlans && lieu == Lieu.SAUT_LEZARDE -> Cascade(zone, graine, Paysages.CHUTE_LEZARDE)
-                enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES)
+                enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES, Paysages.BASSIN_ECREVISSES)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
                 enPlans && lieu == Lieu.SOUFRIERE -> Vapeurs(zone, graine, Paysages.FUMEE_SOUFRIERE, plan = 3, nappe = null,
                     force = 0.55f, taille = 0.5f)
@@ -184,7 +184,9 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     nappe = floatArrayOf(2f, 30f, 36f, 10f), force = 0.6f),
                     Petales(zone, graine + 1, Paysages.BAMBOUS_BAINS, intArrayOf(0xFFE0C848.toInt(), 0xFFB8C040.toInt()),
                         sol0 = 32f, sens = 1f, plan = Paysages.MILIEU, chute = 30f, elan = 0.5f, feuille = true,
-                        grandeur = 1.5f, surLEau = { x, y -> Paysages.dansLeBassin(x, y) }))
+                        grandeur = 1.5f, surLEau = { x, y -> Paysages.dansLeBassin(x, y) }),
+                    // Le jour, la secousse fait détaler des mangoustes sur le chemin (propriétaire, 2026-11-10).
+                    if (heure?.nuit == true) Ensemble() else Mangoustes(zone, graine + 2))
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
@@ -1057,6 +1059,134 @@ private class GardeBoeufs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
     }
 }
 
+/**
+ * Les petites mangoustes des Bains Jaunes, qu'une secousse fait détaler
+ * (propriétaire, 2026-11-10) : deux, l'une derrière l'autre, jaillissent de
+ * la forêt sous le garde-corps, filent en travers du chemin de pavés, la
+ * première se dresse un instant sur ses pattes de derrière pour regarder,
+ * puis elles filent vers le bout du chemin et se perdent dans la forêt. Le
+ * jour seulement : la nuit, c'est le raton laveur qui rôde. Leurs parcours
+ * sont dans [Paysages.MANGOUSTES_BAINS], sur le plan du milieu.
+ */
+private class Mangoustes(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val trajets = Paysages.MANGOUSTES_BAINS
+    /** Depuis quand elles détalent, ou -1. */
+    private var course = -1f
+    private val chemin = Path()
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        if (course < 0f) course = 0f
+    }
+
+    override fun avancer(dt: Float) {
+        if (course < 0f) return
+        course += dt
+        if (course > RETARD * (trajets.size - 1) + FILE + DRESSEE + FUIT) course = -1f
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        if (course < 0f) return
+        val e = cadre[0]
+        val g = Paysages.GLISSEMENT[Paysages.MILIEU]
+        c.save()
+        c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+        c.scale(e, e)
+        p.shader = null
+        for ((k, t) in trajets.withIndex()) {
+            val f = course - k * RETARD
+            if (f < 0f) continue
+            // Le départ, l'arrêt à mi-chemin, l'arrivée dans la forêt : x, y, taille.
+            val (x0, y0, x1, y1, x2, y2) = t
+            val dressee = k == 0 && f in FILE..FILE + DRESSEE
+            val (x, y, u) = when {
+                f < FILE -> (f / FILE).let { Triple(x0 + (x1 - x0) * it, y0 + (y1 - y0) * it, it) }
+                f < FILE + DRESSEE -> Triple(x1, y1, 1f)
+                else -> ((f - FILE - DRESSEE) / FUIT).coerceAtMost(1f).let { Triple(x1 + (x2 - x1) * it, y1 + (y2 - y1) * it, 1f + it) }
+            }
+            // Plus petite à mesure qu'elle s'éloigne, et elle s'efface dans les feuilles au bout.
+            val taille = 2.5f - 0.7f * u
+            val vue = if (f > FILE + DRESSEE + FUIT * 0.75f) ((FILE + DRESSEE + FUIT - f) / (FUIT * 0.25f)).coerceIn(0f, 1f) else 1f
+            val sens = if ((if (f < FILE) x1 - x0 else x2 - x1) < 0f) -1f else 1f
+            mangouste(c, p, x, y, taille, sens, f, dressee, vue)
+        }
+        c.restore()
+        p.style = Paint.Style.FILL
+    }
+
+    /**
+     * Une petite mangouste de profil, tête vers [sens] : le corps long et
+     * bas, gris-brun tiqueté, le museau pointu, la queue longue qui
+     * s'effile ; les pattes courtes qui galopent, ou dressée sur celles de
+     * derrière, le nez en l'air.
+     */
+    private fun mangouste(c: Canvas, p: Paint, x: Float, y: Float, s: Float, sens: Float, f: Float, dressee: Boolean, vue: Float) {
+        val a = (vue * 255f).toInt()
+        val pelage = 0xFF5A4630.toInt()
+        c.save()
+        c.translate(x, y)
+        c.scale(sens * s, s)
+        if (dressee) c.rotate(-62f, -1.2f, 0f)
+        val galop = if (dressee) 0f else sin(f * 30f)
+        // La queue, qui traîne derrière et s'effile.
+        chemin.rewind()
+        chemin.moveTo(-1.3f, -0.45f)
+        chemin.quadTo(-2.6f, -0.2f - galop * 0.15f, -3.6f, 0.1f)
+        chemin.quadTo(-2.6f, 0.15f, -1.2f, 0.05f)
+        chemin.close()
+        p.style = Paint.Style.FILL
+        p.color = pelage
+        p.alpha = a
+        c.drawPath(chemin, p)
+        // Les pattes, deux par deux, en ciseaux au galop.
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        p.strokeWidth = 0.28f
+        p.color = 0xFF3E3022.toInt()
+        p.alpha = a
+        c.drawLine(0.8f, 0f, 0.8f + galop * 0.5f, 0.75f, p)
+        c.drawLine(-0.8f, 0f, -0.8f - galop * 0.5f, 0.75f, p)
+        // Le corps, la tête et le museau.
+        p.style = Paint.Style.FILL
+        p.color = pelage
+        p.alpha = a
+        c.drawOval(-1.5f, -0.75f - galop * 0.12f, 1.4f, 0.25f - galop * 0.12f, p)
+        c.drawOval(0.9f, -1.1f, 2.1f, -0.15f, p)
+        chemin.rewind()
+        chemin.moveTo(1.9f, -0.95f); chemin.lineTo(2.75f, -0.45f); chemin.lineTo(1.9f, -0.3f); chemin.close()
+        c.drawPath(chemin, p)
+        // Le dos plus clair, tiqueté, l'œil et l'oreille.
+        p.color = 0xFF8C7450.toInt()
+        p.alpha = a
+        c.drawOval(-1.2f, -0.75f - galop * 0.12f, 1.1f, -0.35f - galop * 0.12f, p)
+        p.color = 0xFF2A2420.toInt()
+        p.alpha = a
+        c.drawCircle(1.85f, -0.8f, 0.11f, p)
+        c.drawCircle(2.72f, -0.47f, 0.09f, p)
+        p.color = 0xFF6A5A46.toInt()
+        p.alpha = a
+        c.drawCircle(1.25f, -1.05f, 0.18f, p)
+        c.restore()
+    }
+
+    private companion object {
+        /** La course jusqu'à mi-chemin, le temps dressée, la fuite vers la forêt ; l'écart entre deux mangoustes. */
+        const val FILE = 1.1f
+        const val DRESSEE = 1f
+        const val FUIT = 1.6f
+        const val RETARD = 0.45f
+    }
+}
+
+private operator fun FloatArray.component6() = this[5]
+
 /** Plusieurs ambiances l'une sur l'autre, la première dessous. */
 /**
  * Les étoiles d'une nuit de carte, qui scintillent : chacune à sa place dans
@@ -1215,9 +1345,14 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * Lézarde ([Paysages.CHUTE_LEZARDE]) : des traînées
  * blanches qui dévalent le rideau peint en accélérant et s'écartent un peu
  * vers le pied, où l'écume bouillonne en bouffées qui gonflent et
- * s'effacent. La chute est sur le plan du milieu et glisse avec lui.
+ * s'effacent. La chute est sur le plan du milieu et glisse avec lui. Une
+ * secousse fait bouillonner le pied plus fort et en jaillir une gerbe de
+ * gouttes qui retombent dans le bassin.
  */
-private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Paysages.CHUTE_CARBET) : Ambiance(zone, graine) {
+private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Paysages.CHUTE_CARBET,
+                      private val bassin: FloatArray? = null) : Ambiance(zone, graine) {
+    /** Le bassin rond, s'il y en a un : les ronds qui partent du pied de la chute y restent. */
+    private val ovale = bassin?.let { (g, h, d, b) -> Path().apply { addOval(RectF(g, h, d, b), Path.Direction.CW) } }
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 22
     private val voie = FloatArray(n) { hasard() - 0.5f }
@@ -1227,6 +1362,14 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
     private val bouffees = 6
     private val decalage = FloatArray(bouffees) { hasard() - 0.5f }
     private val rythme = FloatArray(bouffees) { 0.9f + hasard() * 0.6f }
+    private val gouttes = 14
+    private val gx = FloatArray(gouttes)
+    private val gy = FloatArray(gouttes)
+    private val gvx = FloatArray(gouttes)
+    private val gvy = FloatArray(gouttes)
+    /** Depuis quand la gerbe est partie, ou -1 ; et sa force. */
+    private var gerbe = -1f
+    private var forceGerbe = 0f
     private var temps = 0f
     private var regardX = 0f
     private var regardY = 0f
@@ -1236,8 +1379,28 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
         regardY = y
     }
 
+    override fun secouer(force: Float) {
+        val (x, _, bas, w) = eau
+        gerbe = 0f
+        forceGerbe = force
+        for (k in 0 until gouttes) {
+            gx[k] = x + (hasard() - 0.5f) * w
+            gy[k] = bas - 0.5f
+            gvx[k] = (hasard() - 0.5f) * (6f + 8f * force)
+            gvy[k] = -(5f + hasard() * 7f * force)
+        }
+    }
+
     override fun avancer(dt: Float) {
         temps += dt
+        if (gerbe < 0f) return
+        gerbe += dt
+        if (gerbe > GERBE) { gerbe = -1f; return }
+        for (k in 0 until gouttes) {
+            gvy[k] += 22f * dt
+            gx[k] += gvx[k] * dt
+            gy[k] += gvy[k] * dt
+        }
     }
 
     override fun dessiner(c: Canvas, p: Paint) {
@@ -1266,14 +1429,46 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
             p.color = (alpha shl 24) or (if (i % 3 == 0) 0xFFFFFF else 0x7DB8B2)
             c.drawLine(fx, (y - l).coerceAtLeast(haut), fx, y, p)
         }
+        if (ovale != null) {
+            // Des ronds partent du pied de la chute et s'élargissent dans le bassin.
+            c.save()
+            c.clipPath(ovale)
+            p.strokeWidth = 0.3f
+            for (k in 0 until RONDS) {
+                val t = (temps / 3.2f + k / RONDS.toFloat()) % 1f
+                val rx = w * 0.5f + t * 30f
+                p.color = (((1f - t) * 150f).toInt() shl 24) or 0xFFFFFF
+                c.drawOval(x - rx, bas - rx * 0.28f, x + rx, bas + rx * 0.28f, p)
+            }
+            c.restore()
+        }
         p.style = Paint.Style.FILL
+        // Le pied bouillonne plus fort le temps de la gerbe.
+        val bouillon = if (gerbe >= 0f) 1f + forceGerbe * 0.9f * exp(-gerbe * 1.4f) else 1f
         for (j in 0 until bouffees) {
             val t = (temps / rythme[j] + j / bouffees.toFloat()) % 1f
-            val r = w * (0.25f + 0.4f * t)
+            // Plafonnée : sous un rideau large, des bouffées à sa mesure faisaient des boules.
+            val r = minOf(w, 6f) * (0.25f + 0.4f * t) * bouillon
             p.color = (((1f - t) * 200f).toInt() shl 24) or 0xFFFFFF
-            c.drawCircle(x + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f, r, p)
+            c.drawCircle(x + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f * bouillon, r, p)
+        }
+        if (gerbe >= 0f) {
+            val a = ((1f - gerbe / GERBE) * 230f).toInt().coerceIn(0, 255)
+            for (k in 0 until gouttes) {
+                // Une goutte retombée dans le bassin n'est plus qu'un rond qui s'efface.
+                if (gy[k] > bas + 2f) continue
+                p.color = (a shl 24) or (if (k % 3 == 0) 0xBFE4E0 else 0xFFFFFF)
+                c.drawCircle(gx[k], gy[k], 0.35f + (k % 3) * 0.12f, p)
+            }
         }
         c.restore()
+    }
+
+    private companion object {
+        /** Combien de temps vit la gerbe d'une secousse, en secondes. */
+        const val GERBE = 1.8f
+        /** Combien de ronds à la fois dans un bassin rond. */
+        const val RONDS = 3
     }
 }
 
@@ -1860,7 +2055,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
-                Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
+                Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
                 else -> Unit
             }
         }
@@ -1905,7 +2100,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             if (rafale[i] >= 0f) { rafale[i] += dt; if (rafale[i] > RAFALE) rafale[i] = -1f }
             if (envol[i] >= 0f) { envol[i] += dt; if (envol[i] > retard(i) + duree(b)) envol[i] = -1f }
-            if (plongee[i] >= 0f) { plongee[i] += dt; if (plongee[i] > PLONGE + AU_FOND + REMONTE) plongee[i] = -1f }
+            if (plongee[i] >= 0f) {
+                plongee[i] += dt
+                val fin = if (b.espece == Espece.ECREVISSE) RECUL + SOUS_GALET + RESSORT else PLONGE + AU_FOND + REMONTE
+                if (plongee[i] > fin) plongee[i] = -1f
+            }
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
@@ -2019,6 +2218,26 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                         else -> -cote
                     })
                 }
+                plongee[i] >= 0f && b.espece == Espece.ECREVISSE -> {
+                    // D'un coup de queue elle file en arrière et se glisse sous un galet,
+                    // puis en ressort à reculons et revient à sa place.
+                    val f = plongee[i]
+                    val arriere = -(if (i % 2 == 0) 1f else -1f) * 6f * b.taille
+                    val (ecartRecul, vue) = when {
+                        f < RECUL -> arriere * (1f - (1f - f / RECUL).let { it * it }) to 1f - (f / RECUL).let { it * it }
+                        f < RECUL + SOUS_GALET -> arriere to 0f
+                        else -> arriere * (1f - (f - RECUL - SOUS_GALET) / RESSORT) to ((f - RECUL - SOUS_GALET) / 0.6f).coerceAtMost(1f)
+                    }
+                    if (f >= RECUL && f < RECUL + SOUS_GALET) {
+                        // Rien : elle est sous son galet.
+                    } else if (vue > 0.01f) {
+                        val l = 8f * b.taille
+                        c.translate(ecartRecul, 0f)
+                        c.saveLayerAlpha(b.x - l, b.y - l, b.x + l, b.y + l, (vue * 255f).toInt())
+                        atelier.peindre(c, b, geste[i], i)
+                        c.restore()
+                    }
+                }
                 plongee[i] >= 0f -> {
                     // Elle s'enfonce : plus petite et plus pâle à mesure que
                     // l'eau la recouvre, invisible au fond, puis elle remonte.
@@ -2093,6 +2312,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val PETITS_PAS = 3f
         /** Où l'iguane va se mettre à couvert, en unités de carte : hors de la fenêtre, vers la gauche. */
         const val COUVERT = -42f
+        /** L'écrevisse : son coup de queue en arrière, le temps sous son galet, son retour. */
+        const val RECUL = 0.35f
+        const val SOUS_GALET = 3f
+        const val RESSORT = 2.2f
         const val RATON_COUVERT = -30f
         /** Le temps qu'il met à y filer, celui qu'il y reste, celui qu'il met à revenir. */
         const val FILE = 0.9f
