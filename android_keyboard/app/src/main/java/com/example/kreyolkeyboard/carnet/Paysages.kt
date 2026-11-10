@@ -172,7 +172,12 @@ enum class Espece {
      * Pas une bête : la frange d'herbe haute et blonde du glacis, au Fort
      * Delgrès, qui ondule au vent ; une secousse y fait passer une vague.
      */
-    GLACIS
+    GLACIS,
+    /**
+     * Pas une bête : le petit ponton flottant devant le Mémorial ACTe, qui
+     * monte et descend avec la houle ; une secousse le fait danser.
+     */
+    PONTON
 }
 
 /**
@@ -1134,7 +1139,7 @@ object Paysages {
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1),
             Bete(Espece.SOURCE, 72.33f, 44.41f, taille = 1.6f, attache = 51.51f), Bete(Espece.SOURCE, 77.18f, 43.93f, taille = 0.5f, attache = 53.18f)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 88.6f, 52.9f), Bete(Espece.GLACIS, 0f, 0f, plan = 1)),
-        Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
+        Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 22f, 52.4f, taille = 1.6f), Bete(Espece.PONTON, 38.1f, 41f))
     )
 
     /**
@@ -1187,8 +1192,8 @@ object Paysages {
         fun envol(c: Canvas, b: Bete, aile: Float, sens: Float) {
             peintre.c = c
             peintre.aplat {
-                if (b.espece == Espece.PELICAN_PIEU || b.espece == Espece.PELICAN)
-                    peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille, fonce = b.espece == Espece.PELICAN)
+                if (b.espece == Espece.PELICAN_PIEU || b.espece == Espece.PELICAN || b.espece == Espece.PELICAN_QUAI)
+                    peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille, fonce = b.espece != Espece.PELICAN_PIEU)
                 else if (b.espece == Espece.PARULINE) peintre.parulineEnVol(b.x, b.y, aile, sens, b.taille)
                 else peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille)
             }
@@ -1579,8 +1584,11 @@ object Paysages {
 
     internal val EAU_CUL_DE_SAC = floatArrayOf(24f, 76f, 38f, 64f)
 
-    /** L'eau de la baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1. */
-    internal val EAU_ACTE = floatArrayOf(-2f, 76f, 52f, 64f)
+    /** La baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1, bornée à droite par [quaiActe]. */
+    internal val EAU_ACTE = floatArrayOf(-2f, 52f, 35.6f, 66f)
+
+    /** Le bord droit de la baie du Mémorial ACTe à la hauteur [y] : la rive au loin, le quai de bois, puis la rampe. */
+    internal fun quaiActe(y: Float) = if (y < 38.2f) 52f else if (y < 47.6f) 42f else 50f - (y - 47.6f) * 0.03f
 
     /** La lanterne du phare de la Désirade, sur le plan du milieu : d'où part le faisceau, allumé le soir et la nuit. */
     internal val PHARE_DESIRADE = floatArrayOf(89f, 16.9f)
@@ -2658,6 +2666,47 @@ object Paysages {
             trait("M${x + 0.4f} ${y - 3f}Q${x + 0.8f} ${y - 4.8f} ${x + 0.2f} ${y - 5.2f}", plume, 0.7f)
             rond(x + 0.2f, y - 5.2f, 0.6f, duJour(0xFFE9E2D0.toInt()))
             trait("M${x + 0.6f} ${y - 5.1f}L${x + 2.6f} ${y - 3.4f}", duJour(0xFFC9A24A.toInt()), 0.4f)
+        }
+
+        /**
+         * Le pélican brun debout, de profil vers la droite, ses pattes en
+         * ([x], [y]) : le corps lourd gris-brun, l'aile argentée striée, le cou
+         * châtain replié, la tête blanche lavée de jaune, le long bec qui
+         * repose sur la poitrine et sa poche sombre.
+         */
+        /**
+         * Le petit ponton flottant du Mémorial ACTe, centré en ([x], [y]) sur
+         * l'eau, penché de [gite] degrés : son plancher, sa rambarde.
+         */
+        fun ponton(x: Float, y: Float, gite: Float) {
+            ovale(x, y + 0.7f, 4.2f, 0.32f, duJour(0xFF86C6D4.toInt()))
+            c.save()
+            c.rotate(gite, x, y)
+            val gris = duJour(0xFF8A8C8A.toInt())
+            forme("M${x - 3.5f} ${y - 0.6f}L${x + 3.5f} ${y - 1.2f}L${x + 3.5f} ${y + 0.2f}L${x - 3.5f} ${y + 0.9f}Z", gris)
+            forme("M${x - 3.5f} ${y - 0.6f}L${x + 3.5f} ${y - 1.2f}L${x + 3.5f} ${y - 0.9f}L${x - 3.5f} ${y - 0.3f}Z", duJour(0xFFB4B6B2.toInt()))
+            barre(x - 3.3f, y - 1.8f, x + 3.3f, y - 2.4f, 0.15f, gris, 0f)
+            for (k in 0..4) { val px = x - 3.1f + k * 1.6f; barre(px, y - 0.6f - k * 0.13f, px, y - 1.8f - k * 0.13f, 0.12f, gris, 0f) }
+            c.restore()
+        }
+
+        fun pelicanDebout(x: Float, y: Float) {
+            val patte = duJour(0xFF2E2A28.toInt())
+            barre(x - 0.3f, y, x - 0.2f, y - 1.3f, 0.3f, patte, 0f)
+            barre(x + 0.4f, y, x + 0.3f, y - 1.3f, 0.3f, patte, 0f)
+            ovale(x - 0.5f, y - 0.1f, 0.55f, 0.18f, patte)
+            ovale(x + 0.6f, y - 0.1f, 0.55f, 0.18f, patte)
+            forme("M${x - 2.8f} ${y - 1.7f}Q${x - 1.6f} ${y - 3.6f} ${x + 0.2f} ${y - 4.1f}Q${x + 1.4f} ${y - 4.2f} ${x + 1.4f} ${y - 2.8f}" +
+                "Q${x + 1.2f} ${y - 1.3f} ${x} ${y - 1.1f}Q${x - 1.6f} ${y - 1.1f} ${x - 2.8f} ${y - 1.7f}Z", duJour(0xFF5E5650.toInt()))
+            forme("M${x - 2.6f} ${y - 1.9f}Q${x - 1.2f} ${y - 3.7f} ${x + 0.4f} ${y - 3.7f}Q${x + 0.4f} ${y - 2.4f} ${x - 0.6f} ${y - 1.9f}Z", duJour(0xFF9C948C.toInt()))
+            for (k in 0 until 4) trait("M${x - 2f + k * 0.6f} ${y - 2.2f - k * 0.3f}L${x - 1.2f + k * 0.6f} ${y - 2.5f - k * 0.3f}", duJour(0xFF5E5650.toInt()), 0.14f)
+            forme("M${x + 0.2f} ${y - 3.8f}Q${x - 0.3f} ${y - 5.2f} ${x + 0.5f} ${y - 6f}L${x + 1.4f} ${y - 6.2f}Q${x + 0.9f} ${y - 5.2f} ${x + 1.3f} ${y - 3.6f}Z", duJour(0xFF6A3E2A.toInt()))
+            forme("M${x + 1.3f} ${y - 3.6f}Q${x + 0.9f} ${y - 5.2f} ${x + 1.4f} ${y - 6.2f}L${x + 1.7f} ${y - 6f}Q${x + 1.3f} ${y - 5f} ${x + 1.6f} ${y - 3.7f}Z", duJour(0xFFF0EAD8.toInt()))
+            ovale(x + 1.1f, y - 6.4f, 0.8f, 0.6f, duJour(0xFFF4EEDC.toInt()))
+            ovale(x + 1f, y - 6.8f, 0.5f, 0.22f, duJour(0xFFE8D48A.toInt()))
+            forme("M${x + 1.5f} ${y - 6.1f}Q${x + 2.6f} ${y - 4.6f} ${x + 2.4f} ${y - 3.2f}L${x + 2f} ${y - 3.4f}Q${x + 1.8f} ${y - 4.8f} ${x + 1.2f} ${y - 5.9f}Z", duJour(0xFF4A4A40.toInt()))
+            forme("M${x + 1.6f} ${y - 6.6f}Q${x + 2.9f} ${y - 5f} ${x + 2.7f} ${y - 3.1f}L${x + 2.4f} ${y - 3.1f}Q${x + 2.5f} ${y - 4.8f} ${x + 1.4f} ${y - 6.2f}Z", duJour(0xFFC4A868.toInt()))
+            rond(x + 1.15f, y - 6.45f, 0.13f, duJour(0xFF1E1E1E.toInt()))
         }
 
         /**
@@ -5831,7 +5880,7 @@ object Paysages {
                     Espece.TORTUE -> tortue(x, y, b.taille)
                     Espece.PELICAN_PIEU -> { c.save(); c.scale(b.taille, b.taille, x, y); pelican(x, y); c.restore() }
                     Espece.PELICAN -> { c.save(); c.scale(b.taille, b.taille, x, y); pelicanPose(x, y); c.restore() }
-                    Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y)
+                    Espece.PELICAN_QUAI -> if (!P.nuit) { c.save(); c.scale(-b.taille, b.taille, x, y); pelicanDebout(x, y); c.restore() }
                     Espece.LIBELLULE -> libellule(x, y)
                     Espece.ANOLI -> anoli(x, y)
                     Espece.PIC -> pic(x, y)
@@ -5859,6 +5908,7 @@ object Paysages {
                     Espece.MASSIF -> massif(x, y, 0f, 0f)
                     Espece.SOURCE -> source(x, y, b.attache, b.taille, 0f, 0f, -1f)
                     Espece.GLACIS -> glacis(0f, 0f, -1f)
+                    Espece.PONTON -> ponton(x, y, 0f)
                 }
                 return@aplat
             }
@@ -5896,7 +5946,7 @@ object Paysages {
                     pelicanPose(px, py)
                     c.restore()
                 }
-                Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y + sin(t * 0.7f + ph) * 0.12f)
+                Espece.PELICAN_QUAI -> if (!P.nuit) { c.save(); c.scale(-b.taille, b.taille, x, y); pelicanDebout(x, y + sin(t * 0.7f + ph) * 0.12f); c.restore() }
                 Espece.LIBELLULE -> {
                     // Effrayée, elle file par à-coups d'un point à l'autre, s'y tient
                     // un instant en vol stationnaire, et revient où elle était.
@@ -6051,6 +6101,9 @@ object Paysages {
                 Espece.SOURCE -> source(x, y, b.attache, b.taille, t + ph, rafale, depuisRafale)
                 // L'herbe haute ondule au vent ; une secousse y fait courir une vague de gauche à droite.
                 Espece.GLACIS -> glacis(t, rafale, depuisRafale)
+                // Il monte et descend avec la houle ; une secousse le fait danser.
+                Espece.PONTON -> ponton(x, y + sin(t * 1.1f + ph) * 0.12f + rafale * 0.35f * sin(depuisRafale * 4f),
+                    sin(t * 0.8f + ph) * 0.8f + rafale * 5f * sin(depuisRafale * 5f))
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
@@ -9542,75 +9595,172 @@ object Paysages {
         // ------------------------------------------- le Mémorial ACTe en papier
 
         /**
-         * Le Mémorial ACTe en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08) : le long bâtiment de granit noir sous sa
-         * résille d'argent, des barres blanches entrecroisées qui montent en
-         * perspective vers la droite, à côté du mot, avec la grande croix au
-         * bout ; le parvis, l'enrochement de la darse, l'eau claire de la baie
-         * devant à gauche, le quai et sa bitte où se tient le pélican. L'eau
+         * Le Mémorial ACTe en papier découpé, d'après les deux photos du
+         * propriétaire (2026-11-10), vu du bord de la baie : à gauche du mot,
+         * la baie de Pointe-à-Pitre grande ouverte jusqu'à la ville et au port
+         * au loin, la mer d'où sont venus les ancêtres ; un pélican sur un
+         * pieu, tourné vers le large ; le petit ponton flottant et le quai
+         * bardé de bois, sa rambarde et ses lampadaires. À droite, le grand
+         * tambour qui tourne vers la mer : la résille d'argent, ses rubans
+         * blancs entrecroisés qui se serrent dans la courbe, les vitrages et
+         * le bloc de granit noir ; à ses pieds l'esplanade, et les gradins de
+         * pierre claire qui descendent vers l'eau le long de la rampe. L'eau
          * scintille sur la carte ouverte (`Reflets` dans [Ambiance]).
          */
         fun memorialActePapier() {
+            cumulus(4f, 22f, 26f, 2906)
+            cumulus(36f, 14f, 20f, 2908)
+            // Au loin, sur l'autre rive : le port et ses portiques, la ville basse et blanche.
+            val brume = P.cielBas
+            val rive = mix(papier(0xFF6A7A7E.toInt()), brume, 0.5f)
+            pieceD("M-2 35.4L-2 34.6L14 34.4L30 34.8L52 34.6L54 35.4Z", rive, 0f)
+            val rv = Alea(2918)
+            var vx = 2f
+            while (vx < 52f) {
+                val h = if (vx in 30f..46f) 0.8f + rv() * 1.8f else 0.4f + rv() * 0.8f
+                val l = 0.8f + rv() * 1.6f
+                pieceD("M$vx ${34.8f - h}L${vx + l} ${34.8f - h}L${vx + l} 35L$vx 35Z", mix(papier(if (rv() < 0.6f) 0xFFE4E0D6.toInt() else 0xFF9AA0A4.toInt()), brume, 0.45f), 0f)
+                vx += l + rv() * 1.2f
+            }
+            for (px in floatArrayOf(1f, 4.4f)) {
+                val grue = mix(papier(0xFF5A6268.toInt()), brume, 0.45f)
+                barre(px, 35f, px, 31.4f, 0.22f, grue, 0f); barre(px + 1.6f, 35f, px + 1.6f, 31.4f, 0.22f, grue, 0f)
+                barre(px - 1.2f, 31.6f, px + 3.4f, 31.6f, 0.3f, grue, 0f)
+            }
             plan(1)
-            val haut = brisee(-2f, 31f, 102f, 19f)
-            val bas = brisee(-2f, 35.6f, 102f, 29f)
-            val sol = brisee(-2f, 40.4f, 102f, 42f)
-            // Le granit noir, ses joints, ses vitrages, le bloc clair.
-            val granit = papier(0xFF26282E.toInt())
-            pieceD("M-2 ${bas(-2f)}L102 ${bas(102f)}L102 ${sol(102f)}L-2 ${sol(-2f)}Z", granit, 0.6f)
-            for ((x0, x1, col) in arrayOf(Triple(30f, 38f, 0xFF3A4048), Triple(62f, 67f, 0xFFC8C8C0), Triple(80f, 92f, 0xFF3A4450)))
-                pieceD("M$x0 ${bas(x0) + 0.4f}L$x1 ${bas(x1) + 0.4f}L$x1 ${sol(x1)}L$x0 ${sol(x0)}Z", papier(col.toInt()), 0.2f)
-            var jx = 4f
-            while (jx < 100f) { barre(jx, bas(jx) + 0.4f, jx, sol(jx), 0.15f, papier(0xFF3A3C44.toInt()), 0f); jx += 5.5f }
-            if (P.allume) for (x0 in floatArrayOf(31f, 81f)) {
-                val x1 = x0 + 6f
-                pieceD("M$x0 ${bas(x0) + 1.4f}L$x1 ${bas(x1) + 1.4f}L$x1 ${sol(x1) - 0.4f}L$x0 ${sol(x0) - 0.4f}Z", P.fenetre, 0f)
+            // Le tambour, qui tourne vers la mer : l'angle a va de 0 (au bord droit) à π/2 (sa silhouette,
+            // en x 53) ; x = 103 - 50 sin a, et ce qui tourne au loin rapetisse fort. f est la hauteur : 0 au
+            // pied, 1 au faîte.
+            val aMin = 0f; val aMax = (PI / 2.0).toFloat()
+            fun ax(a: Float) = 103f - 50f * sin(a)
+            fun ech(a: Float) = 0.18f + 0.82f * cos(a).coerceAtLeast(0f).pow(1.25f)
+            fun hy(a: Float, f: Float) = 36.06f + (1.34f - f * 25.8f) * ech(a)
+            fun bande(a0: Float, a1: Float, f0: Float, f1: Float) = Path().apply {
+                val n = 48
+                for (k in 0..n) { val a = a0 + (a1 - a0) * k / n; if (k == 0) moveTo(ax(a), hy(a, f1)) else lineTo(ax(a), hy(a, f1)) }
+                for (k in n downTo 0) { val a = a0 + (a1 - a0) * k / n; lineTo(ax(a), hy(a, f0)) }
+                close()
             }
-            // La résille : l'ombre sous elle, puis les barres blanches
-            // entrecroisées, découpées à la forme de la bande.
-            val bande = chemin("M-2 ${haut(-2f)}L102 ${haut(102f)}L102 ${bas(102f) + 0.6f}L-2 ${bas(-2f) + 0.6f}Z")
-            piece(Path(bande), papier(0xFF3A3E46.toInt()), 0.6f)
-            val barres = Path()
-            val rb = Alea(2901)
-            var bx = -6f
-            while (bx < 106f) {
-                val h = bas(bx) - haut(bx) + 2f
-                val incl = (if (rb() < 0.5f) -1f else 1f) * (2f + rb() * 5f)
-                val e = 0.3f + rb() * 0.5f
-                barres.op(chemin("M${bx - e} ${haut(bx) - 1f}L${bx + e} ${haut(bx) - 1f}L${bx + incl + e} ${haut(bx) + h}L${bx + incl - e} ${haut(bx) + h}Z"), Path.Op.UNION)
-                bx += 0.9f + rb() * 1.3f
+            // Un ruban qui monte de (a0, f0) à (a1, f1), large de l (en angle), en suivant la courbe.
+            fun ruban(a0: Float, f0: Float, a1: Float, f1: Float, l: Float) = Path().apply {
+                val n = 8
+                for (k in 0..n) { val u = k / n.toFloat(); val a = a0 + (a1 - a0) * u - l / 2f; if (k == 0) moveTo(ax(a), hy(a, f0 + (f1 - f0) * u)) else lineTo(ax(a), hy(a, f0 + (f1 - f0) * u)) }
+                for (k in n downTo 0) { val u = k / n.toFloat(); val a = a0 + (a1 - a0) * u + l / 2f; lineTo(ax(a), hy(a, f0 + (f1 - f0) * u)) }
+                close()
             }
-            repeat(10) {
-                val x = rb() * 100f
-                barres.op(chemin("M${x - 4f} ${haut(x) + 1f + rb() * 2f}L${x + 4f} ${haut(x) + 0.6f + rb() * 2f}L${x + 4f} ${haut(x) + 1.1f + rb() * 2f}L${x - 4f} ${haut(x) + 1.5f + rb() * 2f}Z"), Path.Op.UNION)
+            val vitre = 0.33f
+            // Les vitrages, où la lumière de l'intérieur se mêle aux reflets.
+            val verre = if (P.allume) P.fenetre else papier(0xFF46606C.toInt())
+            piece(bande(aMin, aMax, -0.02f, vitre), verre, 0.6f)
+            val rg0 = Alea(2910)
+            if (!P.allume) repeat(18) {
+                val a = 0.3f + rg0() * 1.2f
+                val f = rg0() * 0.24f
+                piece(bande(a, a + 0.03f + rg0() * 0.06f, f, f + 0.06f + rg0() * 0.06f), mix(verre, papier(0xFFE8C88A.toInt()), 0.3f + rg0() * 0.3f), 0f)
             }
-            barres.op(chemin("M84.6 ${haut(84.6f)}L86 ${haut(86f)}L92.6 ${bas(92.6f)}L91.2 ${bas(91.2f)}Z"), Path.Op.UNION)
-            barres.op(chemin("M91 ${haut(91f)}L92.4 ${haut(92.4f)}L86 ${bas(86f)}L84.6 ${bas(84.6f)}Z"), Path.Op.UNION)
-            barres.op(bande, Path.Op.INTERSECT)
-            piece(barres, papier(0xFFE8ECEE.toInt()), 0.4f)
-            // Le parvis, ses lampadaires, l'enrochement de la darse à droite.
-            pieceD("M-2 ${sol(-2f)}L102 ${sol(102f)}L102 ${sol(102f) + 2.6f}L-2 ${sol(-2f) + 2.6f}Z", papier(0xFFB4B2AC.toInt()), 0.4f)
-            for (lx in floatArrayOf(22f, 48f, 70f)) barre(lx, sol(lx) + 0.6f, lx, sol(lx) - 4.4f, 0.25f, papier(0xFF4A4C50.toInt()), 0f)
-            pieceD("M36 ${sol(36f) + 2.6f}L102 ${sol(102f) + 2.6f}L102 54L60 52Z", papier(0xFF8C8A84.toInt()), 0.6f)
-            val rg = Alea(2902)
-            repeat(60) {
-                val x = 40f + rg() * 62f
-                val yh = sol(x) + 2.8f
-                val yb = 52f + (x - 60f).coerceAtLeast(0f) * 0.05f
-                val y = yh + rg() * (yb - yh)
-                galet(x, y, 0.5f + rg() * 0.6f, papier(if (rg() < 0.5f) 0xFFA8A6A0.toInt() else 0xFF78766E.toInt()))
+            val montant = papier(0xFF3A4048.toInt())
+            var a = 0.32f
+            while (a < aMax) {
+                barre(ax(a), hy(a, -0.02f), ax(a), hy(a, vitre), 0.05f + 0.14f * cos(a) * ech(a), montant, 0f)
+                a += 0.07f
+            }
+            for (f in floatArrayOf(0.1f, 0.21f)) piece(bande(0.3f, aMax, f, f + 0.008f), montant, 0f)
+            // Le bloc de granit noir, et les poteaux sombres qui portent la résille.
+            piece(bande(0.16f, 0.305f, -0.02f, vitre + 0.02f), papier(0xFF202228.toInt()), 0.4f)
+            piece(bande(0f, 0.04f, -0.02f, vitre + 0.02f), papier(0xFF2A2C32.toInt()), 0.3f)
+            for (p in floatArrayOf(0.62f, 1.06f)) piece(bande(p, p + 0.025f, -0.02f, vitre + 0.04f), papier(0xFF24262C.toInt()), 0.2f)
+            // La résille : derrière elle, le verre du tambour, et l'ombre qu'elle jette sur les vitrages.
+            val resille = bande(aMin, aMax, vitre, 1f)
+            piece(Path(resille), papier(0xFF5E6E7A.toInt()), 0.5f)
+            a = aMin
+            while (a < aMax) { barre(ax(a), hy(a, vitre), ax(a), hy(a, 1f), 0.08f, papier(0xFF4C5A66.toInt()), 0f); a += 0.09f }
+            piece(bande(aMin, aMax, vitre - 0.02f, vitre), papier(0xFF2A3038.toInt()), 0f)
+            // Les rubans blancs entrecroisés, plus fins et plus serrés là où le tambour tourne.
+            val rr = Alea(2911)
+            val blancs = Path(); val gris2 = Path()
+            repeat(150) {
+                val a0 = aMin - 0.1f + rr() * (aMax + 0.15f - aMin)
+                val incl = (rr() - 0.5f) * 0.36f
+                val bas = if (rr() < 0.7f) vitre - 0.02f else vitre + rr() * 0.4f
+                val haut = if (rr() < 0.75f) 1.02f else bas + 0.2f + rr() * 0.3f
+                val t = ruban(a0, bas, a0 + incl, haut, 0.012f + rr() * 0.024f)
+                (if (rr() < 0.78f) blancs else gris2).op(t, Path.Op.UNION)
+            }
+            gris2.op(resille, Path.Op.INTERSECT)
+            piece(gris2, papier(0xFFB4BCC2.toInt()), 0.3f)
+            blancs.op(resille, Path.Op.INTERSECT)
+            piece(blancs, papier(0xFFF2F4F4.toInt()), 0.4f)
+            // L'esplanade au pied du tambour, et ses lampadaires.
+            pieceD("M50 ${hy(aMax, 0f) - 0.3f}L104 ${hy(0f, 0f) - 0.3f}L104 41L50 41Z", papier(0xFFD6D0C2.toInt()), 0.3f)
+            val fonte = papier(0xFF2B2D33.toInt())
+            val lampe = if (P.allume) P.fenetre else papier(0xFFE4E6E4.toInt())
+            for ((lx, pied, h) in arrayOf(floatArrayOf(66.4f, 38.4f, 6f), floatArrayOf(76f, 38.6f, 7f))) {
+                barre(lx, pied, lx, pied - h, 0.3f, fonte, 0.2f)
+                galbe(lx, pied - h - 0.2f, 0.4f, 0.25f, lampe)
             }
             plan(2)
-            // L'eau claire de la baie, le quai et sa bitte d'amarrage.
-            val (ex0, ex1, ey0, ey1) = EAU_ACTE
-            pieceD("M-2 ${ey0 - 4f}L36 ${ey0 - 4f}Q60 ${ey0 - 1f} $ex1 ${ey0 + 2f}L${ex1 + 4f} 68L-2 68Z", papier(0xFF7EC4C6.toInt()), 0.4f)
-            lanieresMer(ey0 - 3.4f, ey1, 2903, intArrayOf(papier(0xFF8ED0D0.toInt()), papier(0xFF6AB4BA.toInt()), papier(0xFFA6DCD8.toInt())))
-            pieceD("M-2 ${ey0 - 4.6f}L30 ${ey0 - 4.6f}L32 ${ey0 - 3.4f}L-2 ${ey0 - 3.4f}Z", papier(0xFF5A5C60.toInt()), 0.5f)
-            pieceD("M80 50L104 50L104 68L76 68Q78 58 80 50Z", papier(0xFFA8A49C.toInt()), 0.7f)
-            pieceD("M80 50L104 50L104 51.2L79.8 51.2Z", papier(0xFFC8C4BC.toInt()), 0f)
-            val fonte = papier(0xFF2B2D33.toInt())
-            pieceD("M91.1 50L91.1 52.6L92.9 52.6L92.9 50Z", fonte, 0.4f)
-            piece(Path().apply { addOval(RectF(90.7f, 49.5f, 93.3f, 50.5f), Path.Direction.CW) }, fonte, 0.2f)
+            // La baie, d'où sont venus les ancêtres : grande ouverte jusqu'à l'horizon, plus sombre au
+            // large, ses rides plus longues vers soi.
+            pieceD("M-2 35.3L52 35.3L52 70L-2 70Z", papier(0xFF4E9AB4.toInt()), 0.2f)
+            pieceD("M-2 35.3L52 35.3L52 39.6Q24 38.6 -2 40Z", papier(0xFF2E6E98.toInt()), 0f)
+            pieceD("M-2 39.4Q24 38.4 52 39.4L52 46Q26 44.6 -2 46.4Z", papier(0xFF3C82A6.toInt()), 0f)
+            val rw = Alea(2916)
+            val rides = intArrayOf(papier(0xFF7CC0D2.toInt()), papier(0xFF3A7EA4.toInt()), papier(0xFFA4D8E2.toInt()))
+            repeat(70) {
+                val y = 36f + rw().pow(1.5f) * 31f
+                val q = (y - 35.3f) / 30f
+                val l = (1.2f + rw() * 4f) * (0.3f + q * 1.8f)
+                val x = -2f + rw() * (quaiActe(y) + 2f - l * 0.6f)
+                val e = 0.08f + 0.36f * q
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - e * 1.4f} ${x + l} ${y}Q${x + l / 2f} ${y + e} $x ${y}Z", rides[min((rw() * 3f).toInt(), 2)], 0f)
+            }
+            // Le petit ponton flottant est une bête (`Espece.PONTON`) : il bouge avec la houle.
+            // Le quai bardé de bois : sa face au jour, sa face à l'ombre, la rambarde et ses lampadaires.
+            val bois = papier(0xFFB88A5A.toInt())
+            pieceD("M42 38L50 40.4L50 48L42 44.8Z", bois, 0.5f)
+            pieceD("M50 40.4L67 39.6L67 44L50 48Z", mix(bois, 0xFF000000.toInt(), 0.35f), 0.3f)
+            for (k in 1 until 8) {
+                val x = 42f + k
+                barre(x, 38f + k * 0.3f, x, 44.8f + k * 0.4f, 0.08f, mix(bois, 0xFF000000.toInt(), 0.18f), 0f)
+            }
+            pieceD("M42 38L50 40.4L67 39.6L67 39.2L50 39.9L42 37.6Z", papier(0xFFC8C2B4.toInt()), 0f)
+            val rampe = papier(0xFFB0B4B4.toInt())
+            barre(42f, 36.4f, 50f, 38.8f, 0.18f, rampe, 0f); barre(50f, 38.8f, 67f, 38.1f, 0.18f, rampe, 0f)
+            for (k in 0..8) { val x = 42f + k; barre(x, 37.6f + k * 0.3f, x, 36.4f + k * 0.3f, 0.12f, rampe, 0f) }
+            for ((lx, pied) in arrayOf(46f to 39.2f, 57f to 39.6f, 63f to 39.4f)) {
+                barre(lx, pied, lx, pied - 7f, 0.28f, fonte, 0.2f)
+                galbe(lx, pied - 7.2f, 0.4f, 0.25f, lampe)
+            }
+            // La rampe de béton qui descend dans l'eau, plus sombre là où elle est mouillée.
+            val beton = papier(0xFF6E6E68.toInt())
+            pieceD("M50 47.6L56.8 47.4L66.8 70L49.4 70Z", beton, 0.4f)
+            pieceD("M50 47.6L51.6 47.6L51 70L49.4 70Z", mix(beton, 0xFF000000.toInt(), 0.25f), 0f)
+            // Les gradins de pierre claire : chaque marche file vers un point de fuite loin à gauche, sur
+            // l'horizon (6, 35), et s'ouvre en éventail vers soi ; le nez éclairé, la contremarche à l'ombre.
+            fun marche(yd: Float) = 35f + (yd - 35f) * (63.3f - 6f) / 98f
+            val gradins = chemin("M63.3 ${marche(46.3f)}L104 46.3L104 70L66.8 70L56.7 47.4Z")
+            val pierre = papier(0xFFCEC2A8.toInt())
+            piece(Path(gradins), pierre, 0.5f)
+            val marches = Path(); val nez = Path()
+            var yd = 46.3f; var dy = 1.5f
+            while (yd < 96f) {
+                val e = dy * 0.42f
+                marches.op(chemin("M6 35L104 ${yd}L104 ${yd + e}Z"), Path.Op.UNION)
+                nez.op(chemin("M6 35L104 ${yd - 0.12f - dy * 0.03f}L104 ${yd + 0.12f + dy * 0.03f}Z"), Path.Op.UNION)
+                yd += dy; dy *= 1.09f
+            }
+            marches.op(gradins, Path.Op.INTERSECT)
+            piece(marches, mix(pierre, 0xFF000000.toInt(), 0.2f), 0f)
+            nez.op(gradins, Path.Op.INTERSECT)
+            piece(nez, mix(pierre, papier(0xFFFFE8B0.toInt()), 0.55f), 0f)
+            // La joue sombre entre le quai et le haut des gradins.
+            pieceD("M50 47.6L63.3 ${marche(46.3f)}L63.3 ${marche(46.3f) + 1.2f}L56.7 47.4Z", mix(beton, 0xFF000000.toInt(), 0.15f), 0f)
+            // Le pieu planté dans la baie, où se tient le pélican, et la ride qui l'entoure.
+            val pieu = papier(0xFF5A4232.toInt())
+            pieceD("M21.3 52.4L22.7 52.4L22.8 59L21.2 59Z", pieu, 0.5f)
+            galbe(22f, 52.4f, 0.75f, 0.3f, mix(pieu, 0xFFFFFFFF.toInt(), 0.25f))
+            galbe(22f, 59.1f, 2.2f, 0.45f, papier(0xFF86C6D4.toInt()))
+            pieceD("M21.2 59L22.8 59L22.8 59.2L21.2 59.2Z", pieu, 0f)
         }
 
         /** Le Mémorial ACTe : le granit noir pris dans ses racines d'argent, la passerelle, la baie, un pélican. */

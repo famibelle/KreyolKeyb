@@ -236,8 +236,9 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                             if (heure.nuit) Ensemble() else GardeBoeufs(zone, graine + 2, Paysages.DORTOIR_CUL_DE_SAC))
                     }
                 }
-                enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 // Le vieux mur s'effrite et les feuilles mortes du sol se soulèvent.
+                enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 18, plan = 4,
+                    devant = Paysages::quaiActe)
                 enPlans && lieu == Lieu.FIGUIER_MAUDIT && heure != null -> Ensemble(
                     Gravats(zone, graine, intArrayOf(Paysages.aLHeure(0xFF8A8670.toInt(), heure), Paysages.aLHeure(0xFF6A6650.toInt(), heure))),
                     Petales(zone, graine, Paysages.FEUILLES_FIGUIER,
@@ -2539,10 +2540,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE, Espece.RATON_FORET -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
-                Espece.LIBELLULE, Espece.BANANIER, Espece.MASSIF, Espece.SOURCE, Espece.GLACIS -> rafale[i] = 0f
+                Espece.LIBELLULE, Espece.BANANIER, Espece.MASSIF, Espece.SOURCE, Espece.GLACIS, Espece.PONTON -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU, Espece.PELICAN -> if (envol[i] < 0f) envol[i] = 0f
-                Espece.PARULINE -> if (envol[i] < 0f && !nuit) envol[i] = 0f
+                Espece.PARULINE, Espece.PELICAN_QUAI -> if (envol[i] < 0f && !nuit) envol[i] = 0f
                 Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
                 Espece.PIC, Espece.ANOLI -> if (plongee[i] < 0f && !nuit) plongee[i] = 0f
                 Espece.BALEINE -> if (saut[i] < 0f) saut[i] = 0f
@@ -2565,7 +2566,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
 
     /** Combien de temps dure le vol de [b] avant qu'il se repose : le pélican fait un plus grand tour. */
     private fun duree(b: Bete) = when (b.espece) {
-        Espece.PELICAN_PIEU -> VOL_PELICAN
+        Espece.PELICAN_PIEU, Espece.PELICAN_QUAI -> VOL_PELICAN
         Espece.PELICAN -> PECHE
         else -> VOL
     }
@@ -2708,10 +2709,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 vol >= 0f -> {
                     // Une boucle au-dessus de la rue, partie de son côté, qui la ramène à son perchoir.
                     // Le pélican rase l'eau sous le mot jusqu'à l'autre bord, en battements
-                    // lents entrecoupés de longs planés, et revient à son pieu.
-                    val pelican = b.espece == Espece.PELICAN_PIEU
+                    // lents entrecoupés de longs planés, et revient à son pieu ; celui du
+                    // Mémorial ACTe part vers le large, sort de la fenêtre et revient.
+                    val pelican = b.espece == Espece.PELICAN_PIEU || b.espece == Espece.PELICAN_QUAI
                     val tau = vol / duree(b)
-                    val cote = if (b.x < 50f) 1f else -1f
+                    val cote = if (b.espece == Espece.PELICAN_QUAI || b.x >= 50f) -1f else 1f
                     val large = 20f + 4f * (i % 3)
                     val haut = 10f + 3f * (i % 2)
                     val a = 2f * PI.toFloat() * tau
