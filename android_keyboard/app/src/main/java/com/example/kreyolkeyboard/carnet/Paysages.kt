@@ -161,7 +161,13 @@ enum class Espece {
      * au bord du jardin, dont les feuilles frémissent au repos et s'agitent à la
      * secousse.
      */
-    MASSIF
+    MASSIF,
+    /**
+     * Pas une bête : l'eau de source qui tombe dans le bassin de Matouba, de
+     * [Bete.y] jusqu'à l'eau en [Bete.attache], large de [Bete.taille]. Elle
+     * coule et fait des ronds ; une secousse la fait grossir et éclabousser.
+     */
+    SOURCE
 }
 
 /**
@@ -1117,7 +1123,8 @@ object Paysages {
             Bete(Espece.RATON_FORET, 74f, 59.6f, plan = 1, taille = 1.3f)),
         Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 23.3f, 36.3f, taille = 1.6f), Bete(Espece.BANANIER, 95.5f, 26.4f, plan = 1),
             Bete(Espece.MASSIF, 72f, 48.4f)),
-        Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1)),
+        Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1),
+            Bete(Espece.SOURCE, 72.33f, 44.41f, taille = 1.6f, attache = 51.51f), Bete(Espece.SOURCE, 77.18f, 43.93f, taille = 0.5f, attache = 53.18f)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
         Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
     )
@@ -5842,6 +5849,7 @@ object Paysages {
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
                     Espece.BANANIER -> feuillesBananier(x, y, 0f)
                     Espece.MASSIF -> massif(x, y, 0f, 0f)
+                    Espece.SOURCE -> source(x, y, b.attache, b.taille, 0f, 0f, -1f)
                 }
                 return@aplat
             }
@@ -6030,6 +6038,8 @@ object Paysages {
                 Espece.BANANIER -> feuillesBananier(x, y, sin(t * 0.8f + ph) * 2f + rafale * 24f * sin(depuisRafale * 2f * PI.toFloat() * 1.4f))
                 // Ses feuilles frémissent chacune à son rythme ; une secousse les agite toutes.
                 Espece.MASSIF -> massif(x, y, t, rafale * sin(depuisRafale * 2f * PI.toFloat() * 2f))
+                // L'eau coule et fait des ronds ; une secousse la fait grossir et éclabousser.
+                Espece.SOURCE -> source(x, y, b.attache, b.taille, t + ph, rafale, depuisRafale)
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
@@ -6129,6 +6139,46 @@ object Paysages {
          * ([x], [y]) : chaque feuille frémit de quelques degrés à son rythme
          * selon [t], toutes s'agitent de [secoue] (de -1 à 1) à la secousse.
          */
+        /**
+         * L'eau de source qui tombe de ([x], [y0]) dans le bassin en [y1], large
+         * de [w] : des filets blancs et bleutés où des traits clairs descendent
+         * selon [t], l'eau qui bouillonne à plat au pied et des ronds qui
+         * s'élargissent. [crue] (de 0 à 1) la fait grossir ; depuis la secousse
+         * ([depuis], en secondes, -1 sans secousse), des gouttes sautent du pied.
+         */
+        fun source(x: Float, y0: Float, y1: Float, w0: Float, t: Float, crue: Float, depuis: Float) {
+            val w = w0 * (1f + 0.6f * crue)
+            val blanc = papier(0xFFF4F8F8.toInt())
+            val bleu = papier(0xFFCFE6EA.toInt())
+            val eau = papier(0xFF8CC8D4.toInt())
+            // Les ronds sur l'eau, aplatis par la perspective.
+            for (j in 0 until 2) {
+                val u = (t * 0.45f + j * 0.5f) % 1f
+                c.save(); c.scale(1f, 0.28f, x, y1 + 0.2f)
+                anneau(x, y1 + 0.2f, w0 * (0.7f + u * 2.4f), mix(blanc, eau, u), 0.5f)
+                c.restore()
+            }
+            for (k in 0 until 4) {
+                val u = k / 3f - 0.5f
+                val x0 = x + u * w * 0.6f; val x1 = x + u * w
+                val e0 = w * 0.14f * (1f + 0.15f * sin(t * 9f + k * 2f)); val e1 = w * 0.2f
+                pieceD("M${x0 - e0} ${y0}Q${(x0 + x1) / 2f - e0} ${(y0 + y1) / 2f} ${x1 - e1} ${y1}L${x1 + e1} ${y1}" +
+                    "Q${(x0 + x1) / 2f + e0} ${(y0 + y1) / 2f} ${x0 + e0} ${y0}Z", if (k % 2 == 1) bleu else blanc, 0.2f)
+                // Des traits clairs qui descendent le long du filet.
+                for (j in 0 until 2) {
+                    val v = (t * 1.4f + k * 0.37f + j * 0.5f) % 1f
+                    val fx = x0 + (x1 - x0) * v
+                    ovale(fx, y0 + (y1 - y0) * v, e1 * 0.6f, (y1 - y0) * 0.08f, if (k % 2 == 1) blanc else bleu)
+                }
+            }
+            for (j in 0 until 3) ovale(x + (j - 1f) * w * 0.45f, y1 + 0.1f, w * 0.4f * (1f + 0.15f * sin(t * 7f + j * 2f)), w * 0.12f + 0.1f, blanc)
+            // Les gouttes qui sautent du pied, la première seconde après la secousse.
+            if (depuis in 0f..1.2f) for (j in 0 until 6) {
+                val v = (depuis / 0.8f + j * 0.07f).coerceAtMost(1f)
+                if (v < 1f) rond(x + (j - 2.5f) * w0 * 0.9f * v, y1 - 10f * v * (1f - v) * (0.6f + 0.1f * (j % 3)), 0.22f, blanc)
+            }
+        }
+
         fun massif(x: Float, y: Float, t: Float, secoue: Float) {
             val r = Alea(2610)
             for (k in 0 until 18) {
@@ -9082,28 +9132,14 @@ object Paysages {
                 ovale(g[0], g[1], 0.6f + rb() * 0.6f, 0.25f + rb() * 0.2f, papier(0xFFC8E6DE.toInt()))
             }
             forme(chemin(eau), papier(0xFF6EB8D0.toInt()), 0.35f)
-            // L'eau qui tombe : la source par-dessus le mur du fond, le filet du tuyau de fer.
-            // Des filets blancs et bleutés, et l'eau qui bouillonne à peine au pied, à plat.
-            fun source(x: Float, y0: Float, y1: Float, w: Float) {
-                for (k in 0 until 4) {
-                    val u = k / 3f - 0.5f
-                    val x0 = x + u * w * 0.6f; val x1 = x + u * w
-                    val e0 = w * 0.14f; val e1 = w * 0.2f
-                    pieceD("M${x0 - e0} ${y0}Q${(x0 + x1) / 2f - e0} ${(y0 + y1) / 2f} ${x1 - e1} ${y1}L${x1 + e1} ${y1}" +
-                        "Q${(x0 + x1) / 2f + e0} ${(y0 + y1) / 2f} ${x0 + e0} ${y0}Z",
-                        if (k % 2 == 1) papier(0xFFCFE6EA.toInt()) else papier(0xFFF4F8F8.toInt()), 0.2f)
-                }
-                for (j in 0 until 3) ovale(x + (j - 1f) * w * 0.45f, y1 + 0.1f, w * 0.4f, w * 0.12f + 0.1f, papier(0xFFF4F8F8.toInt()))
-            }
-            val s1 = bas(-0.25f, bi, fond + 0.04f); val s2 = bas(-0.25f, bi, niveau)
-            source(s1[0], s1[1], s2[1], 1.6f)
+            // Les deux chutes sont une bête (Espece.SOURCE) : la source par-dessus le mur du fond,
+            // en bas(-0.25, bi, fond), et le filet du tuyau de fer, en bas(0.2, 0.3, 1.08), jusqu'à l'eau.
             val fer = papier(0xFF6A6E70.toInt())
             val pied = bas(0.6f, 0.3f, niveau); val tete = bas(0.6f, 0.3f, 1.25f); val bec = bas(0.2f, 0.3f, 1.25f)
-            val jet = bas(0.2f, 0.3f, 1.08f); val chute = bas(0.2f, 0.3f, niveau)
+            val jet = bas(0.2f, 0.3f, 1.08f)
             barre(pied[0], pied[1], tete[0], tete[1], 0.32f, fer, 0.3f)
             barre(tete[0], tete[1], bec[0], bec[1], 0.28f, fer, 0.3f)
             barre(bec[0], bec[1], jet[0], jet[1], 0.26f, fer, 0f)
-            source(jet[0], jet[1], chute[1], 0.5f)
             // Le tuyau blanc qui passe le mur du fond et plonge.
             val t0 = bas(0.75f, b + 0.1f, fond + 0.05f); val t1 = bas(0.7f, bi - 0.05f, fond); val t2 = bas(0.68f, bi - 0.1f, niveau)
             trait("M${t0[0]} ${t0[1]}Q${t1[0]} ${t1[1] - 0.6f} ${t1[0]} ${t1[1]}L${t2[0]} ${t2[1]}", papier(0xFFE8ECEA.toInt()), 0.35f)
