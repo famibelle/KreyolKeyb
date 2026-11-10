@@ -40,6 +40,27 @@ DIAGNOSTIC_PREFIXES = (
 # l'extraction automatique. Complétez cette liste au fil des prochaines
 # versions pour garder une formulation orientée utilisateur.
 CURATED: dict[str, list[dict[str, str]]] = {
+    "25.0.0": [
+        {
+            "emoji": "🏖️",
+            "title": "La plage de la Datcha et les Mamelles",
+            "description": "Les cartes de Sanblé ont deux nouveaux lieux de Guadeloupe : la plage de la Datcha au Gosier, avec sa mer claire, son raisinier et ses touloulous, et les deux mornes des Mamelles dans la forêt, où passe le colibri. Une carte déjà gagnée garde son paysage, et une carte donnée arrive avec le sien. Sur la carte ouverte, secouer le téléphone fait répondre le paysage : les touloulous filent, les tourterelles s'envolent, le pélican part vers le large.",
+            "chiffres": [
+                {"valeur": 2, "libelle": "nouveaux lieux"},
+                {"valeur": 32, "libelle": "lieux de Guadeloupe"},
+                {"valeur": 128, "libelle": "cases dans l'album"},
+            ],
+            "image": "Screenshots/nouveaute_25.0.0_datcha_mamelles.png",
+            "image_alt": (
+                "Deux cartes de Sanblé ouvertes côte à côte. À gauche, "
+                "« manjé » (manger, la nourriture) montre la plage de la "
+                "Datcha : la mer claire, le sable et deux touloulous, le "
+                "raisinier et le mur de pierres de corail. À droite, "
+                "« gran » (grand) montre les deux mornes boisés des "
+                "Mamelles au-dessus de la forêt, en papier découpé."
+            ),
+        },
+    ],
     "24.0.0": [
         {
             "emoji": "✂️",
@@ -1388,7 +1409,9 @@ def build_features(
                 # rendue comme avant.
                 # `images_suite` : illustrations supplémentaires, affichées
                 # sous la première (une entrée qui montre deux gestes).
-                for cle in ("image", "image_alt", "images_suite"):
+                # `chiffres` : quelques nombres que la page fait défiler
+                # de zéro quand l'entrée apparaît à l'écran.
+                for cle in ("image", "image_alt", "images_suite", "chiffres"):
                     if item.get(cle):
                         feature[cle] = item[cle]
                 features.append(feature)

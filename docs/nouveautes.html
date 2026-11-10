@@ -50,6 +50,11 @@ section{margin-top:36px;}
 .feature .shot{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:9px;margin:2px 0 10px;background:#fff;}
 /* Les animations sont des captures verticales de 360 px : pleine largeur, elles seraient agrandies et très hautes. */
 .feature .shot[src$=".gif"]{max-width:360px;margin-left:auto;margin-right:auto;}
+/* Les chiffres d'une nouveauté : ils défilent de zéro quand l'entrée apparaît à l'écran. */
+.feature .chiffres{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:4px 0 12px;}
+.feature .chiffre{background:var(--sea-soft);border-radius:10px;padding:10px 8px;text-align:center;}
+.feature .chiffre strong{display:block;font-size:30px;font-weight:800;line-height:1.1;color:var(--sea);font-variant-numeric:tabular-nums;}
+.feature .chiffre span{display:block;font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
 .feature .meta a{color:var(--sea);text-decoration:none;font-weight:600;}
 .feature .meta a:hover{text-decoration:underline;}
 .beta-frame{display:block;width:100%;height:440px;border:1px solid var(--line);border-radius:12px;margin-top:6px;background:var(--card);}
@@ -152,6 +157,36 @@ footer a{color:var(--sea);}
 </div>
 
 <script>
+// Les chiffres sont écrits en clair dans la page, puis remis à zéro et
+// défilés quand leur entrée devient visible : sans script, sans
+// IntersectionObserver ou avec le mouvement réduit, ils restent tels quels.
+function animerChiffres(racine){
+  var chiffres = racine.querySelectorAll('.chiffre strong[data-valeur]');
+  if (!chiffres.length || !('IntersectionObserver' in window)) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function defiler(el){
+    var cible = parseInt(el.getAttribute('data-valeur'), 10), debut = null, duree = 1400;
+    function pas(t){
+      if (debut === null) debut = t;
+      var u = Math.min(1, (t - debut) / duree);
+      el.textContent = Math.round(cible * (1 - Math.pow(1 - u, 3)));
+      if (u < 1) requestAnimationFrame(pas);
+    }
+    requestAnimationFrame(pas);
+  }
+  var obs = new IntersectionObserver(function(entrees){
+    entrees.forEach(function(e){
+      if (!e.isIntersecting) return;
+      obs.unobserve(e.target);
+      e.target.querySelectorAll('strong[data-valeur]').forEach(defiler);
+    });
+  }, {threshold: 0.6});
+  Array.prototype.forEach.call(racine.querySelectorAll('.chiffres'), function(bloc){
+    bloc.querySelectorAll('strong[data-valeur]').forEach(function(el){ el.textContent = '0'; });
+    obs.observe(bloc);
+  });
+}
+
 fetch('stats/exclusive_features.json').then(function(r){ return r.json(); }).then(function(d){
   document.getElementById('ef-prod').textContent = 'v' + d.production_version;
   document.getElementById('ef-latest').textContent = 'v' + d.latest_version;
@@ -168,6 +203,9 @@ fetch('stats/exclusive_features.json').then(function(r){ return r.json(); }).the
       '<div>' +
         '<h3>' + f.title + '</h3>' +
         '<p>' + f.description + '</p>' +
+        (f.chiffres && f.chiffres.length ? '<div class="chiffres">' + f.chiffres.map(function(c){
+          return '<div class="chiffre"><strong data-valeur="' + c.valeur + '">' + c.valeur + '</strong><span>' + c.libelle + '</span></div>';
+        }).join('') + '</div>' : '') +
         (f.image ? '<img class="shot" src="' + f.image + '" alt="' + (f.image_alt || f.title).replace(/"/g, '&quot;') + '" loading="lazy" decoding="async">' : '') +
         (f.images_suite || []).map(function(i){
           return '<img class="shot" src="' + i.image + '" alt="' + (i.image_alt || f.title).replace(/"/g, '&quot;') + '" loading="lazy" decoding="async">';
@@ -176,6 +214,7 @@ fetch('stats/exclusive_features.json').then(function(r){ return r.json(); }).the
       '</div>' +
     '</div>';
   }).join('');
+  animerChiffres(list);
 }).catch(function(){
   document.getElementById('ef-list').innerHTML = '<div class="card"><p style="color:var(--ink-soft);">Impossible de charger les nouveautés pour le moment.</p></div>';
 });

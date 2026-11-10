@@ -5,6 +5,31 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [25.0.0] - 2026-11-10
+
+Deux nouveaux lieux de Guadeloupe pour les cartes, et des paysages qui
+répondent quand on secoue le téléphone.
+
+### ✨ Ajouté
+
+- **La plage de la Datcha et les Mamelles** : les cartes de Sanblé ont
+  maintenant trente-deux lieux. La Datcha, au Gosier, avec sa mer claire, son
+  raisinier et ses touloulous ; les deux mornes des Mamelles dans la forêt, où
+  passe le colibri. L'album compte 128 cases à remplir.
+- **Chaque carte garde son lieu** : une carte déjà gagnée ne change pas de
+  paysage, et une carte donnée arrive avec le sien sur le téléphone qui la
+  reçoit.
+- **Des paysages redessinés d'après des photos** : la place de la Victoire et
+  Vélo sur son ka, le Grand Étang vu d'en haut, les Bains Jaunes, la Cascade
+  aux Écrevisses, le Saut de la Lézarde, la Grande Vigie et sa baleine, la
+  Porte d'Enfer, le Grand Cul-de-Sac Marin, Gueule Grand Gouffre, la Route de
+  la Traversée, l'Habitation La Grivelière, Matouba, le Fort Delgrès, et le
+  Mémorial ACTe vu de la mer, avec la baie d'où sont venus les ancêtres.
+- **Secouer le téléphone** : sur la carte ouverte, le paysage répond. Les
+  touloulous filent, les tourterelles s'envolent, les mangues tombent, la
+  tortue plonge, le pélican part vers le large et revient, les feuilles
+  tombent des arbres et font des ronds sur l'eau, les cascades bouillonnent.
+
 ## [24.0.0] - 2026-11-08
 
 Les trente lieux de Guadeloupe des cartes sont peints en papier découpé.
