@@ -220,7 +220,18 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26),
                     Lame(zone, graine + 1, nuit = heure?.nuit == true, bord = Paysages::bordPlageGosier),
                     if (heure?.allume == true) Phare(zone, graine + 2, Paysages.PHARE_GOSIER, Paysages.MILIEU) else Ensemble())
-                enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
+                enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> {
+                    val reflets = Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
+                    // La secousse fait lever les aigrettes de la voûte de palétuviers (le jour), et tomber ses feuilles jaunies sur l'eau.
+                    if (heure == null) reflets else {
+                        val jaunes = intArrayOf(Paysages.aLHeure(0xFFD8C040.toInt(), heure), Paysages.aLHeure(0xFFB4B030.toInt(), heure))
+                        Ensemble(reflets,
+                            Petales(zone, graine + 1, Paysages.FEUILLAGE_CUL_DE_SAC, jaunes, sol0 = 50f, sens = -1f,
+                                plan = Paysages.MILIEU, chute = 24f, feuille = true, grandeur = 1.4f,
+                                surLEau = { _, y -> y > 39f }),
+                            if (heure.nuit) Ensemble() else GardeBoeufs(zone, graine + 2, Paysages.DORTOIR_CUL_DE_SAC))
+                    }
+                }
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 // Le vieux mur s'effrite et les feuilles mortes du sol se soulèvent.
                 enPlans && lieu == Lieu.FIGUIER_MAUDIT && heure != null -> Ensemble(
@@ -960,10 +971,13 @@ private class Oiseaux(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * presque droit, puis filent vers le bord de la fenêtre de leur côté, d'un
  * battement continu, sans planer, comme ceux du carême. Ils ne reviennent
  * pas ; la canopée en cache d'autres pour la secousse suivante.
+ *
+ * Les aigrettes de la voûte de palétuviers du Grand Cul-de-Sac Marin font de
+ * même depuis leur [dortoir].
  */
-private class GardeBoeufs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+private class GardeBoeufs(zone: RectF, graine: Int, private val dortoir: FloatArray = Paysages.DORTOIR_ETANG) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
-    private val n = Paysages.DORTOIR_ETANG.size / 2
+    private val n = dortoir.size / 2
     private val x = FloatArray(n)
     private val y = FloatArray(n)
     private val vx = FloatArray(n)
@@ -987,8 +1001,8 @@ private class GardeBoeufs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
         for (i in 0 until n) {
             if (k >= combien) break
             if (age[i] >= 0f) continue
-            x[i] = Paysages.DORTOIR_ETANG[2 * i] + (hasard() - 0.5f) * 3f
-            y[i] = Paysages.DORTOIR_ETANG[2 * i + 1] + (hasard() - 0.5f) * 1.5f
+            x[i] = dortoir[2 * i] + (hasard() - 0.5f) * 3f
+            y[i] = dortoir[2 * i + 1] + (hasard() - 0.5f) * 1.5f
             val cote = if (x[i] < 50f) -1f else 1f
             vx[i] = cote * (2f + hasard() * 2f)
             vy[i] = -8f - hasard() * 3f
@@ -2397,7 +2411,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         forceRafale = max(force, if (rafale.any { it >= 0f }) forceRafale else 0f)
         betes.forEachIndexed { i, b ->
             when (b.espece) {
-                Espece.TOULOULOU, Espece.IGUANE, Espece.RATON -> if (fuite[i] < 0f) fuite[i] = 0f
+                Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
@@ -2466,7 +2480,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 return@forEachIndexed
             }
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
-            if (b.espece == Espece.IGUANE || b.espece == Espece.RATON) {
+            if (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE) {
                 fuite[i] += dt
                 val f = fuite[i]
                 val couvert = couvert(b)
@@ -2513,7 +2527,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             c.save()
             c.translate(Paysages.GLISSEMENT[b.plan + 2] * largeur * regardX / e,
                 Paysages.GLISSEMENT[b.plan + 2] * hauteur * regardY / e)
-            if (fuite[i] >= 0f && (b.espece == Espece.IGUANE || b.espece == Espece.RATON)) {
+            if (fuite[i] >= 0f && (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE)) {
                 // Il file tête vers le bord, puis revient tête vers sa pierre,
                 // le corps qui ondule à chaque foulée.
                 val f = fuite[i]
@@ -2527,7 +2541,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                     val versLeRocher = if (RATON_COUVERT > 0f) 1f else -1f
                     val veut = if (f < FILE) versLeRocher else -versLeRocher
                     if (tourne != veut) c.scale(-1f, 1f, b.x + sin(a) * 6f, b.y)
-                } else if (f < FILE) c.scale(-1f, 1f, b.x + 5f * b.taille, b.y)
+                } else if (f < FILE) c.scale(-1f, 1f, if (b.espece == Espece.RATON_MANGROVE) b.x else b.x + 5f * b.taille, b.y)
             } else if (fuite[i] >= 0f) {
                 // Le trou, ouvert le temps que la bête y entre et en ressorte.
                 val tx = b.x + trou(b)

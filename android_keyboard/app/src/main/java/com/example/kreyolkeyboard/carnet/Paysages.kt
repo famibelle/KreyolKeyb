@@ -141,7 +141,9 @@ enum class Espece {
     /** Pas une bête : le canot à cabine bleue au mouillage dans le lagon de la Porte d'Enfer, qui se balance. */
     CANOT,
     /** Pas une bête : la barque de bois sur le lagon de l'Îlet du Gosier, qui se balance. */
-    BARQUE_BOIS
+    BARQUE_BOIS,
+    /** Le raton laveur de la Guadeloupe, sur une racine de palétuvier du Grand Cul-de-Sac Marin, qui fouille l'eau. */
+    RATON_MANGROVE
 }
 
 /**
@@ -1083,7 +1085,7 @@ object Paysages {
         Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 9.6f, 50.6f, taille = 1.5f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
         Lieu.ILET_GOSIER to listOf(Bete(Espece.BARQUE_BOIS, 13f, 55f, plan = 1), Bete(Espece.PELICAN, 30f, 48f, plan = 1, taille = 1.6f),
             Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
-        Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.TORTUE, 34f, 58f, plan = 1, taille = 3f)),
+        Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.RATON_MANGROVE, 15f, 48.2f, taille = 1.3f)),
         Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 50f, 57f, plan = 1)),
         Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 22f, 52f)),
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 13.6f, 30f)),
@@ -1298,6 +1300,16 @@ object Paysages {
     internal val DORTOIR_ETANG = floatArrayOf(6f, 30f, 25f, 29.5f, 2f, 41f, 70f, 33f, 80f, 37f, 90f, 31f,
         95f, 45f, 75f, 47f, 86f, 53f)
 
+    /**
+     * La voûte de palétuviers du Grand Cul-de-Sac Marin où se tiennent les
+     * aigrettes que la secousse fait lever : x et y, de chaque côté du chenal.
+     */
+    internal val DORTOIR_CUL_DE_SAC = floatArrayOf(6f, 26f, 16f, 20f, 28f, 12f, 4f, 16f, 70f, 8f, 80f, 13f,
+        90f, 19f, 98f, 24f)
+
+    /** La voûte de palétuviers du Grand Cul-de-Sac Marin, d'où tombent les feuilles jaunies : x0, x1, y0, y1. */
+    internal val FEUILLAGE_CUL_DE_SAC = floatArrayOf(10f, 90f, 6f, 22f)
+
     /** Le bord gauche de l'eau libre du Grand Étang à la hauteur y. */
     internal fun etangVuGauche(y: Float) = etangGauche(y)
 
@@ -1459,7 +1471,7 @@ object Paysages {
     /** La lanterne du phare de l'Îlet du Gosier, sur le plan du milieu : x, y. */
     internal val PHARE_GOSIER = floatArrayOf(82f, 18.8f)
 
-    internal val EAU_CUL_DE_SAC = floatArrayOf(-2f, 60f, 44f, 62f)
+    internal val EAU_CUL_DE_SAC = floatArrayOf(24f, 76f, 38f, 64f)
 
     /** L'eau de la baie devant le Mémorial ACTe, sur le plan de devant : x0, x1, y0, y1. */
     internal val EAU_ACTE = floatArrayOf(-2f, 76f, 52f, 64f)
@@ -5418,6 +5430,53 @@ object Paysages {
             trait("M${x - 3f} ${y - 0.2f}L${x - 3f} ${y + 0.3f}M${x - 3.8f} ${y - 0.9f}L${x - 3.6f} ${y - 0.5f}", 0xFF2A2E40.toInt(), 0.3f)
         }
 
+        /**
+         * Le raton laveur de la Guadeloupe accroupi sur une racine, de profil
+         * vers la droite, ses pattes en ([x], [y]) : le dos rond gris brun, la
+         * queue touffue annelée de noir, le masque noir sous les sourcils
+         * blancs, le museau clair. [fouille] (0 à 1) baisse la tête et plonge
+         * les pattes de devant dans l'eau, qui fait un rond.
+         */
+        fun ratonMangrove(x: Float, y: Float, fouille: Float) {
+            val gris = duJour(0xFF8A8478.toInt())
+            val sombre = duJour(0xFF5E584E.toInt())
+            val clair = duJour(0xFFE6E2D8.toInt())
+            val noir = duJour(0xFF24201C.toInt())
+            // La queue, en anneaux clairs et noirs, qui retombe derrière lui.
+            for (k in 0 until 7) {
+                val u = k / 6f
+                val qx = (1f - u) * (1f - u) * (x - 3f) + 2f * u * (1f - u) * (x - 6.4f) + u * u * (x - 7.6f)
+                val qy = (1f - u) * (1f - u) * (y - 1.8f) + 2f * u * (1f - u) * (y - 2.6f) + u * u * (y + 0.2f)
+                ovale(qx, qy, 1f - u * 0.2f, 0.85f - u * 0.15f, if (k % 2 == 0) duJour(0xFFB4AC98.toInt()) else noir)
+            }
+            // La patte arrière, le dos rond, le ventre plus clair.
+            ovale(x - 1.8f, y - 0.8f, 1.3f, 0.95f, sombre)
+            forme("M${x - 3.4f} ${y - 1f}Q${x - 3.2f} ${y - 4.6f} ${x + 0.4f} ${y - 4.3f}Q${x + 2.6f} ${y - 4f} ${x + 3f} ${y - 2.4f}" +
+                "L${x + 2.4f} ${y - 0.6f}Q${x - 0.6f} ${y + 0.2f} ${x - 3.4f} ${y - 1f}Z", gris)
+            forme("M${x - 1.6f} ${y - 0.6f}Q${x + 0.6f} ${y - 0.2f} ${x + 2.4f} ${y - 0.8f}L${x + 2.6f} ${y - 1.8f}Q${x + 0.4f} ${y - 1f} ${x - 1.6f} ${y - 1.4f}Z",
+                duJour(0xFFB4AC9C.toInt()))
+            // Les pattes de devant, qui descendent jusqu'à l'eau quand il fouille.
+            val px = x + 2.8f + fouille * 0.4f
+            val py = y + fouille * 3.2f
+            trait("M${x + 1.8f} ${y - 1.4f}L$px $py", sombre, 0.65f)
+            trait("M${x + 2.6f} ${y - 1.6f}L${px + 0.6f} ${py - 0.2f}", sombre, 0.6f)
+            if (fouille > 0.3f) ovale(px + 0.3f, y + 3.4f, 1.2f + fouille, 0.28f, blanc(), 0.6f * fouille)
+            // La tête, qui se baisse vers l'eau.
+            val hx = x + 3.6f
+            val hy = y - 3.4f + fouille * 1.6f
+            forme("M${hx - 1f} ${hy - 0.9f}L${hx - 0.9f} ${hy - 2.4f}L${hx - 0.1f} ${hy - 1.2f}Z", sombre)
+            forme("M${hx + 0.1f} ${hy - 1.1f}L${hx + 0.4f} ${hy - 2.5f}L${hx + 1f} ${hy - 1f}Z", sombre)
+            trait("M${hx - 0.9f} ${hy - 2.3f}L${hx - 0.5f} ${hy - 1.5f}", clair, 0.18f)
+            rond(hx, hy, 1.5f, gris)
+            ovale(hx + 0.7f, hy + 0.2f, 1.3f, 0.95f, clair)
+            // Le masque noir en travers des yeux, sous le sourcil blanc.
+            forme("M${hx - 0.7f} ${hy - 0.4f}Q${hx + 0.6f} ${hy - 0.9f} ${hx + 1.9f} ${hy - 0.1f}L${hx + 1.7f} ${hy + 0.5f}" +
+                "Q${hx + 0.6f} $hy ${hx - 0.5f} ${hy + 0.5f}Z", noir)
+            rond(hx + 0.9f, hy - 0.3f, 0.13f, clair)
+            ovale(hx + 2f, hy + 0.5f, 0.65f, 0.45f, clair)
+            rond(hx + 2.6f, hy + 0.45f, 0.24f, noir)
+        }
+
         /** Un petit passereau perché, de la couleur dite. Le jour seulement. */
         fun oiselet(x: Float, y: Float, col: Int) {
             if (P.nuit) return
@@ -5664,6 +5723,7 @@ object Paysages {
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
                     Espece.CANOT -> canot(x, y, 0f)
                     Espece.BARQUE_BOIS -> barqueBois(x, y, 0f)
+                    Espece.RATON_MANGROVE -> { c.save(); c.scale(b.taille, b.taille, x, y); ratonMangrove(x, y, 0f); c.restore() }
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
                 }
@@ -5804,6 +5864,20 @@ object Paysages {
                 // Le canot de la Porte d'Enfer se balance sur le lagon ; une secousse le fait tanguer, puis il se calme.
                 Espece.CANOT -> canot(x, y + sin(t * 1.1f + ph) * 0.15f + rafale * 0.4f * sin(depuisRafale * 4f),
                     sin(t * 0.8f + ph) * 1.6f + rafale * 8f * sin(depuisRafale * 5f))
+                // Il guette un moment, puis plonge les pattes dans l'eau pour y tâter un crabe, et se redresse.
+                Espece.RATON_MANGROVE -> {
+                    val u = (t + ph) % 7f
+                    val fouille = when {
+                        u < 3.4f -> 0f
+                        u < 3.9f -> (u - 3.4f) / 0.5f
+                        u < 6.2f -> 0.85f + 0.15f * sin((u - 3.9f) * 9f)
+                        u < 6.7f -> 1f - (u - 6.2f) / 0.5f
+                        else -> 0f
+                    }
+                    c.save(); c.scale(b.taille, b.taille, x, y)
+                    ratonMangrove(x, y, fouille)
+                    c.restore()
+                }
                 // La barque de l'Îlet du Gosier, de même.
                 Espece.BARQUE_BOIS -> barqueBois(x, y + sin(t * 1f + ph) * 0.15f + rafale * 0.4f * sin(depuisRafale * 4f),
                     sin(t * 0.7f + ph) * 1.4f + rafale * 7f * sin(depuisRafale * 5f))
@@ -7540,102 +7614,241 @@ object Paysages {
 
         // ------------------------------------------- le Grand Cul-de-Sac Marin en papier
 
-        /** Une frégate posée, de profil vers la droite : le corps noir, la queue en ciseaux, le bec crochu. */
-        private fun fregatePosee(x: Float, y: Float, s: Float, teteBlanche: Boolean) {
-            val noir = papier(0xFF1E1C20.toInt())
-            pieceD("M${x - s * 0.9f} ${y + s * 0.2f}L${x - s * 1.9f} ${y + s * 1.3f}L${x - s * 1.6f} ${y + s * 1.4f}L${x - s * 0.5f} ${y + s * 0.5f}Z", noir, 0.2f)
-            piece(Path().apply { addOval(RectF(x - s, y - s * 0.55f, x + s * 0.6f, y + s * 0.5f), Path.Direction.CW) }, noir, 0.4f)
-            if (teteBlanche) piece(Path().apply { addOval(RectF(x - s * 0.1f, y - s * 0.3f, x + s * 0.6f, y + s * 0.45f), Path.Direction.CW) },
-                papier(0xFFEDEBE4.toInt()), 0f)
-            val tete = if (teteBlanche) papier(0xFFEDEBE4.toInt()) else noir
-            piece(disque(x + s * 0.55f, y - s * 0.5f, s * 0.32f), tete, 0.2f)
-            pieceD("M${x + s * 0.8f} ${y - s * 0.6f}L${x + s * 1.5f} ${y - s * 0.5f}L${x + s * 1.5f} ${y - s * 0.32f}L${x + s * 0.8f} ${y - s * 0.4f}Z",
-                papier(0xFF7A7A80.toInt()), 0f)
+        /** Une grappe d'huîtres de palétuvier accrochée à une racine en ([x], [y]), qui pend vers le bas sur [h]. */
+        private fun huitres(x: Float, y: Float, h: Float, r: Alea) {
+            val coquilles = intArrayOf(papier(0xFFBEB6A4.toInt()), papier(0xFFD6D0C2.toInt()), papier(0xFF9A9282.toInt()))
+            val n = 4 + (h * 1.6f).toInt()
+            repeat(n) { k ->
+                val u = k / (n - 1f)
+                val cx = x + (r() - 0.5f) * 1.4f
+                val cy = y + u * h + (r() - 0.5f) * 0.4f
+                val l = 0.7f + r() * 0.5f
+                val coquille = Path().apply {
+                    addOval(RectF(cx - l, cy - l * 0.45f, cx + l, cy + l * 0.45f), Path.Direction.CW)
+                    transform(Matrix().apply { setRotate(-60f + r() * 120f, cx, cy) })
+                }
+                piece(coquille, coquilles[min((r() * 3f).toInt(), 2)], 0.7f)
+                // La ligne de croissance, plus sombre.
+                piece(Path().apply {
+                    addOval(RectF(cx - l * 0.5f, cy - l * 0.2f, cx + l * 0.5f, cy + l * 0.2f), Path.Direction.CW)
+                    transform(Matrix().apply { setRotate(-60f + r() * 120f, cx, cy) })
+                }, papier(0xFF6E6658.toInt()), 0f)
+            }
         }
 
         /**
-         * Le Grand Cul-de-Sac Marin en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08) : un îlet de palétuviers posé sur l'eau
-         * du lagon, à droite du mot, son dôme de feuillage sombre où les
-         * frégates sont posées en rang, l'enchevêtrement de branches et de
-         * racines-échasses dessous, des aigrettes blanches dedans ; au loin la
-         * ligne basse de la mangrove et un petit îlet à gauche. Les frégates
-         * volent au-dessus et l'eau bouge sur la carte ouverte ; la tortue
-         * verte nage dans le lagon.
+         * Des racines-échasses de palétuvier rouge entre [x0] et [x1] : des
+         * arcs qui partent de [haut] et plongent dans l'eau entre [pied] et
+         * [pied] + 4, dans les [teintes] données (brun roux par défaut).
+         */
+        private fun echasses(x0: Float, x1: Float, haut: (Float) -> Float, pied: Float, n: Int, r: Alea, epais: Float = 0.4f,
+                             teintes: IntArray = intArrayOf(papier(0xFF8A5A3A.toInt()), papier(0xFF6A4430.toInt()),
+                                 papier(0xFFA87A50.toInt()), papier(0xFF5A3A28.toInt()))) {
+            repeat(n) {
+                val a = x0 + r() * (x1 - x0)
+                val l = (3f + r() * 7f) * if (r() < 0.5f) -1f else 1f
+                val b = a + l
+                val yb = pied + r() * 4f
+                racine(min(a, b), if (l > 0f) haut(a) + 1f else yb, max(a, b), if (l > 0f) yb else haut(a) + 1f,
+                    1.5f + r() * 4f, epais * (0.6f + r() * 0.8f), teintes[min((r() * teintes.size).toInt(), teintes.size - 1)])
+            }
+        }
+
+        /**
+         * Des arceaux de racines entre [x0] et [x1], les deux pieds dans l'eau
+         * vers [eau] (un peu plus bas vers la droite de [pente]), qui montent de
+         * [hMin] à [hMax] : l'enchevêtrement d'une lisière de palétuviers.
+         */
+        private fun arceaux(x0: Float, x1: Float, eau: Float, pente: Float, hMin: Float, hMax: Float, n: Int, r: Alea,
+                            epais: Float, teintes: IntArray) {
+            repeat(n) {
+                val a = x0 + r() * (x1 - x0)
+                val l = 2.4f + r() * 7f
+                val ya = eau + (a - x0) * pente + r() * 1.2f
+                val yb = eau + (a + l - x0) * pente + r() * 1.2f
+                racine(a, ya, a + l, yb, hMin + r() * (hMax - hMin), epais * (0.6f + r() * 0.8f),
+                    teintes[min((r() * teintes.size).toInt(), teintes.size - 1)])
+            }
+        }
+
+        /**
+         * Le Grand Cul-de-Sac Marin en papier découpé, au plus près de la
+         * photo du propriétaire (2026-11-10), en plans bien distincts : au
+         * fond, l'horizon pâle du lagon et ses nuages bas au bout du chenal ;
+         * au milieu, à gauche, la lisière de palétuviers et l'enchevêtrement
+         * de leurs racines, rousses et éclairées au-dessus de l'eau claire, à
+         * droite le mur sombre et ses fines racines aériennes ; devant, les
+         * racines sombres des deux bords, l'eau transparente où l'on voit le
+         * fond, les racines et les huîtres de palétuvier, le ciel bleu reflété
+         * au milieu, et la voûte de feuilles traversée d'une longue branche.
+         * Là où la photo a une pagayeuse, un raton laveur de la Guadeloupe
+         * (`Espece.RATON_MANGROVE`) fouille l'eau depuis une racine.
          */
         fun grandCulDeSacPapier() {
-            // L'horizon : la ligne basse de la mangrove, le petit îlet à gauche.
-            val loin = mix(papier(0xFF3E5A44.toInt()), P.cielBas, 0.45f)
-            pieceD("M70 41.4Q84 40.2 102 40.6L102 42.4L70 42.4Z", loin, 0.3f)
-            val ilot = Path()
-            val ri = Alea(2301)
-            repeat(7) { ilot.op(disque(2f + ri() * 10f, 40.6f + ri() * 1.2f, 0.9f + ri() * 1f), Path.Op.UNION) }
-            ilot.op(chemin("M-2 41.6L16 41.6L16 42.6L-2 42.6Z"), Path.Op.UNION)
-            piece(ilot, loin, 0.3f)
+            // Au fond : le ciel brumeux sur l'horizon, le lagon pâle.
+            cumulus(30f, 26.4f, 24f, 2301)
+            cumulus(52f, 28f, 18f, 2302)
+            pieceD("M-2 29.6L102 29.6L102 40L-2 40Z", mix(papier(0xFF9ACCE4.toInt()), P.cielBas, 0.3f), 0.2f)
+            pieceD("M-2 29.6L102 29.6L102 30.2L-2 30.2Z", mix(papier(0xFF6AA8CC.toInt()), P.cielBas, 0.2f), 0f)
             plan(1)
-            // Le lagon gris-vert, en lanières, plus sombre vers soi.
-            pieceD("M-2 41.8L102 41.8L102 68L-2 68Z", papier(0xFF5E8E88.toInt()), 0.2f)
-            lanieresMer(42.4f, 64f, 2302, intArrayOf(papier(0xFF6E9E96.toInt()), papier(0xFF4E7E7A.toInt()), papier(0xFF8AB4AC.toInt()), papier(0xFF5A8A84.toInt())))
-            // Le reflet sombre de l'îlet, d'une seule pièce au bord ondulé.
-            val ondes = Alea(2303)
-            val reflet = StringBuilder("M60 46.4L100 46.4L102 46.6")
-            var oy = 46.6f
-            while (oy < 54f) { reflet.append("L${100f - (oy - 46f) * 0.8f + ondes() * 3f} $oy"); oy += 1f }
-            while (oy > 46.6f) { oy -= 1f; reflet.append("L${64f + (oy - 46f) * 1.4f + ondes() * 3f} $oy") }
-            reflet.append("Z")
-            pieceD(reflet.toString(), papier(0xFF2E4A44.toInt()), 0f)
-            // Le dôme de feuillage : un petit lobe bas, un grand à droite.
-            fun crete(x: Float): Float {
-                val a = 33f + ((x - 68f) / 6f).let { it * it } * 4f
-                val b = 21f + ((x - 85f) / 15f).let { it * it } * 13f
-                return min(a, b)
+            // L'eau du chenal au loin : très claire, presque blanche, puis plus bleue en approchant.
+            var y = 31f
+            while (y < 68f) {
+                val u = ((y - 31f) / 14f).coerceIn(0f, 1f)
+                pieceD("M-2 ${y}L102 ${y}L102 ${y + 1.05f}L-2 ${y + 1.05f}Z", mix(papier(0xFFD2E8F0.toInt()), papier(0xFF7CCAD8.toInt()), u), 0f)
+                y += 1f
             }
-            val rc = Alea(2304)
-            // Les branches et les racines-échasses sous le feuillage.
-            val bois = papier(0xFF4E4440.toInt())
-            val boisClair = papier(0xFF8A7C70.toInt())
-            var bx = 63f
-            while (bx < 99f) {
-                val haut = crete(bx) + 4f + rc() * 3f
-                val mx = bx + (rc() - 0.5f) * 8f
-                val my = (haut + 46f) / 2f
-                barre(bx + (rc() - 0.5f) * 4f, 46.4f, mx, my, 0.35f + rc() * 0.25f, if (rc() < 0.3f) boisClair else bois, 0.2f)
-                barre(mx, my, mx + (rc() - 0.5f) * 10f, haut, 0.3f + rc() * 0.2f, if (rc() < 0.3f) boisClair else bois, 0.2f)
-                bx += 1.2f + rc() * 1.4f
+            val rm = Alea(2303)
+            // À gauche, la lisière : son feuillage clair au-dessus, l'ombre dessous, puis les arceaux roux éclairés.
+            val lisiere = Path()
+            lisiere.op(chemin("M-2 24L36 26L38 32L-2 33Z"), Path.Op.UNION)
+            lisiere.op(bosses(-2f, 38f, { x -> 24f + (x - 18f).let { it * it } * 0.004f }, 1.6f, 2.6f, Alea(2304)), Path.Op.UNION)
+            piece(lisiere, papier(0xFF3E6A2E.toInt()), 0.4f)
+            repeat(40) {
+                val fx = -2f + rm() * 40f
+                feuillePliee(fx, 22f + rm() * 8f, 1.2f + rm() * 0.6f, -170f + rm() * 160f,
+                    papier(if (rm() < 0.5f) 0xFF7AAA42.toInt() else 0xFF5A8A36.toInt()), 0.45f)
             }
-            val feuillage = Path()
-            var fx = 62f
-            while (fx < 103f) {
-                val c = crete(fx)
-                repeat(3) { feuillage.op(disque(fx + (rc() - 0.5f) * 2f, c + 2f + rc() * 6f, 2f + rc() * 1.8f), Path.Op.UNION) }
-                fx += 1.6f
+            pieceD("M-2 31L37 31L38.6 38.6L-2 39.6Z", papier(0xFF3A2E22.toInt()), 0f)
+            val rouxClairs = intArrayOf(papier(0xFFC09A6A.toInt()), papier(0xFFA87E52.toInt()), papier(0xFF8A6440.toInt()), papier(0xFFD2B080.toInt()))
+            arceaux(-2f, 36f, 38.4f, 0.02f, 2f, 7f, 46, rm, 0.32f, rouxClairs)
+            // Sous la surface, les racines de la lisière se prolongent, à peine voilées par l'eau.
+            repeat(22) {
+                val rx = -2f + rm() * 38f
+                val l = (2f + rm() * 5f) * if (rm() < 0.5f) -1f else 1f
+                trait("M$rx 39Q${rx + l * 0.4f} ${41f + rm() * 2f} ${rx + l} ${42f + rm() * 3.4f}", papier(0xFF7A5634.toInt()), 0.3f + rm() * 0.3f)
             }
-            piece(feuillage, papier(0xFF2A4A2C.toInt()), 0.8f)
-            repeat(30) {
-                val x = 63f + rc() * 38f
-                rosette(x, crete(x) + 1.6f + rc() * 3f, 1.4f, papier(if (rc() < 0.5f) 0xFF4E7A3A.toInt() else 0xFF3E6A34.toInt()), rc)
-            }
-            // Les frégates posées en rang sur le dôme.
-            for (x in floatArrayOf(66f, 71.4f, 77f, 82.4f, 88f, 93f, 98f))
-                fregatePosee(x, crete(x) + 0.6f + rc() * 0.8f, 1.7f + rc() * 0.3f, rc() < 0.35f)
-            // Les aigrettes blanches dans les branches, à gauche de l'îlet.
-            val aigrette = papier(0xFFF2F0EA.toInt())
-            for ((ax, ay) in arrayOf(66f to 40f, 69.4f to 42.4f, 72f to 38.6f, 75f to 41.8f, 80f to 40.4f)) {
-                piece(Path().apply { addOval(RectF(ax - 0.6f, ay - 0.9f, ax + 0.6f, ay + 0.9f), Path.Direction.CW) }, aigrette, 0.3f)
-                piece(disque(ax + 0.2f, ay - 1.2f, 0.35f), aigrette, 0f)
-            }
-            // Les racines-échasses au ras de l'eau.
-            val racines = intArrayOf(papier(0xFF5A4A40.toInt()), papier(0xFF7A6658.toInt()))
-            var rx = 61f
-            while (rx < 100f) {
-                val l = 3f + rc() * 6f
-                racine(rx, 46.6f, rx + l, 46.4f + rc() * 0.4f, 2.4f + rc() * 3f, 0.3f + rc() * 0.2f, racines[(rc() * 2f).toInt().coerceAtMost(1)])
-                rx += 1.2f + rc() * 2f
-            }
+            forme(chemin("M-2 39.2L38.6 38.6Q34 42 26 46L-2 46Z"), papier(0xFF4AB8C8.toInt()), 0.2f)
+            for ((hx, hy) in arrayOf(5f to 38.8f, 13f to 38.6f, 22f to 39f, 31f to 38.6f)) huitres(hx, hy, 0.8f, rm)
+            // À droite, le mur sombre de la mangrove, ses fines racines aériennes claires, son enchevêtrement au ras de l'eau.
+            pieceD("M62 14L102 10L102 42Q86 40 70 38.6L64 36Q61 26 62 14Z", papier(0xFF1A2814.toInt()), 0.3f)
+            for ((ax, ay, dx) in arrayOf(Triple(64.4f, 22f, -1.6f), Triple(67f, 18f, 0.8f), Triple(71.6f, 24f, -1f), Triple(74f, 20f, 1.4f)))
+                trait("M$ax ${ay}Q${ax + dx} ${(ay + 37f) / 2f} ${ax + dx * 0.3f} ${37.6f + rm() * 1.4f}", papier(0xFF5E4E3A.toInt()), 0.14f)
+            val rouxSombres = intArrayOf(papier(0xFF5A3E2C.toInt()), papier(0xFF6E4A32.toInt()), papier(0xFF8A5A3A.toInt()))
+            arceaux(68f, 102f, 38.6f, 0.05f, 1.6f, 5f, 30, rm, 0.34f, rouxSombres)
+            forme(chemin("M64 38.4L102 40.4L102 46Q84 44 70 42Z"), papier(0xFF2A3420.toInt()), 0.4f)
+            for ((hx, hy) in arrayOf(72f to 38.8f, 82f to 39.4f, 92f to 40f)) huitres(hx, hy, 0.8f, rm)
             plan(2)
-            // L'eau du devant, plus sombre, ses rides.
-            pieceD("M-2 62.6Q50 61.8 102 62.8L102 68L-2 68Z", papier(0xFF3E6A66.toInt()), 0.3f)
-            lanieresMer(63.2f, 67f, 2305, intArrayOf(papier(0xFF4E7E78.toInt()), papier(0xFF6A9A92.toInt())))
+            // Devant : l'eau claire. Le fond, vaseux, sableux par endroits, avec ses herbiers.
+            val fond = "M-2 46Q50 44.4 102 46L102 68L-2 68Z"
+            pieceD(fond, papier(0xFFD6CCA4.toInt()), 0f)
+            taches(-2f, 102f, 68f, 22, 2305, papier(0xFFEAE2C4.toInt())) { 50f }
+            taches(-2f, 102f, 68f, 12, 2306, papier(0xFFC4C8A8.toInt())) { 54f }
+            // Les racines noyées, qui courent sous l'eau depuis les deux rives vers le milieu,
+            // et les grappes d'huîtres de palétuvier accrochées dessus.
+            val rn = Alea(2310)
+            val noyees = intArrayOf(papier(0xFF6A3A26.toInt()), papier(0xFF7E4A30.toInt()), papier(0xFF55301F.toInt()))
+            repeat(22) { k ->
+                val gauche = k % 2 == 0
+                val x0 = if (gauche) -2f + rn() * 26f else 76f + rn() * 26f
+                val y0 = 48f + rn() * 18f
+                val l = (8f + rn() * 16f) * if (gauche) 1f else -1f
+                val x1 = x0 + l
+                val y1 = y0 + (rn() - 0.3f) * 6f
+                val cx = x0 + l * 0.5f
+                val cy = min(y0, y1) - 1f - rn() * 3f
+                val e = 0.8f + rn() * 0.8f
+                trait("M$x0 ${y0}Q$cx $cy $x1 $y1", noyees[min((rn() * 3f).toInt(), 2)], e)
+                trait("M$x0 ${y0 - e * 0.3f}Q$cx ${cy - e * 0.3f} $x1 ${y1 - e * 0.3f}", papier(0xFFA8784E.toInt()), 0.22f)
+                // Une grappe d'huîtres sur le haut de la racine.
+                if (rn() < 0.75f) {
+                    val u = 0.3f + rn() * 0.4f
+                    val hx = (1f - u) * (1f - u) * x0 + 2f * u * (1f - u) * cx + u * u * x1
+                    val hy = (1f - u) * (1f - u) * y0 + 2f * u * (1f - u) * cy + u * u * y1
+                    huitres(hx, hy, 1.6f + rn() * 1.6f, rn)
+                }
+            }
+            // Les racines de devant, à gauche et à droite, sombres, rousses par endroits.
+            val rd = Alea(2307)
+            val sombres = intArrayOf(papier(0xFF3A281C.toInt()), papier(0xFF4E3424.toInt()), papier(0xFF7A4A30.toInt()), papier(0xFF2E2018.toInt()))
+            arceaux(-4f, 22f, 52f, 0.12f, 4f, 12f, 26, rd, 0.7f, sombres)
+            echasses(-2f, 14f, { x -> 34f + x * 0.4f }, 52f, 10, rd, 0.6f, sombres)
+            arceaux(78f, 104f, 50f, 0.06f, 4f, 11f, 26, rd, 0.7f, sombres)
+            echasses(84f, 102f, { x -> 33f + (102f - x) * 0.1f }, 50f, 8, rd, 0.6f, sombres)
+            for ((hx, hy) in arrayOf(2f to 53.4f, 9f to 54.6f, 16f to 55.6f, 83f to 51.6f, 91f to 52.4f, 98f to 52f))
+                huitres(hx, hy, 2.4f, rd)
+            // L'eau, transparente : une teinte sur ce qui est dessous, le ciel bleu reflété au milieu, ses nuages.
+            y = 46f
+            while (y < 68f) {
+                val u = (y - 46f) / 22f
+                forme(chemin("M-2 ${y + 0.6f}L102 ${y + 0.6f}L102 ${y + 1.65f}L-2 ${y + 1.65f}Z"), papier(0xFF0EB4CC.toInt()), 0.42f - 0.14f * u)
+                y += 1f
+            }
+            forme(chemin("M-2 46Q50 44.4 102 46L102 47.4Q50 46 -2 47.4Z"), papier(0xFF7CCAD8.toInt()), 0.8f)
+            // Le ciel reflété : des nappes ovales superposées, d'un bleu plus profond vers soi, aux bords fondus.
+            for (k in 0 until 12) {
+                val u = k / 11f
+                val cy = 47.4f + u * 20f
+                val rx = 6f + u * 15f
+                forme(Path().apply { addOval(RectF(50f - rx + u * 2f, cy - 2.6f, 50f + rx + u * 2f, cy + 2.6f), Path.Direction.CW) },
+                    papier(0xFF3A78C4.toInt()), 0.09f + u * 0.07f)
+            }
+            for (k in 0 until 5) {
+                val cy = 47f + k * 2f
+                val rx = 4f + k * 2f
+                forme(Path().apply { addOval(RectF(50f - rx, cy - 1.4f, 50f + rx, cy + 1.4f), Path.Direction.CW) }, papier(0xFFA8D0EC.toInt()), 0.1f)
+            }
+            for ((cx, cy, rx) in arrayOf(Triple(46f, 52f, 6f), Triple(58f, 56.6f, 5f), Triple(42f, 60f, 7f), Triple(56f, 63f, 6f)))
+                forme(Path().apply { addOval(RectF(cx - rx, cy - rx * 0.26f, cx + rx, cy + rx * 0.26f), Path.Direction.CW) }, blanc(), 0.25f)
+            // La surface : des rides de lumière qui passent sur ce qu'on voit dessous.
+            val ride = Alea(2311)
+            repeat(26) {
+                val rx = -2f + ride() * 104f
+                val ry = 47.6f + ride() * 20f
+                val rl = 1.6f + ride() * 4f
+                forme(chemin("M$rx ${ry}Q${rx + rl / 2f} ${ry - 0.35f} ${rx + rl} ${ry}Q${rx + rl / 2f} ${ry + 0.2f} $rx ${ry}Z"), blanc(), 0.35f + ride() * 0.25f)
+            }
+            // La racine où le raton fouille l'eau, au-dessus de la surface.
+            pieceD("M-2 45Q12 46.4 22 50.6Q28 53.4 31 58L28.4 58.6Q25 54.8 20 52.6Q10 49.2 -2 48.4Z", papier(0xFF5A3826.toInt()), 0.6f)
+            pieceD("M-2 45Q12 46.4 22 50.6Q28 53.4 31 58L30.4 58Q27.6 54 21.6 51.4Q11.6 47.4 -2 46Z", papier(0xFF8A5A3A.toInt()), 0f)
+            // À droite, le tronc sombre et les tiges claires qui descendent du feuillage jusqu'à l'eau.
+            barre(77f, 12f, 76.4f, 47f, 0.55f, papier(0xFF2E2418.toInt()), 0.3f)
+            for ((ax, ay, dx) in arrayOf(Triple(85f, 18f, -1.2f), Triple(89.4f, 21f, 0.9f)))
+                trait("M$ax ${ay}Q${ax + dx} ${(ay + 40f) / 2f} ${ax + dx * 0.2f} 40", papier(0xFF8E7656.toInt()), 0.22f)
+            // La voûte : deux masses de feuillage qui laissent le ciel ouvert au milieu, et la longue branche en travers.
+            fun bordG(x: Float) = when {
+                x < 18f -> 32f - (x + 2f) * 0.5f
+                x < 40f -> 22f - (x - 18f) * 0.5f
+                else -> 11f - (x - 40f) * 1.6f
+            }
+            fun bordD(x: Float) = when {
+                x < 64f -> -2f + (x - 53f) * 1.6f
+                x < 80f -> 15.6f + (x - 64f) * 0.7f
+                else -> 26.8f + (x - 80f) * 0.33f
+            }
+            val voute = Path()
+            voute.op(chemin("M-2 -2L48 -2Q46 6 40 11Q30 17 18 22Q8 27 -2 32Z"), Path.Op.UNION)
+            voute.op(chemin("M53 -2L102 -2L102 34Q90 30 80 27Q70 24 64 16Q58 8 53 -2Z"), Path.Op.UNION)
+            voute.op(bosses(-2f, 46f, ::bordG, 1.4f, 2.6f, Alea(2308)), Path.Op.UNION)
+            voute.op(bosses(55f, 103f, ::bordD, 1.4f, 2.6f, Alea(2309)), Path.Op.UNION)
+            piece(voute, papier(0xFF182E12.toInt()), 0.6f)
+            val bois = papier(0xFF3A2E22.toInt())
+            barre(-2f, 32f, 24f, 23.4f, 0.8f, bois, 0.4f)
+            barre(24f, 23.4f, 54f, 13.6f, 0.5f, bois, 0.4f)
+            barre(36f, 19.6f, 44f, 23.4f, 0.2f, bois, 0.2f)
+            barre(46f, 16f, 52f, 20f, 0.16f, bois, 0.2f)
+            // Les feuilles, distinctes, plus claires là où le jour les touche.
+            val feuilles = intArrayOf(papier(0xFF1E3A18.toInt()), papier(0xFF2E5A24.toInt()), papier(0xFF4A7E30.toInt()),
+                papier(0xFF7AAA3E.toInt()), papier(0xFFA8C860.toInt()))
+            repeat(460) {
+                val k = rd()
+                val (fx, fy) = when {
+                    // Le bord de la masse de gauche, que les feuilles débordent.
+                    k < 0.4f -> { val x = -2f + 49f * rd(); x to (bordG(x) + 2f - rd() * 9f) }
+                    // Le bord de la masse de droite.
+                    k < 0.8f -> { val x = 54f + 48f * rd(); x to (bordD(x) + 2f - rd() * 9f) }
+                    // Le long de la branche, qui pendent dans l'ouverture.
+                    k < 0.9f -> { val u = rd(); (24f + 30f * u) to (23.4f - 9.8f * u + rd() * 3f) }
+                    // Le cœur des masses, plus sombre.
+                    else -> if (rd() < 0.5f) (-2f + rd() * 30f) to (-2f + rd() * 18f) else (70f + rd() * 32f) to (-2f + rd() * 18f)
+                }
+                val clair = when {
+                    fx in 30f..70f -> rd() * 1.2f + 2.6f
+                    fy < 8f -> rd() * 2.4f
+                    else -> rd() * 4.8f
+                }
+                feuillePliee(fx, fy, 1.8f + rd() * 1.4f, 20f + rd() * 140f, feuilles[min(clair.toInt(), 4)], 0.5f)
+            }
         }
 
         /** Le Grand Cul-de-Sac Marin : le lagon, la mangrove, le banc de sable de l'îlet Caret, une tortue verte. */
