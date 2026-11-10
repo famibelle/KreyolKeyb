@@ -941,6 +941,12 @@ object Paysages {
     /** Les feuillages de la mangrove de l'îlet Macou, à gauche et à droite, sur le plan du milieu : x0, x1, y0, y1. */
     internal val FEUILLAGE_MACOU_GAUCHE = floatArrayOf(-2f, 18f, 8f, 36f)
 
+    /** Le sol de feuilles mortes du Figuier maudit, que la secousse soulève : x0, x1, y0, y1. */
+    internal val FEUILLES_FIGUIER = floatArrayOf(0f, 100f, 57f, 64f)
+
+    /** Le haut du mur en ruine du Figuier maudit, d'où se détachent les gravats : x0, x1, et le sol à son pied. */
+    internal val MUR_FIGUIER = floatArrayOf(0f, 40f, 56f)
+
     /** La voûte de la forêt des Roches gravées, d'où tombent les feuilles : x0, x1, y0, y1. */
     internal val VOUTE_ROCHES = floatArrayOf(4f, 80f, 6f, 16f)
     internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)

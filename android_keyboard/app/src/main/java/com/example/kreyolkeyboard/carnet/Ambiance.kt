@@ -179,6 +179,13 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
+                // Le vieux mur s'effrite et les feuilles mortes du sol se soulèvent.
+                enPlans && lieu == Lieu.FIGUIER_MAUDIT && heure != null -> Ensemble(
+                    Gravats(zone, graine, intArrayOf(Paysages.aLHeure(0xFF8A8670.toInt(), heure), Paysages.aLHeure(0xFF6A6650.toInt(), heure))),
+                    Petales(zone, graine, Paysages.FEUILLES_FIGUIER,
+                        intArrayOf(Paysages.aLHeure(0xFFD0A868.toInt(), heure), Paysages.aLHeure(0xFFB08848.toInt(), heure)),
+                        sol0 = 56f, sens = 1f, plan = Paysages.DEVANT, chute = 8f, elan = 0.5f, feuille = true, envol = 2f,
+                        grandeur = 1.6f))
                 // Des feuilles mortes que la secousse détache de la voûte.
                 enPlans && lieu == Lieu.ROCHES_GRAVEES && heure != null -> Petales(zone, graine, Paysages.VOUTE_ROCHES,
                     intArrayOf(Paysages.aLHeure(0xFFB08A3A.toInt(), heure), Paysages.aLHeure(0xFF8A9A3A.toInt(), heure)),
@@ -2039,12 +2046,15 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
  * le [plan] de l'arbre. [chute] est la hauteur qu'elles ont à descendre
  * au-delà de la source : un grand arbre les laisse tomber plus loin ; [elan]
  * les fait porter plus loin par le vent. [feuille] : des feuilles en
- * amande plutôt que des fleurs en cœur.
+ * amande plutôt que des fleurs en cœur. [envol] les lance plus haut : des
+ * feuilles mortes soulevées du sol plutôt que tombées d'un arbre ;
+ * [grandeur] agrandit chacune.
  */
 private class Petales(zone: RectF, graine: Int, private val source: FloatArray, private val couleurs: IntArray,
                       private val sol0: Float, private val sens: Float, private val plan: Int,
                       private val chute: Float = 0f, private val elan: Float = 1f,
-                      private val feuille: Boolean = false) : Ambiance(zone, graine) {
+                      private val feuille: Boolean = false, private val envol: Float = 1f,
+                      private val grandeur: Float = 1f) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 16
     private val x = FloatArray(n)
@@ -2074,7 +2084,7 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
             x[i] = x0 + hasard() * (x1 - x0)
             y[i] = y0 + hasard() * (y1 - y0)
             vx[i] = sens * elan * (5f + hasard() * 7f * force)
-            vy[i] = -3f - hasard() * 4f * force
+            vy[i] = (-3f - hasard() * 4f * force) * envol
             sol[i] = sol0 + chute * hasard() + hasard() * 2.4f
             angle[i] = hasard() * 360f
             pose[i] = -1f
@@ -2113,6 +2123,7 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
             if (pose[i] > 0f) p.alpha = ((1f - pose[i] / FANE) * 255f).toInt().coerceIn(0, 255)
             c.save()
             c.rotate(angle[i], x[i], y[i])
+            if (grandeur != 1f) c.scale(grandeur, grandeur, x[i], y[i])
             // Une bractée : un cœur arrondi, aplati en tournant pour qu'on la voie de profil.
             c.scale(1f, 0.35f + 0.65f * abs(cos(angle[i] * 0.02f)), x[i], y[i])
             chemin.rewind()
@@ -2140,6 +2151,100 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
     private companion object {
         /** Combien de temps une fleur posée met à se faner, en secondes. */
         const val FANE = 4f
+    }
+}
+
+/**
+ * Le vieux mur du Figuier maudit qui s'effrite quand on secoue le
+ * téléphone : quelques gravats d'enduit se détachent de son faîte
+ * ([Paysages.MUR_FIGUIER]), tombent le long du mur en tournant, rebondissent
+ * une fois au pied et s'y effacent. Sur le plan du milieu, comme le mur.
+ */
+private class Gravats(zone: RectF, graine: Int, private val couleurs: IntArray) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = 10
+    private val x = FloatArray(n)
+    private val y = FloatArray(n)
+    private val vx = FloatArray(n)
+    private val vy = FloatArray(n)
+    private val angle = FloatArray(n)
+    private val taille = FloatArray(n)
+    private val rebonds = IntArray(n)
+    /** L'âge de chaque gravat depuis qu'il s'est posé, -1 en chute ; -2 : case libre. */
+    private val pose = FloatArray(n) { -2f }
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        val (x0, x1) = Paysages.MUR_FIGUIER
+        val combien = (5f + force * 5f).toInt()
+        var k = 0
+        for (i in 0 until n) {
+            if (k >= combien) break
+            if (pose[i] == -1f) continue
+            x[i] = x0 + hasard() * (x1 - x0)
+            // Le faîte du mur monte doucement vers la droite.
+            y[i] = 4.6f + (x[i] + 4f) / 12f + hasard() * 1.5f
+            vx[i] = (hasard() - 0.5f) * 3f
+            vy[i] = hasard() * 2f
+            angle[i] = hasard() * 360f
+            taille[i] = 0.5f + hasard() * 0.5f
+            rebonds[i] = 0
+            pose[i] = -1f
+            k++
+        }
+    }
+
+    override fun avancer(dt: Float) {
+        val sol = Paysages.MUR_FIGUIER[2]
+        for (i in 0 until n) {
+            when {
+                pose[i] == -1f -> {
+                    vy[i] += PESANTEUR * dt
+                    x[i] += vx[i] * dt
+                    y[i] += vy[i] * dt
+                    angle[i] += 300f * dt
+                    if (y[i] >= sol + (i % 3) * 0.5f) {
+                        y[i] = sol + (i % 3) * 0.5f
+                        if (rebonds[i] == 0) { vy[i] = -vy[i] * 0.3f; vx[i] *= 0.5f; rebonds[i] = 1 }
+                        else pose[i] = 0f
+                    }
+                }
+                pose[i] >= 0f -> { pose[i] += dt; if (pose[i] > EFFACE) pose[i] = -2f }
+            }
+        }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        if (pose.all { it == -2f }) return
+        val e = cadre[0]
+        val g = Paysages.GLISSEMENT[Paysages.MILIEU]
+        c.save()
+        c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        for (i in 0 until n) {
+            if (pose[i] == -2f) continue
+            p.color = couleurs[i % 2]
+            if (pose[i] > 0f) p.alpha = ((1f - pose[i] / EFFACE) * 255f).toInt().coerceIn(0, 255)
+            val s = taille[i]
+            c.save()
+            c.rotate(angle[i], x[i], y[i])
+            c.drawRect(x[i] - s, y[i] - s * 0.7f, x[i] + s, y[i] + s * 0.7f, p)
+            c.restore()
+        }
+        c.restore()
+    }
+
+    private companion object {
+        const val PESANTEUR = 60f
+        /** Combien de temps un gravat posé met à s'effacer, en secondes. */
+        const val EFFACE = 2.5f
     }
 }
 
