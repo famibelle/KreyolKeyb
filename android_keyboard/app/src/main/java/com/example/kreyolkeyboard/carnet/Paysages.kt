@@ -1125,7 +1125,7 @@ object Paysages {
             Bete(Espece.MASSIF, 72f, 48.4f)),
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1),
             Bete(Espece.SOURCE, 72.33f, 44.41f, taille = 1.6f, attache = 51.51f), Bete(Espece.SOURCE, 77.18f, 43.93f, taille = 0.5f, attache = 53.18f)),
-        Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
+        Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 88.6f, 52.9f)),
         Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
     )
 
@@ -9240,90 +9240,249 @@ object Paysages {
 
         // ------------------------------------------- le Fort Delgrès en papier
 
-        /** Une pierre dressée du mémorial : un bloc de lave sombre au sommet arrondi, sa face éclairée. */
-        private fun pierreDressee(x: Float, sol: Float, l: Float, h: Float, col: Int, r: Alea) {
-            val pench = (r() - 0.5f) * l * 0.4f
-            pieceD("M${x - l / 2f} ${sol}L${x - l * 0.45f + pench} ${sol - h * 0.75f}Q${x - l * 0.3f + pench} ${sol - h} ${x + pench} ${sol - h}" +
-                "Q${x + l * 0.45f + pench} ${sol - h * 0.95f} ${x + l * 0.5f + pench} ${sol - h * 0.6f}L${x + l / 2f} ${sol}Z", col, 0.6f)
-            pieceD("M${x + l * 0.1f + pench} ${sol - h * 0.92f}Q${x + l * 0.45f + pench} ${sol - h * 0.9f} ${x + l * 0.5f + pench} ${sol - h * 0.6f}" +
-                "L${x + l / 2f} ${sol}L${x + l * 0.2f} ${sol}Z", mix(col, 0xFFFFFFFF.toInt(), 0.16f), 0f)
+        /**
+         * Une pierre dressée du mémorial : un bloc gris, taillé à facettes, sa
+         * face gauche au jour, sa face droite à l'ombre, du lichen. [plat] lui
+         * donne un sommet presque plat, où l'anoli peut se poser.
+         */
+        /** Un ovale découpé, que le tassement en cours agrandit comme le reste (l'ovale peint ne l'est pas). */
+        private fun galbe(cx: Float, cy: Float, rx: Float, ry: Float, col: Int) =
+            piece(Path().apply { addOval(RectF(cx - rx, cy - ry, cx + rx, cy + ry), Path.Direction.CW) }, col, 0f)
+
+        /** Un trait fin découpé, d'épaisseur [e], que le tassement en cours agrandit aussi. */
+        private fun entaille(ax: Float, ay: Float, bx: Float, by: Float, e: Float, col: Int, ombre: Float = 0f) {
+            val l = sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)).coerceAtLeast(0.01f)
+            val nx = -(by - ay) / l * e / 2f; val ny = (bx - ax) / l * e / 2f
+            pieceD("M${ax + nx} ${ay + ny}L${bx + nx} ${by + ny}L${bx - nx} ${by - ny}L${ax - nx} ${ay - ny}Z", col, ombre)
+        }
+
+        private fun rocheDressee(x: Float, sol: Float, l: Float, h: Float, r: Alea, plat: Boolean = false) {
+            val p = if (plat) 0f else (r() - 0.5f) * l * 0.8f
+            val q = if (plat) 0.98f else 0.62f + r() * 0.36f
+            val s = if (plat) 0.96f else 0.42f + r() * 0.5f
+            val base = papier(0xFF8C8884.toInt())
+            val p1x = x - l * 0.52f + p * 0.3f; val p1y = sol - h * 0.55f
+            val p2x = x - l * 0.3f + p; val p2y = sol - h * q
+            val p3x = x + l * 0.05f + p; val p3y = sol - h
+            val p4x = x + l * 0.4f + p * 0.7f; val p4y = sol - h * s
+            val p5x = x + l * 0.55f; val p5y = sol - h * 0.35f
+            val mx = x + p * 0.4f + l * 0.05f; val my = sol - h * 0.5f
+            pieceD("M${x - l / 2f} ${sol}L$p1x ${p1y}L$p2x ${p2y}L$p3x ${p3y}L$p4x ${p4y}L$p5x ${p5y}L${x + l * 0.45f} ${sol}Z", base, 0.7f)
+            pieceD("M${x - l / 2f} ${sol}L$p1x ${p1y}L$p2x ${p2y}L$p3x ${p3y}L$mx ${my}L${x - l * 0.08f} ${sol}Z",
+                mix(base, 0xFFFFFFFF.toInt(), 0.24f), 0f)
+            pieceD("M$p4x ${p4y}L$p5x ${p5y}L${x + l * 0.45f} ${sol}L${x + l * 0.16f} ${sol}L$mx ${my}L$p3x ${p3y}Z",
+                mix(base, 0xFF000000.toInt(), 0.24f), 0f)
+            entaille(mx, my, mx - l * 0.1f, sol - h * 0.15f, 0.1f, mix(base, 0xFF000000.toInt(), 0.4f), 0f)
+            repeat(2) { galbe(x + (r() - 0.6f) * l * 0.6f, sol - h * (0.2f + r() * 0.5f), 0.3f + r() * 0.3f, 0.2f + r() * 0.15f, papier(0xFFC8C49A.toInt())) }
         }
 
         /**
          * Le Fort Delgrès en papier découpé, d'après la photo du propriétaire
-         * (2026-11-08) : les mornes verts de la Soufrière derrière ; les
-         * remparts de pierre sombre et la longue caserne au toit de tuiles
-         * brunes ; sur la pelouse, à droite du mot, le mémorial : la grande
-         * tête de Delgrès entourée de pierres de lave dressées le long d'une
-         * spirale de pavés. L'anoli fait ses pompes sur un bloc à gauche.
+         * (2026-11-10), vu à hauteur d'homme : à gauche du mot, le mémorial,
+         * la grande tête de pierre de Delgrès au milieu de son cercle de
+         * pierres dressées, dans un anneau de pavés qui s'aplatit en ellipse ;
+         * à droite, le rempart de pierre grise qui fuit vers la gauche, sa
+         * porte en arc, l'herbe sur son faîte ; entre les deux, l'herbe haute
+         * et blonde du glacis ; derrière, les arbres, les mornes de la Soufrière
+         * et les nuages. L'anoli fait ses pompes sur une pierre à droite. Pas
+         * une bande droite : le rempart fuit, le pré s'arrondit autour du
+         * mémorial.
          */
         fun fortDelgresPapier() {
-            cumulus(-6f, 16f, 20f, 2801)
-            // Les mornes de la Soufrière.
-            val loin = brisee(-2f, 26f, 14f, 22f, 28f, 18f, 38f, 12.6f, 46f, 11f, 54f, 13f, 62f, 17.6f, 68f, 15.6f, 76f, 12.4f,
-                84f, 16f, 96f, 23f, 102f, 26f)
+            cumulus(-6f, 14f, 22f, 2801)
+            cumulus(60f, 8f, 18f, 2807)
+            // Les mornes de la Soufrière à gauche, plus bas à droite.
+            val loin = brisee(-2f, 16f, 8f, 12f, 18f, 13f, 28f, 17f, 40f, 21f, 52f, 19.6f, 62f, 16f, 72f, 19f, 80f, 14.6f, 90f, 18.6f, 102f, 15.4f)
             val m = sousLaCrete(-2f, 102f, loin)
             m.op(bosses(-2f, 102f, { x -> loin(x) + 0.3f }, 1f, 1.6f, Alea(2802)), Path.Op.UNION)
-            piece(m, mix(papier(0xFF4E8A4A.toInt()), P.cielBas, 0.3f))
-            taches(-2f, 102f, 36f, 16, 2803, mix(papier(0xFF6EA858.toInt()), P.cielBas, 0.25f), loin)
-            morneBoise(28f, 2.4f, 2804, papier(0xFF3E7A3A.toInt()), 2.4f)
+            piece(m, mix(papier(0xFF4E8A6A.toInt()), P.cielBas, 0.4f))
+            taches(-2f, 102f, 34f, 16, 2803, mix(papier(0xFF6EA868.toInt()), P.cielBas, 0.3f), loin)
+            morneBoise(27f, 2.2f, 2804, mix(papier(0xFF3E7A3A.toInt()), P.cielBas, 0.15f), 2.4f)
             plan(1)
-            // Les remparts de pierre sombre, leurs moellons.
-            val pierre = papier(0xFF5E5A56.toInt())
-            pieceD("M-2 33.6L30 34.6L30 44L-2 44Z", pierre, 0.6f)
-            pieceD("M66 35L102 34L102 44L66 44Z", pierre, 0.6f)
-            pieceD("M84 44L102 38.6L102 44Z", papier(0xFF6E6A64.toInt()), 0.3f)
+            // Les arbres derrière le rempart, le grand arbre au-dessus du mémorial.
+            val ra = Alea(2808)
+            val feuillage = intArrayOf(papier(0xFF2E5E2C.toInt()), papier(0xFF3E7034.toInt()), papier(0xFF4E8040.toInt()))
+            repeat(34) {
+                val x = -2f + ra() * 106f
+                val grand = x in 30f..50f
+                val y = if (grand) 12f + ra() * 18f else 22f + ra() * 10f
+                val r = if (grand) 2.6f + ra() * 2.4f else 1.8f + ra() * 2f
+                piece(Path().apply { addOval(RectF(x - r * 1.3f, y - r, x + r * 1.3f, y + r), Path.Direction.CW) }, feuillage[min((ra() * 3f).toInt(), 2)], 0.5f)
+            }
+            // Le rempart qui fuit vers la gauche, vers un point de fuite sur l'horizon (0, 33) : haut à droite, bas derrière le mémorial.
+            fun fu(y0: Float, x: Float) = y0 + (33f - y0) * (102f - x) / 102f
+            val pierre = papier(0xFF7A7672.toInt())
+            val rempart = Path().apply {
+                moveTo(30f, fu(21.4f, 30f))
+                var x = 30f
+                while (x <= 104f) { lineTo(x, fu(21.4f, x)); x += 2f }
+                lineTo(104f, fu(37f, 104f)); lineTo(30f, fu(37f, 30f)); close()
+            }
+            piece(rempart, pierre, 0.6f)
             val rm = Alea(2805)
-            repeat(40) {
-                val x = -2f + rm() * 104f; val y = 35.4f + rm() * 8f
-                if (x < 30f || x > 66f)
-                    piece(Path().apply { addRoundRect(RectF(x, y, x + 1.6f + rm(), y + 0.8f), 0.3f, 0.3f, Path.Direction.CW) },
-                        papier(if (rm() < 0.5f) 0xFF4A4644.toInt() else 0xFF726C66.toInt()), 0f)
+            val moellons = intArrayOf(papier(0xFF8A8682.toInt()), papier(0xFF6A6662.toInt()), papier(0xFF9A948C.toInt()), papier(0xFF5E5A56.toInt()))
+            for (k in 0 until 9) {
+                val f0 = 0.04f + k * 0.105f; val f1 = f0 + 0.095f
+                var x = 30f + rm() * 2f
+                while (x < 104f) {
+                    val h = (fu(37f, x) - fu(21.4f, x)) * 0.1f
+                    val l = h * (1.4f + rm() * 1.6f)
+                    fun ligne(f: Float, xx: Float) = fu(21.4f, xx) + (fu(37f, xx) - fu(21.4f, xx)) * f
+                    pieceD("M$x ${ligne(f0, x)}L${x + l - 0.2f} ${ligne(f0, x + l)}L${x + l - 0.2f} ${ligne(f1, x + l)}L$x ${ligne(f1, x)}Z",
+                        moellons[min((rm() * 4f).toInt(), 3)], 0f)
+                    x += l
+                }
             }
-            pieceD("M4 31.6L9 31.6L9 34L4 34Z", pierre, 0.4f)
-            // La longue caserne : murs de pierre, toit de tuiles brunes en croupe, l'auvent.
-            pieceD("M28 40L72 40L72 45L28 45Z", papier(0xFF6E6862.toInt()), 0.5f)
-            val tuile = papier(0xFF8E5E48.toInt())
-            pieceD("M26.6 40.4L73.4 40.4L68 34L32 34Z", tuile, 0.8f)
-            var tx = 33f
-            while (tx < 68f) { barre(tx - 0.4f, 34.2f, tx - 1.2f, 40.2f, 0.1f, papier(0xFF6E4636.toInt()), 0f); tx += 1.4f }
-            for (k in 1..3) barre(27f + k * 1.4f, 40.2f - k * 1.5f, 73f - k * 1.4f, 40.2f - k * 1.5f, 0.1f, papier(0xFF6E4636.toInt()), 0f)
-            pieceD("M24 43L76 43L76.6 44.6L23.4 44.6Z", papier(0xFF9E6A50.toInt()), 0.4f)
-            // La pelouse.
-            pieceD("M-2 44Q50 43 102 44L102 68L-2 68Z", papier(0xFF8EAA4A.toInt()), 0.4f)
-            pieceD("M-2 48Q40 46.6 102 48.6L102 68L-2 68Z", papier(0xFF7E9E42.toInt()), 0f)
+            // Les coulures sombres de l'âge, l'herbe sur le faîte.
+            repeat(10) {
+                val x = 32f + rm() * 70f
+                pieceD("M$x ${fu(21.6f, x)}L${x + 1.4f} ${fu(21.6f, x + 1.4f)}L${x + 0.9f} ${fu(21.6f, x) + 4f + rm() * 5f}L${x + 0.3f} ${fu(21.6f, x) + 3f}Z",
+                    mix(pierre, 0xFF000000.toInt(), 0.3f), 0f)
+            }
+            val crete = Path()
+            var cx = 30f
+            while (cx < 104f) { crete.op(disque(cx, fu(21.4f, cx), 0.9f + rm() * 0.8f), Path.Op.UNION); cx += 1.4f + rm() }
+            piece(crete, papier(0xFF5E8A3E.toInt()), 0.3f)
+            // La porte en arc, dans l'ombre.
+            val ga = 85f; val gb = 91f
+            val noir = papier(0xFF2A2624.toInt())
+            pieceD("M$ga ${fu(37f, ga)}L$ga ${fu(29.4f, ga)}Q$ga ${fu(26f, ga)} ${(ga + gb) / 2f} ${fu(25.6f, (ga + gb) / 2f)}" +
+                "Q$gb ${fu(26f, gb)} $gb ${fu(29.4f, gb)}L$gb ${fu(37f, gb)}Z", mix(pierre, 0xFFFFFFFF.toInt(), 0.2f), 0.4f)
+            pieceD("M${ga + 0.8f} ${fu(37f, ga)}L${ga + 0.8f} ${fu(29.8f, ga)}Q${ga + 0.8f} ${fu(26.9f, ga)} ${(ga + gb) / 2f} ${fu(26.6f, (ga + gb) / 2f)}" +
+                "Q${gb - 0.8f} ${fu(26.9f, gb)} ${gb - 0.8f} ${fu(29.8f, gb)}L${gb - 0.8f} ${fu(37f, gb)}Z", noir, 0f)
+            // Le pré au pied du rempart, et l'herbe haute et blonde du glacis, au bord ébouriffé.
+            pieceD("M-2 36Q40 35 104 ${fu(37f, 104f) - 0.4f}L104 70L-2 70Z", papier(0xFF86AE4A.toInt()), 0.4f)
+            val glacis = Path().apply {
+                moveTo(-2f, 34f)
+                var x = -2f
+                while (x <= 70f) { lineTo(x, 34.4f + (x + 2f) * 0.06f + sin(x * 0.9f) * 0.5f); x += 1f }
+                quadTo(76f, 40f, 66f, 44f)
+                lineTo(-2f, 46f); close()
+            }
+            piece(glacis, papier(0xFFB4BC72.toInt()), 0.3f)
+            val blondes = intArrayOf(papier(0xFFC8C884.toInt()), papier(0xFF9EAE5A.toInt()), papier(0xFFD4D49A.toInt()))
+            repeat(70) {
+                val x = -2f + ra() * 72f
+                val y = 35.4f + ra() * 9f
+                galbe(x, y, 0.8f + ra() * 1.4f, 0.25f + ra() * 0.25f, blondes[min((ra() * 3f).toInt(), 2)])
+            }
             plan(2)
-            // Le mémorial : la spirale de pavés, les pierres dressées, la tête,
-            // agrandis autour du centre de la spirale.
-            tasser(80f, 58f, 1.3f, 1.3f) {
-            val pave = papier(0xFF5A5A58.toInt())
-            for ((rx, ry) in arrayOf(17f to 5.4f, 11f to 3.4f)) {
-                val anneau = Path().apply { addOval(RectF(80f - rx, 57f - ry, 80f + rx, 57f + ry), Path.Direction.CW) }
-                anneau.op(Path().apply { addOval(RectF(80f - rx + 0.8f, 57f - ry + 0.5f, 80f + rx - 0.8f, 57f + ry - 0.5f), Path.Direction.CW) }, Path.Op.DIFFERENCE)
-                piece(anneau, pave, 0f)
+            // Le mémorial, sur la planche de devant : le pré tondu qui s'arrondit autour de lui.
+            pieceD("M-2 41Q30 38.4 50 44.6Q64 51 82 53Q96 54 104 52.6L104 70L-2 70Z", papier(0xFF7EA644.toInt()), 0.5f)
+            val rt = Alea(2809)
+            repeat(14) {
+                val x = -2f + rt() * 106f
+                val y = 46f + rt() * 20f
+                if (y > 44f + max(0f, x - 40f) * 0.25f) galbe(x, y, (1.6f + rt() * 2.6f) * (y - 30f) / 20f, 0.4f + rt() * 0.4f,
+                    if (rt() < 0.5f) papier(0xFF9A8A5E.toInt()) else papier(0xFF94B456.toInt()))
             }
-            val lave = intArrayOf(papier(0xFF4A4A4C.toInt()), papier(0xFF5E5C5A.toInt()), papier(0xFF3E3E40.toInt()))
+            // L'anneau de pavés autour du cercle : une ellipse plus épaisse devant que derrière.
+            // Le mémorial, imposant : agrandi d'un tiers autour du pied de la tête.
+            tasser(20f, 58f, 1.35f, 1.35f) {
+            val ox = 20f; val oy = 51f; val ex = 30f; val ey = 8.6f
+            val pave = intArrayOf(papier(0xFF9A968E.toInt()), papier(0xFF86827A.toInt()), papier(0xFFAAA69C.toInt()))
+            fun paves(a0: Float, a1: Float) {
+                val n = 26
+                for (k in 0 until n) {
+                    val u0 = a0 + (a1 - a0) * (k + 0.06f) / n; val u1 = a0 + (a1 - a0) * (k + 0.94f) / n
+                    fun dedans(a: Float) = floatArrayOf(ox + ex * cos(a), oy + ey * sin(a))
+                    fun dehors(a: Float) = floatArrayOf(ox + (ex + 1.6f) * cos(a), oy + 0.5f + (ey + 1.2f) * sin(a))
+                    val a = dedans(u0); val b = dedans(u1); val c2 = dehors(u1); val d = dehors(u0)
+                    pieceD("M${a[0]} ${a[1]}L${b[0]} ${b[1]}L${c2[0]} ${c2[1]}L${d[0]} ${d[1]}Z", pave[k % 3], 0.2f)
+                }
+            }
+            paves(PI.toFloat(), 2f * PI.toFloat())
+            // Les pierres dressées du fond du cercle, plus petites, puis la tête, puis celles de devant.
             val rp = Alea(2806)
-            // Les pierres du fond, puis la tête, puis celles de devant.
-            val fond = arrayOf(floatArrayOf(66f, 54f), floatArrayOf(71f, 52.4f), floatArrayOf(76f, 52f), floatArrayOf(86f, 52.2f),
-                floatArrayOf(91f, 53f), floatArrayOf(95.6f, 54.6f))
-            for ((x, y) in fond) pierreDressee(x, y, 2f + rp() * 1f, 4f + rp() * 2.4f, lave[min((rp() * 3f).toInt(), 2)], rp)
-            // La tête de Delgrès, de trois quarts : le crâne, le front, le nez, la bouche, le menton.
-            val bronze = papier(0xFF4E4E50.toInt())
-            pieceD("M75.4 56Q74.6 50 76 46.6Q78 43.4 81.6 43.6Q85.6 44 86.4 47.6L86.6 49.4L87.8 51.2L86.8 51.6L86.8 53Q86.4 54.6 84.6 55L84 56.4Z", bronze, 0.8f)
-            pieceD("M82.4 44Q85.6 44.6 86.4 47.6L86.6 49.4L87.8 51.2L86.8 51.6L86.8 53Q86.4 54.6 84.6 55L84 56.4L82.6 56.4Q84 52 82.4 44Z",
-                mix(bronze, 0xFFFFFFFF.toInt(), 0.15f), 0f)
-            pieceD("M84.4 48.2Q85.6 47.6 86.4 48.2L86.2 48.6Q85.4 48.2 84.6 48.6Z", papier(0xFF2E2E30.toInt()), 0f)
-            pieceD("M85.2 53Q86 52.8 86.6 53.2L86.4 53.5Q85.8 53.3 85.3 53.4Z", papier(0xFF2E2E30.toInt()), 0f)
-            piece(Path().apply { addOval(RectF(77.4f, 48.4f, 79.4f, 51.6f), Path.Direction.CW) }, mix(bronze, 0xFF000000.toInt(), 0.2f), 0f)
-            val devant = arrayOf(floatArrayOf(64f, 59f), floatArrayOf(69f, 61f), floatArrayOf(74.6f, 62.4f), floatArrayOf(81f, 62.6f),
-                floatArrayOf(87f, 62f), floatArrayOf(93f, 60.4f), floatArrayOf(97f, 58.4f), floatArrayOf(73f, 57.4f), floatArrayOf(88f, 57.6f))
-            for ((x, y) in devant) pierreDressee(x, y, 2.2f + rp() * 1.2f, 4.4f + rp() * 3f, lave[min((rp() * 3f).toInt(), 2)], rp)
+            fun cercle(a0: Float, a1: Float, n: Int) {
+                for (k in 0 until n) {
+                    val a = a0 + (a1 - a0) * (k + 0.5f) / n + (rp() - 0.5f) * 0.12f
+                    val x = ox + 22f * cos(a); val y = oy - 0.4f + 6.2f * sin(a)
+                    // Rien devant la tête, à droite du cercle rien sous le mot.
+                    if (x > 36f || (sin(a) > 0f && abs(x - ox) < 7f)) continue
+                    val f = 0.62f + 0.38f * (y - (oy - 6.6f)) / 12.4f
+                    rocheDressee(x, y, (4.6f + rp() * 2.4f) * f, (6.4f + rp() * 3.6f) * f, rp)
+                }
             }
-            // Le bloc de pierre de l'anoli, à gauche, et la butte d'herbe.
-            pieceD("M-2 58Q20 55.6 40 60L44 68L-2 68Z", papier(0xFF8CB04C.toInt()), 0.4f)
-            pieceD("M15.6 55.2L24.6 55.2L24.6 61L15.6 61Z", papier(0xFF6E6A64.toInt()), 0.6f)
-            pieceD("M15.6 55.2L24.6 55.2L24.6 56L15.6 56Z", papier(0xFF8E8A84.toInt()), 0f)
+            cercle(PI.toFloat() * 1.04f, PI.toFloat() * 1.96f, 8)
+            // La tête de Delgrès, de face, d'après la photo du propriétaire : le crâne large aux cheveux
+            // peignés en arrière, le front ridé, les sourcils froncés et bas, les yeux ouverts en amande
+            // à l'iris creusé, le nez long et fort, les plis amers des joues, la bouche serrée aux
+            // coins tombants, le menton fort ; la pierre claire striée de coulures sombres.
+            val tete = papier(0xFFA6A29A.toInt())
+            val ombre = mix(tete, 0xFF000000.toInt(), 0.22f)
+            val creux = papier(0xFF4A4644.toInt())
+            val clair = mix(tete, 0xFFFFFFFF.toInt(), 0.2f)
+            // Un sillon creusé dans la pierre : une courbe de [a] à [b] par [c], épaisse de [e] (vers le bas, ou vers la droite).
+            fun sillon(ax: Float, ay: Float, cx: Float, cy: Float, bx: Float, by: Float, e: Float, col: Int, debout: Boolean = false) {
+                val dx = if (debout) e else 0f; val dy = if (debout) 0f else e
+                pieceD("M$ax ${ay}Q$cx $cy $bx ${by}L${bx + dx} ${by + dy}Q${cx + dx} ${cy + dy} ${ax + dx} ${ay + dy}Z", col, 0f)
+            }
+            // Son ombre sur l'herbe, pour qu'elle pèse sur le sol.
+            galbe(20.4f, 50.7f, 6.4f, 0.9f, papier(0xFF4E7430.toInt()))
+            // Les oreilles, à demi cachées.
+            galbe(12.9f, 42.4f, 1.1f, 2.2f, ombre)
+            galbe(27.1f, 42.4f, 1.1f, 2.2f, mix(ombre, 0xFF000000.toInt(), 0.1f))
+            // Le crâne large, les pommettes, la mâchoire carrée, le menton.
+            pieceD("M20 50.8Q23.4 50.8 24.8 48Q26.6 45 26.8 41.4Q27.4 36 25.6 33.6Q23.4 31.2 20 31.2" +
+                "Q16.6 31.2 14.4 33.6Q12.6 36 13.2 41.4Q13.4 45 15.2 48Q16.6 50.8 20 50.8Z", tete, 0.8f)
+            // Le côté droit un peu dans l'ombre.
+            pieceD("M23.4 32Q25.8 33 26.6 36Q27.4 40 26.8 41.4Q26.6 45 24.8 48Q23.6 50.2 22 50.7Q24.2 47 24.6 42.4Q25 36 23.4 32Z", ombre, 0f)
+            // Les cheveux peignés en arrière, en mèches creusées, et la ligne du front.
+            pieceD("M14 35.4Q14.4 32.4 17 31.6Q20 31 23 31.6Q25.6 32.4 26 35.4Q23.4 34.2 20 34.4Q16.6 34.2 14 35.4Z", mix(tete, 0xFF000000.toInt(), 0.1f), 0f)
+            for (k in 0 until 9) {
+                val x = 14.8f + k * 1.3f
+                sillon(x, 34.8f - abs(x - 20f) * 0.05f, x + (x - 20f) * 0.08f, 33f, x + (x - 20f) * 0.14f, 31.6f + abs(x - 20f) * 0.08f, 0.16f, ombre, debout = true)
+            }
+            // Le front ridé, les plis du froncement entre les sourcils.
+            for (k in 0 until 3) sillon(16.6f + k * 0.3f, 36.4f + k * 0.8f, 20f, 35.8f + k * 0.8f, 23.4f - k * 0.3f, 36.4f + k * 0.8f, 0.14f, ombre)
+            sillon(19.4f, 38.2f, 19.2f, 39f, 19.5f, 39.9f, 0.16f, creux, debout = true)
+            sillon(20.4f, 38.2f, 20.6f, 39f, 20.3f, 39.9f, 0.16f, creux, debout = true)
+            // Les sourcils lourds, bas vers le nez, et l'ombre de l'arcade.
+            pieceD("M14.8 39.6Q16.6 38.2 19.2 39.2L19.4 40Q17 39.4 15 40.4Z", ombre, 0.2f)
+            pieceD("M25.2 39.6Q23.4 38.2 20.8 39.2L20.6 40Q23 39.4 25 40.4Z", ombre, 0.2f)
+            // Les yeux ouverts, en amande, l'iris creusé, la paupière lourde, le pli dessous.
+            for (ox in floatArrayOf(17.4f, 22.6f)) {
+                val d = if (ox < 20f) -1f else 1f
+                pieceD("M${ox - 1.5f} 41.2Q$ox 40.1 ${ox + 1.5f} 41.2Q$ox 42 ${ox - 1.5f} 41.2Z", clair, 0f)
+                galbe(ox + d * 0.1f, 41.15f, 0.5f, 0.45f, mix(tete, 0xFF000000.toInt(), 0.18f))
+                galbe(ox + d * 0.1f, 41.15f, 0.2f, 0.2f, creux)
+                sillon(ox - 1.6f, 41.1f, ox, 39.9f, ox + 1.6f, 41.1f, 0.22f, creux)
+                sillon(ox - 1.2f, 42.2f, ox, 42.9f, ox + 1.3f, 42.1f, 0.12f, ombre)
+            }
+            // Le nez long et fort : l'arête, ses ailes larges, les narines, son ombre à droite.
+            pieceD("M19.3 40.2L20.7 40.2Q21 43.4 22.1 45.4Q22.4 46.4 21.4 46.6Q20.6 46.2 20 46.5Q19.4 46.2 18.6 46.6Q17.6 46.4 17.9 45.4Q19 43.4 19.3 40.2Z", clair, 0.3f)
+            pieceD("M20.7 40.2Q21 43.4 22.1 45.4Q22.4 46.4 21.4 46.6Q21.6 45.6 20.9 44.6Q20.6 42.4 20.7 40.2Z", ombre, 0f)
+            galbe(19.1f, 46f, 0.42f, 0.24f, creux)
+            galbe(20.9f, 46f, 0.42f, 0.24f, creux)
+            // Les plis amers qui descendent des ailes du nez vers les coins de la bouche.
+            sillon(17.8f, 45.6f, 16.6f, 47f, 17.1f, 48.8f, 0.2f, ombre, debout = true)
+            sillon(22.2f, 45.6f, 23.4f, 47f, 22.9f, 48.8f, 0.2f, ombre, debout = true)
+            // Les coulures sombres de la pierre, sous les yeux et sur les joues.
+            for ((x0, y0, l) in arrayOf(floatArrayOf(15.6f, 42.6f, 4f), floatArrayOf(24.4f, 42.6f, 4.4f), floatArrayOf(14.4f, 37f, 5f),
+                    floatArrayOf(25.8f, 37.4f, 4f), floatArrayOf(18.4f, 34.8f, 1.8f)))
+                sillon(x0, y0, x0 - 0.2f, y0 + l * 0.5f, x0 + 0.1f, y0 + l, 0.2f, mix(tete, 0xFF000000.toInt(), 0.18f), debout = true)
+            // La bouche serrée aux coins tombants, la lèvre du dessous, le creux sous la lèvre.
+            pieceD("M17.6 48.1Q18.6 47.4 20 47.6Q21.4 47.4 22.4 48.1Q21.2 47.9 20 48Q18.8 47.9 17.6 48.1Z", creux, 0f)
+            pieceD("M18.4 48.2Q20 49.1 21.6 48.2Q20 48.6 18.4 48.2Z", clair, 0f)
+            sillon(18.8f, 49.2f, 20f, 49.6f, 21.2f, 49.2f, 0.18f, ombre)
+            // Le menton fort, sa fossette.
+            galbe(20f, 50.1f, 1.8f, 0.6f, clair)
+            sillon(20f, 49.8f, 19.9f, 50.2f, 20f, 50.6f, 0.14f, ombre, debout = true)
+            cercle(PI.toFloat() * 0.06f, PI.toFloat() * 0.94f, 7)
+            paves(0f, PI.toFloat())
+            }
+            // À droite du mot, deux pierres seules sur le pré ; l'anoli sur celle du bout, au sommet plat.
+            val rs = Alea(2811)
+            rocheDressee(74f, 57.4f, 5f, 6.4f, rs)
+            rocheDressee(88f, 61.6f, 7.4f, 8.6f, rs, plat = true)
+            // L'herbe drue au ras du bas.
+            val rh = Alea(2810)
+            val verts = intArrayOf(papier(0xFF5E9636.toInt()), papier(0xFF86B848.toInt()), papier(0xFF4E8430.toInt()))
+            repeat(60) {
+                val x = -2f + rh() * 106f
+                brin(x, 64f + rh() * 4f, 1.6f + rh() * 2.6f, (rh() - 0.5f) * 3f, verts[min((rh() * 3f).toInt(), 2)])
+            }
         }
 
         /** Le fort Delgrès : le bastion et son échauguette, la mer, la Soufrière derrière, un anoli sur le mur. */
