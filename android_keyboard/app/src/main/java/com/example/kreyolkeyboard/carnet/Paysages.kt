@@ -149,7 +149,19 @@ enum class Espece {
      * la route de la Traversée : assis au bord de la route, tourné vers elle,
      * il hume le sol. Le dessin du Grand Cul-de-Sac, retourné, sans l'eau.
      */
-    RATON_FORET
+    RATON_FORET,
+    /**
+     * Pas une bête : les grandes feuilles du bananier de la Grivelière, au-dessus
+     * du mur de pierre, que l'air berce et qu'une secousse fait battre. Le stipe
+     * reste peint dans le paysage.
+     */
+    BANANIER,
+    /**
+     * Pas une bête : le grand massif de feuilles devant la case de la Grivelière,
+     * au bord du jardin, dont les feuilles frémissent au repos et s'agitent à la
+     * secousse.
+     */
+    MASSIF
 }
 
 /**
@@ -1023,6 +1035,9 @@ object Paysages {
     /** La voûte au-dessus de la route de la Traversée, d'où la secousse détache des feuilles : x0, x1, y0, y1. */
     internal val VOUTE_TRAVERSEE = floatArrayOf(30f, 90f, 0f, 10f)
 
+    /** Le houppier du grand arbre de la Grivelière, à gauche, d'où la secousse détache des feuilles : x0, x1, y0, y1. */
+    internal val HOUPPIER_GRIVELIERE = floatArrayOf(0f, 22f, 6f, 20f)
+
     /** La voûte de la forêt des Roches gravées, d'où tombent les feuilles : x0, x1, y0, y1. */
     internal val VOUTE_ROCHES = floatArrayOf(4f, 80f, 6f, 16f)
     internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)
@@ -1100,7 +1115,8 @@ object Paysages {
         Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.RATON_MANGROVE, 15f, 48.2f, taille = 1.3f)),
         Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 52f, 57f, plan = 1, taille = 1.2f),
             Bete(Espece.RATON_FORET, 74f, 59.6f, plan = 1, taille = 1.3f)),
-        Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 23.3f, 36.3f)),
+        Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 23.3f, 36.3f, taille = 1.6f), Bete(Espece.BANANIER, 95.5f, 26.4f, plan = 1),
+            Bete(Espece.MASSIF, 72f, 48.4f)),
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 13.6f, 30f)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
         Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
@@ -1158,6 +1174,7 @@ object Paysages {
             peintre.aplat {
                 if (b.espece == Espece.PELICAN_PIEU || b.espece == Espece.PELICAN)
                     peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille, fonce = b.espece == Espece.PELICAN)
+                else if (b.espece == Espece.PARULINE) peintre.parulineEnVol(b.x, b.y, aile, sens, b.taille)
                 else peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille)
             }
         }
@@ -1967,7 +1984,7 @@ object Paysages {
         private companion object {
             /** Le siffleur des montagnes, gris ardoise ; la paruline caféiette, vert olive. */
             const val COULEUR_SIFFLEUR = 0xFF4E5560.toInt()
-            const val COULEUR_PARULINE = 0xFF8C8A3A.toInt()
+            const val COULEUR_PARULINE = 0xFFC8B032.toInt()
 
             // La palette de la référence papier découpé (skill `direction-artistique`).
             const val CREME = 0xFFFCF5EC.toInt()
@@ -5806,7 +5823,7 @@ object Paysages {
                     Espece.AGOUTI -> agouti(x, y, b.taille)
                     Espece.RATON -> raton(x, y)
                     Espece.SIFFLEUR -> oiselet(x, y, COULEUR_SIFFLEUR)
-                    Espece.PARULINE -> oiselet(x, y, COULEUR_PARULINE)
+                    Espece.PARULINE -> { c.save(); c.scale(b.taille, b.taille, x, y + 0.8f); oiselet(x, y, COULEUR_PARULINE); c.restore() }
                     Espece.BALEINE -> baleine(x, y)
                     Espece.ECREVISSE -> ecrevisse(x, y, b.taille)
                     Espece.IGUANE -> iguane(x, y, 0f, b.taille)
@@ -5823,6 +5840,8 @@ object Paysages {
                     Espece.RATON_FORET -> { c.save(); c.scale(-b.taille, b.taille, x, y); ratonMangrove(x, y, 0f, eau = false); c.restore() }
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
+                    Espece.BANANIER -> feuillesBananier(x, y, 0f)
+                    Espece.MASSIF -> massif(x, y, 0f, 0f)
                 }
                 return@aplat
             }
@@ -5910,7 +5929,9 @@ object Paysages {
                 Espece.SIFFLEUR, Espece.PARULINE -> {
                     val u = (t + ph) % 3.4f
                     val saut = if (u < 0.35f) sin(u / 0.35f * PI.toFloat()) * 1.2f else 0f
+                    c.save(); c.scale(b.taille, b.taille, x, y + 0.8f)
                     oiselet(x, y - saut, if (b.espece == Espece.SIFFLEUR) COULEUR_SIFFLEUR else COULEUR_PARULINE)
+                    c.restore()
                 }
                 // Le souffle, puis la queue qui sort de l'eau et sonde.
                 Espece.BALEINE -> {
@@ -6005,6 +6026,10 @@ object Paysages {
                 // Elle se balance à peine dans l'air de la forêt ; une secousse
                 // la fait osciller, de moins en moins.
                 Espece.LIANE -> liane(x, y, sin(t * 0.7f + ph) * 1.5f + rafale * 12f * sin(depuisRafale * 3.4f + ph * 0.3f), b.attache)
+                // L'air les berce à peine ; une secousse les fait battre, puis s'apaiser.
+                Espece.BANANIER -> feuillesBananier(x, y, sin(t * 0.8f + ph) * 2f + rafale * 24f * sin(depuisRafale * 2f * PI.toFloat() * 1.4f))
+                // Ses feuilles frémissent chacune à son rythme ; une secousse les agite toutes.
+                Espece.MASSIF -> massif(x, y, t, rafale * sin(depuisRafale * 2f * PI.toFloat() * 2f))
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
@@ -6089,6 +6114,50 @@ object Paysages {
          * l'aile proche levée ([aile] 1) ou baissée (négatif) ; l'aile
          * lointaine suit, plus courte.
          */
+        /** Les feuilles du bananier de la Grivelière, nées en ([x], [y]), penchées de [penche] degrés, plus au bout. */
+        fun feuillesBananier(x: Float, y: Float, penche: Float) {
+            // Trois grandes feuilles dressées et une feuille sèche qui pend : pas d'éventail,
+            // qui se lirait comme une palme.
+            feuilleBananier(x, y + 3f, 9f, 150f + penche * 0.4f, papier(0xFF9A8A4A.toInt()))
+            feuilleBananier(x, y, 15f, -128f + penche * 0.8f, papier(0xFF5E8E36.toInt()))
+            feuilleBananier(x, y + 1f, 13f, -58f + penche, papier(0xFF6E9E3A.toInt()))
+            feuilleBananier(x, y - 1f, 16f, -96f + penche * 0.9f, papier(0xFF7AAA42.toInt()))
+        }
+
+        /**
+         * Le grand massif de feuilles devant la case de la Grivelière, né en
+         * ([x], [y]) : chaque feuille frémit de quelques degrés à son rythme
+         * selon [t], toutes s'agitent de [secoue] (de -1 à 1) à la secousse.
+         */
+        fun massif(x: Float, y: Float, t: Float, secoue: Float) {
+            val r = Alea(2610)
+            for (k in 0 until 18) {
+                val dx = (r() - 0.5f) * 3f
+                val l = 3f + r() * 2.2f
+                val a = -175f + r() * 170f
+                val col = papier(if (r() < 0.5f) 0xFF4E9A3E.toInt() else 0xFF3A7A34.toInt())
+                feuillePliee(x + dx, y, l, a + sin(t * (1.1f + 0.3f * (k % 4)) + k * 1.3f) * 3f + secoue * 18f, col, 0.45f)
+            }
+        }
+
+        /** La paruline en vol, petite et jaune olive, ailes à [aile] (1 levées), tournée selon [sens]. */
+        fun parulineEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float) {
+            voile = 1f
+            c.save()
+            c.scale(sens * taille * 0.75f, taille * 0.75f, x, y)
+            val plume = duJour(0xFF8C8A3A.toInt())
+            val jaune = duJour(0xFFD8C040.toInt())
+            val cy = y - 1.2f
+            forme("M${x - 0.6f} ${cy}L${x + 0.5f} ${cy}L${x - 0.6f} ${cy - 2.2f * aile}Z", mix(plume, 0xFF000000.toInt(), 0.2f))
+            forme("M${x - 1f} ${cy - 0.2f}L${x - 2.6f} ${cy - 0.4f}L${x - 2.6f} ${cy + 0.4f}L${x - 1f} ${cy + 0.3f}Z", plume)
+            forme("M${x - 1.4f} ${cy}Q${x - 0.4f} ${cy - 0.7f} ${x + 1.2f} ${cy - 0.3f}Q${x + 1.4f} ${cy + 0.4f} ${x}" +
+                " ${cy + 0.55f}Q${x - 1f} ${cy + 0.5f} ${x - 1.4f} ${cy}Z", jaune)
+            rond(x + 1.4f, cy - 0.3f, 0.5f, jaune)
+            forme("M${x + 1.85f} ${cy - 0.35f}L${x + 2.3f} ${cy - 0.2f}L${x + 1.85f} ${cy - 0.05f}Z", duJour(0xFF3A3030.toInt()))
+            forme("M${x - 0.9f} ${cy - 0.1f}L${x + 0.7f} ${cy - 0.1f}L${x - 0.5f} ${cy - 2.8f * aile}Z", plume)
+            c.restore()
+        }
+
         fun tourterelleEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float) {
             voile = 1f
             c.save()
@@ -8533,10 +8602,9 @@ object Paysages {
             barre(92.6f, 33f, 99.8f, 46.8f, 0.22f, bois, 0.3f)
             barre(99.8f, 46.8f, 99.8f, 49.4f, 0.22f, bois, 0f)
             c.restore()
-            // Les bananiers au-dessus du mur, à droite.
-            val banane = papier(0xFF6E9E3A.toInt())
-            pieceD("M98.2 26L99.6 26L99.8 50L98 50Z", papier(0xFF8A8A4A.toInt()), 0.4f)
-            for ((a, l) in arrayOf(-150f to 8f, -118f to 10f, -84f to 9f, -48f to 8f, -170f to 6f)) feuilleBananier(98.9f, 26.4f, l, a, banane)
+            // Le bananier au-dessus du mur, à droite.
+            pieceD("M94.8 26L96.2 26L96.4 50L94.6 50Z", papier(0xFF8A8A4A.toInt()), 0.4f)
+            // Ses feuilles sont une bête (Espece.BANANIER), pour que la carte ouverte les berce.
             plan(2)
             // Devant, tout fuit vers la gauche comme la façade, vers un point de fuite plus lointain
             // (-60, 43) : le mur du jardin, haut et proche au pied de l'escalier, mince au loin, et
@@ -8669,10 +8737,7 @@ object Paysages {
                         papier(if (rc() < 0.5f) 0xFF9A2E3A.toInt() else 0xFF6E2A34.toInt()), 0.3f)
                 }
             }
-            repeat(18) {
-                feuillePliee(72f + (rc() - 0.5f) * 3f, haut(72f) - 0.2f, 3f + rc() * 2.2f, -175f + rc() * 170f,
-                    papier(if (rc() < 0.5f) 0xFF4E9A3E.toInt() else 0xFF3A7A34.toInt()), 0.45f)
-            }
+            // Le grand massif devant la case est une bête (Espece.MASSIF), pour que ses feuilles frémissent.
             // Les deux grosses pierres rondes au pied de l'escalier.
             galet(85.6f, 48.4f, 2.4f, papier(0xFF6E6A66.toInt()))
             galet(89.8f, 49.4f, 1.9f, papier(0xFF7A7672.toInt()))

@@ -248,6 +248,13 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.TRAVERSEE && heure != null -> Petales(zone, graine, Paysages.VOUTE_TRAVERSEE,
                     intArrayOf(Paysages.aLHeure(0xFFB09A3A.toInt(), heure), Paysages.aLHeure(0xFF7A9A3A.toInt(), heure)),
                     sol0 = 48f, sens = 1f, plan = Paysages.MILIEU, chute = 14f, elan = 0.4f, feuille = true, grandeur = 1.3f)
+                // La paruline s'envole et revient sur l'oratoire, le bananier bat, le massif devant la
+                // case s'agite (BetesDuLieu) ; des feuilles se détachent du grand arbre et tombent sur
+                // le jardin et la cour. Au repos, une feuille tombe de temps en temps, seule.
+                enPlans && lieu == Lieu.GRIVELIERE && heure != null -> Petales(zone, graine, Paysages.HOUPPIER_GRIVELIERE,
+                    intArrayOf(Paysages.aLHeure(0xFF6E9A3A.toInt(), heure), Paysages.aLHeure(0xFFB09A3A.toInt(), heure)),
+                    sol0 = 46f, sens = 1f, plan = Paysages.MILIEU, chute = 10f, elan = 0.4f, feuille = true, grandeur = 1.7f,
+                    auRepos = 6f)
                 // Des feuilles mortes que la secousse détache de la voûte.
                 enPlans && lieu == Lieu.ROCHES_GRAVEES && heure != null -> Petales(zone, graine, Paysages.VOUTE_ROCHES,
                     intArrayOf(Paysages.aLHeure(0xFFB08A3A.toInt(), heure), Paysages.aLHeure(0xFF8A9A3A.toInt(), heure)),
@@ -2485,6 +2492,8 @@ private class Bougies(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  */
 private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone, 0) {
     private val atelier = Paysages.Atelier(heure)
+    /** La nuit, la paruline dort : elle n'est pas peinte, elle ne s'envole pas. */
+    private val nuit = heure.nuit
     private val betes = Paysages.BETES[lieu].orEmpty()
     private val cadre = Paysages.cadrage(largeur, hauteur)
     /** Depuis quand chaque bête fuit, en secondes, ou -1 si elle est à sa place. */
@@ -2524,9 +2533,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE, Espece.RATON_FORET -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
-                Espece.LIBELLULE -> rafale[i] = 0f
+                Espece.LIBELLULE, Espece.BANANIER, Espece.MASSIF -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU, Espece.PELICAN -> if (envol[i] < 0f) envol[i] = 0f
+                Espece.PARULINE -> if (envol[i] < 0f && !nuit) envol[i] = 0f
                 Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
                 Espece.BALEINE -> if (saut[i] < 0f) saut[i] = 0f
                 else -> Unit
@@ -3003,7 +3013,8 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
                       private val chute: Float = 0f, private val elan: Float = 1f,
                       private val feuille: Boolean = false, private val envol: Float = 1f,
                       private val grandeur: Float = 1f,
-                      private val surLEau: ((Float, Float) -> Boolean)? = null) : Ambiance(zone, graine) {
+                      private val surLEau: ((Float, Float) -> Boolean)? = null,
+                      private val auRepos: Float = 0f) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 16
     private val x = FloatArray(n)
@@ -3025,25 +3036,42 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
         regardY = y
     }
 
+    /** Le temps avant la prochaine feuille qui tombe d'elle-même, si [auRepos] en fait tomber une de temps en temps. */
+    private var attente = auRepos * 0.5f
+
     override fun secouer(force: Float) {
-        val (x0, x1, y0, y1) = source
         val combien = (5f + force * 8f).toInt()
         var k = 0
         for (i in 0 until n) {
             if (k >= combien) break
             if (pose[i] == -1f) continue
-            x[i] = x0 + hasard() * (x1 - x0)
-            y[i] = y0 + hasard() * (y1 - y0)
-            vx[i] = sens * elan * (5f + hasard() * 7f * force)
-            vy[i] = (-3f - hasard() * 4f * force) * envol
-            sol[i] = sol0 + chute * hasard() + hasard() * 2.4f
-            angle[i] = hasard() * 360f
-            pose[i] = -1f
+            lacher(i, force)
             k++
         }
     }
 
+    /** Détache la feuille [i] de sa source, poussée d'autant plus fort que [force]. */
+    private fun lacher(i: Int, force: Float) {
+        val (x0, x1, y0, y1) = source
+        x[i] = x0 + hasard() * (x1 - x0)
+        y[i] = y0 + hasard() * (y1 - y0)
+        vx[i] = sens * elan * (5f + hasard() * 7f * force)
+        vy[i] = (-3f - hasard() * 4f * force) * envol
+        sol[i] = sol0 + chute * hasard() + hasard() * 2.4f
+        angle[i] = hasard() * 360f
+        pose[i] = -1f
+    }
+
     override fun avancer(dt: Float) {
+        // Au repos, une feuille se détache de temps en temps, seule, sans élan.
+        if (auRepos > 0f) {
+            attente -= dt
+            if (attente <= 0f) {
+                attente = auRepos * (0.6f + 0.8f * hasard())
+                val libre = (0 until n).firstOrNull { pose[it] != -1f }
+                if (libre != null) lacher(libre, 0f)
+            }
+        }
         for (i in 0 until n) {
             when {
                 pose[i] == -1f -> {
