@@ -255,6 +255,12 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     intArrayOf(Paysages.aLHeure(0xFF6E9A3A.toInt(), heure), Paysages.aLHeure(0xFFB09A3A.toInt(), heure)),
                     sol0 = 46f, sens = 1f, plan = Paysages.MILIEU, chute = 10f, elan = 0.4f, feuille = true, grandeur = 1.7f,
                     auRepos = 6f)
+                // L'anoli file derrière sa pierre, l'herbe du glacis ondule (BetesDuLieu) ; des feuilles
+                // se détachent du grand arbre au-dessus du mémorial, une seule de temps en temps au repos.
+                enPlans && lieu == Lieu.FORT_DELGRES && heure != null -> Petales(zone, graine, Paysages.HOUPPIER_FORT,
+                    intArrayOf(Paysages.aLHeure(0xFF5E8A3A.toInt(), heure), Paysages.aLHeure(0xFFB09A3A.toInt(), heure)),
+                    sol0 = 38f, sens = 1f, plan = Paysages.MILIEU, chute = 9f, elan = 0.4f, feuille = true, grandeur = 1.6f,
+                    auRepos = 8f)
                 // Des feuilles mortes que la secousse détache de la voûte.
                 enPlans && lieu == Lieu.ROCHES_GRAVEES && heure != null -> Petales(zone, graine, Paysages.VOUTE_ROCHES,
                     intArrayOf(Paysages.aLHeure(0xFFB08A3A.toInt(), heure), Paysages.aLHeure(0xFF8A9A3A.toInt(), heure)),
@@ -2533,12 +2539,12 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE, Espece.RATON_FORET -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
-                Espece.LIBELLULE, Espece.BANANIER, Espece.MASSIF, Espece.SOURCE -> rafale[i] = 0f
+                Espece.LIBELLULE, Espece.BANANIER, Espece.MASSIF, Espece.SOURCE, Espece.GLACIS -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU, Espece.PELICAN -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.PARULINE -> if (envol[i] < 0f && !nuit) envol[i] = 0f
                 Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
-                Espece.PIC -> if (plongee[i] < 0f && !nuit) plongee[i] = 0f
+                Espece.PIC, Espece.ANOLI -> if (plongee[i] < 0f && !nuit) plongee[i] = 0f
                 Espece.BALEINE -> if (saut[i] < 0f) saut[i] = 0f
                 else -> Unit
             }
@@ -2597,6 +2603,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 val fin = when (b.espece) {
                     Espece.ECREVISSE -> RECUL + SOUS_GALET + RESSORT
                     Espece.PIC -> TOURNE + DERRIERE + GUETTE + TOURNE
+                    Espece.ANOLI -> FILE_ANOLI + DERRIERE + REVIENT_ANOLI
                     else -> PLONGE + AU_FOND + REMONTE
                 }
                 if (plongee[i] > fin) plongee[i] = -1f
@@ -2740,6 +2747,21 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                         c.saveLayerAlpha(b.x - l, b.y - l, b.x + l, b.y + l, (vue * 255f).toInt())
                         atelier.peindre(c, b, geste[i], i)
                         c.restore()
+                    }
+                }
+                plongee[i] >= 0f && b.espece == Espece.ANOLI -> {
+                    // Il file vers l'arrière de sa pierre et bascule derrière son sommet,
+                    // reste caché, puis remonte la tête la première et revient à sa place.
+                    val f = plongee[i]
+                    val u = when {
+                        f < FILE_ANOLI -> f / FILE_ANOLI
+                        f < FILE_ANOLI + DERRIERE -> 1f
+                        else -> 1f - (f - FILE_ANOLI - DERRIERE) / REVIENT_ANOLI
+                    }.coerceIn(0f, 1f)
+                    if (u < 0.98f) {
+                        c.translate(2.4f * u, 0.5f * u)
+                        c.scale(1f, 1f - u, b.x, b.y + 0.4f)
+                        atelier.peindre(c, b, geste[i], i)
                     }
                 }
                 plongee[i] >= 0f && b.espece == Espece.PIC -> {
@@ -2901,6 +2923,9 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val TOURNE = 0.5f
         const val DERRIERE = 3f
         const val GUETTE = 1.4f
+        /** L'anoli du Fort Delgrès : le temps de filer derrière sa pierre, puis d'en revenir. */
+        const val FILE_ANOLI = 0.35f
+        const val REVIENT_ANOLI = 0.9f
         /** L'axe du tronc du pic, à sa droite, en unités de carte. */
         const val PIC_TRONC = 1.2f
         const val SOUS_GALET = 3f

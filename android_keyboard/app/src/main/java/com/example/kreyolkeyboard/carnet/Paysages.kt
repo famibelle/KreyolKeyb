@@ -167,7 +167,12 @@ enum class Espece {
      * [Bete.y] jusqu'à l'eau en [Bete.attache], large de [Bete.taille]. Elle
      * coule et fait des ronds ; une secousse la fait grossir et éclabousser.
      */
-    SOURCE
+    SOURCE,
+    /**
+     * Pas une bête : la frange d'herbe haute et blonde du glacis, au Fort
+     * Delgrès, qui ondule au vent ; une secousse y fait passer une vague.
+     */
+    GLACIS
 }
 
 /**
@@ -1044,6 +1049,9 @@ object Paysages {
     /** Le houppier du grand arbre de la Grivelière, à gauche, d'où la secousse détache des feuilles : x0, x1, y0, y1. */
     internal val HOUPPIER_GRIVELIERE = floatArrayOf(0f, 22f, 6f, 20f)
 
+    /** Le houppier du grand arbre au-dessus du mémorial du Fort Delgrès : x0, x1, y0, y1. */
+    internal val HOUPPIER_FORT = floatArrayOf(30f, 50f, 12f, 28f)
+
     /** La voûte de la forêt des Roches gravées, d'où tombent les feuilles : x0, x1, y0, y1. */
     internal val VOUTE_ROCHES = floatArrayOf(4f, 80f, 6f, 16f)
     internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)
@@ -1125,7 +1133,7 @@ object Paysages {
             Bete(Espece.MASSIF, 72f, 48.4f)),
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1),
             Bete(Espece.SOURCE, 72.33f, 44.41f, taille = 1.6f, attache = 51.51f), Bete(Espece.SOURCE, 77.18f, 43.93f, taille = 0.5f, attache = 53.18f)),
-        Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 88.6f, 52.9f)),
+        Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 88.6f, 52.9f), Bete(Espece.GLACIS, 0f, 0f, plan = 1)),
         Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
     )
 
@@ -5850,6 +5858,7 @@ object Paysages {
                     Espece.BANANIER -> feuillesBananier(x, y, 0f)
                     Espece.MASSIF -> massif(x, y, 0f, 0f)
                     Espece.SOURCE -> source(x, y, b.attache, b.taille, 0f, 0f, -1f)
+                    Espece.GLACIS -> glacis(0f, 0f, -1f)
                 }
                 return@aplat
             }
@@ -6040,6 +6049,8 @@ object Paysages {
                 Espece.MASSIF -> massif(x, y, t, rafale * sin(depuisRafale * 2f * PI.toFloat() * 2f))
                 // L'eau coule et fait des ronds ; une secousse la fait grossir et éclabousser.
                 Espece.SOURCE -> source(x, y, b.attache, b.taille, t + ph, rafale, depuisRafale)
+                // L'herbe haute ondule au vent ; une secousse y fait courir une vague de gauche à droite.
+                Espece.GLACIS -> glacis(t, rafale, depuisRafale)
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
@@ -6176,6 +6187,30 @@ object Paysages {
             if (depuis in 0f..1.2f) for (j in 0 until 6) {
                 val v = (depuis / 0.8f + j * 0.07f).coerceAtMost(1f)
                 if (v < 1f) rond(x + (j - 2.5f) * w0 * 0.9f * v, y1 - 10f * v * (1f - v) * (0.6f + 0.1f * (j % 3)), 0.22f, blanc)
+            }
+        }
+
+        /**
+         * La frange d'herbe haute et blonde du glacis du Fort Delgrès, le long
+         * de son bord ébouriffé : de fins brins qui ondulent selon [t] ; depuis
+         * la secousse ([depuis], -1 sans), une vague de force [vague] les
+         * couche l'un après l'autre de gauche à droite.
+         */
+        fun glacis(t: Float, vague: Float, depuis: Float) {
+            val r = Alea(2812)
+            val cols = intArrayOf(papier(0xFFC8C884.toInt()), papier(0xFF9EAE5A.toInt()), papier(0xFFD4D49A.toInt()))
+            var x = 30f
+            while (x < 69f) {
+                val y = 34.4f + (x + 2f) * 0.06f + sin(x * 0.9f) * 0.5f + 0.6f + r() * 0.8f
+                val h = 1.2f + r() * 1.2f
+                val front = if (depuis >= 0f) depuis * 40f - (x + 2f) else -1f
+                val coup = if (front in 0f..12f) sin(front / 12f * PI.toFloat()) * vague * 2.2f else 0f
+                val l = sin(t * 1.3f - x * 0.15f) * 0.4f + coup + (r() - 0.5f) * 0.4f
+                // Les bêtes se peignent par-dessus toutes les planches : rien derrière le mémorial,
+                // sa tête et ses pierres, seulement entre lui et le bout du glacis.
+                if (x > 38.5f) pieceD("M${x - 0.15f} ${y}Q${x + l * 0.3f} ${y - h * 0.6f} ${x + l} ${y - h}Q${x + l * 0.3f + 0.18f} ${y - h * 0.55f} ${x + 0.15f} ${y}Z",
+                    cols[min((r() * 3f).toInt(), 2)], 0f)
+                x += 0.55f + r() * 0.5f
             }
         }
 
