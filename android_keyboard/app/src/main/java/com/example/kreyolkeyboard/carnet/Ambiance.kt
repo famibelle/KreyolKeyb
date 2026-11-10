@@ -152,7 +152,16 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
             val eau = when {
                 enPlans && lieu == Lieu.SOFAIA -> Douches(zone, graine)
                 enPlans && lieu == Lieu.CHUTES_CARBET -> Cascade(zone, graine)
-                enPlans && lieu == Lieu.SAUT_LEZARDE -> Cascade(zone, graine, Paysages.CHUTE_LEZARDE)
+                // Le filet de la paroi coule aussi ; une secousse fait tomber des feuilles
+                // de la forêt, qui font des ronds dans le bassin.
+                enPlans && lieu == Lieu.SAUT_LEZARDE -> Ensemble(Cascade(zone, graine, Paysages.CHUTE_LEZARDE, penche = Paysages.PENCHE_LEZARDE),
+                    Cascade(zone, graine + 1, Paysages.FILET_LEZARDE),
+                    // Des éclats de lumière sur l'eau claire du bassin, comme sur un lagon.
+                    Reflets(zone, graine + 3, nuit = heure?.nuit == true, eau = Paysages.EAU_LEZARDE, eclatsDuJour = 22,
+                        rive = { y -> Paysages.bordLezarde(y, true) }, devant = { y -> Paysages.bordLezarde(y, false) }),
+                    Petales(zone, graine + 2, Paysages.FORET_LEZARDE, intArrayOf(0xFFF0C838.toInt(), 0xFFE09030.toInt()),
+                        sol0 = 51f, sens = 1f, plan = Paysages.MILIEU, chute = 12f, elan = 0.5f, feuille = true,
+                        grandeur = 1.6f, surLEau = { x, y -> Paysages.dansLeBassinLezarde(x, y) }))
                 enPlans && lieu == Lieu.CASCADE_ECREVISSES -> Cascade(zone, graine, Paysages.CHUTE_ECREVISSES, Paysages.BASSIN_ECREVISSES)
                 enPlans && lieu == Lieu.RAVINE_CHAUDE -> Vapeurs(zone, graine)
                 enPlans && lieu == Lieu.SOUFRIERE -> Vapeurs(zone, graine, Paysages.FUMEE_SOUFRIERE, plan = 3, nappe = null,
@@ -1350,10 +1359,17 @@ private class Douches(zone: RectF, graine: Int) : Ambiance(zone, graine) {
  * gouttes qui retombent dans le bassin.
  */
 private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Paysages.CHUTE_CARBET,
-                      private val bassin: FloatArray? = null) : Ambiance(zone, graine) {
+                      private val bassin: FloatArray? = null, private val rang: Int = Paysages.MILIEU,
+                      /** De combien le pied de la chute est décalé de sa tête, pour une chute qui penche. */
+                      private val penche: Float = 0f) : Ambiance(zone, graine) {
     /** Le bassin rond, s'il y en a un : les ronds qui partent du pied de la chute y restent. */
     private val ovale = bassin?.let { (g, h, d, b) -> Path().apply { addOval(RectF(g, h, d, b), Path.Direction.CW) } }
-    private val cadre = Paysages.cadrage(largeur, hauteur)
+    // Calée comme le calque de son plan, qui déborde de la fenêtre pour pouvoir glisser :
+    // sur le fond, avec le cadrage de la fenêtre seule, le filet de gauche du Saut de la
+    // Lézarde tombait trois unités à côté du filet peint.
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
     private val n = 22
     private val voie = FloatArray(n) { hasard() - 0.5f }
     private val periode = FloatArray(n) { 0.7f + hasard() * 0.5f }
@@ -1380,7 +1396,8 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
     }
 
     override fun secouer(force: Float) {
-        val (x, _, bas, w) = eau
+        val (x0, _, bas, w) = eau
+        val x = x0 + penche
         gerbe = 0f
         forceGerbe = force
         for (k in 0 until gouttes) {
@@ -1407,8 +1424,8 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
         val (x, haut, bas, w) = eau
         val e = cadre[0]
         c.save()
-        c.translate(zone.left + cadre[1] + Paysages.GLISSEMENT[3] * largeur * regardX,
-            zone.top + cadre[2] + Paysages.GLISSEMENT[3] * hauteur * regardY)
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
         c.scale(e, e)
         p.style = Paint.Style.STROKE
         p.strokeCap = Paint.Cap.ROUND
@@ -1420,7 +1437,7 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
             val l = 1.5f + 3.5f * v
             // Dans le rideau peint, qui va de 0,7 à 1,1 fois la largeur.
             val ecart = w * (0.7f + 0.4f * v)
-            val fx = x + voie[i] * ecart * 0.6f
+            val fx = x + penche * v + voie[i] * ecart * 0.6f
             // Fondu à l'entrée (sous la brume) et au pied (dans l'écume).
             val alpha = (minOf(t / 0.15f, (1f - t) / 0.2f, 1f) * 220f).toInt().coerceIn(0, 255)
             // Sur un rideau blanc, une traînée blanche ne se voit pas : deux
@@ -1450,7 +1467,7 @@ private class Cascade(zone: RectF, graine: Int, private val eau: FloatArray = Pa
             // Plafonnée : sous un rideau large, des bouffées à sa mesure faisaient des boules.
             val r = minOf(w, 6f) * (0.25f + 0.4f * t) * bouillon
             p.color = (((1f - t) * 200f).toInt() shl 24) or 0xFFFFFF
-            c.drawCircle(x + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f * bouillon, r, p)
+            c.drawCircle(x + penche + decalage[j] * w * 1.1f, bas - 0.4f - t * 1.6f * bouillon, r, p)
         }
         if (gerbe >= 0f) {
             val a = ((1f - gerbe / GERBE) * 230f).toInt().coerceIn(0, 255)

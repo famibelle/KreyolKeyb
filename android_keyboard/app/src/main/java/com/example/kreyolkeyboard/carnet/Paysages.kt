@@ -136,12 +136,16 @@ enum class Espece {
     BATEAU,
     /** Une abeille minuscule qui butine autour de sa fleur. */
     ABEILLE,
-    /** Pas une bête : une liane qui pend de la voûte, aux Roches gravées, et se balance. */
+    /** Pas une bête : une liane qui pend de la voûte (Roches gravées) ou de la paroi (Saut de la Lézarde), et se balance. */
     LIANE
 }
 
-/** Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille. */
-class Bete(val espece: Espece, val x: Float, val y: Float, val plan: Int = 2, val taille: Float = 1f)
+/**
+ * Une bête d'un lieu : son espèce, sa place dans la boîte 100 × 66, son plan (0 à 2) et sa taille.
+ * Une liane prend aussi la hauteur où elle s'attache ; sans elle, c'est la voûte des Roches gravées.
+ */
+class Bete(val espece: Espece, val x: Float, val y: Float, val plan: Int = 2, val taille: Float = 1f,
+           val attache: Float = Float.NaN)
 
 /**
  * L'heure d'une carte, et sa palette : la rareté fait avancer le jour.
@@ -1011,7 +1015,12 @@ object Paysages {
         Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 20f, 26.6f, plan = 1)),
         Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 40f, 58f, taille = 1.05f), Bete(Espece.ECREVISSE, 58f, 61f, taille = 1.15f),
             Bete(Espece.ECREVISSE, 84f, 56f, taille = 0.95f), Bete(Espece.LIBELLULE, 33f, 43f)),
-        Lieu.SAUT_LEZARDE to listOf(Bete(Espece.LIBELLULE, 44f, 50f, plan = 1)),
+        // Les lianes qui pendent du surplomb dans la cavité ; une secousse les balance.
+        Lieu.SAUT_LEZARDE to listOf(Bete(Espece.LIBELLULE, 22f, 54f, plan = 1)) +
+            listOf(floatArrayOf(5f, 34f, 22.6f), floatArrayOf(15f, 40f, 21.2f), floatArrayOf(19f, 36f, 21f),
+                floatArrayOf(26f, 41f, 21.6f), floatArrayOf(32f, 33f, 23f)).map { (x, y, a) ->
+                Bete(Espece.LIANE, x, y, plan = 1, attache = a)
+            },
         Lieu.GRANDE_VIGIE to listOf(Bete(Espece.BALEINE, 26f, 46f, plan = 1)),
         Lieu.PORTE_ENFER to listOf(Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
         Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 9.6f, 50.6f, taille = 1.5f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
@@ -1412,14 +1421,50 @@ object Paysages {
     /** La chute du Carbet, sur le plan du milieu : son x, son haut, son pied et sa largeur. */
     internal val CHUTE_CARBET = floatArrayOf(80f, 12f, 47f, 4.6f)
 
-    /** La chute du Saut de la Lézarde, à droite du mot, sur le plan du milieu : x, haut, bas, largeur. */
     /** La Cascade aux Écrevisses, son rideau large à droite du mot, sur le plan du milieu : x, haut, bas, largeur. */
     internal val CHUTE_ECREVISSES = floatArrayOf(76f, 16.4f, 47.2f, 10f)
 
     /** Le bassin rond de la Cascade aux Écrevisses, où tombe la chute : gauche, haut, droite, bas. */
     internal val BASSIN_ECREVISSES = floatArrayOf(22f, 45f, 98f, 64f)
 
-    internal val CHUTE_LEZARDE = floatArrayOf(86f, 17f, 39.4f, 6f)
+    /**
+     * La chute du Saut de la Lézarde, à droite du mot, sur le plan du milieu : x en haut, haut,
+     * bas, largeur. Elle penche : son pied est [PENCHE_LEZARDE] plus à gauche que sa tête.
+     */
+    internal val CHUTE_LEZARDE = floatArrayOf(83f, 2f, 49f, 12f)
+    internal const val PENCHE_LEZARDE = -7f
+
+    /** Le mince filet d'eau du Saut de la Lézarde, au bord droit de la cavité, sur le plan du milieu : x, haut, bas, largeur. */
+    internal val FILET_LEZARDE = floatArrayOf(36.4f, 22f, 42f, 1.4f)
+
+    /** La végétation au-dessus de la cavité du Saut de la Lézarde, d'où une secousse fait tomber des feuilles : x0, x1, y0, y1. */
+    internal val FORET_LEZARDE = floatArrayOf(0f, 30f, 18f, 26f)
+
+    /**
+     * Le bassin du Saut de la Lézarde, le haut d'un grand ovale qui file sous la fenêtre : gauche,
+     * haut, droite, bas. Entier dans la fenêtre, il faisait flaque (propriétaire, 2026-11-10).
+     */
+    internal val BASSIN_LEZARDE = floatArrayOf(-30f, 47f, 116f, 92f)
+
+    /** Le bassin du Saut de la Lézarde, où l'eau scintille : x0, x1, y0, y1, bornés par l'ovale ([bordLezarde]). */
+    internal val EAU_LEZARDE = floatArrayOf(-2f, 92f, 48f, 64f)
+
+    /** Le bord de l'eau du Saut de la Lézarde à la hauteur [y] : à gauche si [gauche], sinon à droite ; au milieu hors de l'ovale. */
+    internal fun bordLezarde(y: Float, gauche: Boolean): Float {
+        val (g, h, d, b) = BASSIN_LEZARDE
+        val v = (y - (h + b) / 2f) / ((b - h) / 2f)
+        val demi = if (abs(v) >= 1f) 0f else (d - g) / 2f * sqrt(1f - v * v)
+        return (g + d) / 2f + if (gauche) -demi + 1f else demi - 1f
+    }
+
+    /** Si ([x], [y]) est sur l'eau du bassin ovale du Saut de la Lézarde, à [marge] près (positive : un peu au-delà du bord). */
+    internal fun dansLeBassinLezarde(x: Float, y: Float, marge: Float = 0f): Boolean {
+        val (g, h, d, b) = BASSIN_LEZARDE
+        val u = (x - (g + d) / 2f) / ((d - g) / 2f + marge)
+        val v = (y - (h + b) / 2f) / ((b - h) / 2f + marge)
+        return u * u + v * v < 1f
+    }
+
     fun dessiner(c: Canvas, lieu: Lieu, heure: Heure, ciel: Boolean = true, lieuAussi: Boolean = true,
                  seul: Int = -1, faune: Boolean = true, etoiles: Boolean = true,
                  facture: Facture = Facture.VIGNETTE, echelle: Float = 1f, releve: Canvas? = null) {
@@ -4519,13 +4564,17 @@ object Paysages {
         private val etapeLibellule = 0.55f
         private val vouteRoches = brisee(-2f, 14f, 20f, 18f, 40f, 12f, 60f, 16f, 80f, 10f, 102f, 13f)
 
-        /** Une liane des Roches gravées, de la voûte jusqu'à ([lx], [ly]), balancée de [angle] degrés autour de son attache. */
-        fun liane(lx: Float, ly: Float, angle: Float) {
-            val haut = vouteRoches(lx)
+        /**
+         * Une liane, de son attache jusqu'à ([lx], [ly]), balancée de [angle] degrés autour de
+         * l'attache. Sans attache donnée, elle pend de la voûte des Roches gravées ; sur la
+         * roche sombre du Saut de la Lézarde elle est plus claire, sinon elle s'y perd.
+         */
+        fun liane(lx: Float, ly: Float, angle: Float, attache: Float = Float.NaN) {
+            val haut = if (attache.isNaN()) vouteRoches(lx) else attache
             c.save()
             c.rotate(angle, lx, haut)
             pieceD("M$lx ${haut}Q${lx + 1.6f} ${(haut + ly) / 2f} $lx ${ly}L${lx + 0.35f} ${ly}Q${lx + 1.95f} ${(haut + ly) / 2f} ${lx + 0.35f} ${haut}Z",
-                papier(0xFF4E5A34.toInt()), 0f)
+                papier(if (attache.isNaN()) 0xFF4E5A34.toInt() else 0xFF7A8C4A.toInt()), 0f)
             c.restore()
         }
 
@@ -5417,7 +5466,7 @@ object Paysages {
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
-                    Espece.LIANE -> liane(x, y, 0f)
+                    Espece.LIANE -> liane(x, y, 0f, b.attache)
                 }
                 return@aplat
             }
@@ -5555,7 +5604,7 @@ object Paysages {
                     b.espece == Espece.FLEURS, b.taille)
                 // Elle se balance à peine dans l'air de la forêt ; une secousse
                 // la fait osciller, de moins en moins.
-                Espece.LIANE -> liane(x, y, sin(t * 0.7f + ph) * 1.5f + rafale * 12f * sin(depuisRafale * 3.4f + ph * 0.3f))
+                Espece.LIANE -> liane(x, y, sin(t * 0.7f + ph) * 1.5f + rafale * 12f * sin(depuisRafale * 3.4f + ph * 0.3f), b.attache)
                 // Elle zigzague autour de sa fleur en vrombissant ; une
                 // secousse l'égaille loin, puis elle revient butiner. La nuit
                 // elle est à la ruche.
@@ -6574,93 +6623,168 @@ object Paysages {
         }
 
         /**
-         * Le Saut de la Lézarde en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08) : au fond, la paroi de roche sombre sous la
-         * forêt, ses lianes qui pendent, un mince filet d'eau à gauche et sa
-         * dalle rousse au pied ; la chute à droite du mot, qui tombe dans le
-         * bassin vert ; la dalle moussue à gauche, les rapides blancs qui
-         * sortent du bassin en bas à gauche, les gros rochers moussus et le
-         * gué de galets à droite. La chute tombe sur la carte ouverte
-         * (`Cascade`), la libellule passe sur le bassin, le colibri visite les
-         * balisiers.
+         * Le Saut de la Lézarde en papier découpé, au plus près de la photo du
+         * propriétaire (2026-11-10) : à gauche la cavité noire sous un surplomb
+         * couvert de végétation, ses grandes feuilles et ses lianes qui pendent,
+         * la dalle rousse à son pied et le mince filet qui coule sur sa droite ;
+         * au milieu la colonne de roche moussue ; à droite la grande chute qui
+         * penche et s'élargit sur la roche sombre, sa brume et son écume, la
+         * paroi brune et moussue, un rocher moussu devant ; en bas le bassin
+         * vert émeraude, plus clair près de la chute, rayé d'écume. La chute
+         * tombe sur la carte ouverte (`Cascade`), la libellule passe sur le
+         * bassin, le colibri visite les balisiers.
          */
         fun sautLezardePapier() {
-            // La forêt au-dessus de la paroi.
-            morneBoise(4f, 2f, 1801, papier(0xFF3E7A36.toInt()), 3f)
-            morneBoise(9f, 1.6f, 1802, papier(0xFF2A5A2C.toInt()), 2.6f)
-            // La paroi sombre, ses strates, ses lianes, le filet d'eau de gauche.
-            val paroi = brisee(-2f, 14f, 20f, 12.4f, 40f, 15f, 60f, 14.6f, 80f, 12f, 102f, 11f)
-            val mur = sousLaCrete(-2f, 102f, paroi)
-            mur.op(chemin("M-2 0L104 0L104 40L-2 40Z"), Path.Op.INTERSECT)
-            piece(mur, papier(0xFF3A3430.toInt()))
-            for ((y, col) in arrayOf(22f to 0xFF4A423C, 29f to 0xFF2E2A28, 34f to 0xFF443C36))
-                pieceD("M-2 ${y}Q30 ${y - 1.2f} 60 ${y + 0.4f}Q80 ${y + 1f} 102 ${y - 0.6f}L102 ${y + 1.4f}Q70 ${y + 2f} 40 ${y + 1f}Q20 ${y + 0.6f} -2 ${y + 1.6f}Z",
-                    papier(col.toInt()), 0f)
-            val rl = Alea(1803)
-            val liane = papier(0xFF5A6A3A.toInt())
-            repeat(16) {
-                val x = 2f + rl() * 70f
-                barre(x, paroi(x) + 1f, x + (rl() - 0.5f) * 0.6f, paroi(x) + 6f + rl() * 14f, 0.16f + rl() * 0.12f, liane, 0f)
-            }
-            val feuilles = intArrayOf(papier(0xFF4E9A3E.toInt()), papier(0xFF6AB04A.toInt()), papier(0xFF3A7A34.toInt()))
-            repeat(26) {
-                val x = -2f + rl() * 104f
-                feuillePliee(x, paroi(x) + rl() * 4f, 2.4f + rl() * 1.6f, 30f + rl() * 120f, feuilles[min((rl() * 3f).toInt(), 2)], 0.45f)
-            }
-            filets(9f, 15f, 33f, 1.6f, 1804)
-            pieceD("M-2 35.4Q30 34 60 35.6Q80 36.4 102 35.6L102 39L-2 39Z", papier(0xFF8A4E3A.toInt()), 0.4f)
-            pieceD("M-2 35.4Q30 34 60 35.6Q80 36.4 102 35.6L102 36.4Q70 37 40 36Q20 35.4 -2 36.4Z", papier(0xFFA86A50.toInt()), 0f)
+            // La forêt du haut.
+            morneBoise(-1f, 2f, 1801, papier(0xFF1E4626.toInt()), 3.2f)
             plan(1)
-            // La roche de la chute, à droite, coiffée de forêt.
-            val roche = brisee(74f, 40f, 76f, 22f, 80f, 15.6f, 88f, 14.6f, 96f, 13.4f, 102f, 13f)
-            val pan = sousLaCrete(74f, 102f, roche)
-            pan.op(bosses(76f, 103f, { x -> roche(x) + 0.3f }, 1.4f, 2.2f, Alea(1805)), Path.Op.UNION)
-            pan.op(chemin("M70 0L104 0L104 40L70 40Z"), Path.Op.INTERSECT)
-            piece(pan, papier(0xFF2E2A28.toInt()))
-            pieceD("M77 40L78 24Q80 18 84 17.4L84 40Z", papier(0xFF443C36.toInt()), 0f)
-            pieceD("M91 40L90 17.6Q95 16.4 99 18L100 40Z", papier(0xFF3A3430.toInt()), 0f)
-            mousses(76f, 101f, 18f, 38f, 8, 1806)
+            // La roche, d'un bord à l'autre : la paroi sombre, plus brune à droite où le jour la touche.
+            pieceD("M-2 6L104 6L104 58L92 56Q90 52 88 50L-2 50Z", papier(0xFF3A322C.toInt()), 0.4f)
+            pieceD("M86 10Q92 8 104 9L104 58L92 56Q88 50 89 40Q88 24 86 10Z", papier(0xFF6A5442.toInt()), 0.4f)
+            taches(88f, 104f, 54f, 14, 1802, papier(0xFF5E8A34.toInt())) { 12f }
+            taches(88f, 104f, 54f, 6, 1810, papier(0xFF8CB848.toInt())) { 16f }
+            // La colonne de roche du milieu, ses plaques de mousse.
+            pieceD("M38 50L39 30Q40 18 46 12L60 8L64 50Z", papier(0xFF443A32.toInt()), 0.3f)
+            taches(40f, 62f, 40f, 10, 1803, papier(0xFF4E7A2E.toInt())) { 14f }
+            // La roche sombre derrière la chute.
+            pieceD("M62 50L63 10Q70 2 80 0L90 0L88 20Q86 36 88 50Z", papier(0xFF2E2A28.toInt()), 0.3f)
+            // La cavité sous le surplomb, typique du lieu : un creux noir, plus noir sous la voûte.
+            // Son sol suit la courbe du bassin (propriétaire, 2026-11-10) : voir plus bas.
+            val creux = "M-2 22Q14 18.6 28 21Q36 22.6 38.6 28Q40 36 40 44L40 52L-2 52Z"
+            pieceD(creux, papier(0xFF1A1614.toInt()), 0.5f)
+            pieceD("M-2 22Q14 18.6 28 21Q36 22.6 38.6 28L37.6 30Q34 25 26 24Q12 22.4 -2 25Z", papier(0xFF0E0C0B.toInt()), 0f)
+            // Le surplomb : sa roche, la végétation qui le couvre et retombe sur son bord.
+            pieceD("M-2 6L40 6Q42 14 40 24Q38 22 34 21Q24 18.4 12 18.6Q4 19 -2 20Z", papier(0xFF4E4238.toInt()), 0.4f)
+            val verts = intArrayOf(papier(0xFF2E6A2A.toInt()), papier(0xFF3E8A34.toInt()), papier(0xFF5AA640.toInt()), papier(0xFF8CC43A.toInt()))
+            val rv = Alea(1804)
+            for (k in 0 until 46) {
+                val fx = -2f + rv() * 66f
+                val fy = 3f + rv() * 15f
+                val col = verts[min((rv() * 4f).toInt(), 3)]
+                if (rv() < 0.4f) feuilleBananier(fx, fy, 4.4f + rv() * 2.6f, 40f + rv() * 100f, col)
+                else feuilleCoeur(fx, fy, 1.6f + rv() * 1.2f, -40f + rv() * 80f, col)
+            }
+            taches(-2f, 38f, 22f, 12, 1805, papier(0xFF4E8A2E.toInt())) { x -> 17.4f + x * 0.04f }
+            // Les grandes feuilles qui pendent devant le haut de la cavité.
+            for ((fx, fy, fl, fa) in arrayOf(floatArrayOf(8f, 18f, 7f, 110f), floatArrayOf(14f, 20f, 6f, 70f), floatArrayOf(20f, 18.6f, 7f, 100f),
+                    floatArrayOf(11f, 24f, 5f, 80f), floatArrayOf(4f, 22f, 5f, 120f)))
+                feuilleBananier(fx, fy, fl, fa, papier(0xFF6AB04A.toInt()))
+            // La végétation en haut à droite, au-dessus de la paroi brune.
+            for (k in 0 until 18) {
+                val fx = 86f + rv() * 18f
+                val fy = 2f + rv() * 14f
+                feuilleCoeur(fx, fy, 1.6f + rv() * 1.2f, -30f + rv() * 60f, verts[min((rv() * 4f).toInt(), 3)])
+            }
+            // Le mince filet, au bord droit de la cavité.
+            filets(FILET_LEZARDE[0], FILET_LEZARDE[1], FILET_LEZARDE[2], FILET_LEZARDE[3], 1806)
+            // Le bassin, le haut d'un grand ovale qui file sous le bas de la fenêtre : on n'en voit que
+            // le bord du fond, en courbe douce (entier, il faisait flaque, propriétaire 2026-11-10).
+            // Le sol de la cavité et la dalle rousse suivent cette courbe, en bandes concentriques.
+            val (lg, lh, ld, lb) = BASSIN_LEZARDE
+            val ovale = { m: Float, dy: Float -> Path().apply { addOval(RectF(lg - m, lh - m + dy, ld + m, lb + m + dy), Path.Direction.CW) } }
+            val dans = { t: Path -> t.apply { op(ovale(0f, 0f), Path.Op.INTERSECT) } }
+            val gauche = chemin("M-4 30L41 30L41 70L-4 70Z")
+            val droite = chemin("M41 30L106 30L106 70L41 70Z")
+            // Le sol de la cavité, dans l'ombre, puis la dalle rousse qui descend jusqu'à l'eau.
+            piece(ovale(7.6f, 0f).apply { op(ovale(5f, 0f), Path.Op.DIFFERENCE); op(gauche, Path.Op.INTERSECT) }, papier(0xFF2A221E.toInt()), 0f)
+            piece(ovale(5f, 0f).apply { op(ovale(0f, 0f), Path.Op.DIFFERENCE); op(chemin("M-4 30L49 30L49 70L-4 70Z"), Path.Op.INTERSECT) },
+                papier(0xFF7A4434.toInt()), 0.4f)
+            piece(ovale(5f, 0f).apply { op(ovale(5f, 1.2f), Path.Op.DIFFERENCE); op(chemin("M-4 30L49 30L49 70L-4 70Z"), Path.Op.INTERSECT) },
+                papier(0xFF9A5A44.toInt()), 0f)
+            // À droite, le pied mouillé de la paroi, autour de la chute.
+            piece(ovale(5f, 0f).apply { op(ovale(0f, 0f), Path.Op.DIFFERENCE); op(chemin("M49 30L106 30L106 70L49 70Z"), Path.Op.INTERSECT) },
+                papier(0xFF2E2622.toInt()), 0.3f)
+            bloc(42f, 45.2f, 4.6f, 3f, papier(0xFF7E4636.toInt()), papier(0xFF5E7A34.toInt()))
+            bloc(50f, 46.2f, 3.6f, 2.2f, papier(0xFF6A3E30.toInt()), papier(0xFF5E7A34.toInt()))
+            // La grande chute qui penche, et sa brume.
             val (cx, ch, cb, cw) = CHUTE_LEZARDE
-            filets(cx, ch, cb, cw, 1807)
-            // Le bassin vert, ses lanières, l'écume au pied de la chute.
-            pieceD("M-2 38.6L102 38.6L102 54L-2 54Z", papier(0xFF2E7A6E.toInt()), 0.3f)
-            lanieresMer(39.2f, 52f, 1808, intArrayOf(papier(0xFF3E8A7C.toInt()), papier(0xFF266A62.toInt()), papier(0xFF5AA090.toInt())))
-            for ((ex, ey, el) in arrayOf(Triple(80f, 40f, 9f), Triple(83f, 41.4f, 6f)))
-                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.8f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.5f} $ex ${ey}Z", blanc(), 0f)
-            // La dalle moussue de gauche.
-            pieceD("M-2 37.6Q14 36.6 26 38.6Q34 40 36 44Q30 48 20 49.4Q8 50.6 -2 51Z", papier(0xFF2E2A26.toInt()), 0.6f)
-            pieceD("M-2 37Q14 36 26 38Q33 39.4 35 43Q24 42.4 12 43Q4 43.4 -2 44Z", papier(0xFF6A9A36.toInt()), 0.5f)
-            taches(-2f, 34f, 43f, 10, 1809, papier(0xFF8CB848.toInt())) { x -> 37f + x * 0.05f }
-            plan(2)
-            // Les rapides blancs qui sortent du bassin, en bas à gauche.
-            pieceD("M-2 52Q20 50 40 53L44 68L-2 68Z", papier(0xFF3E7A74.toInt()), 0.3f)
-            val rr = Alea(1810)
-            var y = 53f
-            while (y < 67f) {
-                var x = -2f + rr() * 3f
-                while (x < 40f + (y - 53f) * 0.3f) {
-                    val l = 3f + rr() * 6f; val e = 0.4f + rr() * 0.5f
-                    piece(Path().apply { addRoundRect(RectF(x, y, x + l, y + e), e / 2f, e / 2f, Path.Direction.CW) },
-                        if (rr() < 0.6f) blanc() else papier(0xFFB8DCD6.toInt()), 0.2f)
-                    x += l + 0.6f + rr() * 2f
+            rideau(cx, cx + PENCHE_LEZARDE, ch, cb, cw * 0.55f, cw * 1.9f, 1807)
+            // L'eau, vert émeraude, translucide sur plusieurs mètres mais trop profonde pour qu'on en
+            // voie le fond (pas de sable) : la dalle rousse continue sous la surface et s'efface,
+            // des rais de lumière plongent et se perdent ; plus claire près de la chute.
+            piece(ovale(1.2f, 0f).apply { op(ovale(0f, 0f), Path.Op.DIFFERENCE) }, papier(0xFF241E1A.toInt()), 0.2f)
+            piece(ovale(0f, 0f), papier(0xFF0A4A42.toInt()), 0f)
+            forme(ovale(0f, 0f).apply { op(ovale(0f, 14f), Path.Op.DIFFERENCE) }, papier(0xFF16806E.toInt()), 0.7f)
+            forme(ovale(0f, 0f).apply { op(ovale(0f, 6f), Path.Op.DIFFERENCE) }, papier(0xFF26A08A.toInt()), 0.55f)
+            forme(ovale(0f, 0f).apply { op(ovale(-2f, 4.6f), Path.Op.DIFFERENCE); op(gauche, Path.Op.INTERSECT) }, papier(0xFF8A4C3A.toInt()), 0.55f)
+            forme(ovale(-2f, 4.6f).apply { op(ovale(-4f, 9f), Path.Op.DIFFERENCE); op(gauche, Path.Op.INTERSECT) }, papier(0xFF7A4434.toInt()), 0.3f)
+            // À droite, c'est le pied sombre de la paroi qui plonge : sans lui, une couture au milieu de l'eau.
+            forme(ovale(0f, 0f).apply { op(ovale(-2f, 4.6f), Path.Op.DIFFERENCE); op(droite, Path.Op.INTERSECT) }, papier(0xFF2E2622.toInt()), 0.45f)
+            forme(ovale(-2f, 4.6f).apply { op(ovale(-4f, 9f), Path.Op.DIFFERENCE); op(droite, Path.Op.INTERSECT) }, papier(0xFF2E2622.toInt()), 0.25f)
+            if (!P.nuit) for ((rx, rw) in arrayOf(6f to 3f, 16f to 2f, 28f to 3.4f, 52f to 2.4f, 66f to 3f)) {
+                forme(dans(chemin("M$rx 46L${rx + rw} 46L${rx + rw + 4f} 68L${rx + 2.6f} 68Z")), papier(0xFF8CE0CC.toInt()), 0.14f)
+            }
+            forme(dans(Path().apply { addOval(RectF(48f, 44f, 104f, 62f), Path.Direction.CW) }), papier(0xFF4AB8A4.toInt()), 0.4f)
+            // L'ombre de la roche sur l'eau, le long du bord du fond.
+            forme(ovale(0f, 0f).apply { op(ovale(0f, 2f), Path.Op.DIFFERENCE) }, papier(0xFF0E3A30.toInt()), 0.4f)
+            val re = Alea(1808)
+            if (actif) {
+                c.save()
+                c.clipPath(ovale(0f, 0f))
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 0.22f
+                for ((ry, rx0, rl) in arrayOf(Triple(55f, 4f, 20f), Triple(58f, 30f, 18f), Triple(61.6f, 8f, 16f),
+                        Triple(64.6f, 40f, 22f), Triple(57f, 58f, 16f), Triple(62f, 70f, 18f))) {
+                    val ond = StringBuilder("M$rx0 $ry")
+                    var k = 1
+                    while (k <= 6) { ond.append("Q${rx0 + rl * (k - 0.5f) / 6f} ${ry + if (k % 2 == 0) 0.4f else -0.4f} ${rx0 + rl * k / 6f} $ry"); k++ }
+                    teinte(0xFFFFFFFF.toInt(), if (P.nuit) 0.12f else 0.4f)
+                    c.drawPath(chemin(ond.toString()), p)
                 }
-                y += 1f + rr() * 0.6f
+                // Le bord de l'eau, un liseré clair le long de la roche.
+                p.strokeWidth = 0.45f
+                teinte(0xFFD8F0E4.toInt(), if (P.nuit) 0.12f else 0.5f)
+                c.drawOval(RectF(lg + 0.3f, lh + 0.3f, ld - 0.3f, lb - 0.3f), p)
+                p.style = Paint.Style.FILL
+                c.restore()
             }
-            // Le gué clair à droite, ses galets, les gros rochers moussus.
-            pieceD("M44 53Q70 51.6 102 52.4L102 68L48 68Z", papier(0xFF6A8A70.toInt()), 0.3f)
-            repeat(40) {
-                galet(48f + rr() * 54f, 54f + rr() * 13f, 0.6f + rr() * 0.8f, papier(if (rr() < 0.5f) 0xFF8A7E6A.toInt() else 0xFF6E6658.toInt()))
+            repeat(12) {
+                val ey = 51f + re() * 13f
+                val ex = 2f + re() * 86f
+                val el = 3f + re() * 8f
+                if (dansLeBassinLezarde(ex, ey, -1f) && dansLeBassinLezarde(ex + el, ey, -1f))
+                    forme(chemin("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.5f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.3f} $ex ${ey}Z"), blanc(), 0.45f + re() * 0.3f)
             }
-            val pierre = papier(0xFF8A8072.toInt()); val mousse = papier(0xFF6E9A3A.toInt())
-            bloc(60f, 56f, 6f, 3.4f, papier(0xFF7A7064.toInt()), mousse)
-            bloc(74f, 59f, 8f, 4.4f, pierre, mousse)
-            bloc(90f, 56.6f, 6f, 3.6f, papier(0xFF948A7C.toInt()), mousse)
-            bloc(84f, 64.6f, 9f, 4.6f, papier(0xFF7E7468.toInt()), mousse)
-            // Le bois flotté, à droite.
-            barre(88f, 50.6f, 102f, 52.6f, 0.9f, papier(0xFFA89A84.toInt()), 0.4f)
-            barre(94f, 51.4f, 98f, 48.6f, 0.4f, papier(0xFFA89A84.toInt()), 0.2f)
-            balisier(9f, 62f, 14f, feuille())
-            balisier(96f, 62f, 13f, feuille())
+            // L'écume au pied de la chute, et la brume qui s'en élève.
+            val pied = cx + PENCHE_LEZARDE
+            forme(Path().apply { addOval(RectF(pied - 18f, cb - 6f, pied + 14f, cb + 7f), Path.Direction.CW) }, blanc(), 0.35f)
+            for ((ex, ey, er) in arrayOf(Triple(pied - 9f, cb + 0.6f, 4f), Triple(pied - 3f, cb, 4.6f), Triple(pied + 4f, cb + 0.4f, 4f),
+                    Triple(pied - 6f, cb + 2.4f, 3.6f), Triple(pied + 1f, cb + 2.8f, 4f), Triple(pied - 13f, cb + 2f, 3f)))
+                forme(Path().apply { addOval(RectF(ex - er, ey - er * 0.42f, ex + er, ey + er * 0.42f), Path.Direction.CW) }, blanc(), 0.8f)
+            balisier(5f, 48f, 10f, feuille())
+            plan(2)
+            // Le rocher moussu devant, à droite.
+            bloc(102f, 61f, 9f, 8f, papier(0xFF5E5A50.toInt()), papier(0xFF6A9A36.toInt()))
+            taches(93f, 104f, 68f, 7, 1809, papier(0xFF7AAA3A.toInt())) { 55f }
+            balisier(97f, 56f, 11f, feuille())
+        }
+
+        /**
+         * Une chute qui penche : sa tête en [xh], large de [wh], son pied en [xb], large de [wb].
+         * Un voile continu, puis des filets qui s'écartent en descendant.
+         */
+        private fun rideau(xh: Float, xb: Float, haut: Float, bas: Float, wh: Float, wb: Float, graine: Int) {
+            val r = Alea(graine)
+            val my = (haut + bas) / 2f
+            forme(chemin("M${xh - wh / 2f} ${haut}L${xh + wh / 2f} ${haut}Q${xh + wh / 2f + 1f} $my ${xb + wb / 2f} ${bas}" +
+                "L${xb - wb / 2f} ${bas}Q${xh - wh} $my ${xh - wh / 2f} ${haut}Z"), papier(0xFFDDEDEE.toInt()), 0.8f)
+            val n = 18
+            for (k in 0 until n) {
+                val u = (k + 0.5f) / n - 0.5f
+                val x0 = xh + u * wh * 0.9f + (r() - 0.5f) * 0.3f
+                val x1 = xb + u * wb * 0.95f + (r() - 0.5f) * 0.8f
+                val e0 = wh / n * (0.6f + r() * 0.5f)
+                val e1 = wb / n * (0.6f + r() * 0.6f)
+                val y0 = haut + r() * (bas - haut) * 0.15f
+                val mx = x0 + (x1 - x0) * 0.3f
+                val t = Path()
+                t.moveTo(x0 - e0 / 2f, y0)
+                t.quadTo(mx - (e0 + e1) / 4f, my, x1 - e1 / 2f, bas)
+                t.lineTo(x1 + e1 / 2f, bas)
+                t.quadTo(mx + (e0 + e1) / 4f, my, x0 + e0 / 2f, y0)
+                t.close()
+                piece(t, if (k % 3 == 1) papier(0xFFCFE6EA.toInt()) else papier(0xFFF4F8F8.toInt()), 0.3f)
+            }
         }
 
         /** Le Saut de la Lézarde : la gorge étroite, la chute droite, le bassin sombre, les lianes. */
