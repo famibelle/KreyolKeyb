@@ -163,9 +163,20 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     devant = { y -> if (y < Paysages.FEUILLAGE_GRANDE_ANSE[0]) 102f else Paysages.FEUILLAGE_GRANDE_ANSE[1] }),
                     Ecume(zone, graine))
                 // Un lac au calme : peu d'éclats, entre ses deux rives de forêt.
-                enPlans && lieu == Lieu.GRAND_ETANG -> Reflets(zone, graine, nuit = heure?.nuit == true,
-                    eau = Paysages.EAU_ETANG, eclatsDuJour = 14,
-                    rive = { y -> Paysages.etangVuGauche(y) + 1.5f }, devant = { y -> Paysages.etangVuDroite(y) - 1.5f })
+                // Une secousse fait tomber des feuilles des lisières, qui font des ronds sur l'eau,
+                // et lève les garde-bœufs de la canopée, le jour.
+                enPlans && lieu == Lieu.GRAND_ETANG -> {
+                    val eau = { x: Float, y: Float -> x > Paysages.etangVuGauche(y) && x < Paysages.etangVuDroite(y) }
+                    val feuilles = intArrayOf(0xFFF0C838.toInt(), 0xFFE09030.toInt())
+                    Ensemble(Reflets(zone, graine, nuit = heure?.nuit == true,
+                        eau = Paysages.EAU_ETANG, eclatsDuJour = 14,
+                        rive = { y -> Paysages.etangVuGauche(y) + 1.5f }, devant = { y -> Paysages.etangVuDroite(y) - 1.5f }),
+                        Petales(zone, graine + 1, Paysages.LISIERE_ETANG_GAUCHE, feuilles, sol0 = 46f, sens = 1f,
+                            plan = Paysages.MILIEU, chute = 10f, elan = 0.6f, feuille = true, grandeur = 1.6f, surLEau = eau),
+                        Petales(zone, graine + 2, Paysages.LISIERE_ETANG_DROITE, feuilles, sol0 = 38f, sens = -1f,
+                            plan = Paysages.MILIEU, chute = 9f, elan = 0.6f, feuille = true, grandeur = 1.6f, surLEau = eau),
+                        if (heure?.nuit == true) Ensemble() else GardeBoeufs(zone, graine + 3))
+                }
                 enPlans && lieu == Lieu.LES_SAINTES -> Reflets(zone, graine, nuit = heure?.nuit == true,
                     eau = Paysages.EAU_SAINTES, eclatsDuJour = 24)
                 enPlans && lieu == Lieu.BAINS_JAUNES -> Vapeurs(zone, graine, Paysages.VAPEURS_BAINS, plan = 3,
@@ -907,6 +918,138 @@ private class Oiseaux(zone: RectF, graine: Int) : Ambiance(zone, graine) {
 
     private companion object {
         const val COULEUR = 0xE6FFFFFF.toInt()
+    }
+}
+
+/**
+ * Les hérons garde-bœufs qui se tiennent dans la canopée du Grand Étang,
+ * qu'une secousse fait lever (propriétaire, 2026-11-10) : ils jaillissent des
+ * cimes ([Paysages.DORTOIR_ETANG]) l'un après l'autre, montent d'abord
+ * presque droit, puis filent vers le bord de la fenêtre de leur côté, d'un
+ * battement continu, sans planer, comme ceux du carême. Ils ne reviennent
+ * pas ; la canopée en cache d'autres pour la secousse suivante.
+ */
+private class GardeBoeufs(zone: RectF, graine: Int) : Ambiance(zone, graine) {
+    private val cadre = Paysages.cadrage(largeur, hauteur)
+    private val n = Paysages.DORTOIR_ETANG.size / 2
+    private val x = FloatArray(n)
+    private val y = FloatArray(n)
+    private val vx = FloatArray(n)
+    private val vy = FloatArray(n)
+    private val retard = FloatArray(n)
+    private val phase = FloatArray(n)
+    /** Depuis quand chaque oiseau a pris peur, retard compris, ou -1 s'il est dans les cimes. */
+    private val age = FloatArray(n) { -1f }
+    private val chemin = Path()
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        val combien = (4f + force * 4f).toInt()
+        var k = 0
+        for (i in 0 until n) {
+            if (k >= combien) break
+            if (age[i] >= 0f) continue
+            x[i] = Paysages.DORTOIR_ETANG[2 * i] + (hasard() - 0.5f) * 3f
+            y[i] = Paysages.DORTOIR_ETANG[2 * i + 1] + (hasard() - 0.5f) * 1.5f
+            val cote = if (x[i] < 50f) -1f else 1f
+            vx[i] = cote * (2f + hasard() * 2f)
+            vy[i] = -8f - hasard() * 3f
+            retard[i] = hasard() * 0.8f
+            phase[i] = hasard() * 6.28f
+            age[i] = 0f
+            k++
+        }
+    }
+
+    override fun avancer(dt: Float) {
+        for (i in 0 until n) {
+            if (age[i] < 0f) continue
+            age[i] += dt
+            if (age[i] < retard[i]) continue
+            // L'élan du départ retombe en une montée douce, et il prend de la vitesse vers son bord.
+            vy[i] += (-2.5f - vy[i]) * 1.4f * dt
+            vx[i] = (vx[i] * (1f + 1.2f * dt)).coerceIn(-13f, 13f)
+            x[i] += vx[i] * dt
+            y[i] += vy[i] * dt
+            if (x[i] < -8f || x[i] > 108f || y[i] < -6f) age[i] = -1f
+        }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        if (age.all { it < 0f }) return
+        val e = cadre[0]
+        val g = Paysages.GLISSEMENT[Paysages.MILIEU]
+        c.save()
+        c.translate(zone.left + cadre[1] + g * largeur * regardX, zone.top + cadre[2] + g * hauteur * regardY)
+        c.scale(e, e)
+        p.shader = null
+        p.strokeCap = Paint.Cap.ROUND
+        for (i in 0 until n) {
+            val vol = age[i] - retard[i]
+            if (age[i] < 0f || vol < 0f) continue
+            val sens = if (vx[i] < 0f) -1f else 1f
+            // Il sort des cimes : il se découvre en un quart de seconde.
+            val vu = (vol / 0.25f).coerceIn(0f, 1f)
+            // Un battement continu, deux et demi par seconde, l'aile de -1 (basse) à 1 (haute).
+            val aile = sin(vol * 2.5f * 2f * PI.toFloat() + phase[i])
+            c.save()
+            c.scale(TAILLE, TAILLE, x[i], y[i])
+            oiseau(c, p, x[i], y[i], sens, aile, vu)
+            c.restore()
+        }
+        c.restore()
+        p.style = Paint.Style.FILL
+    }
+
+    /** Un garde-bœuf de profil, vers [sens] : corps blanc, bec jaune, pattes sombres en arrière, l'aile à [aile]. */
+    private fun oiseau(c: Canvas, p: Paint, x: Float, y: Float, sens: Float, aile: Float, vu: Float) {
+        val a = (vu * 255f).toInt()
+        fun aileA(dx: Float, col: Int) {
+            chemin.rewind()
+            chemin.moveTo(x - sens * 0.5f + dx, y - 0.1f)
+            chemin.quadTo(x - sens * 0.2f + dx, y - 1.2f * aile, x - sens * 0.9f + dx, y - 2f * aile)
+            chemin.lineTo(x + sens * 0.4f + dx, y - 0.1f)
+            chemin.close()
+            p.style = Paint.Style.FILL
+            p.color = col
+            p.alpha = a
+            c.drawPath(chemin, p)
+        }
+        // L'aile lointaine, plus grise, un peu en retrait.
+        aileA(sens * 0.3f, 0xFFD6D6CE.toInt())
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.13f
+        p.color = 0xFF5E5648.toInt()
+        p.alpha = a
+        c.drawLine(x - sens * 0.8f, y + 0.1f, x - sens * 1.7f, y + 0.25f, p)
+        p.strokeWidth = 0.15f
+        p.color = 0xFFE8B030.toInt()
+        p.alpha = a
+        c.drawLine(x + sens * 1.15f, y - 0.3f, x + sens * 1.65f, y - 0.2f, p)
+        p.style = Paint.Style.FILL
+        p.color = 0xFFFFFFFF.toInt()
+        p.alpha = a
+        c.drawOval(x - 0.95f, y - 0.4f, x + 0.95f, y + 0.4f, p)
+        c.drawCircle(x + sens * 0.95f, y - 0.32f, 0.32f, p)
+        aileA(0f, 0xFFFFFFFF.toInt())
+        // Un fil gris autour du corps, pour qu'il se lise aussi sur le ciel pâle.
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.07f
+        p.color = 0xFF9A9A90.toInt()
+        p.alpha = a / 2
+        c.drawOval(x - 0.95f, y - 0.4f, x + 0.95f, y + 0.4f, p)
+        c.drawPath(chemin, p)
+    }
+
+    private companion object {
+        /** Un garde-bœuf à cette échelle se lit sur la canopée sans cacher le lac. */
+        const val TAILLE = 1.8f
     }
 }
 
@@ -1709,7 +1852,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE, Espece.LIANE -> rafale[i] = 0f
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE, Espece.LIANE,
+                Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE -> if (plongee[i] < 0f) plongee[i] = 0f
@@ -2048,13 +2192,15 @@ private class RueVictoire(zone: RectF, heure: Heure) : Ambiance(zone, 0) {
  * les fait porter plus loin par le vent. [feuille] : des feuilles en
  * amande plutôt que des fleurs en cœur. [envol] les lance plus haut : des
  * feuilles mortes soulevées du sol plutôt que tombées d'un arbre ;
- * [grandeur] agrandit chacune.
+ * [grandeur] agrandit chacune. [surLEau] : là où une feuille qui se pose
+ * touche l'eau, un rond s'y élargit et s'efface.
  */
 private class Petales(zone: RectF, graine: Int, private val source: FloatArray, private val couleurs: IntArray,
                       private val sol0: Float, private val sens: Float, private val plan: Int,
                       private val chute: Float = 0f, private val elan: Float = 1f,
                       private val feuille: Boolean = false, private val envol: Float = 1f,
-                      private val grandeur: Float = 1f) : Ambiance(zone, graine) {
+                      private val grandeur: Float = 1f,
+                      private val surLEau: ((Float, Float) -> Boolean)? = null) : Ambiance(zone, graine) {
     private val cadre = Paysages.cadrage(largeur, hauteur)
     private val n = 16
     private val x = FloatArray(n)
@@ -2065,6 +2211,8 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
     private val angle = FloatArray(n)
     /** L'âge de chaque fleur depuis qu'elle s'est posée, -1 en l'air ; -2 : aucune fleur dans cette case. */
     private val pose = FloatArray(n) { -2f }
+    /** Si chaque feuille s'est posée sur l'eau, où elle fait un rond. */
+    private val onde = BooleanArray(n)
     private val chemin = Path()
     private var regardX = 0f
     private var regardY = 0f
@@ -2102,7 +2250,10 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
                     x[i] += vx[i] * dt
                     y[i] += (vy[i] + sin(angle[i] * 0.05f) * 1.2f) * dt
                     angle[i] += 260f * dt
-                    if (y[i] >= sol[i] && vy[i] > 0f) { y[i] = sol[i]; pose[i] = 0f }
+                    if (y[i] >= sol[i] && vy[i] > 0f) {
+                        y[i] = sol[i]; pose[i] = 0f
+                        onde[i] = surLEau?.invoke(x[i], y[i]) == true
+                    }
                 }
                 pose[i] >= 0f -> { pose[i] += dt; if (pose[i] > FANE) pose[i] = -2f }
             }
@@ -2119,6 +2270,16 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
         p.style = Paint.Style.FILL
         for (i in 0 until n) {
             if (pose[i] == -2f) continue
+            if (pose[i] >= 0f && onde[i] && pose[i] < ONDE) {
+                // Le rond qui part de la feuille, couché sur l'eau.
+                val r = 0.6f + pose[i] * 2f
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 0.28f
+                p.color = 0xFFFFFFFF.toInt()
+                p.alpha = ((1f - pose[i] / ONDE) * 220f).toInt().coerceIn(0, 255)
+                c.drawOval(x[i] - r, y[i] - r * 0.3f, x[i] + r, y[i] + r * 0.3f, p)
+                p.style = Paint.Style.FILL
+            }
             p.color = couleurs[i % 2]
             if (pose[i] > 0f) p.alpha = ((1f - pose[i] / FANE) * 255f).toInt().coerceIn(0, 255)
             c.save()
@@ -2151,6 +2312,8 @@ private class Petales(zone: RectF, graine: Int, private val source: FloatArray, 
     private companion object {
         /** Combien de temps une fleur posée met à se faner, en secondes. */
         const val FANE = 4f
+        /** Combien de temps vit le rond d'une feuille tombée sur l'eau. */
+        const val ONDE = 2.2f
     }
 }
 

@@ -9,6 +9,7 @@ import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RadialGradient
@@ -1005,7 +1006,7 @@ object Paysages {
         Lieu.ROCHES_GRAVEES to listOf(34f to 30f, 38f to 24f, 52f to 34f, 66f to 26f, 18f to 28f).map { (x, y) ->
             Bete(Espece.LIANE, x, y, plan = 0)
         },
-        Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 62f, 49f, plan = 1)),
+        Lieu.GRAND_ETANG to listOf(Bete(Espece.LIBELLULE, 15f, 45f, plan = 1)),
         Lieu.BAINS_JAUNES to listOf(Bete(Espece.RATON, 80f, 40.4f, plan = 1)),
         Lieu.CASCADE_ECREVISSES to listOf(Bete(Espece.ECREVISSE, 28f, 62f, taille = 1.5f), Bete(Espece.ECREVISSE, 50f, 63.6f, taille = 1.7f),
             Bete(Espece.ECREVISSE, 68f, 61.6f, taille = 1.3f), Bete(Espece.LIBELLULE, 33f, 43f)),
@@ -1155,25 +1156,60 @@ object Paysages {
      */
     internal fun rivageGrandeAnse(y: Float): Float = 61f + 37f * ((y - 34f) / 32f).coerceIn(0f, 1f).pow(1.2f)
 
-    /** Le bord gauche du Grand Étang à la hauteur y, sur le plan du milieu : le lac naît à l'horizon et s'élargit vers soi. */
-    internal fun etangGauche(y: Float) = 36f - (y - 32f) / 28f * 30f
-
-    /** Le bord droit du Grand Étang à la hauteur y. */
-    internal fun etangDroite(y: Float) = 64f + (y - 32f) / 28f * 30f
-
     /**
-     * L'eau du Grand Étang qu'on voit vraiment, sur le plan du milieu : x0,
-     * x1, y0, y1. Les lisières des rives mordent sur le lac bien au-delà de
-     * [etangGauche] et [etangDroite] ; ses bords visibles, relevés sur la
-     * carte ouverte (2026-11-09), sont [etangVuGauche] et [etangVuDroite].
+     * Le Grand Étang vu d'en haut, d'après la photo aérienne du propriétaire
+     * (2026-11-10) : le lac dans sa cuvette de forêt, un bras qui remonte vers
+     * le fond, une langue de marais qui avance depuis la rive droite. Il est à
+     * gauche du mot, pour que le symbole ne le cache plus. Ses bords, rangée
+     * par rangée, sur le plan du milieu : y, bord gauche, bord droit de l'eau.
      */
-    internal val EAU_ETANG = floatArrayOf(24f, 77f, 38f, 59f)
+    private val ETANG = floatArrayOf(
+        31.5f, 13f, 19f,
+        33f, 10f, 23f,
+        36f, 7.5f, 26f,
+        40f, 6f, 28.5f,
+        44f, 4.5f, 30.5f,
+        48f, 3f, 32f,
+        52f, 3.5f, 34f,
+        55f, 6f, 34f,
+        57.5f, 10f, 30f,
+        59.5f, 17f, 24f)
 
-    /** Le bord gauche de l'eau visible du Grand Étang, entre les lisières, à la hauteur y. */
-    internal fun etangVuGauche(y: Float) = 33f - (y - 38f) / 22f * 9f
+    /** La colonne [k] de [ETANG] (1 : bord gauche, 2 : bord droit) à la hauteur [y], ou null hors du lac. */
+    private fun bordEtang(y: Float, k: Int): Float? {
+        if (y < ETANG[0] || y > ETANG[ETANG.size - 3]) return null
+        var i = 0
+        while (ETANG[i + 3] < y) i += 3
+        val u = (y - ETANG[i]) / (ETANG[i + 3] - ETANG[i])
+        return ETANG[i + k] + (ETANG[i + 3 + k] - ETANG[i + k]) * u
+    }
 
-    /** Le bord droit de l'eau visible du Grand Étang. */
-    internal fun etangVuDroite(y: Float) = 72f + (y - 38f) / 22f * 5f
+    /** Le bord gauche du Grand Étang à la hauteur y ; au-dessus ou au-dessous du lac, plus loin que tout bord droit. */
+    internal fun etangGauche(y: Float) = bordEtang(y, 1) ?: 200f
+
+    /** Le bord droit du Grand Étang à la hauteur y ; hors du lac, plus loin que tout bord gauche. */
+    internal fun etangDroite(y: Float) = bordEtang(y, 2) ?: -200f
+
+    /** L'eau du Grand Étang, sur le plan du milieu : x0, x1, y0, y1. */
+    internal val EAU_ETANG = floatArrayOf(3f, 36f, 31.5f, 59.5f)
+
+    /** Les lisières du Grand Étang au-dessus de l'eau, d'où une secousse fait tomber des feuilles : x0, x1, y0, y1. */
+    internal val LISIERE_ETANG_GAUCHE = floatArrayOf(0f, 7f, 38f, 45f)
+    internal val LISIERE_ETANG_DROITE = floatArrayOf(24f, 31f, 30f, 36f)
+
+    /** Les cimes du Grand Étang où se tiennent les garde-bœufs que la secousse fait lever : x et y, de chaque côté du mot. */
+    internal val DORTOIR_ETANG = floatArrayOf(6f, 30f, 25f, 29.5f, 2f, 41f, 70f, 33f, 80f, 37f, 90f, 31f,
+        95f, 45f, 75f, 47f, 86f, 53f)
+
+    /** Le bord gauche de l'eau libre du Grand Étang à la hauteur y. */
+    internal fun etangVuGauche(y: Float) = etangGauche(y)
+
+    /** Le bord droit de l'eau libre : la pointe du marais là où il avance dans le lac. */
+    internal fun etangVuDroite(y: Float) = when (y) {
+        in 45.4f..50.2f -> min(etangDroite(y), 20f + abs(y - 47.8f) * 2.6f)
+        in 54.2f..55.6f -> min(etangDroite(y), 26f)
+        else -> etangDroite(y)
+    }
 
     /** La baie des Saintes, sur le plan du milieu, entre le pied du morne et la plage : x0, x1, y0, y1. */
     internal val EAU_SAINTES = floatArrayOf(-2f, 95f, 37.6f, 47f)
@@ -4452,6 +4488,9 @@ object Paysages {
          * Balisiers pour le colibri.
          */
         /** La lisière de la voûte des Roches gravées, d'où pendent les lianes. */
+        /** Les à-coups de la libellule effrayée, en écarts à sa place (x, y), un toutes les [etapeLibellule] s, le dernier la ramène. */
+        private val elansLibellule = floatArrayOf(10f, -4f, 4f, -8f, 13f, 2f, 6f, 3f, 0f, 0f)
+        private val etapeLibellule = 0.55f
         private val vouteRoches = brisee(-2f, 14f, 20f, 18f, 40f, 12f, 60f, 16f, 80f, 10f, 102f, 13f)
 
         /** Une liane des Roches gravées, de la voûte jusqu'à ([lx], [ly]), balancée de [angle] degrés autour de son attache. */
@@ -5383,10 +5422,23 @@ object Paysages {
                 // Posé sur l'eau, il monte et descend avec la houle.
                 Espece.PELICAN -> pelicanPose(x + sin(t * 0.15f + ph) * 1.5f, y + sin(t * 1.2f + ph) * 0.35f)
                 Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y + sin(t * 0.7f + ph) * 0.12f)
-                Espece.LIBELLULE -> libellule(
-                    x + sin(t * 1.3f + ph) * 3f + sin(t * 3.1f) * 0.6f,
-                    y + cos(t * 1.7f + ph) * 1.2f
-                )
+                Espece.LIBELLULE -> {
+                    // Effrayée, elle file par à-coups d'un point à l'autre, s'y tient
+                    // un instant en vol stationnaire, et revient où elle était.
+                    var fx = 0f
+                    var fy = 0f
+                    if (rafale > 0f) {
+                        val k = (depuisRafale / etapeLibellule).toInt().coerceIn(0, elansLibellule.size / 2 - 1)
+                        val u = ((depuisRafale - k * etapeLibellule) / 0.18f).coerceIn(0f, 1f)
+                        val v = 1f - (1f - u) * (1f - u)
+                        val ax = if (k == 0) 0f else elansLibellule[2 * k - 2]
+                        val ay = if (k == 0) 0f else elansLibellule[2 * k - 1]
+                        fx = ax + (elansLibellule[2 * k] - ax) * v
+                        fy = ay + (elansLibellule[2 * k + 1] - ay) * v
+                    }
+                    libellule(x + fx + sin(t * 1.3f + ph) * 3f + sin(t * 3.1f) * 0.6f,
+                        y + fy + cos(t * 1.7f + ph) * 1.2f)
+                }
                 Espece.ANOLI -> {
                     val u = (t + ph) % 4f
                     val pompe = if (u < 1.2f) abs(sin(u / 1.2f * PI.toFloat() * 3f)) * 0.4f else 0f
@@ -5965,61 +6017,95 @@ object Paysages {
          * rien de pointu : tout tient dans l'empilement des plans.
          */
         fun grandEtangPapier() {
-            morneBoise(22f, 3f, 700, mix(papier(0xFF7FB8A8.toInt()), P.cielBas, 0.35f), 1.6f)
-            morneBoise(26f, 2.4f, 701, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.2f), 1.8f)
-            morneBoise(29.5f, 1.6f, 702, papier(0xFF6FCB8A.toInt()), 1.6f)
+            morneBoise(19f, 3f, 700, mix(papier(0xFF7FB8A8.toInt()), P.cielBas, 0.35f), 1.6f)
+            morneBoise(23f, 2.4f, 701, mix(papier(0xFF5FA88A.toInt()), P.cielBas, 0.2f), 1.8f)
             plan(1)
-            // L'étang, qui naît à l'horizon et s'élargit jusqu'au premier plan.
-            fun gauche(y: Float) = etangGauche(y)
-            fun droite(y: Float) = etangDroite(y)
-            val eau = Path()
-            eau.moveTo(gauche(32f) - 2f, 32f); eau.lineTo(droite(32f) + 2f, 32f)
-            eau.lineTo(droite(66f) + 4f, BAS); eau.lineTo(gauche(66f) - 4f, BAS); eau.close()
-            piece(eau, papier(SARCELLE), 0.3f)
-            val reflets = intArrayOf(papier(TURQUOISE), papier(VERT_D_EAU), papier(EAU_CLAIRE), papier(0xFF20B298.toInt()))
+            // La cuvette de forêt vue d'en haut, d'un bord à l'autre de la fenêtre.
+            canopeeVueDuHaut(26.5f, BAS + 3f, 740, intArrayOf(0xFF2E7044.toInt(), 0xFF3A8A4E.toInt(),
+                0xFF4F9E48.toInt(), 0xFF2D8A62.toInt(), 0xFF235E3E.toInt()), 0xFFA6CC5E.toInt())
+            // Le lac, cerclé d'herbe claire, le ciel qui pâlit l'eau vers le fond.
+            piece(contourEtang(1.3f), papier(0xFFA8CC6A.toInt()), 0.5f)
+            piece(contourEtang(0f), papier(0xFF2C6A78.toInt()), 0.3f)
+            piece(contourEtang(-2.2f).apply { offset(-0.6f, -1.6f) }, papier(0xFF3A8290.toInt()), 0f)
+            // Le marais qui avance depuis la rive droite en touffes d'herbes rondes, et
+            // une bande plus basse ; deux touffes au bout du lac.
             val r = Alea(710)
-            var y = 32.6f
-            while (y < 62f) {
-                val p = (y - 32f) / 28f
-                val e = 0.35f + 0.9f * p
-                var x = gauche(y) - 2f + r() * 2f
-                while (x < droite(y) + 2f) {
-                    val l = (3f + r() * 7f) * (0.6f + p)
-                    val t = Path()
-                    t.addRoundRect(RectF(x, y, min(x + l, droite(y) + 2f), y + e), e / 2f, e / 2f, Path.Direction.CW)
-                    piece(t, reflets[min((r() * 4f).toInt(), 3)], 0.4f)
-                    x += l + 0.5f + r() * 2f * (0.5f + p)
-                }
-                y += e + 0.35f + 0.6f * p
+            val marais = Path()
+            val clair = Path()
+            var x = 37f
+            while (x > 20f) {
+                val p = (37f - x) / 17f
+                val cy = 47.8f + (r() - 0.5f) * 0.8f
+                marais.addOval(RectF(x - 1.9f, cy - 2.4f + p * 1.3f, x + 1.9f, cy + 2.4f - p * 1.2f), Path.Direction.CW)
+                if (r() < 0.6f) clair.addOval(RectF(x - 1f, cy - 1.8f + p, x + 1.1f, cy - 0.2f), Path.Direction.CW)
+                x -= 1.5f + r() * 0.6f
             }
-            // Les rives de forêt, en lisières de houppiers qui descendent jusqu'à l'eau.
-            val verts = intArrayOf(papier(0xFF2E9E6E.toInt()), papier(0xFF8FD99A.toInt()), papier(SARCELLE),
-                papier(LIME), papier(0xFF4FB06A.toInt()), papier(VERT_PROFOND))
-            for (k in 0 until 6) {
-                val bas = 33f + k * 3.6f
-                rive(true, 27f + k * 4f, bas, gauche(bas), 720 + k, verts[k], 3.2f + k * 0.5f)
-                rive(false, 28f + k * 4f, bas + 0.5f, droite(bas + 0.5f), 730 + k, verts[(k + 2) % 6], 3.2f + k * 0.5f)
-                if (k == 2) {
-                    // Quelques grands arbres qui dépassent de la canopée.
-                    val tronc = papier(TERRE)
-                    arbreRond(7f, 44f, 4.5f, papier(0xFF3FA86A.toInt()), tronc)
-                    arbreRond(17f, 45f, 3.6f, papier(MOUTARDE), tronc)
-                    arbreRond(84f, 45f, 3.6f, papier(0xFF8FD99A.toInt()), tronc)
-                    arbreRond(93f, 44f, 4.5f, papier(SARCELLE), tronc)
-                }
+            x = 38f
+            while (x > 26.5f) {
+                marais.addOval(RectF(x - 1.5f, 54.2f + r() * 0.3f, x + 1.5f, 55.8f), Path.Direction.CW)
+                x -= 1.4f + r() * 0.5f
             }
+            marais.addOval(RectF(15.5f, 31.4f, 18f, 32.6f), Path.Direction.CW)
+            marais.addOval(RectF(11.6f, 33.6f, 13.4f, 34.4f), Path.Direction.CW)
+            piece(marais, papier(0xFFA6C45A.toInt()), 0.4f)
+            piece(clair, papier(0xFFC6DA80.toInt()), 0f)
             plan(2)
-            // Le sous-bois du premier plan : grandes feuilles, balisier, anthurium.
-            butte(4f, 74f, 24f, 11f, papier(TURQUOISE))
+            // Le sous-bois du premier plan, aux coins : grandes feuilles, balisier, anthurium.
+            butte(4f, 75f, 22f, 10f, papier(TURQUOISE))
             butte(96f, 73f, 24f, 11f, papier(LIME))
-            feuilleBananier(-1f, 60f, 16f, -38f, papier(0xFF4FB06A.toInt()))
-            feuilleBananier(2f, 63f, 14f, -12f, papier(SARCELLE))
+            feuilleBananier(-2f, 66f, 13f, -20f, papier(SARCELLE))
             feuilleBananier(101f, 60f, 16f, -142f, papier(0xFF3FA86A.toInt()))
-            feuilleCoeur(10f, 63f, 4.5f, -18f, papier(VERT_PROFOND))
-            feuilleCoeur(16f, 65f, 3.5f, 12f, papier(0xFF2E9E6E.toInt()))
+            feuilleCoeur(3f, 64f, 3.2f, -18f, papier(VERT_PROFOND))
             feuilleCoeur(90f, 64f, 4.2f, 15f, papier(VERT_PROFOND))
-            balisier(22f, 64f, 9f, papier(SARCELLE))
+            balisier(10f, 66f, 7f, papier(SARCELLE))
             anthurium(81f, 64f)
+        }
+
+        /** Le contour lissé du Grand Étang, élargi de [marge] tout autour. */
+        private fun contourEtang(marge: Float): Path {
+            val y0 = EAU_ETANG[2]; val y1 = EAU_ETANG[3]
+            val pts = ArrayList<PointF>()
+            pts += PointF((etangGauche(y0) + etangDroite(y0)) / 2f, y0 - 0.8f - marge)
+            var y = y0
+            while (y <= y1) { pts += PointF(etangDroite(y) + marge, y); y += 1.5f }
+            pts += PointF((etangGauche(y1) + etangDroite(y1)) / 2f, y1 + 0.6f + marge)
+            y = y1
+            while (y >= y0) { pts += PointF(etangGauche(y) - marge, y); y -= 1.5f }
+            val t = Path()
+            fun milieu(a: PointF, b: PointF) = PointF((a.x + b.x) / 2f, (a.y + b.y) / 2f)
+            val m0 = milieu(pts[0], pts[1])
+            t.moveTo(m0.x, m0.y)
+            for (k in 1..pts.size) {
+                val a = pts[k % pts.size]
+                val m = milieu(a, pts[(k + 1) % pts.size])
+                t.quadTo(a.x, a.y, m.x, m.y)
+            }
+            t.close()
+            return t
+        }
+
+        /**
+         * Une forêt vue d'en haut, qui couvre tout de [y0] à [y1] : des rangées
+         * de houppiers ronds, plus gros vers soi, de [verts] mêlés, et ça et là
+         * une cime plus [clair]e. Une pièce par teinte et par rangée.
+         */
+        fun canopeeVueDuHaut(y0: Float, y1: Float, graine: Int, verts: IntArray, clair: Int) {
+            val r = Alea(graine)
+            piece(Path().apply { addRect(-2f, y0 + 1f, LARGEUR + 2f, y1, Path.Direction.CW) }, papier(verts[verts.size - 1]), 0f)
+            var y = y0
+            while (y < y1) {
+                val p = ((y - y0) / (BAS - y0)).coerceIn(0f, 1f)
+                val rr = 1.2f + 2.2f * p
+                val tas = Array(verts.size + 1) { Path() }
+                var x = -3f + r() * rr
+                while (x < LARGEUR + 3f) {
+                    val k = if (r() < 0.06f) verts.size else min((r() * verts.size).toInt(), verts.size - 1)
+                    tas[k].addCircle(x, y + (r() - 0.5f) * rr * 0.5f, rr * (0.8f + r() * 0.45f), Path.Direction.CW)
+                    x += rr * (1.2f + r() * 0.5f)
+                }
+                tas.forEachIndexed { k, t -> if (!t.isEmpty) piece(t, papier(if (k == verts.size) clair else verts[k]), 0.5f) }
+                y += rr * 0.95f
+            }
         }
 
         /** Le Grand Étang : le lac dans sa cuvette de forêt, les mornes, une libellule. */
