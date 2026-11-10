@@ -209,13 +209,17 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22),
                     Brisants(zone, graine + 1, nuit = heure?.nuit == true),
                     Lame(zone, graine + 2, nuit = heure?.nuit == true, bord = Paysages::bordPlagePetiteTerre, debut = 36f),
-                    if (heure?.allume == true) Phare(zone, graine + 3) else Ensemble())
+                    if (heure?.allume == true) Phare(zone, graine + 3, Paysages.PHARE_PETITE_TERRE, Paysages.MILIEU - 1) else Ensemble())
                 enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
                 enPlans && lieu == Lieu.GRANDE_VIGIE -> Ensemble(
                     Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26,
                         devant = { y -> if (y < 34f) 9f else 52f }),
                     Embruns(zone, graine + 1, nuit = heure?.nuit == true))
-                enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
+                // Une vague lèche le sable du rivage, le phare de l'îlet tourne le soir.
+                enPlans && lieu == Lieu.ILET_GOSIER -> Ensemble(
+                    Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26),
+                    Lame(zone, graine + 1, nuit = heure?.nuit == true, bord = Paysages::bordPlageGosier),
+                    if (heure?.allume == true) Phare(zone, graine + 2, Paysages.PHARE_GOSIER, Paysages.MILIEU) else Ensemble())
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
                 // Le vieux mur s'effrite et les feuilles mortes du sol se soulèvent.
@@ -1796,13 +1800,11 @@ private fun faisceauDePhare(c: Canvas, p: Paint, cone: Path, lx: Float, ly: Floa
 }
 
 /**
- * Le phare de Terre-de-Bas, à Petite-Terre ([Paysages.PHARE_PETITE_TERRE],
- * plan du fond), allumé le soir et la nuit : son faisceau tourne au-dessus
- * de l'île.
+ * Un phare allumé le soir et la nuit, sa lanterne en [lanterne] (x, y) sur le
+ * plan de rang [rang] : son faisceau tourne au-dessus du paysage. Celui de
+ * Terre-de-Bas à Petite-Terre, celui de l'Îlet du Gosier.
  */
-private class Phare(zone: RectF, graine: Int) : Ambiance(zone, graine) {
-    /** Le plan du fond du lieu (son plan 0), juste derrière [Paysages.MILIEU]. */
-    private val rang = Paysages.MILIEU - 1
+private class Phare(zone: RectF, graine: Int, private val lanterne: FloatArray, private val rang: Int) : Ambiance(zone, graine) {
     // Calé comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
     private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
     private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
@@ -1826,8 +1828,7 @@ private class Phare(zone: RectF, graine: Int) : Ambiance(zone, graine) {
             zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
         c.scale(e, e)
         p.style = Paint.Style.FILL
-        val (lx, ly) = Paysages.PHARE_PETITE_TERRE
-        faisceauDePhare(c, p, cone, lx, ly, temps)
+        faisceauDePhare(c, p, cone, lanterne[0], lanterne[1], temps)
         c.restore()
     }
 }
@@ -2397,10 +2398,10 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE, Espece.RATON -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.ABEILLE, Espece.LIANE,
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
-                Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
+                Espece.TOURTERELLE, Espece.PELICAN_PIEU, Espece.PELICAN -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
                 Espece.BALEINE -> if (saut[i] < 0f) saut[i] = 0f
                 else -> Unit
@@ -2421,7 +2422,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     }
 
     /** Combien de temps dure le vol de [b] avant qu'il se repose : le pélican fait un plus grand tour. */
-    private fun duree(b: Bete) = if (b.espece == Espece.PELICAN_PIEU) VOL_PELICAN else VOL
+    private fun duree(b: Bete) = when (b.espece) {
+        Espece.PELICAN_PIEU -> VOL_PELICAN
+        Espece.PELICAN -> PECHE
+        else -> VOL
+    }
 
     /** La tourterelle [i] ne part pas avec les autres : un battement de cœur de retard chacune. */
     private fun retard(i: Int) = (i % 3) * 0.15f
@@ -2547,6 +2552,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                         if (g > 0f) atelier.mangueQuiPousse(c, b, g)
                     }
                 }
+                vol >= 0f && b.espece == Espece.PELICAN -> pecher(c, p, b, vol)
                 vol >= 0f -> {
                     // Une boucle au-dessus de la rue, partie de son côté, qui la ramène à son perchoir.
                     // Le pélican rase l'eau sous le mot jusqu'à l'autre bord, en battements
@@ -2621,6 +2627,67 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     }
 
     /**
+     * Le pélican de l'Îlet du Gosier [t] secondes après la secousse : il
+     * s'arrache de l'eau à grands battements, monte en tournant au-dessus
+     * du lagon, se retourne, puis plonge à pic, ailes repliées, comme pêche
+     * le pélican brun ; l'eau gicle, il reste un instant dessous, et
+     * reparaît posé à sa place.
+     */
+    private fun pecher(c: Canvas, p: Paint, b: Bete, t: Float) {
+        val haut = 16f
+        val tombe = MONTEE + VIRAGE
+        val sous = tombe + PIQUE
+        when {
+            t < MONTEE -> {
+                // Il s'arrache et monte en biais vers la droite, à grands battements.
+                val u = t / MONTEE
+                val v = 1f - (1f - u) * (1f - u)
+                c.translate(-12f * v, -haut * v)
+                atelier.envol(c, b, sin(t * 6f) * 0.9f + 0.1f, -1f)
+            }
+            t < tombe -> {
+                // Il plane en revenant au-dessus de sa place, et se retourne.
+                val u = (t - MONTEE) / VIRAGE
+                c.translate(-12f * (1f - u), -haut - 2f * sin(PI.toFloat() * u))
+                atelier.envol(c, b, 0.15f, 1f)
+            }
+            t < sous -> {
+                // Le piqué : tête en bas, ailes repliées, de plus en plus vite.
+                val u = (t - tombe) / PIQUE
+                c.translate(0f, -(haut + 2f) * (1f - u * u))
+                c.rotate(80f, b.x, b.y - 3f * b.taille)
+                atelier.envol(c, b, -0.25f, 1f)
+            }
+            else -> {
+                // La gerbe de l'impact, puis il reparaît, posé, en se dandinant.
+                val u = (t - sous) / GERBE_PECHE
+                if (u < 1f) Paysages.gerbe(c, p, b.x, b.y, 3.2f * b.taille, 4f * b.taille, u, 0xFFFFFF, 7)
+                // Les ronds qui s'élargissent sur le lagon.
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = 0.3f
+                for (k in 0 until 3) {
+                    val o = ((t - sous) / RONDS - k * 0.18f)
+                    if (o in 0f..1f) {
+                        p.color = (((1f - o) * 200f).toInt() shl 24) or 0xFFFFFF
+                        val rx = (2f + 9f * o) * b.taille * 0.7f
+                        c.drawOval(b.x - rx, b.y - rx * 0.22f, b.x + rx, b.y + rx * 0.22f, p)
+                    }
+                }
+                p.style = Paint.Style.FILL
+                val r = ((t - sous - DESSOUS) / 0.5f).coerceIn(0f, 1f)
+                if (r > 0f) {
+                    c.save()
+                    c.scale(0.5f + 0.5f * r, 0.5f + 0.5f * r, b.x, b.y)
+                    c.saveLayerAlpha(b.x - 10f, b.y - 10f, b.x + 10f, b.y + 10f, (r * 255f).toInt())
+                    atelier.poser(c, b, 0)
+                    c.restore()
+                    c.restore()
+                }
+            }
+        }
+    }
+
+    /**
      * Où en est la mangue [b] (rang [i]) [t] secondes après s'être
      * détachée : sa chute, un rebond dans l'herbe, puis quelques tours en
      * roulant avant de s'arrêter. Rend le décalage du fruit et son angle.
@@ -2682,6 +2749,14 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         /** La durée de la boucle d'une tourterelle, de l'envol au retour sur son garde-corps. */
         const val VOL = 6.5f
         const val VOL_PELICAN = 9f
+        /** Le pélican de l'Îlet du Gosier : sa montée, son virage, son piqué, sa gerbe, son temps sous l'eau. */
+        const val MONTEE = 2.4f
+        const val VIRAGE = 1.6f
+        const val PIQUE = 0.45f
+        const val GERBE_PECHE = 1.3f
+        const val RONDS = 2.2f
+        const val DESSOUS = 1f
+        const val PECHE = MONTEE + VIRAGE + PIQUE + DESSOUS + 0.5f
         /** Jusqu'où le pélican de l'îlet Macou rase l'eau avant de faire demi-tour. */
         const val TRAVERSEE = 76f
     }

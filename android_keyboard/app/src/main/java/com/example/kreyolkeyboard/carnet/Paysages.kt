@@ -139,7 +139,9 @@ enum class Espece {
     /** Pas une bête : une liane qui pend de la voûte (Roches gravées) ou de la paroi (Saut de la Lézarde), et se balance. */
     LIANE,
     /** Pas une bête : le canot à cabine bleue au mouillage dans le lagon de la Porte d'Enfer, qui se balance. */
-    CANOT
+    CANOT,
+    /** Pas une bête : la barque de bois sur le lagon de l'Îlet du Gosier, qui se balance. */
+    BARQUE_BOIS
 }
 
 /**
@@ -1079,7 +1081,8 @@ object Paysages {
         Lieu.PORTE_ENFER to listOf(Bete(Espece.CANOT, 86.6f, 43.6f, plan = 1),
             Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
         Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 9.6f, 50.6f, taille = 1.5f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
-        Lieu.ILET_GOSIER to listOf(Bete(Espece.PELICAN, 22f, 47f, plan = 1), Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
+        Lieu.ILET_GOSIER to listOf(Bete(Espece.BARQUE_BOIS, 13f, 55f, plan = 1), Bete(Espece.PELICAN, 30f, 48f, plan = 1, taille = 1.6f),
+            Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
         Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.TORTUE, 34f, 58f, plan = 1, taille = 3f)),
         Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 50f, 57f, plan = 1)),
         Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 22f, 52f)),
@@ -1138,7 +1141,8 @@ object Paysages {
         fun envol(c: Canvas, b: Bete, aile: Float, sens: Float) {
             peintre.c = c
             peintre.aplat {
-                if (b.espece == Espece.PELICAN_PIEU) peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille)
+                if (b.espece == Espece.PELICAN_PIEU || b.espece == Espece.PELICAN)
+                    peintre.pelicanEnVol(b.x, b.y, aile, sens, b.taille, fonce = b.espece == Espece.PELICAN)
                 else peintre.tourterelleEnVol(b.x, b.y, aile, sens, b.taille)
             }
         }
@@ -1445,6 +1449,15 @@ object Paysages {
         floatArrayOf(31f, 33.4f, 0.6f), floatArrayOf(47f, 45.6f, 1f), floatArrayOf(52f, 46.6f, 1.1f), floatArrayOf(58f, 47.2f, 1.1f))
 
     internal val EAU_GOSIER = floatArrayOf(-2f, 60f, 46f, 58f)
+
+    /** Le bord du lagon sur le sable du rivage de l'Îlet du Gosier, à l'abscisse [x] (plan de devant) : la courbe peinte. */
+    internal fun bordPlageGosier(x: Float): Float {
+        val t = ((x + 2f) / 104f).coerceIn(0f, 1f)
+        return (1f - t) * (1f - t) * 60.2f + 2f * t * (1f - t) * 58.8f + t * t * 60f
+    }
+
+    /** La lanterne du phare de l'Îlet du Gosier, sur le plan du milieu : x, y. */
+    internal val PHARE_GOSIER = floatArrayOf(82f, 18.8f)
 
     internal val EAU_CUL_DE_SAC = floatArrayOf(-2f, 60f, 44f, 62f)
 
@@ -2533,16 +2546,17 @@ object Paysages {
          * Le pélican du pieu en vol, de profil, ses pattes en ([x], [y]) :
          * le corps lourd, la tête rentrée sur les épaules et le long bec
          * devant, les grandes ailes levées ([aile] 1) ou baissées (négatif),
-         * tourné vers la droite ([sens] -1 : vers la gauche).
+         * tourné vers la droite ([sens] -1 : vers la gauche). [fonce] : le
+         * brun du pélican en mer, pour qu'il se détache sur un ciel pâle.
          */
-        fun pelicanEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float) {
+        fun pelicanEnVol(x: Float, y: Float, aile: Float, sens: Float, taille: Float, fonce: Boolean = false) {
             voile = 1f
             c.save()
             c.scale(sens * taille, taille, x, y)
             // Plus clair qu'à l'arrêt : le dessus des ailes est gris argent.
-            val plume = duJour(0xFFA89C8A.toInt())
+            val plume = duJour(if (fonce) 0xFF6E6052.toInt() else 0xFFA89C8A.toInt())
             val cy = y - 3f
-            forme("M${x - 1f} ${cy}L${x + 1f} ${cy}L${x - 1.6f} ${cy - 4f * aile}Z", duJour(0xFF6E6052.toInt()))
+            forme("M${x - 1f} ${cy}L${x + 1f} ${cy}L${x - 1.6f} ${cy - 4f * aile}Z", duJour(if (fonce) 0xFF4A4036.toInt() else 0xFF6E6052.toInt()))
             forme("M${x - 2.4f} ${cy - 0.2f}L${x - 3.6f} ${cy - 0.1f}L${x - 2.4f} ${cy + 0.4f}Z", plume)
             ovale(x, cy, 2.6f, 0.8f, plume)
             rond(x + 2.2f, cy - 0.5f, 0.6f, duJour(0xFFE9E2D0.toInt()))
@@ -5629,7 +5643,7 @@ object Paysages {
                     Espece.TOULOULOU -> touloulou(x, y)
                     Espece.TORTUE -> tortue(x, y, b.taille)
                     Espece.PELICAN_PIEU -> { c.save(); c.scale(b.taille, b.taille, x, y); pelican(x, y); c.restore() }
-                    Espece.PELICAN -> pelicanPose(x, y)
+                    Espece.PELICAN -> { c.save(); c.scale(b.taille, b.taille, x, y); pelicanPose(x, y); c.restore() }
                     Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y)
                     Espece.LIBELLULE -> libellule(x, y)
                     Espece.ANOLI -> anoli(x, y)
@@ -5649,6 +5663,7 @@ object Paysages {
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
                     Espece.CANOT -> canot(x, y, 0f)
+                    Espece.BARQUE_BOIS -> barqueBois(x, y, 0f)
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
                 }
@@ -5681,7 +5696,13 @@ object Paysages {
                     c.restore()
                 }
                 // Posé sur l'eau, il monte et descend avec la houle.
-                Espece.PELICAN -> pelicanPose(x + sin(t * 0.15f + ph) * 1.5f, y + sin(t * 1.2f + ph) * 0.35f)
+                Espece.PELICAN -> {
+                    val px = x + sin(t * 0.15f + ph) * 1.5f
+                    val py = y + sin(t * 1.2f + ph) * 0.35f
+                    c.save(); c.scale(b.taille, b.taille, px, py)
+                    pelicanPose(px, py)
+                    c.restore()
+                }
                 Espece.PELICAN_QUAI -> if (!P.nuit) pelican(x, y + sin(t * 0.7f + ph) * 0.12f)
                 Espece.LIBELLULE -> {
                     // Effrayée, elle file par à-coups d'un point à l'autre, s'y tient
@@ -5783,6 +5804,9 @@ object Paysages {
                 // Le canot de la Porte d'Enfer se balance sur le lagon ; une secousse le fait tanguer, puis il se calme.
                 Espece.CANOT -> canot(x, y + sin(t * 1.1f + ph) * 0.15f + rafale * 0.4f * sin(depuisRafale * 4f),
                     sin(t * 0.8f + ph) * 1.6f + rafale * 8f * sin(depuisRafale * 5f))
+                // La barque de l'Îlet du Gosier, de même.
+                Espece.BARQUE_BOIS -> barqueBois(x, y + sin(t * 1f + ph) * 0.15f + rafale * 0.4f * sin(depuisRafale * 4f),
+                    sin(t * 0.7f + ph) * 1.4f + rafale * 7f * sin(depuisRafale * 5f))
                 // Elle se balance un peu au bout de sa queue ; une secousse la secoue plus fort.
                 Espece.MANGUE -> mangue(x, y, 0f, 0f, sin(t * 1.2f + ph) * 3f + rafale * 14f * sin(depuisRafale * 13f), true)
                 // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
@@ -6012,6 +6036,22 @@ object Paysages {
             pieceD("M85.6 42L86 39.8L89.6 39.8L90 42Z", papier(0xFF3AA8D8.toInt()), 0.4f)
             pieceD("M85 40L90.6 40L90.4 39.2L85.2 39.2Z", papier(0xFFE8ECEE.toInt()), 0f)
             pieceD("M92.4 41.4L93.8 41.4L93.8 43.4L92.4 43.4Z", papier(0xFF2E2E34.toInt()), 0.2f)
+            c.restore()
+        }
+
+        /**
+         * La barque de bois de l'Îlet du Gosier : ([x], [y]) est le milieu de
+         * sa ligne de flottaison, autour duquel elle roule de [angle] degrés.
+         */
+        fun barqueBois(x: Float, y: Float, angle: Float) {
+            voile = 1f
+            c.save()
+            c.rotate(angle, x, y)
+            c.translate(x - 13f, y - 55f)
+            pieceD("M5 55.6Q13 56.6 21 55.6Q13 57.4 5 55.6Z", papier(0xFF2E9A98.toInt()), 0f)
+            pieceD("M4 52.4L22 52.4L19.6 55Q12 55.8 6 55Z", papier(0xFF8A5A34.toInt()), 0.6f)
+            pieceD("M4 52.4L22 52.4L21.8 53L4.2 53Z", papier(0xFFB07A48.toInt()), 0f)
+            for (k in 0 until 3) barre(7f + k * 5f, 52.6f, 7.6f + k * 5f, 54.8f, 0.25f, papier(0xFF5E3C22.toInt()), 0f)
             c.restore()
         }
 
@@ -7465,12 +7505,8 @@ object Paysages {
             val tronc = papier(0xFF6A4A35.toInt())
             arbreRond(64f, 41.6f, 3.2f, papier(0xFF5A9A40.toInt()), tronc)
             arbreRond(96f, 42f, 2.8f, papier(0xFF4E8E3A.toInt()), tronc)
-            // La barque de bois sur l'eau, à gauche.
-            val bois = papier(0xFF8A5A34.toInt())
-            pieceD("M4 52.4L22 52.4L19.6 55Q12 55.8 6 55Z", bois, 0.6f)
-            pieceD("M4 52.4L22 52.4L21.8 53L4.2 53Z", papier(0xFFB07A48.toInt()), 0f)
-            for (k in 0 until 3) barre(7f + k * 5f, 52.6f, 7.6f + k * 5f, 54.8f, 0.25f, papier(0xFF5E3C22.toInt()), 0f)
-            pieceD("M5 55.6Q13 56.6 21 55.6Q13 57.4 5 55.6Z", papier(0xFF2E9A98.toInt()), 0f)
+            // La barque de bois sur l'eau, à gauche, est une des bêtes du lieu
+            // (`Espece.BARQUE_BOIS`) : elle se balance sur la carte ouverte.
             plan(2)
             // Le sable du rivage, devant.
             pieceD("M-2 60.2Q50 58.8 102 60L102 68L-2 68Z", papier(0xFFEEDDB8.toInt()), 0.5f)
