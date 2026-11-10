@@ -79,8 +79,9 @@ object Series {
     val NOMBRES: List<Int> = emptyList()
 
     /**
-     * Les cent vingt cases de l'album des paysages, rangées lieu par lieu, du
-     * matin à la nuit : la grille du carnet en fait trente rangées de quatre.
+     * Les cent vingt-huit cases de l'album des paysages, rangées lieu par lieu,
+     * du matin à la nuit : la grille du carnet en fait trente-deux rangées de
+     * quatre.
      */
     val PAYSAGES: List<String> = Lieu.values().flatMap { l -> Rarete.values().map { r -> cleDePaysage(l, r) } }
 
@@ -94,9 +95,9 @@ object Series {
         return lieu to rarete
     }
 
-    /** La case d'une carte : le lieu de son mot, à l'heure de sa rareté. */
+    /** La case d'une carte : son lieu ([Carnet.lieuDe]), à l'heure de sa rareté. */
     fun paysage(contenu: ContenuCarte): String =
-        cleDePaysage(Lieu.du(contenu.carte.forme), contenu.rarete)
+        cleDePaysage(Carnet.lieuDe(contenu.carte), contenu.rarete)
 
     @Volatile
     private var enluminures: List<String>? = null

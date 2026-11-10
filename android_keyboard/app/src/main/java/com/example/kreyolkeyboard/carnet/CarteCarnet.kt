@@ -157,7 +157,7 @@ object CarteCarnet {
     fun vignette(context: Context, c: ContenuCarte, cote: Int): View {
         val carte = CarteOrnee(
             context, c.carte.forme, c.rarete, vignette = true, blason = c.blason,
-            souvenir = Souvenir.de(c.carte.premiereFois)
+            souvenir = Souvenir.de(c.carte.premiereFois), lieu = Carnet.lieuDe(c.carte)
         )
             .avecBoite(c.carte.boite)
             .avecPlume(c.plume)
@@ -222,7 +222,7 @@ object CarteCarnet {
         if (largeurPx <= 0) return
         Ornement.metal(context, c.rarete, largeurPx, vignette = false)
         Ornement.rayons(c.rarete, largeurPx, vignette = false)
-        Motif(c.carte.forme, c.rarete, Ornement.FENETRE, c.blason, Souvenir.de(c.carte.premiereFois))
+        Motif(c.carte.forme, c.rarete, Ornement.FENETRE, c.blason, Souvenir.de(c.carte.premiereFois), lieuDeLaCarte = Carnet.lieuDe(c.carte))
             .apply { profondeur = !Pochette.animationsReduites(context) }
             .rendreIci(largeurPx / Ornement.LARGEUR)
     }
@@ -232,7 +232,7 @@ object CarteCarnet {
      * `CarnetFragment.chargerEnFond`. [pret] est appelé quand il est en cache.
      */
     fun preparerVignette(c: ContenuCarte, cote: Int, pret: () -> Unit) {
-        Motif(c.carte.forme, c.rarete, Ornement.FENETRE_VIGNETTE, c.blason, Souvenir.de(c.carte.premiereFois))
+        Motif(c.carte.forme, c.rarete, Ornement.FENETRE_VIGNETTE, c.blason, Souvenir.de(c.carte.premiereFois), lieuDeLaCarte = Carnet.lieuDe(c.carte))
             .demanderLieu(cote / Ornement.LARGEUR, pret)
     }
 
@@ -243,7 +243,7 @@ object CarteCarnet {
         val carte = CarteOrnee(
             context, c.carte.forme, c.rarete, vignette = false, blason = c.blason, jeu = jeu,
             intensite = Rarete.intensitePourRang(c.rang),
-            souvenir = souvenir
+            souvenir = souvenir, lieu = Carnet.lieuDe(c.carte)
         ).avecBoite(c.carte.boite) // pour le sceau d'une carte apprise
             .avecPlume(c.plume)
 

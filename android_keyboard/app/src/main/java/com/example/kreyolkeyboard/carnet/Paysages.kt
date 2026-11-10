@@ -32,15 +32,15 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Le lieu que la fenêtre d'une carte montre : trente lieux de Guadeloupe,
- * choisis par le propriétaire (quinze le 2026-10-19, quinze de plus le même
- * jour sur maquettes).
+ * Le lieu que la fenêtre d'une carte montre : trente-deux lieux de
+ * Guadeloupe, choisis par le propriétaire (quinze le 2026-10-19, quinze de
+ * plus le même jour sur maquettes, la Datcha et les Mamelles le 2026-11-10).
  *
  * ## Pourquoi un lieu
  *
  * Un paysage fait deux choses à la fois : il distingue les cartes d'un coup
  * d'œil, en vignette comme en deutéranopie, et il donne une raison de
- * collectionner (l'album des paysages, trente lieux à quatre heures).
+ * collectionner (l'album des paysages, trente-deux lieux à quatre heures).
  *
  * ## Quel lieu pour quel mot
  *
@@ -62,8 +62,14 @@ import kotlin.math.sqrt
  * graine fixent l'empreinte, et en changer un déplacerait presque toutes les
  * cartes déjà gagnées. La 23.0.0 ne montrait aucun lieu (`LIEUX_DESSINES`
  * était faux) : c'est ce qui a permis de passer de quinze à trente sans rien
- * déplacer chez personne. Un lieu de plus, après publication, demandera de
- * garder dans la carte le lieu où elle a été gagnée.
+ * déplacer chez personne.
+ *
+ * Les deux lieux ajoutés après coup (la Datcha, les Mamelles) ne déplacent
+ * rien non plus : une carte gagnée avant la **bascule** (le premier lancement
+ * de la version qui les apporte, noté dans le carnet) garde son lieu sur les
+ * trente premiers ([du]) ; une carte gagnée après se répartit sur les
+ * trente-deux ([nouveau]) ; une carte reçue garde le lieu qu'elle avait chez
+ * le donneur, écrit dans la carte. Voir [Carnet.lieuDe].
  *
  * Les noms sont les noms d'usage, en français, comme sur les cartes routières.
  */
@@ -97,7 +103,9 @@ enum class Lieu(val nom: String) {
     GRIVELIERE("Habitation La Grivelière"),
     MATOUBA("Matouba"),
     FORT_DELGRES("Fort Delgrès"),
-    MEMORIAL_ACTE("Mémorial ACTe");
+    MEMORIAL_ACTE("Mémorial ACTe"),
+    DATCHA("Plage de la Datcha"),
+    MAMELLES("Les Mamelles");
 
     companion object {
         /**
@@ -106,13 +114,36 @@ enum class Lieu(val nom: String) {
          * appareil à l'autre. La forme est mise en minuscules et en NFC, pour
          * qu'un « é » composé et un « é » précomposé tombent au même endroit.
          */
-        fun du(forme: String): Lieu {
-            val cle = java.text.Normalizer.normalize(forme.lowercase(), java.text.Normalizer.Form.NFC)
-            return values()[Math.floorMod((GRAINE + cle).hashCode(), values().size)]
-        }
+        fun du(forme: String): Lieu = values()[Math.floorMod((GRAINE + cle(forme)).hashCode(), ANCIENS)]
 
-        /** Le sel de l'empreinte, voir plus haut : il fige la répartition des mots. */
+        /**
+         * Le lieu d'un mot pour une carte gagnée après la bascule, sur les
+         * trente-deux lieux. L'empreinte est mélangée (hachage de Fibonacci,
+         * les cinq bits du haut) : son reste modulo 32 ne lirait que ses cinq
+         * bits du bas, où 31 vaut -1 et où le sel ne fait presque rien bouger.
+         * Avec [GRAINE_32], les 128 cases de l'album ont chacune au moins un
+         * des 622 mots glosés, et chaque lieu en a de 11 à 30.
+         */
+        fun nouveau(forme: String): Lieu =
+            values()[((GRAINE_32 + cle(forme)).hashCode() * FIBONACCI) ushr 27]
+
+        /** Le lieu d'un mot gagné le [gagneeLe] (ms) sur un carnet qui a basculé le [bascule]. */
+        fun pour(forme: String, gagneeLe: Long, bascule: Long): Lieu =
+            if (gagneeLe < bascule) du(forme) else nouveau(forme)
+
+        private fun cle(forme: String) =
+            java.text.Normalizer.normalize(forme.lowercase(), java.text.Normalizer.Form.NFC)
+
+        /** Le sel de l'empreinte, voir plus haut : il fige la répartition des mots sur les trente premiers lieux. */
         const val GRAINE = "8576:"
+
+        /** Le sel des cartes gagnées après la bascule : il fige leur répartition sur les trente-deux. */
+        const val GRAINE_32 = "244:"
+
+        /** Les lieux publiés avant la bascule, ceux que [du] distribue. */
+        const val ANCIENS = 30
+
+        private const val FIBONACCI = -0x61c88647
     }
 }
 
@@ -1139,7 +1170,8 @@ object Paysages {
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1),
             Bete(Espece.SOURCE, 72.33f, 44.41f, taille = 1.6f, attache = 51.51f), Bete(Espece.SOURCE, 77.18f, 43.93f, taille = 0.5f, attache = 53.18f)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 88.6f, 52.9f), Bete(Espece.GLACIS, 0f, 0f, plan = 1)),
-        Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 22f, 52.4f, taille = 1.6f), Bete(Espece.PONTON, 38.1f, 41f))
+        Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 22f, 52.4f, taille = 1.6f), Bete(Espece.PONTON, 38.1f, 41f)),
+        Lieu.DATCHA to listOf(Bete(Espece.TOULOULOU, 12f, 60.6f), Bete(Espece.TOULOULOU, 26f, 61.8f))
     )
 
     /**
@@ -1748,6 +1780,8 @@ object Paysages {
             Lieu.MATOUBA -> p.matouba()
             Lieu.FORT_DELGRES -> p.fortDelgres()
             Lieu.MEMORIAL_ACTE -> p.memorialActe()
+            Lieu.DATCHA -> p.datcha()
+            Lieu.MAMELLES -> p.mamelles()
         }
         // Les bêtes au repos, par-dessus le lieu. La carte ouverte les tait
         // ici et les fait vivre dans son ambiance (voir [Atelier]).
@@ -9590,6 +9624,263 @@ object Paysages {
             ovale(42.2f, 42.6f, 2.6f, 1.6f, mix(P.pierre, P.sol, 0.2f))
             rect(41.8f, 45f, 0.8f, 2f, mix(P.pierre, P.sol, 0.6f))
             forme("M0 62Q8 59 18 62L18 66L0 66Z", P.pres)
+        }
+
+        // ------------------------------------------- la plage de la Datcha en papier
+
+        /**
+         * Une pierre de corail du mur de la Datcha, ronde et grumeleuse, en
+         * ([x], [y]), de rayon [r] : sa masse, son haut au jour, ses trous.
+         */
+        private fun pierreCorail(x: Float, y: Float, r: Float, rr: Alea) {
+            val base = papier(if (rr() < 0.5f) 0xFF9C9584.toInt() else 0xFF8A8474.toInt())
+            val t = Path()
+            val n = 7
+            for (k in 0 until n) {
+                val a = k * 2f * PI.toFloat() / n
+                val q = r * (0.78f + rr() * 0.3f)
+                if (k == 0) t.moveTo(x + cos(a) * q, y + sin(a) * q * 0.8f) else t.lineTo(x + cos(a) * q, y + sin(a) * q * 0.8f)
+            }
+            t.close()
+            piece(t, base, 0.5f)
+            galbe(x - r * 0.2f, y - r * 0.3f, r * 0.55f, r * 0.32f, mix(base, 0xFFFFFFFF.toInt(), 0.22f))
+            repeat(2 + (rr() * 3f).toInt()) {
+                galbe(x + (rr() - 0.5f) * r * 1.2f, y + (rr() - 0.4f) * r, 0.12f + rr() * r * 0.14f, 0.1f + rr() * r * 0.1f, papier(0xFF4E4A40.toInt()))
+            }
+        }
+
+        /**
+         * La plage de la Datcha (Gosier) en papier découpé, d'après la photo
+         * du propriétaire (2026-11-10), vue du sable : à gauche du mot la mer
+         * turquoise qui fonce jusqu'à l'horizon, la Basse-Terre au loin
+         * derrière les cumulus, l'écume sur le bord ; le sable clair qui monte
+         * vers la droite ; à droite le mur de pierre corallienne en deux
+         * gradins, le garde-corps bleu aux poteaux rouges, une façade jaune
+         * derrière ; les raisiniers bord de mer penchés au-dessus, un massif
+         * à leur pied. Pas les cocotiers de la photo : la règle du carnet. Les
+         * baigneurs sont devenus des touloulous.
+         */
+        fun datchaPapier() {
+            cumulus(-6f, 41f, 30f, 3001)
+            cumulus(14f, 40.6f, 18f, 3002)
+            cumulus(30f, 16f, 16f, 3003)
+            // La Basse-Terre au loin, bleutée, de l'autre côté du Petit Cul-de-Sac.
+            val mornes = brisee(-2f, 41.6f, 6f, 39.6f, 14f, 40.2f, 22f, 38.8f, 32f, 40.4f, 44f, 41f, 60f, 42f)
+            piece(sousLaCrete(-2f, 60f, mornes), mix(papier(0xFF6A8EA0.toInt()), P.cielBas, 0.6f), 0.2f)
+            plan(1)
+            // La mer, du bleu profond au large au turquoise clair près du bord, en lanières.
+            pieceD("M-2 42L72 42L72 70L-2 70Z", papier(0xFF2F86C8.toInt()), 0.3f)
+            val bleus = arrayOf(
+                intArrayOf(papier(0xFF2F8FD0.toInt()), papier(0xFF3FA3DA.toInt())),
+                intArrayOf(papier(0xFF3FB8D6.toInt()), papier(0xFF58C8DA.toInt())),
+                intArrayOf(papier(0xFF72D8D6.toInt()), papier(0xFF9EE6E0.toInt()))
+            )
+            val r = Alea(3004)
+            var y = 42.6f
+            while (y < 58f) {
+                val p = (y - 42f) / 16f
+                val e = 0.3f + 0.7f * p
+                val teintes = bleus[min((p * 3f).toInt(), 2)]
+                var xx = -2f + r() * 3f
+                while (xx < 72f) {
+                    val l = (4f + r() * 9f) * (0.6f + p)
+                    val t = Path()
+                    t.addRoundRect(RectF(xx, y, xx + l, y + e), e / 2f, e / 2f, Path.Direction.CW)
+                    piece(t, teintes[if (r() < 0.5f) 0 else 1], 0.2f)
+                    xx += l + 0.8f + r() * 2.5f
+                }
+                y += e + 0.4f + 0.5f * p
+            }
+            // Le sable clair qui monte vers le mur, le sable mouillé et l'écume au bord.
+            fun bord(x: Float) = 56.6f - (x + 2f) * 0.1f
+            val mouille = Path().apply {
+                moveTo(-2f, bord(-2f) - 0.8f); var x = -2f
+                while (x <= 104f) { lineTo(x, bord(x) - 0.8f + sin(x * 0.5f) * 0.15f); x += 2f }
+                lineTo(104f, 70f); lineTo(-2f, 70f); close()
+            }
+            piece(mouille, papier(0xFFD8C69C.toInt()), 0.2f)
+            val sable = Path().apply {
+                moveTo(-2f, bord(-2f)); var x = -2f
+                while (x <= 104f) { lineTo(x, bord(x) + sin(x * 0.7f) * 0.25f); x += 2f }
+                lineTo(104f, 70f); lineTo(-2f, 70f); close()
+            }
+            piece(sable, papier(0xFFF0E4C4.toInt()), 0.4f)
+            var ex = -2f
+            while (ex < 62f) {
+                val l = 2f + r() * 5f
+                val e = 0.3f + r() * 0.25f
+                val ey = bord(ex) - 1.1f - r() * 0.6f
+                piece(Path().apply { addRoundRect(RectF(ex, ey, ex + l, ey + e), e / 2f, e / 2f, Path.Direction.CW) }, blanc(), 0.15f)
+                ex += l + 0.6f + r() * 2f
+            }
+            // Les arbres du fond, derrière le mur, et le tronc penché qui descend au sable.
+            val feuillage = intArrayOf(papier(0xFF2E6A2C.toInt()), papier(0xFF3E7E34.toInt()), papier(0xFF4E9040.toInt()))
+            val ra = Alea(3005)
+            repeat(18) {
+                val x = 32f + ra() * 26f
+                val yy = 32f + ra() * 13f
+                val rr = 2f + ra() * 2.4f
+                piece(Path().apply { addOval(RectF(x - rr * 1.3f, yy - rr, x + rr * 1.3f, yy + rr), Path.Direction.CW) }, feuillage[min((ra() * 3f).toInt(), 2)], 0.5f)
+            }
+            val tronc = papier(0xFF5E4A3A.toInt())
+            barre(50.4f, 56.4f, 45.6f, 42f, 0.9f, tronc, 0.4f)
+            barre(52f, 56.4f, 54f, 44f, 0.7f, tronc, 0.3f)
+            galet(51f, 56.6f, 2.6f, papier(0xFF5A5448.toInt()))
+            // Le gradin du haut, en retrait : sa face de corail, la façade jaune derrière, le garde-corps.
+            pieceD("M74 13.6L90 12L90 28L74 28Z", papier(0xFFF0C440.toInt()), 0.4f)
+            pieceD("M74 13.6L90 12L90 13.4L74 15Z", papier(0xFFC89A30.toInt()), 0f)
+            fun hautMur(x: Float) = 33.4f - (x - 57f) * 0.27f
+            val murHaut = chemin("M57 ${hautMur(57f)}L104 ${hautMur(104f)}L104 46L57 46Z")
+            piece(Path(murHaut), papier(0xFF7E786A.toInt()), 0.5f)
+            val rc = Alea(3006)
+            var px = 57.6f
+            while (px < 104f) {
+                var py = hautMur(px) + 1.2f
+                while (py < 45f) { pierreCorail(px + (rc() - 0.5f) * 0.8f, py, 1.1f + rc() * 0.7f, rc); py += 1.6f + rc() * 0.8f }
+                px += 1.8f + rc() * 0.8f
+            }
+            val bleu = papier(0xFF3E7EC8.toInt())
+            val rouge = papier(0xFFD8303A.toInt())
+            for (k in 0..1) barre(57.4f, hautMur(57.4f) - 3.4f + k * 1.7f, 104f, hautMur(104f) - 3.4f + k * 1.7f, 0.32f, bleu, 0.2f)
+            px = 58.8f
+            while (px < 104f) { barre(px, hautMur(px) - 3.4f, px, hautMur(px), 0.18f, bleu, 0f); px += 1.3f }
+            for (rx in floatArrayOf(57.6f, 66f, 88f)) barre(rx, hautMur(rx) - 4.2f, rx, hautMur(rx) + 0.2f, 0.8f, rouge, 0.3f)
+            plan(2)
+            // Le grand raisinier penché au-dessus du mur : ses troncs, puis ses feuilles rondes.
+            barre(76f, 46f, 70f, 30f, 1.1f, tronc, 0.4f)
+            barre(73f, 38f, 62f, 24f, 0.7f, tronc, 0.3f)
+            barre(74.6f, 34f, 82f, 22f, 0.6f, tronc, 0.3f)
+            val verts = intArrayOf(papier(0xFF4E9A3A.toInt()), papier(0xFF62AE44.toInt()), papier(0xFF3E8430.toInt()),
+                papier(0xFF78BC50.toInt()), papier(0xFF2E6E2A.toInt()))
+            val rf = Alea(3007)
+            repeat(70) {
+                val a = rf() * 2f * PI.toFloat()
+                val d = rf().pow(0.6f)
+                val x = 70f + cos(a) * d * 20f
+                val yy = 20f + sin(a) * d * 11f
+                feuilleRaisinier(x, yy, 1.8f + rf() * 1.4f, (rf() - 0.5f) * 140f, verts[min((rf() * verts.size).toInt(), verts.size - 1)])
+            }
+            // Le gradin du bas, tout proche : sa joue au jour, sa face de grosses pierres de corail.
+            fun hautBas(x: Float) = 41.6f - (x - 69f) * 0.09f
+            pieceD("M66.4 42.6L69 ${hautBas(69f)}L69 63L66.4 61.6Z", papier(0xFFB4AC98.toInt()), 0.4f)
+            piece(chemin("M69 ${hautBas(69f)}L104 ${hautBas(104f)}L104 70L69 70Z"), papier(0xFF6E685C.toInt()), 0.6f)
+            px = 70.2f
+            while (px < 104f) {
+                var py = hautBas(px) + 1.6f
+                while (py < 68f) { pierreCorail(px + (rc() - 0.5f) * 1.2f, py, 1.7f + rc() * 1.1f, rc); py += 2.4f + rc() * 1f }
+                px += 2.8f + rc() * 1f
+            }
+            // Le massif de raisiniers au pied du mur.
+            brancheRaisinier(60f, 62f, 20f, -3f, 3008, 8)
+            brancheRaisinier(64f, 62.6f, 16f, 2f, 3009, 7)
+            brancheRaisinier(57f, 61.4f, 12f, -4f, 3010, 5)
+        }
+
+        /** La plage de la Datcha : la mer turquoise, le sable, le mur de corail et son garde-corps, les raisiniers. */
+        fun datcha() {
+            if (PAPIER) { datchaPapier(); return }
+            forme("M0 42L100 42L100 66L0 66Z", P.eau)
+            forme("M0 58L100 50L100 66L0 66Z", sable())
+        }
+
+        // ------------------------------------------- les Mamelles en papier
+
+        /**
+         * Un morne rond couvert de forêt, centré en [cx], large de [w] de part et
+         * d'autre, son sommet en [sommet] et son pied en [pied] : la pièce, ses
+         * houppiers sur la crête, son flanc droit à l'ombre, les houppiers clairs
+         * semés sur la pente.
+         */
+        private fun mamelle(cx: Float, w: Float, sommet: Float, pied: Float, col: Int, graine: Int) {
+            fun crete(x: Float): Float {
+                val u = ((x - cx) / w).coerceIn(-1f, 1f)
+                return pied - (pied - sommet) * (1f - u * u).coerceAtLeast(0f).pow(0.8f)
+            }
+            val r = Alea(graine)
+            val m = sousLaCrete(cx - w, cx + w, ::crete)
+            m.op(bosses(cx - w * 0.92f, cx + w * 0.92f, { x -> crete(x) + 0.3f }, 0.7f, 1.3f, r), Path.Op.UNION)
+            piece(Path(m), col, 0.5f)
+            val ombre = Path(m)
+            ombre.op(chemin("M${cx + w * 0.12f} ${sommet - 4f}L${cx + w + 2f} ${sommet - 4f}L${cx + w + 2f} ${pied + 30f}L${cx - w * 0.2f} ${pied + 30f}Z"), Path.Op.INTERSECT)
+            piece(ombre, mix(col, 0xFF000000.toInt(), 0.16f), 0f)
+            taches(cx - w * 0.9f, cx + w * 0.9f, pied + 2f, (w * 1.4f).toInt(), graine + 1, mix(col, 0xFFFFFFFF.toInt(), 0.14f), ::crete)
+            taches(cx - w * 0.8f, cx + w * 0.9f, pied + 2f, (w * 1.2f).toInt(), graine + 2, mix(col, 0xFF000000.toInt(), 0.2f), ::crete)
+        }
+
+        /**
+         * Les Mamelles en papier découpé, d'après la photo du propriétaire
+         * (2026-11-10), vues de la Traversée : les deux mornes ronds tout
+         * boisés, la Mamelle de Petit-Bourg à gauche du mot, plus basse et plus
+         * pâle, celle de Pigeon à droite, plus haute ; les crêtes bleutées
+         * derrière ; la forêt du col au milieu ; devant, le sous-bois vu de
+         * l'intérieur : grandes feuilles, balisiers, fougères, herbes hautes,
+         * et deux arbres qui montent dans le ciel.
+         */
+        fun mamellesPapier() {
+            cumulus(4f, 18f, 24f, 3101)
+            cumulus(58f, 12f, 28f, 3102)
+            // Les crêtes du fond, dans la brume.
+            val loin = brisee(-2f, 40f, 12f, 37.6f, 30f, 38.8f, 46f, 36.4f, 64f, 37.6f, 84f, 34.6f, 102f, 36f)
+            piece(sousLaCrete(-2f, 102f, loin), mix(papier(0xFF5E8A86.toInt()), P.cielBas, 0.6f), 0.2f)
+            plan(1)
+            // La Mamelle de Petit-Bourg, plus loin et plus pâle, puis celle de Pigeon.
+            mamelle(19f, 16f, 23.4f, 46f, mix(papier(0xFF285E36.toInt()), P.cielBas, 0.14f), 3103)
+            mamelle(76f, 23f, 17.6f, 47f, papier(0xFF22552E.toInt()), 3104)
+            plan(2)
+            // La forêt du col, des houppiers ronds d'un bord à l'autre.
+            val verts = intArrayOf(papier(0xFF2E6A2C.toInt()), papier(0xFF3E7E34.toInt()), papier(0xFF4E9040.toInt()), papier(0xFF5EA048.toInt()))
+            val col = brisee(-2f, 44f, 20f, 45.6f, 40f, 43f, 56f, 44.4f, 78f, 45.6f, 102f, 44f)
+            val foret = sousLaCrete(-2f, 102f, col)
+            foret.op(bosses(-2f, 102f, { x -> col(x) + 0.4f }, 1.6f, 2.4f, Alea(3105)), Path.Op.UNION)
+            piece(foret, verts[0], 0.6f)
+            taches(-2f, 102f, 54f, 40, 3106, verts[2], col)
+            val ra = Alea(3107)
+            repeat(26) {
+                val x = -2f + ra() * 104f
+                val y = col(x) + 3f + ra() * 8f
+                val r = 1.8f + ra() * 2f
+                piece(Path().apply { addOval(RectF(x - r * 1.3f, y - r, x + r * 1.3f, y + r), Path.Direction.CW) }, verts[1 + min((ra() * 3f).toInt(), 2)], 0.5f)
+            }
+            // Deux arbres qui montent devant les mornes, leurs houppiers par touffes.
+            val tronc = papier(0xFF4A3E32.toInt())
+            for ((tx, haut, graine) in arrayOf(Triple(6f, 22f, 3108), Triple(92f, 30f, 3109))) {
+                barre(tx, 70f, tx + 1f, haut + 6f, 1.2f, tronc, 0.4f)
+                val rh = Alea(graine)
+                val houppier = Path()
+                repeat(12) {
+                    val x = tx + (rh() - 0.5f) * 14f
+                    val y = haut + rh() * 14f
+                    val r = 2f + rh() * 2.2f
+                    houppier.addOval(RectF(x - r * 1.2f, y - r, x + r * 1.2f, y + r), Path.Direction.CW)
+                }
+                piece(houppier, papier(0xFF2E6A2A.toInt()), 0.6f)
+                repeat(8) { galbe(tx + (rh() - 0.6f) * 11f, haut + 1f + rh() * 9f, 1.2f + rh(), 0.8f, papier(0xFF4E9440.toInt())) }
+            }
+            // Le sous-bois : un tapis de feuillage, puis les grandes feuilles, les balisiers, les fougères.
+            val tapis = brisee(-2f, 54f, 14f, 52f, 30f, 55f, 50f, 53.6f, 70f, 55.4f, 86f, 52.6f, 102f, 54f)
+            val sousBois = sousLaCrete(-2f, 102f, tapis)
+            sousBois.op(bosses(-2f, 102f, { x -> tapis(x) + 0.4f }, 1.4f, 2.6f, Alea(3110)), Path.Op.UNION)
+            piece(sousBois, papier(0xFF2A5E28.toInt()), 0.7f)
+            taches(-2f, 102f, 66f, 30, 3111, papier(0xFF4A8A3A.toInt()), tapis)
+            feuilleBananier(-2f, 62f, 18f, -30f, papier(0xFF5AAE4A.toInt()))
+            feuilleBananier(4f, 66f, 14f, -62f, papier(0xFF4A9A40.toInt()))
+            feuilleBananier(102f, 63f, 16f, -150f, papier(0xFF62B44E.toInt()))
+            feuilleBananier(96f, 67f, 12f, -118f, papier(0xFF4A9A40.toInt()))
+            balisier(16f, 66f, 13f, papier(0xFF3E8A3A.toInt()))
+            balisier(84f, 66f, 14f, papier(0xFF3E8A3A.toInt()))
+            fougere(26f, 64f, 9f, -60f, papier(0xFF5AA04A.toInt()))
+            fougere(72f, 64f, 9f, -120f, papier(0xFF5AA04A.toInt()))
+            feuilleCoeur(30f, 66f, 4.4f, -10f, papier(0xFF2E6E30.toInt()))
+            feuilleCoeur(68f, 66f, 4.6f, 12f, papier(0xFF2E6E30.toInt()))
+            herbes(86f, 102f, 62f, 3112, intArrayOf(0xFF7AAE4A.toInt(), 0xFF5E9A3E.toInt(), 0xFF9CC060.toInt()))
+        }
+
+        /** Les Mamelles : deux mornes ronds tout boisés au-dessus de la forêt. */
+        fun mamelles() {
+            if (PAPIER) { mamellesPapier(); return }
+            forme("M0 46Q18 18 38 46Z", P.milieu)
+            forme("M48 47Q75 12 102 47Z", P.milieu)
+            forme("M0 50L100 50L100 66L0 66Z", P.pres)
         }
 
         // ------------------------------------------- le Mémorial ACTe en papier

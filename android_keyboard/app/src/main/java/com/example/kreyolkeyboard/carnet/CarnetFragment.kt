@@ -1647,8 +1647,10 @@ class CarnetFragment : DialogFragment() {
         val c = aCeder ?: return
         aCeder = null
         if (Cession.estAncienneVersion(texte)) return dire(getString(R.string.cession_version))
-        val jeton = Cession.lireDemande(texte) ?: return dire(getString(R.string.demande_invalide))
-        val remise = Cession.Remise(jeton, c.carte.forme, c.carte.nombre, System.currentTimeMillis() / 1000)
+        val demande = Cession.lireDemande(texte) ?: return dire(getString(R.string.demande_invalide))
+        // Le lieu voyage si l'autre téléphone sait le recevoir : la carte garde son paysage.
+        val remise = Cession.Remise(demande.jeton, c.carte.forme, c.carte.nombre, System.currentTimeMillis() / 1000,
+            lieu = if (demande.avecLieu) Carnet.lieuDe(c.carte).ordinal else null)
         lecteur?.fermer()
         Thread {
             // La remise d'abord : si l'appli s'arrêtait entre les deux, mieux
@@ -1727,7 +1729,8 @@ class CarnetFragment : DialogFragment() {
         if (!Cession.demandeEnAttente(ctx, r.jeton)) return dire(getString(R.string.remise_autre))
         if (!cartePossible(r)) return dire(getString(R.string.reception_impossible))
         Thread {
-            Carnet.ajouter(ctx, r.forme, JeuCarte.CADEAU)
+            // Une remise en version 2 vient d'un donneur qui n'avait que trente lieux.
+            Carnet.ajouter(ctx, r.forme, JeuCarte.CADEAU, r.lieu?.let { Lieu.values()[it] } ?: Lieu.du(r.forme))
             Cession.noterRecue(ctx, r.jeton)
             Handler(Looper.getMainLooper()).post {
                 if (!isAdded) return@post

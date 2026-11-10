@@ -35,12 +35,20 @@ class PaysagesAlbumTest {
         val glosees = HashSet<String>()
         table.keys().forEach { glosees.add(plier(it)) }
         val dico = JSONArray(actif("creole_dict.json"))
+        // Les cartes gagnées après la bascule : les trente-deux lieux, cent vingt-huit cases.
         val cases = HashSet<Pair<Lieu, Rarete>>()
+        // Celles gagnées avant : les trente premiers lieux, comme avant la Datcha et les Mamelles.
+        val anciennes = HashSet<Pair<Lieu, Rarete>>()
         for (i in 0 until dico.length()) {
             val forme = dico.getJSONArray(i).getString(0)
-            if (plier(forme) in glosees) cases += Lieu.du(forme) to Rarete.pourRang(i)
+            if (plier(forme) in glosees) {
+                cases += Lieu.nouveau(forme) to Rarete.pourRang(i)
+                anciennes += Lieu.du(forme) to Rarete.pourRang(i)
+            }
         }
         val manquantes = Lieu.values().flatMap { l -> Rarete.values().map { l to it } }.filter { it !in cases }
         assertEquals("cases de l'album sans aucun mot : $manquantes", emptyList<Pair<Lieu, Rarete>>(), manquantes)
+        val anciennesManquantes = Lieu.values().take(Lieu.ANCIENS).flatMap { l -> Rarete.values().map { l to it } }.filter { it !in anciennes }
+        assertEquals("cases des trente lieux sans aucun mot : $anciennesManquantes", emptyList<Pair<Lieu, Rarete>>(), anciennesManquantes)
     }
 }

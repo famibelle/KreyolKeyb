@@ -43,13 +43,27 @@ object Cession {
     private const val PREFIXE = "KREYOLKEYB"
     private const val VERSION = "2"
 
+    /**
+     * La version 3 fait voyager le lieu de la carte (voir [Carnet.lieuDe]) :
+     * une carte reçue garde le paysage qu'elle avait chez le donneur. Le
+     * receveur l'annonce par sa demande, et le donneur répond dans la version
+     * de la demande : à un téléphone resté en version 2, une remise qu'il sait
+     * lire. Un donneur resté en version 2 ne lit pas une demande en version 3
+     * et le dit : sa carte ne part pas, rien ne se perd.
+     */
+    private const val VERSION_LIEU = "3"
+
     /** Une demande attend une semaine : assez pour une remise faite plus tard dans la journée. */
     const val VIE_DEMANDE_S = 7 * 24 * 3600L
 
     /** Une remise jamais confirmée reste trente jours sous « À remettre », puis s'oublie. */
     const val VIE_REMISE_S = 30 * 24 * 3600L
 
-    data class Remise(val jeton: String, val forme: String, val nombre: Int?, val depuis: Long = 0L)
+    /** Une remise ; [lieu] est le [Lieu.ordinal] de la carte, `null` pour une remise en version 2. */
+    data class Remise(val jeton: String, val forme: String, val nombre: Int?, val depuis: Long = 0L, val lieu: Int? = null)
+
+    /** Une demande lue : son jeton, et si le receveur sait recevoir le lieu de la carte. */
+    data class Demande(val jeton: String, val avecLieu: Boolean)
 
     private val alea = SecureRandom()
 
@@ -59,27 +73,37 @@ object Cession {
 
     // ---------------------------------------------------------- les textes
 
-    fun demande(jeton: String): String = listOf(PREFIXE, "D", VERSION, jeton).joinToString(":")
+    fun demande(jeton: String): String = listOf(PREFIXE, "D", VERSION_LIEU, jeton).joinToString(":")
 
-    /** Le jeton d'un code de demande, ou `null`. */
-    fun lireDemande(texte: String): String? {
+    /** Un code de demande, en version 2 ou 3, ou `null`. */
+    fun lireDemande(texte: String): Demande? {
         val parts = texte.trim().split(":")
-        if (parts.size != 4 || parts[0] != PREFIXE || parts[1] != "D" || parts[2] != VERSION) return null
-        return parts[3].takeIf { estJeton(it) }
+        if (parts.size != 4 || parts[0] != PREFIXE || parts[1] != "D" || parts[2] !in setOf(VERSION, VERSION_LIEU)) return null
+        val jeton = parts[3].takeIf { estJeton(it) } ?: return null
+        return Demande(jeton, avecLieu = parts[2] == VERSION_LIEU)
     }
 
-    /** Le texte du code de remise. La forme vient en dernier : rien ne l'empêche de contenir « : ». */
+    /**
+     * Le texte du code de remise, en version 3 si elle porte un lieu, en
+     * version 2 sinon. La forme vient en dernier : rien ne l'empêche de
+     * contenir « : ».
+     */
     fun remise(r: Remise): String =
-        listOf(PREFIXE, "C", VERSION, r.jeton, r.nombre?.toString() ?: "", r.forme).joinToString(":")
+        if (r.lieu == null) listOf(PREFIXE, "C", VERSION, r.jeton, r.nombre?.toString() ?: "", r.forme).joinToString(":")
+        else listOf(PREFIXE, "C", VERSION_LIEU, r.jeton, r.nombre?.toString() ?: "", r.lieu.toString(), r.forme).joinToString(":")
 
-    /** Une remise lue sur un code, ou `null` si ce n'en est pas une ou si elle est mal formée. */
+    /** Une remise lue sur un code, en version 2 ou 3, ou `null` si ce n'en est pas une ou si elle est mal formée. */
     fun lireRemise(texte: String): Remise? {
-        val parts = texte.trim().split(":", limit = 6)
-        if (parts.size != 6 || parts[0] != PREFIXE || parts[1] != "C" || parts[2] != VERSION) return null
+        val t = texte.trim()
+        val avecLieu = t.startsWith("$PREFIXE:C:$VERSION_LIEU:")
+        val n = if (avecLieu) 7 else 6
+        val parts = t.split(":", limit = n)
+        if (parts.size != n || parts[0] != PREFIXE || parts[1] != "C" || parts[2] != (if (avecLieu) VERSION_LIEU else VERSION)) return null
         val jeton = parts[3].takeIf { estJeton(it) } ?: return null
         val nombre = if (parts[4].isEmpty()) null else parts[4].toIntOrNull() ?: return null
-        val forme = parts[5].takeIf { it.isNotBlank() && it.length <= 64 } ?: return null
-        return Remise(jeton, forme, nombre)
+        val lieu = if (avecLieu) parts[5].toIntOrNull()?.takeIf { it in Lieu.values().indices } ?: return null else null
+        val forme = parts[n - 1].takeIf { it.isNotBlank() && it.length <= 64 } ?: return null
+        return Remise(jeton, forme, nombre, lieu = lieu)
     }
 
     /**
@@ -165,6 +189,7 @@ object Cession {
         remises.forEach { r ->
             put(JSONObject().put("j", r.jeton).put("m", r.forme).put("t", r.depuis).apply {
                 r.nombre?.let { put("v", it) }
+                r.lieu?.let { put("l", it) }
             })
         }
     }.toString()
@@ -175,7 +200,8 @@ object Cession {
             val o = t.getJSONObject(i)
             val r = Remise(
                 o.optString("j"), o.optString("m"),
-                if (o.has("v")) o.optInt("v") else null, o.optLong("t")
+                if (o.has("v")) o.optInt("v") else null, o.optLong("t"),
+                if (o.has("l")) o.optInt("l") else null
             )
             r.takeIf { estJeton(it.jeton) && it.forme.isNotEmpty() && maintenant - it.depuis <= VIE_REMISE_S }
         }

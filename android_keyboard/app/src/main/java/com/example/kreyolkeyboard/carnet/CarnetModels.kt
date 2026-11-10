@@ -114,6 +114,7 @@ object Carnet {
 
     private const val PREFS = "kreyol_carnet_prefs"
     private const val CLE_CARTES = "cartes"
+    private const val CLE_BASCULE = "bascule_lieux"
     private const val ASSET_DICO = "creole_dict.json"
     private const val TAG = "Carnet"
 
@@ -121,6 +122,16 @@ object Carnet {
     private var cartes: MutableList<CarteMot> = ArrayList()
     private var parForme: MutableMap<String, Int> = HashMap()
     private var charge = false
+
+    /**
+     * Le jour (ms) où ce carnet est passé de trente à trente-deux lieux : le
+     * premier lancement de la version qui a ajouté la Datcha et les Mamelles.
+     * Une carte gagnée avant garde son lieu sur trente, voir [Lieu.pour]. Noté
+     * une fois dans les préférences du carnet, il le suit au changement de
+     * téléphone. Tant que le carnet n'est pas chargé, tout reste sur trente.
+     */
+    @Volatile
+    private var bascule = Long.MAX_VALUE
 
     /** Rangs de fréquence des seules formes du carnet, lus à la demande. */
     private var rangs: Map<String, Int> = emptyMap()
@@ -130,6 +141,8 @@ object Carnet {
     fun charger(context: Context) {
         if (charge) return
         charge = true
+        bascule = prefs(context).getLong(CLE_BASCULE, 0L).takeIf { it > 0L }
+            ?: System.currentTimeMillis().also { prefs(context).edit().putLong(CLE_BASCULE, it).apply() }
         try {
             val brut = prefs(context).getString(CLE_CARTES, null) ?: return
             val tableau = JSONArray(brut)
@@ -149,7 +162,8 @@ object Carnet {
                         numero = o.optInt("k", cartes.size + 1),
                         jeux = lireJeux(o.optString("g")),
                         boite = o.optInt("b", 0),
-                        jourEcheance = o.optInt("j", Sonje.JAMAIS_PLANIFIEE)
+                        jourEcheance = o.optInt("j", Sonje.JAMAIS_PLANIFIEE),
+                        lieuRecu = if (o.has("l")) o.optInt("l") else null
                     )
                 )
             }
@@ -201,7 +215,7 @@ object Carnet {
      * le lèvera, pas un assouplissement ici.
      */
     @Synchronized
-    fun ajouter(context: Context, forme: String, jeu: JeuCarte): Boolean {
+    fun ajouter(context: Context, forme: String, jeu: JeuCarte, lieuRecu: Lieu? = null): Boolean {
         charger(context)
         if (forme.isBlank()) return false
         if (!TranslationDictionary.estProposable(context, forme)) return false
@@ -223,7 +237,8 @@ object Carnet {
                 premiereFois = System.currentTimeMillis(),
                 rencontres = 1,
                 numero = (cartes.maxOfOrNull { it.numero } ?: 0) + 1,
-                jeux = setOf(jeu)
+                jeux = setOf(jeu),
+                lieuRecu = lieuRecu?.ordinal
             )
         )
         enregistrer(context)
@@ -402,6 +417,14 @@ object Carnet {
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
+    /**
+     * Le lieu que montre [carte] : celui qu'elle avait chez le donneur si elle
+     * a été reçue, sinon celui de son mot, sur trente lieux si elle a été
+     * gagnée avant la bascule, sur trente-deux après.
+     */
+    fun lieuDe(carte: CarteMot): Lieu =
+        carte.lieuRecu?.let { Lieu.values().getOrNull(it) } ?: Lieu.pour(carte.forme, carte.premiereFois, bascule)
+
     private fun enregistrer(context: Context) {
         val tableau = JSONArray()
         cartes.forEach {
@@ -419,6 +442,7 @@ object Carnet {
             // frappe n'entre dans un domaine sauvegardé.
             if (it.boite != 0) o.put("b", it.boite)
             if (it.jourEcheance != Sonje.JAMAIS_PLANIFIEE) o.put("j", it.jourEcheance)
+            it.lieuRecu?.let { l -> o.put("l", l) }
             tableau.put(o)
         }
         prefs(context).edit().putString(CLE_CARTES, tableau.toString()).apply()
@@ -601,7 +625,9 @@ data class CarteMot(
      */
     val nombre: Int? = null,
     val boite: Int = 0,
-    val jourEcheance: Int = Sonje.JAMAIS_PLANIFIEE
+    val jourEcheance: Int = Sonje.JAMAIS_PLANIFIEE,
+    /** Le lieu ([Lieu.ordinal]) d'une carte reçue, tel qu'il était chez le donneur ; `null` sinon. */
+    val lieuRecu: Int? = null
 ) {
     /** Le jeu qui a fait entrer la carte au carnet. */
     val origine: JeuCarte get() = jeux.firstOrNull() ?: JeuCarte.MOKWARE

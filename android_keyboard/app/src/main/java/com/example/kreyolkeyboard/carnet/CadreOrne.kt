@@ -3800,7 +3800,9 @@ class CarteOrnee(
     /** De 0 (mot fréquent) à 1 (mot rare) : voir [Rarete.intensitePourRang]. */
     private val intensite: Float = 0.5f,
     /** Le jour où la carte a été gagnée, réduit à sa saison : voir [Souvenir]. */
-    private val souvenir: Souvenir? = null
+    private val souvenir: Souvenir? = null,
+    /** Le lieu de la carte ([Carnet.lieuDe]) ; à défaut, celui de son mot sur trente lieux. */
+    private val lieu: Lieu? = null
 ) : Carton(context) {
 
     override val hauteurUnites: Float =
@@ -3857,7 +3859,7 @@ class CarteOrnee(
             teinte, Ornement.GEMME_CENTRE, Ornement.CREUX_AGRAFE, intensite
         )
         val redessiner: (() -> Unit)? = if (vignette) fun() { invalidate(); quandLieuArrive?.invoke() } else null
-        motif = Motif(mot, rarete, fenetre, blason, souvenir, redessiner)
+        motif = Motif(mot, rarete, fenetre, blason, souvenir, redessiner, lieu)
         setWillNotDraw(false)
         clipChildren = false
     }
@@ -4201,7 +4203,7 @@ class CarteOrnee(
         // lieu ajoute sa faune (voir Faune).
         ambiance = Ambiance.pour(
             souvenir, zone, mot.hashCode(), nuit = rarete.ordinal >= Rarete.RARE.ordinal,
-            oiseaux = motif.profondeur, lieu = if (Paysages.LIEUX_DESSINES) Lieu.du(mot) else null,
+            oiseaux = motif.profondeur, lieu = if (Paysages.LIEUX_DESSINES) motif.lieu else null,
             heure = Heure.de(rarete, blason.champ?.hue)
         )
         oublierLesCouches()
@@ -4567,11 +4569,13 @@ class Motif(
      * arrière-plan, arrive (voir [Paysages.demander]). Sans lui, le rendu est
      * synchrone, comme sur la carte ouverte.
      */
-    private val surPaysage: (() -> Unit)? = null
+    private val surPaysage: (() -> Unit)? = null,
+    /** Le lieu de la carte ([Carnet.lieuDe]) ; à défaut, celui de son mot sur trente lieux. */
+    lieuDeLaCarte: Lieu? = null
 ) {
 
     private val teinteChamp: Float? = blason.champ?.hue
-    private val lieu = Lieu.du(mot)
+    val lieu = lieuDeLaCarte ?: Lieu.du(mot)
     private val heure = Heure.de(rarete, teinteChamp)
     /**
      * La part de la fenêtre qu'on voit vraiment. Sur la carte ouverte, la

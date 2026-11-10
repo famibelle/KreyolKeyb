@@ -1,6 +1,7 @@
 package com.example.kreyolkeyboard
 
 import com.example.kreyolkeyboard.carnet.Cession
+import com.example.kreyolkeyboard.carnet.Lieu
 import com.example.kreyolkeyboard.carnet.JeuCarte
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,7 +24,24 @@ class CessionTest {
 
     @Test
     fun uneDemandeSeRelitTelleQuelle() {
-        assertEquals(jeton, Cession.lireDemande(Cession.demande(jeton)))
+        assertEquals(Cession.Demande(jeton, avecLieu = true), Cession.lireDemande(Cession.demande(jeton)))
+    }
+
+    /** La demande d'un téléphone resté en version 2 se lit encore : on lui répondra sans lieu. */
+    @Test
+    fun uneDemandeEnVersion2SeLitSansLieu() {
+        assertEquals(Cession.Demande(jeton, avecLieu = false), Cession.lireDemande("KREYOLKEYB:D:2:$jeton"))
+    }
+
+    /** Le lieu voyage en version 3, et une remise sans lieu reste en version 2, que les anciens lisent. */
+    @Test
+    fun leLieuVoyageAvecLaCarte() {
+        val r = Cession.Remise(jeton, "a:b", 4, lieu = Lieu.DATCHA.ordinal)
+        assertTrue(Cession.remise(r).startsWith("KREYOLKEYB:C:3:"))
+        assertEquals(r, Cession.lireRemise(Cession.remise(r)))
+        assertTrue(Cession.remise(Cession.Remise(jeton, "kaz", null)).startsWith("KREYOLKEYB:C:2:"))
+        assertNull(Cession.lireRemise("KREYOLKEYB:C:3:$jeton::32:kaz"))
+        assertNull(Cession.lireRemise("KREYOLKEYB:C:3:$jeton::x:kaz"))
     }
 
     @Test
@@ -104,7 +122,7 @@ class CessionTest {
     @Test
     fun lesRemisesSeRelisentEtExpirent() {
         val maintenant = 1_800_000_000L
-        val gardee = Cession.Remise(jeton, "kat", 4, maintenant - 3600)
+        val gardee = Cession.Remise(jeton, "kat", 4, maintenant - 3600, lieu = Lieu.MAMELLES.ordinal)
         val perimee = Cession.Remise("fedcba9876543210", "kaz", null, maintenant - Cession.VIE_REMISE_S - 1)
         val relues = Cession.remisesValides(Cession.encoderRemises(listOf(gardee, perimee)), maintenant)
         assertEquals(listOf(gardee), relues)
