@@ -1117,7 +1117,7 @@ object Paysages {
             Bete(Espece.RATON_FORET, 74f, 59.6f, plan = 1, taille = 1.3f)),
         Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 23.3f, 36.3f, taille = 1.6f), Bete(Espece.BANANIER, 95.5f, 26.4f, plan = 1),
             Bete(Espece.MASSIF, 72f, 48.4f)),
-        Lieu.MATOUBA to listOf(Bete(Espece.PIC, 13.6f, 30f)),
+        Lieu.MATOUBA to listOf(Bete(Espece.PIC, 30.8f, 22f, plan = 1)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
         Lieu.MEMORIAL_ACTE to listOf(Bete(Espece.PELICAN_QUAI, 92f, 50f))
     )
@@ -8851,129 +8851,315 @@ object Paysages {
         }
 
         /**
-         * Les bains de Matouba en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08) : le flanc du morne couvert de forêt qui
-         * monte à pic vers la droite, en bandes de lisières ; le carbet de bois
-         * ouvert à gauche, son toit gris et sa rambarde en croix, sous un grand
-         * arbre dont le tronc porte le pic de Guadeloupe ; le petit bassin de
-         * pierre dans l'herbe à droite du mot, la clôture de piquets, les
-         * bananiers et les fougères à droite ; l'herbe et les marches de bois
-         * devant. Balisiers pour le colibri.
+         * Matouba en papier découpé, d'après la photo du propriétaire
+         * (2026-11-10), vu à hauteur d'homme : le carbet de bois à gauche, sa
+         * longue façade ouverte à rambarde en croix qui fuit vers le mot, sa
+         * pièce fermée de planches au bout ; le panneau sur ses deux poteaux et
+         * l'arbre du pic de Guadeloupe, la petite stèle de Delgrès devant ; le bassin de pierres moussues à droite
+         * du mot, tourné, où l'eau de source tombe du mur du fond et d'un tuyau
+         * de fer dans une eau claire ; le caillebotis de planches à son pied ;
+         * le talus d'herbe qui monte à droite avec ses piquets, les bananiers ;
+         * derrière, le morne raide couvert de forêt jusqu'au ciel blanc. Pas
+         * une bande droite : le carbet, le bassin et les bords de l'herbe
+         * fuient tous vers l'horizon. Balisiers pour le colibri.
          */
         fun matoubaPapier() {
-            // Le fond de forêt en couches, des troncs pâles dans la brume.
-            morneBoise(4f, 2.4f, 2711, mix(papier(0xFF8CBE74.toInt()), P.cielBas, 0.5f), 2.6f)
-            val pale = mix(papier(0xFF7E8E70.toInt()), P.cielBas, 0.4f)
-            for ((x, e) in arrayOf(34f to 0.6f, 41f to 0.5f, 52f to 0.7f, 58f to 0.5f)) barre(x, 44f, x + 0.6f, 4f, e, pale, 0f)
-            // Le flanc du morne qui monte à droite, hérissé de houppiers.
-            val flanc = brisee(20f, 44f, 34f, 30f, 46f, 18f, 58f, 10f, 70f, 4f, 82f, -1f, 102f, -4f)
-            val verts = intArrayOf(papier(0xFF3E7A34.toInt()), papier(0xFF2E6A2E.toInt()), papier(0xFF4A8638.toInt()))
-            for (k in 0 until 3) {
-                val c = { x: Float -> flanc(x - k * 7f) + k * 6f }
-                val bande = sousLaCrete(20f + k * 7f, 104f, c)
-                bande.op(bosses(20f + k * 7f, 104f, { x -> c(x) + 0.4f }, 1.8f, 3.2f, Alea(2703 + k)), Path.Op.UNION)
-                piece(bande, if (k == 0) mix(verts[k], P.cielBas, 0.3f) else mix(verts[k], P.cielBas, 0.15f), 0.6f)
-                taches(24f + k * 7f, 104f, 46f, 10, 2712 + k, mix(papier(0xFF6EA846.toInt()), P.cielBas, 0.2f), c)
+            // Au fond : le morne raide couvert de forêt, un coin de ciel blanc en haut à droite.
+            fun crete(x: Float) = max(-4f, (x - 58f) * 0.24f) + sin(x * 0.3f) * 0.8f
+            pieceD("M-2 ${crete(-2f)}L58 ${crete(58f)}Q80 4 104 ${crete(104f)}L104 70L-2 70Z", mix(papier(0xFF76A456.toInt()), P.cielBas, 0.22f), 0.4f)
+            val rf = Alea(2731)
+            val clairs = intArrayOf(papier(0xFF86B852.toInt()), papier(0xFF6AA046.toInt()), papier(0xFF4E8A3A.toInt()), papier(0xFF5E9640.toInt()))
+            repeat(80) {
+                val x = -2f + rf() * 106f
+                val y = max(crete(x), -1f) + 1f + rf() * 26f
+                val r = 2f + rf() * 2.6f
+                val boule = Path()
+                for (k in 0 until 3) boule.addCircle(x + (k - 1f) * r * 0.6f, y + (if (k == 1) -r * 0.35f else 0f), r * (0.6f + rf() * 0.2f), Path.Direction.CW)
+                piece(boule, mix(clairs[min((rf() * 4f).toInt(), 3)], P.cielBas, 0.24f - y * 0.005f), 0.3f)
             }
-            brumePapier(24f, 76f, 30f, 4f, 2715)
-            morneBoise(30f, 1.8f, 2716, mix(papier(0xFF5E9E52.toInt()), P.cielBas, 0.2f), 2.6f)
-            brumePapier(30f, 70f, 40f, 3f, 2717)
-            morneBoise(38f, 1.4f, 2718, mix(papier(0xFF4E8E46.toInt()), P.cielBas, 0.1f), 2.2f)
+            brumePapier(54f, 104f, 9f, 3f, 2732)
+            // Plus bas, la lisière plus sombre, en houppiers serrés.
+            val moyens = intArrayOf(papier(0xFF3E7236.toInt()), papier(0xFF4E8238.toInt()), papier(0xFF2E6230.toInt()))
+            repeat(46) {
+                val x = -2f + rf() * 106f
+                val y = 22f + rf() * 10f - max(0f, x - 50f) * 0.12f
+                val r = 2f + rf() * 2.2f
+                val boule = Path()
+                for (k in 0 until 3) boule.addCircle(x + (k - 1f) * r * 0.6f, y + (if (k == 1) -r * 0.35f else 0f), r * (0.6f + rf() * 0.2f), Path.Direction.CW)
+                piece(boule, mix(moyens[min((rf() * 3f).toInt(), 2)], P.cielBas, 0.1f), 0.4f)
+            }
+            pieceD("M-2 31L50 31L104 25L104 70L-2 70Z", mix(papier(0xFF2E6230.toInt()), P.cielBas, 0.08f), 0f)
             plan(1)
-            // Les deux lisières de la forêt, qui descendent vers la clairière.
-            val lisieres = intArrayOf(papier(0xFF2E6A3A.toInt()), papier(0xFF4E8E46.toInt()))
-            for (k in 0 until 2) {
-                rive(true, 6f + k * 12f, 40f + k * 3f, 30f - k * 6f, 2720 + k, lisieres[k], 3.6f)
-                rive(false, 4f + k * 12f, 41f + k * 3f, 66f + k * 6f, 2722 + k, lisieres[1 - k], 3.6f)
+            // Le sol de la clairière : il file presque à plat vers la gauche, puis le talus monte à droite.
+            fun sol(x: Float) = if (x < 46f) 33.6f + sin(x * 0.27f) * 0.4f else 33.6f + sin(x * 0.27f) * 0.4f - ((x - 46f) / 58f).pow(1.4f) * 13f
+            // La lisière : les grands arbres derrière le carbet, les fourrés le long du talus.
+            val ra = Alea(2733)
+            val sombres = intArrayOf(papier(0xFF2E5A2C.toInt()), papier(0xFF3E6E34.toInt()), papier(0xFF4E7E3A.toInt()))
+            repeat(30) {
+                val x = -2f + ra() * 40f
+                val y = 2f + ra() * 22f
+                val r = 2f + ra() * 2.6f
+                piece(Path().apply { addOval(RectF(x - r * 1.3f, y - r, x + r * 1.3f, y + r), Path.Direction.CW) }, sombres[min((ra() * 3f).toInt(), 2)], 0.5f)
             }
-            // Le gros tronc de droite, ses contreforts, ses épiphytes et ses lianes.
-            val gros = papier(0xFF4A4036.toInt())
-            pieceD("M78.4 -2L84.6 -2Q84 20 85 34Q86 42 91 47.6L72 47.6Q77 42 77.8 34Q78.8 20 78.4 -2Z", gros, 0.8f)
-            pieceD("M82.8 -2L84.6 -2Q84 20 85 34Q86 42 91 47.6L87.6 47.6Q84.4 40 83.4 30Q82.8 14 82.8 -2Z", mix(gros, 0xFFFFFFFF.toInt(), 0.12f), 0f)
-            for ((y, l) in arrayOf(10f to 5f, 22f to 4f)) feuillePliee(79f, y, l, 95f, papier(0xFF5E9A44.toInt()), 0.35f)
-            // La voûte : les houppiers qui se rejoignent en haut, à droite.
-            val voute = Path()
-            val rv = Alea(2724)
-            repeat(14) { voute.op(disque(56f + rv() * 50f, -2f + rv() * 9f, 3f + rv() * 2.6f), Path.Op.UNION) }
-            piece(voute, papier(0xFF2E6A2E.toInt()))
-            taches(56f, 104f, 8f, 8, 2725, papier(0xFF5E9A44.toInt())) { -2f }
-            val liane = papier(0xFF6A7A48.toInt())
-            barre(64f, 2f, 63.2f, 24f, 0.3f, liane, 0.2f)
-            barre(71f, 4f, 72f, 32f, 0.35f, liane, 0.2f)
-            barre(94f, 4f, 93f, 28f, 0.3f, liane, 0.2f)
-            // Le grand arbre de gauche : son tronc pour le pic, son houppier en haut.
-            val ecorce = papier(0xFF5A4A3A.toInt())
-            barre(14.4f, 46f, 13.8f, 6f, 1.4f, ecorce, 0.5f)
-            barre(14f, 18f, 24f, 10f, 0.5f, ecorce, 0.3f)
-            val houppier = Path()
-            val rh = Alea(2704)
-            repeat(12) { houppier.op(disque(-2f + rh() * 30f, -1f + rh() * 12f, 3f + rh() * 2.4f), Path.Op.UNION) }
-            piece(houppier, papier(0xFF3E7A30.toInt()))
-            taches(-2f, 28f, 12f, 8, 2705, papier(0xFF6EA846.toInt())) { 0f }
-            // Le sol du sous-bois, sombre, et l'herbe de la petite clairière au milieu.
-            pieceD("M-2 46Q30 44.6 60 45.6Q80 46.4 102 45L102 68L-2 68Z", papier(0xFF4E7A38.toInt()), 0.4f)
-            pieceD("M26 47Q46 45.6 64 46.6Q74 47.4 80 51Q70 56 52 56.6Q34 56 22 52Q20 48.6 26 47Z", papier(0xFF7EAE44.toInt()), 0f)
-            taches(-2f, 102f, 58f, 16, 2726, papier(0xFF3E6A2E.toInt())) { 45f }
-            // Le carbet de bois, ouvert, à gauche.
-            val bois = papier(0xFF8A7458.toInt()); val sombre = papier(0xFF4E4234.toInt())
-            pieceD("M4 39.4L24 38.8L24 46L4 46.6Z", sombre, 0.2f)
-            pieceD("M4 45.8L24.6 45.2L24.6 46.6L4 47.2Z", bois, 0.4f)
-            for (px in floatArrayOf(5f, 14.4f, 23.6f)) barre(px, 46.6f - (px - 4f) * 0.03f, px, 38.6f, 0.6f, bois, 0.4f)
-            for ((x0, x1) in arrayOf(5f to 14.4f, 14.4f to 23.6f)) {
-                barre(x0, 41f, x1, 44.6f, 0.3f, bois, 0f)
-                barre(x0, 44.6f, x1, 41f, 0.3f, bois, 0f)
-                barre(x0, 41f, x1, 41f, 0.35f, bois, 0f)
+            val fourre = Path()
+            var hx = -2f
+            while (hx < 104f) { fourre.op(disque(hx, sol(hx) - 1.6f - ra() * 2.2f, 2f + ra() * 1.6f), Path.Op.UNION); hx += 2f + ra() * 2f }
+            piece(fourre, papier(0xFF2E6232.toInt()), 0.5f)
+            repeat(50) {
+                val x = -2f + ra() * 106f
+                feuillePliee(x, sol(x) - ra() * 3f, 1.4f + ra() * 1.4f, -160f + ra() * 140f,
+                    papier(if (ra() < 0.5f) 0xFF3E7A36.toInt() else 0xFF5E9640.toInt()), 0.45f)
             }
-            val tole = papier(0xFF8E9290.toInt())
-            pieceD("M2.2 39.2L25 38.4L21.6 33L6.6 33.4Z", tole, 0.8f)
-            pieceD("M21.6 33L25 38.4L27.4 38.2Z", papier(0xFF6E7270.toInt()), 0.4f)
-            for (k in 1 until 8) {
-                val u = k / 8f
-                barre(2.2f + 22.8f * u, 39.2f - 0.8f * u, 6.6f + 15f * u, 33.4f - 0.4f * u, 0.1f, papier(0xFF6E7270.toInt()), 0f)
+            // L'arbre du pic, entre le panneau et le mot.
+            val ecorce = papier(0xFF6A5A48.toInt())
+            pieceD("M31.2 ${sol(31f) + 0.4f}Q31.6 22 31.1 8L32.4 8Q32.8 22 32.8 ${sol(32f) + 0.4f}Z", ecorce, 0.6f)
+            pieceD("M31.6 14Q34 10 37 8.4L37.4 9.2Q34.4 11.2 32.2 15Z", ecorce, 0.4f)
+            // Le pré et le talus, qui fuient : les touffes rapetissent en remontant.
+            val pre = Path().apply {
+                moveTo(-2f, sol(-2f))
+                var x = -2f
+                while (x <= 104f) { lineTo(x, sol(x)); x += 1f }
+                lineTo(104f, 70f); lineTo(-2f, 70f); close()
             }
-            pieceD("M26.4 39.6L28.6 39.6L28.6 42.6L26.4 42.6Z", papier(0xFFE8E6E0.toInt()), 0.3f)
-            barre(27.5f, 42.6f, 27.5f, 46f, 0.2f, sombre, 0f)
-            // Dans un coin, au bord de la clairière, la petite stèle de Delgrès et de ses compagnons.
-            val stele = papier(0xFF9A968E.toInt())
-            pieceD("M29.2 47.4L34.2 47.4L34.2 48.4L29.2 48.4Z", mix(stele, 0xFF000000.toInt(), 0.15f), 0.3f)
-            pieceD("M30.2 42.2Q31.7 41.2 33.2 42.2L33.6 47.4L29.8 47.4Z", stele, 0.4f)
-            pieceD("M30.7 43.2L32.7 43.2L32.7 44.8L30.7 44.8Z", papier(0xFF5E5A54.toInt()), 0f)
-            // Deux fleurs rouges déposées au pied.
-            for ((fx, fy) in arrayOf(29.8f to 47.6f, 33.6f to 47.8f))
-                pieceD("M${fx - 0.45f} ${fy}Q$fx ${fy - 0.7f} ${fx + 0.45f} ${fy}Q$fx ${fy + 0.5f} ${fx - 0.45f} ${fy}Z", papier(0xFFC8402E.toInt()), 0f)
-            // La clôture de piquets, au fond de la clairière.
+            piece(pre, papier(0xFF7AAA46.toInt()), 0.5f)
+            val herbe = intArrayOf(papier(0xFF6A9E3E.toInt()), papier(0xFF8EBA52.toInt()), papier(0xFF5E8E38.toInt()))
+            repeat(120) {
+                val x = -2f + ra() * 106f
+                val y = sol(x) + 0.6f + ra() * (58f - sol(x))
+                val f = (y - 31.5f) / 14f
+                brin(x, y, (1.2f + ra() * 1.4f) * f, (ra() - 0.5f) * 2f * f, herbe[min((ra() * 3f).toInt(), 2)])
+            }
+            // Des plaques d'herbe plus claire ou plus sombre, aplaties par la distance.
+            repeat(26) {
+                val x = -2f + ra() * 106f
+                val y = sol(x) + 1f + ra() * (62f - sol(x))
+                val f = (y - 31.5f) / 14f
+                ovale(x, y, (2f + ra() * 3f) * f, (0.4f + ra() * 0.5f) * f, if (ra() < 0.5f) papier(0xFF8EBA56.toInt()) else papier(0xFF6A9A3E.toInt()))
+            }
+            // Le talus qui monte à droite, son pied derrière le bassin, plus vert que le pré.
+            fun pied(x: Float) = if (x >= 60f) 45.4f - (x - 60f) * 0.04f else 45.4f - ((60f - x) / 14f).pow(2f) * (45.4f - sol(46f))
+            val talusPre = Path().apply {
+                moveTo(46f, sol(46f))
+                var x = 46f
+                while (x <= 104f) { lineTo(x, sol(x)); x += 1f }
+                x = 104f
+                while (x >= 46f) { lineTo(x, pied(x)); x -= 1f }
+                close()
+            }
+            piece(talusPre, papier(0xFF8EBA52.toInt()), 0.3f)
+            repeat(40) {
+                val x = 48f + ra() * 56f
+                val y = sol(x) + 0.5f + ra() * (pied(x) - sol(x) - 0.5f)
+                val f = (y - 18f) / 22f
+                brin(x, y, (1.2f + ra() * 1.6f) * f, (ra() - 0.5f) * 2f * f, herbe[min((ra() * 3f).toInt(), 2)])
+            }
+            // L'herbe sèche et blonde, devant et à droite du bassin, qui s'évase vers soi.
+            pieceD("M58 70Q62 58 70 52Q80 47 92 44.6Q98 43.6 104 43.4L104 70Z", papier(0xFFB4A862.toInt()), 0.2f)
+            val blonds = intArrayOf(papier(0xFFC8B874.toInt()), papier(0xFF9A9A50.toInt()), papier(0xFF7AA040.toInt()))
+            repeat(60) {
+                val x = 62f + ra() * 42f
+                val y = 46f + ra() * 22f
+                if (y > 70f - (x - 58f) * 2f) {
+                    val f = (y - 31.5f) / 16f
+                    brin(x, y, (1.4f + ra() * 2f) * f, (ra() - 0.5f) * 2.4f * f, blonds[min((ra() * 3f).toInt(), 2)])
+                }
+            }
+            // Les piquets plantés sur le talus, plus petits en montant, et le tuyau qui descend à la source.
             val piquet = papier(0xFF7A6A56.toInt())
-            var fx = 38f
-            while (fx < 60f) { barre(fx, 45.6f, fx, 42f, 0.35f, piquet, 0.2f); fx += 4.6f }
-            barre(38f, 43f, 56.6f, 42.8f, 0.08f, papier(0xFF5A5450.toInt()), 0f)
-            // Le petit bassin de pierre, creusé dans l'herbe, à droite du mot.
-            val pierre = papier(0xFF8E8A82.toInt())
-            pieceD("M62 47.4L76 47L78 50L60 50.4Z", papier(0xFF2A2E2A.toInt()), 0.2f)
-            pieceD("M60.4 46.4L64 45.6L64 47.8L60.4 48.6Z", pierre, 0.5f)
-            pieceD("M74 45.4L78.6 46.8L78.6 48.6L74 47.6Z", pierre, 0.5f)
-            pieceD("M64 45.6L74 45.4L74 46.4L64 46.6Z", papier(0xFF6E6A64.toInt()), 0.3f)
-            barre(69f, 47f, 69f, 43f, 0.3f, papier(0xFF9E9A94.toInt()), 0.2f)
-            barre(69f, 43.2f, 71.6f, 44.2f, 0.25f, papier(0xFF9E9A94.toInt()), 0.2f)
-            // Les bananiers à droite.
-            pied(90f, 50f, 18f, 2706)
-            pied(98f, 52f, 16f, 2707)
-            pied(84f, 50f, 12f, 2708)
+            for (px in floatArrayOf(64f, 72f, 81f, 92f)) {
+                val y = sol(px) + (pied(px) - sol(px)) * 0.3f
+                val f = (y - 18f) / 16f
+                barre(px, y + 0.3f, px + 0.1f, y - 5f * f, 0.55f * f, piquet, 0.3f)
+            }
+            // Les balisiers et les fougères du talus, le bananier qui entre par la droite.
+            balisier(68f, sol(68f) + (pied(68f) - sol(68f)) * 0.5f, 6f, papier(0xFF4E9A44.toInt()))
+            balisier(90f, pied(90f) - 2.6f, 8f, papier(0xFF3E8A3E.toInt()))
+            for ((fx, fa) in arrayOf(84f to -40f, 86f to -140f, 98f to -60f, 101f to -120f)) fougere(fx, pied(fx) - 1.4f, 6f, fa, papier(0xFF3E7A3A.toInt()))
+            feuilleBananier(104f, sol(100f) + 2f, 13f, -168f, papier(0xFF7AAA42.toInt()))
+            feuilleBananier(104f, sol(100f) - 1f, 11f, -142f, papier(0xFF6E9E3A.toInt()))
+            // Le carbet vu à hauteur d'homme : sa longue façade fuit vers un point de fuite sur
+            // l'horizon (42, 31.5), le bord le plus proche sort de la fenêtre à gauche.
+            fun fu(y0: Float, x: Float) = y0 + (31.5f - y0) * (x + 2f) / 44f
+            fun xMur(u: Float) = 42f - 44f / (1f + 1.256f * u)
+            fun mur(u0: Float, u1: Float, y0: Float, y1: Float): String {
+                val a = xMur(u0); val b = xMur(u1)
+                return "M$a ${fu(y0, a)}L$b ${fu(y0, b)}L$b ${fu(y1, b)}L$a ${fu(y1, a)}Z"
+            }
+            fun ech(x: Float) = (42f - x) / 44f
+            val bois = papier(0xFF8A7458.toInt())
+            val sombre = papier(0xFF3A322A.toInt())
+            val tole = papier(0xFFB4B8BA.toInt())
+            // Le dessous du toit, ses chevrons, la sablière ; l'intérieur sombre derrière la rambarde.
+            pieceD(mur(0f, 1f, 4.5f, 37.2f), sombre, 0.6f)
+            pieceD(mur(0f, 1f, 4.5f, 10f), papier(0xFF54483A.toInt()), 0f)
+            for (k in 0 until 14) {
+                val x = xMur(k / 13f)
+                barre(x, fu(4.6f, x), x - 0.4f * ech(x), fu(9.8f, x - 0.4f * ech(x)), 0.4f * ech(x), papier(0xFF7A6A54.toInt()), 0f)
+            }
+            pieceD(mur(0f, 1f, 10f, 11.6f), bois, 0.3f)
+            // La pièce fermée au bout : des planches grises, verticales.
+            val planche = papier(0xFF9C8E7C.toInt())
+            pieceD(mur(0.5f, 1f, 11.6f, 37.2f), planche, 0.4f)
+            for (k in 1 until 14) {
+                val x = xMur(0.5f + k / 28f)
+                barre(x, fu(11.8f, x), x, fu(37f, x), 0.12f * ech(x) + 0.04f, mix(planche, 0xFF000000.toInt(), 0.22f), 0f)
+            }
+            pieceD(mur(0.86f, 0.97f, 22f, 25.4f), papier(0xFFE8E6E0.toInt()), 0.2f)
+            // Le plancher, ses poteaux et la rambarde en croix.
+            pieceD(mur(0f, 1f, 35.6f, 37.2f), bois, 0.4f)
+            pieceD(mur(0f, 1f, 37.2f, 38.4f), papier(0xFF4E4234.toInt()), 0f)
+            for (u in floatArrayOf(0f, 0.25f, 0.5f, 1f)) {
+                val x = xMur(u)
+                barre(x, fu(10f, x), x, fu(38.4f, x), 1.3f * ech(x), bois, 0.4f)
+            }
+            for ((u0, u1) in arrayOf(0f to 0.25f, 0.25f to 0.5f)) {
+                val a = xMur(u0); val b = xMur(u1)
+                barre(a, fu(22.6f, a), b, fu(33f, b), 0.6f * ech(a), bois, 0.2f)
+                barre(a, fu(33f, a), b, fu(22.6f, b), 0.6f * ech(a), bois, 0.2f)
+                barre(a, fu(22.6f, a), b, fu(22.6f, b), 0.8f * ech(a), bois, 0.3f)
+                barre(a, fu(33f, a), b, fu(33f, b), 0.6f * ech(a), bois, 0.2f)
+            }
+            // Le bord de tôle du toit, au-dessus.
+            pieceD(mur(0f, 1.04f, 1.6f, 4.6f), tole, 0.8f)
+            val bout = xMur(1.04f)
+            pieceD("M$bout ${fu(1.6f, bout)}L${bout + 0.4f} ${fu(1.6f, bout)}L${bout + 0.4f} ${fu(4.8f, bout)}L$bout ${fu(4.6f, bout)}Z",
+                mix(tole, 0xFF000000.toInt(), 0.25f), 0f)
+            // Le panneau d'information, sur ses deux poteaux.
+            barre(25.2f, sol(25.2f) + 0.4f, 25.2f, 24.6f, 0.45f, bois, 0.3f)
+            barre(28.8f, sol(28.8f) + 0.4f, 28.8f, 24.8f, 0.45f, bois, 0.3f)
+            pieceD("M24.4 24.6L29.6 25L29.6 30.2L24.4 30Z", papier(0xFFE6E4DC.toInt()), 0.5f)
+            pieceD("M24.4 24.6L29.6 25L29.6 26L24.4 25.6Z", papier(0xFF5E7A8A.toInt()), 0f)
+            for (k in 0 until 4) barre(25f, 27f + k * 0.7f, 28.6f + (k % 2) * 0.4f, 27.1f + k * 0.7f, 0.18f, papier(0xFFA8A49C.toInt()), 0f)
+            // La petite stèle de Delgrès et de ses compagnons, devant le panneau, son socle qui fuit comme le carbet.
+            val stele = papier(0xFF9A968E.toInt())
+            pieceD("M25.4 40.6L31.4 40.2L31.6 41.4L25.2 41.9Z", mix(stele, 0xFF000000.toInt(), 0.18f), 0.4f)
+            pieceD("M26.2 40.6Q26 35.6 28.4 34.8Q30.8 35.4 30.6 40.3Z", stele, 0.5f)
+            pieceD("M27.2 36.6L29.6 36.5L29.6 38.4L27.2 38.5Z", papier(0xFF5E5A54.toInt()), 0f)
+            // Deux fleurs rouges déposées au pied.
+            for ((fx, fy) in arrayOf(25.8f to 41.6f, 31f to 41.2f))
+                pieceD("M${fx - 0.5f} ${fy}Q$fx ${fy - 0.8f} ${fx + 0.5f} ${fy}Q$fx ${fy + 0.55f} ${fx - 0.5f} ${fy}Z", papier(0xFFC8402E.toInt()), 0f)
             plan(2)
-            // Le sous-bois de devant : les marches de bois, fougères et grandes feuilles des deux bords.
-            val planche = papier(0xFF9A8A70.toInt())
-            pieceD("M24 60.6L36 59.4L36.4 60.8L24.4 62Z", planche, 0.5f)
-            pieceD("M20 65.6L40 64L40.4 65.6L20.4 67.2Z", planche, 0.5f)
-            val fougeres = intArrayOf(papier(0xFF5EA04A.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF7AB654.toInt()))
-            for ((fx2, fy, fl, fa) in arrayOf(
-                floatArrayOf(-2f, 52f, 13f, -25f), floatArrayOf(2f, 58f, 14f, -15f), floatArrayOf(4f, 66f, 12f, -32f),
-                floatArrayOf(102f, 52f, 13f, -155f), floatArrayOf(100f, 58f, 13f, -165f), floatArrayOf(96f, 67f, 11f, -140f)))
-                fougere(fx2, fy, fl, fa, fougeres[((fx2 + fy).toInt() and 0xFF) % 3])
-            feuilleBananier(-2f, 67f, 12f, -40f, papier(0xFF4FB06A.toInt()))
-            feuilleCoeur(16f, 67f, 4f, -10f, papier(VERT_PROFOND))
-            feuilleBananier(102f, 67f, 12f, -142f, papier(0xFF3FA86A.toInt()))
-            feuilleCoeur(82f, 67f, 3.6f, 14f, papier(VERT_PROFOND))
-            balisier(12f, 61f, 13f, feuille())
-            balisier(87f, 61f, 13f, feuille())
+            // Le bassin et son caillebotis sur la planche de devant : ils glissent devant le carbet et la stèle.
+            // Le bassin, tourné, vu par une vraie perspective : l'œil à 2,6 m, qui plonge dedans, le regard vers x 72.
+            fun ecran(x: Float, y: Float, z: Float) = floatArrayOf(72f + 60f * x / z, 31.5f + 60f * (2.6f - y) / z)
+            val co = cos(Math.toRadians(12.0)).toFloat(); val si = sin(Math.toRadians(12.0)).toFloat()
+            fun bas(u: Float, v: Float, y: Float) = ecran(0.5f + u * co - v * si, y, 7f + u * si + v * co)
+            fun quad(vararg q: FloatArray) = q.withIndex().joinToString("") { (i, p) -> (if (i == 0) "M" else "L") + "${p[0]} ${p[1]}" } + "Z"
+            val a = 1.7f; val b = 1.3f; val e = 0.28f; val haut = 0.3f; val fond = 0.85f; val niveau = -0.05f
+            val ai = a - e; val bi = b - e
+            val moellon = intArrayOf(papier(0xFF6E7460.toInt()), papier(0xFF5E6650.toInt()), papier(0xFF7E8270.toInt()), papier(0xFF5E7A44.toInt()))
+            val rb = Alea(2734)
+            // Le mur du fond retient le talus, plus haut ; les murs des côtés descendent vers soi.
+            fun dessusCote(v: Float) = haut + (fond - haut) * (v + b) / (2f * b)
+            // Un pan de mur en moellons, de s0 à s1 le long de son arête, du bas [y1] jusqu'à son dessus [y0].
+            fun pan(p: (Float, Float) -> FloatArray, s0: Float, s1: Float, y0: (Float) -> Float, y1: Float, clair: Float) {
+                pieceD(quad(p(s0, y0(s0)), p(s1, y0(s1)), p(s1, y1), p(s0, y1)), mix(moellon[1], 0xFFFFFFFF.toInt(), clair), 0.2f)
+                val d = if (s1 > s0) 1f else -1f
+                var y = y1
+                while (y < max(y0(s0), y0(s1)) - 0.05f) {
+                    val h = 0.16f + rb() * 0.08f
+                    var s = s0 + d * rb() * 0.1f
+                    while ((s1 - s) * d > 0.04f) {
+                        val l = min(0.18f + rb() * 0.22f, (s1 - s) * d) * d
+                        val ha = min(y + h, y0(s)) - 0.015f; val hb = min(y + h, y0(s + l)) - 0.015f
+                        if (ha > y + 0.04f && hb > y + 0.04f)
+                            pieceD(quad(p(s + d * 0.015f, ha), p(s + l - d * 0.015f, hb), p(s + l - d * 0.015f, y + 0.015f), p(s + d * 0.015f, y + 0.015f)),
+                                mix(moellon[min((rb() * 4f).toInt(), 3)], 0xFFFFFFFF.toInt(), clair), 0f)
+                        s += l
+                    }
+                    y += h
+                }
+            }
+            // Les faces intérieures : le mur du fond, le mur de gauche au jour, celui de droite à l'ombre.
+            pan({ s, y -> bas(s, bi, y) }, -ai, ai, { fond }, niveau, 0f)
+            pan({ s, y -> bas(-ai, s, y) }, -bi, bi, ::dessusCote, niveau, 0.14f)
+            pan({ s, y -> bas(ai, s, y) }, bi, -bi, ::dessusCote, niveau, -0.1f)
+            // L'eau claire : le fond de galets clairs sous un voile bleu.
+            val eau = quad(bas(-ai, -bi, niveau), bas(ai, -bi, niveau), bas(ai, bi, niveau), bas(-ai, bi, niveau))
+            pieceD(eau, papier(0xFFA8D8D4.toInt()), 0f)
+            repeat(12) {
+                val g = bas(-ai + rb() * 2f * ai, -bi + rb() * 2f * bi, niveau)
+                ovale(g[0], g[1], 0.6f + rb() * 0.6f, 0.25f + rb() * 0.2f, papier(0xFFC8E6DE.toInt()))
+            }
+            forme(chemin(eau), papier(0xFF6EB8D0.toInt()), 0.35f)
+            // L'eau qui tombe : la source par-dessus le mur du fond, le filet du tuyau de fer.
+            // Des filets blancs et bleutés, et l'eau qui bouillonne à peine au pied, à plat.
+            fun source(x: Float, y0: Float, y1: Float, w: Float) {
+                for (k in 0 until 4) {
+                    val u = k / 3f - 0.5f
+                    val x0 = x + u * w * 0.6f; val x1 = x + u * w
+                    val e0 = w * 0.14f; val e1 = w * 0.2f
+                    pieceD("M${x0 - e0} ${y0}Q${(x0 + x1) / 2f - e0} ${(y0 + y1) / 2f} ${x1 - e1} ${y1}L${x1 + e1} ${y1}" +
+                        "Q${(x0 + x1) / 2f + e0} ${(y0 + y1) / 2f} ${x0 + e0} ${y0}Z",
+                        if (k % 2 == 1) papier(0xFFCFE6EA.toInt()) else papier(0xFFF4F8F8.toInt()), 0.2f)
+                }
+                for (j in 0 until 3) ovale(x + (j - 1f) * w * 0.45f, y1 + 0.1f, w * 0.4f, w * 0.12f + 0.1f, papier(0xFFF4F8F8.toInt()))
+            }
+            val s1 = bas(-0.25f, bi, fond + 0.04f); val s2 = bas(-0.25f, bi, niveau)
+            source(s1[0], s1[1], s2[1], 1.6f)
+            val fer = papier(0xFF6A6E70.toInt())
+            val pied = bas(0.6f, 0.3f, niveau); val tete = bas(0.6f, 0.3f, 1.25f); val bec = bas(0.2f, 0.3f, 1.25f)
+            val jet = bas(0.2f, 0.3f, 1.08f); val chute = bas(0.2f, 0.3f, niveau)
+            barre(pied[0], pied[1], tete[0], tete[1], 0.32f, fer, 0.3f)
+            barre(tete[0], tete[1], bec[0], bec[1], 0.28f, fer, 0.3f)
+            barre(bec[0], bec[1], jet[0], jet[1], 0.26f, fer, 0f)
+            source(jet[0], jet[1], chute[1], 0.5f)
+            // Le tuyau blanc qui passe le mur du fond et plonge.
+            val t0 = bas(0.75f, b + 0.1f, fond + 0.05f); val t1 = bas(0.7f, bi - 0.05f, fond); val t2 = bas(0.68f, bi - 0.1f, niveau)
+            trait("M${t0[0]} ${t0[1]}Q${t1[0]} ${t1[1] - 0.6f} ${t1[0]} ${t1[1]}L${t2[0]} ${t2[1]}", papier(0xFFE8ECEA.toInt()), 0.35f)
+            // Les dessus des murs, pierre claire et mousse ; le mur de devant en dernier.
+            val dessus = papier(0xFFA4A28E.toInt())
+            pieceD(quad(bas(-a, b, fond), bas(a, b, fond), bas(ai, bi, fond), bas(-ai, bi, fond)), dessus, 0.3f)
+            pieceD(quad(bas(-a, b, fond), bas(-ai, bi, fond), bas(-ai, -bi, dessusCote(-bi)), bas(-a, -b, haut)), mix(dessus, 0xFFFFFFFF.toInt(), 0.1f), 0.3f)
+            pieceD(quad(bas(a, b, fond), bas(ai, bi, fond), bas(ai, -bi, dessusCote(-bi)), bas(a, -b, haut)), dessus, 0.3f)
+            pan({ s, y -> bas(s, -b, y) }, -a, a, { haut }, -0.2f, 0.06f)
+            // Le pré devant le bassin, qui cache l'eau sous le mur de devant : vert à gauche, sec à droite.
+            val q0 = bas(-a - 2.2f, -b, -0.2f); val q1 = bas(a, -b, -0.2f)
+            pieceD("M${q0[0]} ${q0[1]}L${q1[0]} ${q1[1]}L104 ${q1[1] - 1f}L104 70L${q0[0]} 70Z", papier(0xFF7AAA46.toInt()), 0f)
+            val q2 = bas(0f, -b, -0.2f)
+            pieceD("M${q2[0] - 6f} 70Q${q2[0] - 2f} ${q2[1] + 2f} ${q2[0]} ${q2[1]}L${q1[0]} ${q1[1]}L104 ${q1[1] - 1f}L104 70Z",
+                papier(0xFFB4A862.toInt()), 0f)
+            pieceD(quad(bas(-a, -b, haut), bas(a, -b, haut), bas(ai, -bi, haut), bas(-ai, -bi, haut)), mix(dessus, 0xFFFFFFFF.toInt(), 0.08f), 0.3f)
+            val mousse = intArrayOf(papier(0xFF5E8A3A.toInt()), papier(0xFF4E7A34.toInt()))
+            repeat(16) {
+                val s = -a + rb() * 2f * a
+                val p = if (rb() < 0.5f) bas(s, b - e * 0.5f, fond) else bas(s, -b + e * 0.5f, haut)
+                ovale(p[0], p[1], 0.6f + rb() * 0.9f, 0.25f + rb() * 0.15f, mousse[min((rb() * 2f).toInt(), 1)])
+            }
+            // L'herbe qui monte contre le mur de devant, à droite, comme sur la photo.
+            val talus = Path().apply {
+                val d0 = bas(-0.1f, -b - 0.05f, -0.25f)
+                moveTo(d0[0], d0[1])
+                var s = -0.1f
+                while (s <= a + 0.4f) { val q = bas(s, -b - 0.05f, -0.2f + 0.36f * ((s + 0.1f) / (a + 0.5f)).pow(0.5f)); lineTo(q[0], q[1] + sin(s * 21f) * 0.25f); s += 0.1f }
+                val d1 = bas(a + 0.4f, -b - 0.3f, -0.4f)
+                lineTo(d1[0] + 4f, d1[1]); lineTo(d1[0] + 4f, d1[1] + 3f); lineTo(d0[0], d0[1] + 3f); close()
+            }
+            piece(talus, papier(0xFF8AB24E.toInt()), 0.4f)
+            // Le caillebotis de planches, au pied du bassin, à gauche.
+            val bp = papier(0xFF8C7C66.toInt())
+            pieceD(quad(bas(-a - 0.9f, -b - 0.25f, 0.06f), bas(-a - 0.1f, -b - 0.25f, 0.06f), bas(-a - 0.1f, -b + 0.7f, 0.06f), bas(-a - 0.9f, -b + 0.7f, 0.06f)), bp, 0.5f)
+            pieceD(quad(bas(-a - 0.9f, -b - 0.25f, 0.06f), bas(-a - 0.1f, -b - 0.25f, 0.06f), bas(-a - 0.1f, -b - 0.25f, -0.08f), bas(-a - 0.9f, -b - 0.25f, -0.08f)),
+                mix(bp, 0xFF000000.toInt(), 0.3f), 0f)
+            for (k in 1 until 4) {
+                val v = -b - 0.25f + k * 0.2375f
+                val g0 = bas(-a - 0.9f, v, 0.06f); val g1 = bas(-a - 0.1f, v, 0.06f)
+                barre(g0[0], g0[1], g1[0], g1[1], 0.1f, mix(bp, 0xFF000000.toInt(), 0.3f), 0f)
+            }
+            // Devant, pas de bande : une touffe d'herbe drue dans le coin gauche, des brins au ras du bas.
+            pieceD("M-2 44Q8 46 16 52Q24 58 30 70L-2 70Z", papier(0xFF72A842.toInt()), 0.15f)
+            val rh = Alea(2737)
+            val verts = intArrayOf(papier(0xFF5E9636.toInt()), papier(0xFF86B848.toInt()), papier(0xFF4E8430.toInt()))
+            repeat(90) {
+                val y = 45f + rh() * 23f
+                val x = -2f + rh() * ((y - 42f) * 1.3f)
+                brin(x, y, 2.4f + rh() * 3f, (rh() - 0.5f) * 3f, verts[min((rh() * 3f).toInt(), 2)])
+            }
+            repeat(50) {
+                val x = 20f + rh() * 84f
+                val y = 65f + rh() * 3f
+                brin(x, y, 1.6f + rh() * 2.6f, (rh() - 0.5f) * 3f, (if (x > 60f) blonds else verts)[min((rh() * 3f).toInt(), 2)])
+            }
         }
 
         /** Matouba : la stèle de Delgrès et de ses compagnons, dans sa clairière, au cœur de la forêt. */
