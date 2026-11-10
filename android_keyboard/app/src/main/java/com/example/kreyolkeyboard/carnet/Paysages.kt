@@ -1446,8 +1446,69 @@ object Paysages {
     /** La lanterne du phare de Terre-de-Bas, sur le plan du fond : x, y. */
     internal val PHARE_PETITE_TERRE = floatArrayOf(86f, 22.4f)
 
-    /** L'océan sous Gueule Grand Gouffre, sur le plan du fond : x0, x1, y0, y1. */
-    internal val EAU_GOUFFRE = floatArrayOf(-2f, 66f, 16f, 42f)
+    /**
+     * La côte de Gueule Grand Gouffre, entre l'herbe et la mer (plan de
+     * devant), en ligne brisée : x, y, x, y… Elle passe juste au-dessus du
+     * trou, qu'elle ne sépare de la mer que par un pont de roche mince.
+     */
+    internal val COTE_GOUFFRE = floatArrayOf(-2f, 50f, 10f, 46f, 24f, 40.5f, 38f, 35f, 50f, 30f, 58f, 26.6f,
+        66f, 23.2f, 76f, 20.2f, 88f, 17.4f, 98f, 15.6f, 104f, 13f)
+
+    /** Où la côte de Gueule Grand Gouffre croise la hauteur [y] : la mer est à gauche de ce x. */
+    internal fun xCoteGouffre(y: Float): Float {
+        val c = COTE_GOUFFRE
+        if (y >= c[1]) return c[0]
+        var k = 0
+        while (k + 3 < c.size) {
+            if (y <= c[k + 1] && y >= c[k + 3]) return c[k] + (c[k + 2] - c[k]) * (c[k + 1] - y) / (c[k + 1] - c[k + 3])
+            k += 2
+        }
+        return c[c.size - 2]
+    }
+
+    /**
+     * Le trou de Gueule Grand Gouffre est couché le long de la côte : il se
+     * dessine redressé, puis tourne de cet angle (en degrés) autour de
+     * [CENTRE_GOUFFRE]. Seuls le trou et son bord tournent : l'arche reste
+     * droite et l'eau de niveau.
+     */
+    internal const val ROT_GOUFFRE = -14f
+    internal val CENTRE_GOUFFRE = floatArrayOf(77f, 40f)
+
+    /** Le trou de Gueule Grand Gouffre, redressé. */
+    internal fun trouDroitGouffre() = Path().apply {
+        moveTo(55f, 45f)
+        quadTo(54f, 33f, 63f, 28f)
+        quadTo(71f, 24f, 81f, 24f)
+        quadTo(93f, 23.4f, 97.6f, 27f)
+        quadTo(100.6f, 30f, 99.6f, 37f)
+        quadTo(98.6f, 47f, 90f, 52f)
+        quadTo(80f, 57.4f, 68f, 56.6f)
+        quadTo(56f, 55f, 55f, 45f)
+        close()
+    }
+
+    /** Le trou de Gueule Grand Gouffre, découpé dans le sol du plan de devant, couché le long de la côte. */
+    internal fun trouGouffre() = trouDroitGouffre().apply {
+        transform(Matrix().apply { setRotate(ROT_GOUFFRE, CENTRE_GOUFFRE[0], CENTRE_GOUFFRE[1]) })
+    }
+
+    /** La cavité sous le trou de Gueule Grand Gouffre (plan du milieu) : plus grande que le trou, qui glisse devant. */
+    internal fun caviteGouffre() = Path(trouGouffre()).apply { transform(Matrix().apply { setScale(1.08f, 1.1f, 77f, 40f) }) }
+
+    /** L'eau au fond du trou de Gueule Grand Gouffre (plan du milieu) : de niveau, elle, quoique le trou soit couché. */
+    internal fun bassinGouffre() = chemin("M40 45L110 45L110 70L40 70Z").apply {
+        op(caviteGouffre(), Path.Op.INTERSECT)
+    }
+
+    /** La porte ouverte sur l'océan sous l'arche de Gueule Grand Gouffre, droite, au ras de l'eau (plan du milieu). */
+    internal const val PORTE_GOUFFRE_D = "M67.8 45L68.2 40.6Q69 35 74.6 33.4Q80.6 32.6 83.4 37Q84.6 40.4 84.4 45Z"
+
+    /** Le seuil de la porte de Gueule Grand Gouffre (plan du milieu) : x, y. */
+    internal val PORTE_GOUFFRE = floatArrayOf(76f, 45f)
+
+    /** L'océan au large de Gueule Grand Gouffre, sur le plan du fond : x0, x1, y0, y1 ; la côte le borne ([xCoteGouffre]). */
+    internal val EAU_GOUFFRE = floatArrayOf(-2f, 104f, -2f, 50f)
 
     /** L'océan de la Grande Vigie, à gauche de la falaise, sur le plan du milieu : x0, x1, y0, y1. */
     internal val EAU_VIGIE = floatArrayOf(-2f, 52f, 17f, 48f)
@@ -7873,89 +7934,170 @@ object Paysages {
         // ------------------------------------------- Gueule Grand Gouffre en papier
 
         /**
-         * Gueule Grand Gouffre en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08), vue d'en haut : l'océan turquoise qui
-         * monte jusqu'à un horizon haut, la pointe boisée au loin à droite et
-         * son écume ; l'arête de calcaire coiffée d'herbe qui monte en biais
-         * vers la droite, percée de l'arche où la mer s'engouffre, à droite
-         * du mot ; les blocs clairs du bord devant. La mer scintille sur la
-         * carte ouverte.
+         * Gueule Grand Gouffre en papier découpé, vue d'en haut d'après la
+         * photo aérienne du propriétaire (2026-11-10) : un trou dans le
+         * plateau, creusé par l'érosion au ras de la falaise et couché le long
+         * de la côte, et au fond de ce trou une porte ouverte sur l'océan,
+         * sous l'arche de roche grise qui le sépare de la mer. Le théâtre de
+         * papier se lit du premier plan au dernier, chaque plan vu par la
+         * découpe du précédent :
+         *
+         * - devant, le sol : l'herbe, la côte et sa falaise blanche, le pont
+         *   d'herbe au-dessus de l'arche, la frange de roche grise du trou et,
+         *   du côté proche, la corniche de calcaire blanc où sont l'escalier
+         *   de bois et son belvédère ; **le trou y est découpé**
+         *   ([Paysages.trouGouffre]) ;
+         * - au milieu, vu par le trou : l'arche de roche grise, claire sur son
+         *   pilier de gauche, noire sous le surplomb de droite, l'eau sombre
+         *   au fond, et sous l'arche **la porte, découpée à son tour**, au ras
+         *   de l'eau ;
+         * - au fond, l'océan, profond au large, turquoise contre la côte, et
+         *   presque blanc de soleil au pied de l'arche, qu'on voit par la porte.
+         *
+         * Le bord du trou se dessine dans le repère du trou redressé
+         * ([Paysages.ROT_GOUFFRE]), l'arche et l'eau restent droites. Le trou
+         * et sa porte sont à droite du mot.
          */
         fun gueuleGrandGouffrePapier() {
-            // L'océan, bleu profond au large, turquoise vers la côte.
-            pieceD("M-2 12.6L102 12.6L102 68L-2 68Z", papier(0xFF2A72A8.toInt()), 0.2f)
-            pieceD("M-2 20Q50 19 102 21L102 68L-2 68Z", papier(0xFF1E9AB8.toInt()), 0f)
-            pieceD("M-2 30Q50 29 102 31L102 68L-2 68Z", papier(0xFF22B4C0.toInt()), 0f)
-            // Peu de lanières, longues : serrées, leurs tranches de kraft
-            // brunissent la mer.
+            val (cx, cy) = Paysages.CENTRE_GOUFFRE
+            val droit = Paysages.trouDroitGouffre()
+            // Au fond : l'océan, d'un bord à l'autre, profond au large, turquoise vers la côte.
+            pieceD("M-2 -2L104 -2L104 70L-2 70Z", papier(0xFF0E5E96.toInt()), 0f)
+            for ((d, col) in arrayOf("M-2 26Q30 12 60 6Q82 2 104 0L104 70L-2 70Z" to 0xFF1180B0,
+                    "M-2 38Q26 26 52 18Q78 10 104 8L104 70L-2 70Z" to 0xFF16A2C2,
+                    "M-2 47Q24 38 48 29Q74 20 104 14L104 70L-2 70Z" to 0xFF2EC4CC))
+                pieceD(d, papier(col.toInt()), 0f)
             val rm = Alea(2402)
-            val houle = intArrayOf(papier(0xFF2A86B4.toInt()), papier(0xFF46C2CA.toInt()), papier(0xFF1E8AB0.toInt()))
-            repeat(22) {
-                val y = 14f + rm() * 34f; val x = -2f + rm() * 90f; val l = (5f + rm() * 10f) * (0.5f + y / 40f)
-                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.4f} $x ${y}Z", houle[min((rm() * 3f).toInt(), 2)], 0f)
-            }
+            val houle = intArrayOf(papier(0xFF1C92BE.toInt()), papier(0xFF46CCD2.toInt()), papier(0xFF0E74A6.toInt()))
             repeat(26) {
-                val x = -2f + rm() * 70f; val y = 18f + rm() * 30f; val l = 0.8f + rm() * 1.6f * (y / 30f)
-                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.3f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.2f} $x ${y}Z", papier(0xFFF2F6F6.toInt()), 0f)
+                val x = -2f + rm() * 90f
+                val y = -1f + rm() * (44f - x * 0.36f)
+                val l = 4f + rm() * 8f
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y - 0.3f}Q${x + l / 2f} ${y + 0.3f} $x ${y}Z", houle[min((rm() * 3f).toInt(), 2)], 0f)
             }
-            // La pointe boisée au loin, sa falaise, l'écume à son pied.
-            val pointe = brisee(68f, 26f, 74f, 21f, 82f, 18.4f, 92f, 17.4f, 102f, 17f)
-            val p = sousLaCrete(68f, 102f, pointe)
-            p.op(chemin("M66 0L104 0L104 29L66 29Z"), Path.Op.INTERSECT)
-            piece(p, papier(0xFF8A8478.toInt()))
-            val vert = { x: Float -> pointe(x) }
-            val herbe = sousLaCrete(70f, 102f, vert)
-            herbe.op(chemin("M66 0L104 0L104 23Q88 22 76 24.6L72 24Z"), Path.Op.INTERSECT)
-            herbe.op(bosses(72f, 103f, { x -> pointe(x) + 0.2f }, 0.7f, 1.2f, Alea(2403)), Path.Op.UNION)
-            piece(herbe, papier(0xFF4E8A3A.toInt()))
-            for ((ex, ey, el) in arrayOf(Triple(64f, 28f, 6f), Triple(70f, 29f, 5f), Triple(60f, 30.4f, 4f)))
-                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.7f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.4f} $ex ${ey}Z", papier(0xFFF2F6F6.toInt()), 0f)
+            // Les rochers en haut à droite, et la mer qui s'y brise.
+            pieceD("M88 -2L104 -2L104 8Q98 7 94 4Q90 2 88 -2Z", papier(0xFF6E6A62.toInt()), 0.4f)
+            for ((ex, ey, er) in arrayOf(Triple(86f, 1f, 3.6f), Triple(84f, 4f, 2.6f), Triple(90f, 6f, 3f), Triple(81f, 2f, 1.8f)))
+                forme(Path().apply { addOval(RectF(ex - er, ey - er * 0.5f, ex + er, ey + er * 0.5f), Path.Direction.CW) }, blanc(), 0.75f)
             plan(1)
-            // L'arête de calcaire qui monte vers la droite, coiffée d'herbe.
-            val arete = brisee(-2f, 50f, 20f, 47f, 40f, 43f, 56f, 38f, 70f, 32.6f, 84f, 27.4f, 102f, 22f)
-            val roc = sousLaCrete(-2f, 102f, arete)
-            // L'arche : la mer passe dessous, à droite du mot.
-            val arche = chemin("M75.4 70L76 52Q77.6 44 84 43.4Q91 44 92.4 52L93 70Z")
-            roc.op(arche, Path.Op.DIFFERENCE)
-            piece(roc, papier(0xFF8E867C.toInt()))
-            // Les strates, la face ombrée sous la crête, l'ombre dans l'arche.
-            val rr = Alea(2407)
-            repeat(26) {
-                val x = -2f + rr() * 104f
-                val y = arete(x) + 2.4f + rr() * 18f
-                val l = 3f + rr() * 6f
-                if (x + l < 75f || x > 93f || y < 42f)
-                    pieceD("M$x ${y}Q${x + l * 0.4f} ${y - 1f - rr()} ${x + l} ${y - 0.3f}Q${x + l * 0.6f} ${y + 0.8f} $x ${y}Z",
-                        papier(if (rr() < 0.6f) 0xFF8A7E70.toInt() else 0xFFB8AE9E.toInt()), 0f)
+            // Au milieu, par le trou : l'arche de roche grise, droite, l'eau de niveau au fond, la porte.
+            val cavite = Paysages.caviteGouffre()
+            val porte = chemin(Paysages.PORTE_GOUFFRE_D)
+            val paroi = Path(cavite).apply { op(porte, Path.Op.DIFFERENCE) }
+            piece(paroi, papier(0xFF3A3D3E.toInt()), 0f)
+            val dans = { d: String -> Path(chemin(d)).apply { op(paroi, Path.Op.INTERSECT) } }
+            piece(dans("M40 10L110 10L110 45L40 45Z"), papier(0xFF5D6162.toInt()), 0f)
+            // Le pilier de gauche et le dessus de l'arche, au soleil ; le surplomb de droite, dans le noir.
+            piece(dans("M40 10L64 10Q58.6 28 62 45L40 45Z"), papier(0xFF878A87.toInt()), 0f)
+            piece(dans("M40 10L110 10L110 25Q86 25 64 30L40 34Z"), papier(0xFF73776F.toInt()), 0f)
+            piece(dans("M91 10L110 10L110 62L94 62Q97 40 91 10Z"), papier(0xFF222526.toInt()), 0f)
+            // L'ombre que le pont d'herbe jette en haut de la paroi.
+            piece(Path(paroi).apply { op(Path(cavite).apply { offset(0f, 2.6f) }, Path.Op.DIFFERENCE) }, papier(0xFF2C2F30.toInt()), 0f)
+            // La roche rugueuse, piquée de creux et de bosses.
+            c.save()
+            c.clipPath(paroi)
+            val rs = Alea(2407)
+            repeat(46) {
+                val x = 54f + rs() * 46f
+                val y = 21f + rs() * 23f
+                val r = 0.5f + rs() * 1.2f
+                forme(Path().apply { addOval(RectF(x - r * 1.6f, y - r * 0.6f, x + r * 1.6f, y + r * 0.6f), Path.Direction.CW) },
+                    papier(if (rs() < 0.5f) 0xFF2E3132.toInt() else 0xFF9A9C96.toInt()), 0.35f + rs() * 0.3f)
             }
-            pieceD("M93 70L92.4 52Q91 44 84 43.4Q90 42 96 40Q100 38 102 36L102 70Z", papier(0xFF6E6458.toInt()), 0.3f)
-            val dedans = Path(arche)
-            piece(dedans, papier(0xFF1E8EA4.toInt()), 0f)
-            for ((y, x0, l) in arrayOf(Triple(53f, 79f, 6f), Triple(56.6f, 78f, 9f), Triple(60.4f, 77.4f, 11f), Triple(64f, 77f, 12f)))
-                pieceD("M$x0 ${y}Q${x0 + l / 2f} ${y - 0.5f} ${x0 + l} ${y}Q${x0 + l / 2f} ${y + 0.4f} $x0 ${y}Z", papier(0xFF5ACCD2.toInt()), 0f)
-            pieceD("M77 66Q83 64.6 92 66Q85 67.2 77 66Z", papier(0xFFF2F6F6.toInt()), 0f)
-            pieceD("M76 52Q77.6 44 84 43.4L84 44.8Q79 45.6 77.4 52.6L77 68L75.8 68Z", papier(0xFF544A40.toInt()), 0f)
-            // L'herbe de la crête.
-            val gazon = Path()
-            var gx = -2f
-            gazon.moveTo(-2f, arete(-2f) + 1.4f)
-            while (gx <= 102f) { gazon.lineTo(gx, arete(gx) + 1.2f + sin(gx * 0.7f) * 0.2f); gx += 2f }
-            gx = 102f
-            while (gx >= -2f) { gazon.lineTo(gx, arete(gx) - 0.2f); gx -= 2f }
-            gazon.close()
-            gazon.op(bosses(-2f, 102f, { x -> arete(x) - 0.1f }, 0.5f, 0.9f, Alea(2404)), Path.Op.UNION)
-            piece(gazon, papier(0xFF5E9A3A.toInt()), 0.4f)
+            c.restore()
+            // Le dessous de l'arche, dans l'ombre, au-dessus de la porte.
+            val bordPorte = Path(porte).apply { transform(Matrix().apply { setScale(1.12f, 1.2f, 76f, 45f) }) }
+            bordPorte.op(porte, Path.Op.DIFFERENCE)
+            bordPorte.op(paroi, Path.Op.INTERSECT)
+            piece(bordPorte, papier(0xFF1E2122.toInt()), 0f)
+            // Par la porte, la mer du dehors, de la même couleur qu'au large de la côte ; dessous, l'eau du trou à l'ombre de l'arche.
+            val bassin = Paysages.bassinGouffre()
+            piece(Path(chemin("M60 45L67.8 45L68 42.6Q75 41.6 84.6 38.4L92 38.4L92 45Z")).apply { op(porte, Path.Op.INTERSECT) },
+                papier(0xFF0E4A62.toInt()), 0f)
+            // L'eau au fond du trou : sombre, éclairée en éventail sous la porte.
+            piece(bassin, papier(0xFF0B3850.toInt()), 0f)
+            forme(Path(chemin("M68 45L84.4 45L90 62L62 62Z")).apply { op(bassin, Path.Op.INTERSECT) }, papier(0xFF15697E.toInt()), 0.6f)
+            forme(Path(bassin).apply { op(chemin("M40 53L110 53L110 70L40 70Z"), Path.Op.INTERSECT) }, papier(0xFF072A3C.toInt()), 0.5f)
+            // L'écume blanche qui se brise sur les roches, en bas à gauche du trou.
+            // Des lignes d'écume qui suivent le bord, pas des flocons : semées, elles se lisaient comme des poissons.
+            for ((x, y, l) in arrayOf(Triple(56f, 46.4f, 6f), Triple(57.4f, 49.6f, 8f), Triple(59.6f, 52.6f, 9f), Triple(63f, 55.4f, 8f))) {
+                pieceD("M$x ${y}Q${x + l * 0.25f} ${y - 0.7f} ${x + l * 0.5f} ${y - 0.2f}Q${x + l * 0.75f} ${y + 0.4f} ${x + l} ${y + 0.6f}" +
+                    "Q${x + l * 0.6f} ${y + 0.9f} $x ${y + 0.5f}Z", blanc(), 0f)
+            }
             plan(2)
-            // Les blocs clairs du bord, devant à droite.
-            val bord = brisee(60f, 70f, 66f, 64f, 74f, 62f, 84f, 61f, 94f, 58f, 102f, 56f)
-            val blocs = sousLaCrete(54f, 102f, bord)
-            blocs.op(bosses(62f, 103f, { x -> bord(x) + 0.6f }, 1.2f, 2.4f, Alea(2405)), Path.Op.UNION)
-            piece(blocs, papier(0xFFC6C0B4.toInt()))
-            taches(64f, 102f, 68f, 10, 2406, papier(0xFFA8A296.toInt()), bord)
-            repeat(6) {
-                val x = 66f + rm() * 34f
-                feuillePliee(x, bord(x) + 1f + rm() * 3f, 1.2f, -150f + rm() * 120f, papier(0xFF6E9A3A.toInt()), 0.45f)
+            // Devant : le sol, de la falaise au bas de la fenêtre, le trou découpé dedans.
+            val ligne = brisee(*Paysages.COTE_GOUFFRE)
+            // La côte n'est pas une règle : elle avance et recule en petites pointes.
+            val cote = { x: Float -> ligne(x) + 0.9f * sin(x * 0.55f) + 0.6f * sin(x * 1.37f + 1f) }
+            val re = Alea(2408)
+            // La falaise blanche au bord de la mer, en blocs de calcaire, et l'écume à leur pied.
+            val falaise = Path()
+            var fx = -2f
+            while (fx < 104f) {
+                val l = 2f + re() * 3.4f
+                falaise.op(chemin("M$fx ${cote(fx) + 0.4f}L${fx + 0.3f} ${cote(fx) - 1f - re()}L${fx + l * 0.6f} ${cote(fx + l * 0.6f) - 1.6f - re()}" +
+                    "L${fx + l} ${cote(fx + l) - 0.8f}L${fx + l} ${cote(fx + l) + 0.4f}Z"), Path.Op.UNION)
+                fx += l * (0.8f + re() * 0.4f)
             }
+            piece(falaise, papier(0xFFE6E0D2.toInt()), 0.4f)
+            val sol = sousLaCrete(-2f, 104f, cote)
+            sol.op(bosses(-2f, 104f, { x -> cote(x) + 0.4f }, 0.8f, 1.6f, Alea(2411)), Path.Op.UNION)
+            sol.op(Paysages.trouGouffre(), Path.Op.DIFFERENCE)
+            piece(sol, papier(0xFF4E9A2E.toInt()), 0.6f)
+            repeat(22) {
+                val x = -2f + re() * 92f
+                val l = 2f + re() * 5f
+                val y = cote(x) - 1.8f - re() * 1.4f
+                pieceD("M$x ${y}Q${x + l / 2f} ${y - 0.5f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.3f} $x ${y}Z", papier(0xFFF4F8F8.toInt()), 0f)
+            }
+            // Le sable clair en bas à droite.
+            pieceD("M84 68Q86 60 92 55Q98 51 104 50L104 70L84 70Z", papier(0xFFEDE6D4.toInt()), 0.4f)
+            // L'herbe : plus claire au soleil, plus sombre en buissons ; rien dans le trou ni sur le sable.
+            c.save()
+            c.clipPath(sol)
+            taches(-2f, 104f, 68f, 26, 2409, papier(0xFF72B840.toInt())) { x -> cote(x) + 3f }
+            taches(-2f, 104f, 68f, 16, 2410, papier(0xFF2E6E22.toInt())) { x -> cote(x) + 1f }
+            repeat(56) {
+                val x = -2f + re() * 106f
+                val y = cote(x) + 0.8f + re() * 3f
+                feuillePliee(x, y, 1f + re() * 0.6f, -160f + re() * 140f, papier(if (re() < 0.5f) 0xFF3E8228.toInt() else 0xFF6AAE3C.toInt()), 0.45f)
+            }
+            c.restore()
+            // Autour du trou, dans son repère : une frange de roche grise, et du côté proche la corniche de calcaire blanc.
+            c.save()
+            c.rotate(Paysages.ROT_GOUFFRE, cx, cy)
+            val rf = Alea(2412)
+            val frange = Path()
+            val corniche = Path()
+            for (k in 0 until 64) {
+                val a = 2f * PI.toFloat() * k / 64f
+                val ca = cos(a); val sa = sin(a)
+                val r = 0.8f + rf() * 1f
+                frange.addOval(RectF(cx + 22.4f * ca - r * 1.4f, cy + 0.4f + 15.8f * sa - r, cx + 22.4f * ca + r * 1.4f, cy + 0.4f + 15.8f * sa + r), Path.Direction.CW)
+                // Le côté proche, du bout gauche jusque sous le belvédère : de 60° à 200°.
+                if (a > PI.toFloat() / 3f && a < PI.toFloat() * 10f / 9f) {
+                    val l = 2f + rf() * 2.2f
+                    corniche.addOval(RectF(cx + 22.6f * ca - l * 1.5f, cy + 0.6f + 16.2f * sa - l, cx + 22.6f * ca + l * 1.5f, cy + 0.6f + 16.2f * sa + l), Path.Direction.CW)
+                }
+            }
+            frange.op(droit, Path.Op.DIFFERENCE)
+            piece(frange, papier(0xFF8E8C84.toInt()), 0.4f)
+            corniche.op(droit, Path.Op.DIFFERENCE)
+            piece(corniche, papier(0xFFE9E5DB.toInt()), 0.5f)
+            // La corniche plonge vers l'eau : son bord intérieur dans l'ombre.
+            val pente = Path(droit).apply { transform(Matrix().apply { setScale(1.05f, 1.09f, cx, cy) }) }
+            pente.op(droit, Path.Op.DIFFERENCE)
+            pente.op(chemin("M40 46L110 46L110 70L40 70Z"), Path.Op.INTERSECT)
+            forme(pente, papier(0xFFB6AE9C.toInt()), 0.7f)
+            // Le belvédère et son escalier de bois, sur la corniche.
+            val bois = papier(0xFF9A7A52.toInt())
+            pieceD("M64 58.2L76 58.6L75.8 60.8L63.8 60.4Z", papier(0xFFB8956A.toInt()), 0.4f)
+            for (k in 0 until 3) barre(67f + k * 0.2f, 61.4f + k * 1.3f, 71f + k * 0.2f, 61.6f + k * 1.3f, 0.4f, bois, 0.2f)
+            for (px in floatArrayOf(64f, 67.2f, 70.4f, 73.6f, 76f)) barre(px, 58.4f, px, 56.4f, 0.22f, bois, 0f)
+            barre(64f, 56.6f, 76f, 57f, 0.2f, bois, 0f)
+            barre(76f, 57f, 86f, 55.4f, 0.2f, bois, 0f)
+            for (px in floatArrayOf(79.4f, 82.8f, 86f)) barre(px, 58.4f - (px - 76f) * 0.16f, px, 56.4f - (px - 76f) * 0.16f, 0.22f, bois, 0f)
+            c.restore()
         }
 
         /** Gueule Grand Gouffre : la falaise de Marie-Galante percée d'un gouffre où la mer s'engouffre. */

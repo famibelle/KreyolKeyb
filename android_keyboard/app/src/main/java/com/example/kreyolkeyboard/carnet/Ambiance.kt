@@ -210,7 +210,11 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     Brisants(zone, graine + 1, nuit = heure?.nuit == true),
                     Lame(zone, graine + 2, nuit = heure?.nuit == true, bord = Paysages::bordPlagePetiteTerre, debut = 36f),
                     if (heure?.allume == true) Phare(zone, graine + 3, Paysages.PHARE_PETITE_TERRE, Paysages.MILIEU - 1) else Ensemble())
-                enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
+                // La houle entre par la porte du trou ; à la secousse, la mer s'y engouffre et jaillit.
+                enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Ensemble(
+                    Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2,
+                        devant = { y -> Paysages.xCoteGouffre(y) - 2f }),
+                    Gouffre(zone, graine + 1, nuit = heure?.nuit == true))
                 enPlans && lieu == Lieu.GRANDE_VIGIE -> Ensemble(
                     Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26,
                         devant = { y -> if (y < 34f) 9f else 52f }),
@@ -1926,6 +1930,109 @@ private class Brisants(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone,
         /** Le temps que le rouleau met à courir le long du récif, puis à retomber là où il est passé, en secondes. */
         const val COURSE = 1.4f
         const val RETOMBE = 1.6f
+    }
+}
+
+/**
+ * La mer au fond du trou de Gueule Grand Gouffre (plan du milieu). Au repos,
+ * la houle entre par la porte ([Paysages.PORTE_GOUFFRE]) : des lignes
+ * d'écume en sortent, s'élargissent dans le bassin et s'effacent. À la
+ * secousse, la mer s'engouffre par la porte : une nappe d'écume bouillonnante
+ * s'étale de la porte à tout le bassin, une gerbe jaillit hors du trou,
+ * puis l'écume reflue et se dissout.
+ */
+private class Gouffre(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+    private val rang = Paysages.MILIEU
+    // Calée comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
+    private val teinte = if (nuit) 0x9FB3D8 else 0xFFFFFF
+    private val bassin = Paysages.bassinGouffre()
+    private val nLignes = 4
+    /** L'écume qui bouillonne : direction, distance (de 0 à 1) et taille de chaque boule, tirées une fois. */
+    private val bulles = FloatArray(3 * 54) { hasard() }
+    private val rythme = FloatArray(nLignes) { 3f + hasard() * 1.2f }
+    private val phase = FloatArray(nLignes) { hasard() }
+    private var temps = 0f
+    /** Depuis quand la mer s'est engouffrée, ou -1 ; et sa force. */
+    private var coup = -1f
+    private var forceCoup = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        if (coup in 0f..1.2f) return
+        coup = 0f
+        forceCoup = force
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+        if (coup >= 0f) { coup += dt; if (coup > MONTE + GERBE + REFLUE) coup = -1f }
+    }
+
+    private fun blanc(o: Float) = ((o.coerceIn(0f, 1f) * 255f).toInt() shl 24) or teinte
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        p.shader = null
+        val (px, py) = Paysages.PORTE_GOUFFRE
+        c.save()
+        c.clipPath(bassin)
+        // La houle qui entre par la porte et s'élargit dans le bassin.
+        for (k in 0 until nLignes) {
+            val t = (temps / rythme[k] + phase[k]) % 1f
+            val y = py + 0.6f + 10f * t
+            val l = 4f + 10f * t
+            p.color = blanc(sin(PI.toFloat() * t) * 0.7f)
+            c.drawOval(px - l, y - 0.3f, px + l, y + 0.3f, p)
+        }
+        // La mer qui s'engouffre : l'écume s'étale de la porte à tout le bassin, puis reflue.
+        if (coup >= 0f) {
+            val etendue = (coup / MONTE).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) }
+            val o = when {
+                coup < MONTE + GERBE -> 1f
+                else -> 1f - (coup - MONTE - GERBE) / REFLUE
+            }
+            for (k in 0 until bulles.size / 3) {
+                val a = PI.toFloat() * (0.05f + 0.9f * bulles[3 * k])
+                val d = bulles[3 * k + 1] * etendue
+                val bx = px + cos(a) * d * 24f
+                val by = py + sin(a) * d * 12f
+                val v = sin(k * 1.7f + coup * 5f)
+                p.color = blanc(o * (0.3f + 0.4f * bulles[3 * k + 2]) * (1f - d * 0.4f))
+                // Aplaties : vues d'en haut, rondes elles se lisaient comme des billes.
+                val r = 0.5f + 1.1f * bulles[3 * k + 2]
+                c.drawOval(bx - r, by + 0.3f * v - r * 0.55f, bx + r, by + 0.3f * v + r * 0.55f, p)
+            }
+        }
+        c.restore()
+        // La gerbe qui jaillit hors du trou.
+        if (coup >= MONTE * 0.7f) {
+            val u = (coup - MONTE * 0.7f) / GERBE
+            for (j in 0 until 5)
+                Paysages.gerbe(c, p, px + (j - 2f) * 3f, py + 6f, (14f + 8f * forceCoup) * (1f - abs(j - 2f) * 0.18f),
+                    8f, u - abs(j - 2f) * 0.07f, teinte, j)
+        }
+        c.restore()
+    }
+
+    private companion object {
+        /** Le temps que l'écume met à envahir le bassin, que la gerbe dure, que l'écume met à refluer, en secondes. */
+        const val MONTE = 0.6f
+        const val GERBE = 1.6f
+        const val REFLUE = 1.8f
     }
 }
 
