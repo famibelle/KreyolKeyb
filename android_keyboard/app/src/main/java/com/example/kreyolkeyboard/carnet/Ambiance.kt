@@ -198,7 +198,12 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                     if (heure?.nuit == true) Ensemble() else Mangoustes(zone, graine + 2))
                 enPlans && lieu == Lieu.POINTE_CHATEAUX -> Vagues(zone, graine)
                 enPlans && lieu == Lieu.DESIRADE -> Ressac(zone, graine, phare = heure?.allume == true)
-                enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
+                // La houle s'engouffre dans la passe et une vague lèche la plage.
+                enPlans && lieu == Lieu.PORTE_ENFER -> Ensemble(
+                    Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26,
+                        rive = { y -> Paysages.rivePorteEnfer(y) + 1f }),
+                    Embruns(zone, graine + 1, nuit = heure?.nuit == true, points = Paysages.RESSAC_PORTE_ENFER),
+                    Lame(zone, graine + 2, nuit = heure?.nuit == true))
                 enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
                 enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
                 enPlans && lieu == Lieu.GRANDE_VIGIE -> Ensemble(
@@ -1777,17 +1782,19 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
 
 /**
  * La mer qui se brise au pied de l'aiguille et du cap de la Grande Vigie
- * ([Paysages.RESSAC_VIGIE], plan du milieu) : au repos, de petites bouffées
- * d'écume ; à la secousse, la houle donne un coup et de hautes gerbes montent
- * l'une après l'autre, de l'aiguille au cap.
+ * ([Paysages.RESSAC_VIGIE], plan du milieu), ou de la falaise dans la passe
+ * de la Porte d'Enfer ([Paysages.RESSAC_PORTE_ENFER]) : au repos, de petites
+ * bouffées d'écume ; à la secousse, la houle donne un coup et de hautes
+ * gerbes montent l'une après l'autre, de gauche à droite.
  */
-private class Embruns(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+private class Embruns(zone: RectF, graine: Int, nuit: Boolean,
+                      private val points: Array<FloatArray> = Paysages.RESSAC_VIGIE) : Ambiance(zone, graine) {
     private val rang = Paysages.MILIEU
     // Calées comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
     private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
     private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
     private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
-    private val n = Paysages.RESSAC_VIGIE.size
+    private val n = points.size
     private val rythme = FloatArray(n) { 2.4f + hasard() * 1.8f }
     private val phase = FloatArray(n) { hasard() }
     private val teinte = if (nuit) 0x9FB3D8 else 0xFFFFFF
@@ -1821,7 +1828,7 @@ private class Embruns(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, 
             zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
         c.scale(e, e)
         p.style = Paint.Style.FILL
-        Paysages.RESSAC_VIGIE.forEachIndexed { i, (x, y, s) ->
+        points.forEachIndexed { i, (x, y, s) ->
             val u = (coup - i * DECALAGE) / GERBE_HAUTE
             if (coup >= 0f && u in 0f..1f) {
                 Paysages.gerbe(c, p, x, y, (5f + 5f * forceCoup) * s, 4.4f * s, u, teinte, i)
@@ -1839,6 +1846,117 @@ private class Embruns(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, 
         const val GERBE_HAUTE = 1.5f
         /** Le retard d'une gerbe sur sa voisine de gauche, en secondes. */
         const val DECALAGE = 0.14f
+    }
+}
+
+/**
+ * Le bord du lagon de la Porte d'Enfer sur sa plage ([Paysages.bordPlagePorteEnfer],
+ * plan de devant) : au repos, l'eau clapote d'un rien et son liseré d'écume
+ * respire ; à la secousse, une vague monte sur le sable, s'étale, puis se
+ * retire en laissant une ligne d'écume qui s'efface.
+ */
+private class Lame(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+    private val rang = Paysages.DEVANT
+    // Calée comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
+    private val eau = if (nuit) 0x4A6A8A else 0x8ED0D0
+    private val ecume = if (nuit) 0x9FB3D8 else 0xFFFFFF
+    private val phase = hasard() * 6f
+    private val nappe = Path()
+    private var temps = 0f
+    /** Depuis quand la vague est partie, ou -1 ; et sa force. */
+    private var vague = -1f
+    private var forceVague = 0f
+    /** Jusqu'où la dernière vague est montée, pour la ligne d'écume qu'elle laisse. */
+    private var laisse = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        if (vague in 0f..1f) return
+        vague = 0f
+        forceVague = force
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+        if (vague >= 0f) { vague += dt; if (vague > MONTE + RETIRE + EFFACE) vague = -1f }
+    }
+
+    /** Jusqu'où l'eau monte sur le sable à cet instant, en unités sous le bord. */
+    private fun portee(): Float {
+        val repos = 0.35f + 0.25f * sin(temps * 1.3f + phase)
+        if (vague < 0f) return repos
+        val haut = 2.4f + 2.4f * forceVague
+        laisse = haut
+        val v = vague
+        return when {
+            v < MONTE -> repos + haut * sin(PI.toFloat() / 2f * v / MONTE)
+            v < MONTE + RETIRE -> repos + haut * (1f - (v - MONTE) / RETIRE).let { it * it }
+            else -> repos
+        }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        p.shader = null
+        val r = portee()
+        // La nappe : du bord de l'eau jusqu'à sa lèvre, qui ondule.
+        nappe.rewind()
+        var x = -4f
+        nappe.moveTo(x, Paysages.bordPlagePorteEnfer(x) - 0.2f)
+        while (x <= 104f) { nappe.lineTo(x, Paysages.bordPlagePorteEnfer(x) - 0.2f); x += 4f }
+        x = 104f
+        while (x >= -4f) { nappe.lineTo(x, levre(x, r)); x -= 2f }
+        nappe.close()
+        p.color = (150 shl 24) or eau
+        c.drawPath(nappe, p)
+        // Sa lèvre d'écume.
+        p.style = Paint.Style.STROKE
+        p.strokeCap = Paint.Cap.ROUND
+        p.strokeWidth = 0.6f
+        p.color = (200 shl 24) or ecume
+        nappe.rewind()
+        x = -4f
+        nappe.moveTo(x, levre(x, r))
+        while (x <= 104f) { x += 2f; nappe.lineTo(x, levre(x, r)) }
+        c.drawPath(nappe, p)
+        // La ligne d'écume que la vague laisse en se retirant, et qui s'efface.
+        val apres = vague - MONTE
+        if (vague >= 0f && apres > 0f) {
+            val o = (1f - apres / (RETIRE + EFFACE)).coerceIn(0f, 1f)
+            p.strokeWidth = 0.3f
+            p.color = ((o * 170f).toInt() shl 24) or ecume
+            nappe.rewind()
+            x = -4f
+            nappe.moveTo(x, levre(x, 0.35f + laisse))
+            while (x <= 104f) { x += 2f; nappe.lineTo(x, levre(x, 0.35f + laisse)) }
+            c.drawPath(nappe, p)
+        }
+        p.style = Paint.Style.FILL
+        c.restore()
+    }
+
+    private fun levre(x: Float, r: Float) =
+        Paysages.bordPlagePorteEnfer(x) + r * (1f + 0.18f * sin(x * 0.35f + phase) + 0.1f * sin(x * 0.9f))
+
+    private companion object {
+        /** Le temps que la vague met à monter, à se retirer, puis que sa laisse s'efface, en secondes. */
+        const val MONTE = 0.9f
+        const val RETIRE = 1.6f
+        const val EFFACE = 2f
     }
 }
 
@@ -2140,7 +2258,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         betes.forEachIndexed { i, b ->
             when (b.espece) {
                 Espece.TOULOULOU, Espece.IGUANE, Espece.RATON -> if (fuite[i] < 0f) fuite[i] = 0f
-                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.ABEILLE, Espece.LIANE,
+                Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.ABEILLE, Espece.LIANE,
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f

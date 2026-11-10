@@ -137,7 +137,9 @@ enum class Espece {
     /** Une abeille minuscule qui butine autour de sa fleur. */
     ABEILLE,
     /** Pas une bête : une liane qui pend de la voûte (Roches gravées) ou de la paroi (Saut de la Lézarde), et se balance. */
-    LIANE
+    LIANE,
+    /** Pas une bête : le canot à cabine bleue au mouillage dans le lagon de la Porte d'Enfer, qui se balance. */
+    CANOT
 }
 
 /**
@@ -1074,7 +1076,8 @@ object Paysages {
                 Bete(Espece.LIANE, x, y, plan = 1, attache = a)
             },
         Lieu.GRANDE_VIGIE to listOf(Bete(Espece.BALEINE, 22f, 43f, plan = 1)),
-        Lieu.PORTE_ENFER to listOf(Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
+        Lieu.PORTE_ENFER to listOf(Bete(Espece.CANOT, 86.6f, 43.6f, plan = 1),
+            Bete(Espece.TOULOULOU, 30f, 61f), Bete(Espece.TOULOULOU, 62f, 62.4f)),
         Lieu.PETITE_TERRE to listOf(Bete(Espece.IGUANE, 9.6f, 50.6f, taille = 1.5f), Bete(Espece.TOULOULOU, 62f, 58.6f), Bete(Espece.TOULOULOU, 78f, 60.4f)),
         Lieu.ILET_GOSIER to listOf(Bete(Espece.PELICAN, 22f, 47f, plan = 1), Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
         Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.TORTUE, 34f, 58f, plan = 1, taille = 3f)),
@@ -1383,7 +1386,32 @@ object Paysages {
 
     /** Le lagon du Grand Cul-de-Sac Marin, à gauche de l'îlet, sur le plan du milieu : x0, x1, y0, y1. */
     /** Le lagon de la Porte d'Enfer, sur le plan du milieu : x0, x1, y0, y1. */
-    internal val EAU_PORTE_ENFER = floatArrayOf(-2f, 102f, 42f, 56f)
+    internal val EAU_PORTE_ENFER = floatArrayOf(-2f, 102f, 43f, 52.4f)
+
+    /** Où la houle se brise dans la passe de la Porte d'Enfer, au pied de la falaise, sur le plan du milieu : (x, y, taille). */
+    internal val RESSAC_PORTE_ENFER = arrayOf(floatArrayOf(36f, 38.4f, 0.5f), floatArrayOf(64f, 39.2f, 0.5f),
+        floatArrayOf(68.6f, 39.6f, 0.7f), floatArrayOf(74f, 39.8f, 0.8f), floatArrayOf(80f, 40f, 0.7f), floatArrayOf(86f, 40.2f, 0.6f))
+
+    /** Le rivage du bras de gauche de la Porte d'Enfer, qui file de la passe vers le coin : sa hauteur en [x]. */
+    internal fun rivePorteEnferEnX(x: Float): Float = when {
+        x < 12f -> 45f + (x + 2f) / 14f * (42.4f - 45f)
+        x < 24f -> 42.4f + (x - 12f) / 12f * (40.2f - 42.4f)
+        else -> 40.2f + ((x - 24f) / 10.4f).coerceAtMost(1f) * (38.6f - 40.2f)
+    }
+
+    /** Où l'eau du lagon commence à gauche, à la hauteur [y] : le rivage du bras de gauche. */
+    internal fun rivePorteEnfer(y: Float): Float = when {
+        y >= 45f -> -2f
+        y >= 42.4f -> -2f + (45f - y) / (45f - 42.4f) * 14f
+        y >= 40.2f -> 12f + (42.4f - y) / 2.2f * 12f
+        else -> 24f + ((40.2f - y) / 1.6f).coerceAtMost(1f) * 10.4f
+    }
+
+    /** Le bord de l'eau sur la plage de la Porte d'Enfer, à l'abscisse [x] (plan de devant) : la courbe peinte de la plage. */
+    internal fun bordPlagePorteEnfer(x: Float): Float {
+        val t = ((x + 2f) / 104f).coerceIn(0f, 1f)
+        return (1f - t) * (1f - t) * 53.4f + 2f * t * (1f - t) * 52.6f + t * t * 53.2f
+    }
 
     /** Le lagon devant l'Îlet du Gosier, sur le plan du milieu : x0, x1, y0, y1. */
     /** Le lagon de Petite-Terre, sur le plan du milieu : x0, x1, y0, y1. */
@@ -2430,14 +2458,26 @@ object Paysages {
             ovale(x + s * 0.4f, y - s * 1.06f, s * 0.28f, s * 0.11f, orange)
         }
 
-        /** Un touloulou, le petit crabe rouge des plages, vu de face. */
+        /**
+         * Un touloulou, le petit crabe des plages, vu de face : **jaune sable**
+         * (propriétaire, 2026-11-10 ; il était rouge). Sur le sable il s'y
+         * fondrait : un liseré brun, une ombre portée et des yeux sombres le
+         * détachent.
+         */
         fun touloulou(x: Float, y: Float) {
-            val rouge = duJour(0xFFD8402E.toInt())
-            ovale(x, y, 1.1f, 0.65f, rouge)
+            val sable = duJour(0xFFE2C676.toInt())
+            val brun = duJour(0xFF8E6E36.toInt())
+            ovale(x, y + 0.55f, 1.5f, 0.4f, 0xFF000000.toInt(), 0.18f)
             trait("M${x - 1f} ${y}L${x - 1.9f} ${y + 0.7f}M${x + 1f} ${y}L${x + 1.9f} ${y + 0.7f}" +
-                "M${x - 0.8f} ${y + 0.3f}L${x - 1.5f} ${y + 1.1f}M${x + 0.8f} ${y + 0.3f}L${x + 1.5f} ${y + 1.1f}", rouge, 0.22f)
-            rond(x - 1.4f, y - 0.7f, 0.45f, rouge)
-            rond(x + 1.4f, y - 0.7f, 0.45f, rouge)
+                "M${x - 0.8f} ${y + 0.3f}L${x - 1.5f} ${y + 1.1f}M${x + 0.8f} ${y + 0.3f}L${x + 1.5f} ${y + 1.1f}", brun, 0.24f)
+            rond(x - 1.4f, y - 0.7f, 0.56f, brun)
+            rond(x + 1.4f, y - 0.7f, 0.56f, brun)
+            rond(x - 1.4f, y - 0.7f, 0.42f, sable)
+            rond(x + 1.4f, y - 0.7f, 0.42f, sable)
+            ovale(x, y, 1.24f, 0.78f, brun)
+            ovale(x, y, 1.1f, 0.65f, sable)
+            rond(x - 0.42f, y - 0.62f, 0.17f, duJour(0xFF2A2218.toInt()))
+            rond(x + 0.42f, y - 0.62f, 0.17f, duJour(0xFF2A2218.toInt()))
         }
 
         /**
@@ -5595,6 +5635,7 @@ object Paysages {
                     Espece.FLEURS -> jardiniere(x, y, 0f, true, b.taille)
                     Espece.MANGUE -> mangue(x, y, 0f, 0f, 0f, true)
                     Espece.BATEAU -> bateauPlongee(x, y, 0f, 0f)
+                    Espece.CANOT -> canot(x, y, 0f)
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
                 }
@@ -5726,6 +5767,9 @@ object Paysages {
                 // Il roule doucement à son amarre ; une secousse le fait tanguer fort, puis il se calme.
                 Espece.BATEAU -> bateauPlongee(x, y + sin(t * 1.1f + ph) * 0.15f,
                     sin(t * 0.9f + ph) * 1.2f + rafale * 7f * sin(depuisRafale * 5f), 0f)
+                // Le canot de la Porte d'Enfer se balance sur le lagon ; une secousse le fait tanguer, puis il se calme.
+                Espece.CANOT -> canot(x, y + sin(t * 1.1f + ph) * 0.15f + rafale * 0.4f * sin(depuisRafale * 4f),
+                    sin(t * 0.8f + ph) * 1.6f + rafale * 8f * sin(depuisRafale * 5f))
                 // Elle se balance un peu au bout de sa queue ; une secousse la secoue plus fort.
                 Espece.MANGUE -> mangue(x, y, 0f, 0f, sin(t * 1.2f + ph) * 3f + rafale * 14f * sin(depuisRafale * 13f), true)
                 // Un souffle d'air les berce ; une secousse les fait trembler, puis s'apaiser.
@@ -5937,6 +5981,24 @@ object Paysages {
             for (k in 0 until 4) pieceD("M${3f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 41.8L${4.2f + k * 1.8f} 43L${3f + k * 1.8f} 43Z", papier(0xFF3C4450.toInt()), 0f)
             barre(11.6f, 44.6f, 12.4f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
             barre(12.4f, 40.6f, 14.6f, 40.6f, 0.2f, papier(0xFFDAD6CC.toInt()), 0f)
+            c.restore()
+        }
+
+        /**
+         * Le canot de la Porte d'Enfer, coque blanche, cabine bleue sous son
+         * toit, le moteur à l'arrière : ([x], [y]) est le milieu de sa ligne
+         * de flottaison, autour duquel il roule de [angle] degrés.
+         */
+        fun canot(x: Float, y: Float, angle: Float) {
+            voile = 1f
+            c.save()
+            c.rotate(angle, x, y)
+            c.translate(x - 86.6f, y - 43.6f)
+            pieceD("M80 42L93 42L91.8 44Q86 44.6 81.4 44Z", papier(0xFFE8ECEE.toInt()), 0.5f)
+            pieceD("M80 42L93 42L92.8 42.5L80.2 42.5Z", papier(0xFF4A5868.toInt()), 0f)
+            pieceD("M85.6 42L86 39.8L89.6 39.8L90 42Z", papier(0xFF3AA8D8.toInt()), 0.4f)
+            pieceD("M85 40L90.6 40L90.4 39.2L85.2 39.2Z", papier(0xFFE8ECEE.toInt()), 0f)
+            pieceD("M92.4 41.4L93.8 41.4L93.8 43.4L92.4 43.4Z", papier(0xFF2E2E34.toInt()), 0.2f)
             c.restore()
         }
 
@@ -7122,78 +7184,128 @@ object Paysages {
         // ------------------------------------------- la Porte d'Enfer en papier
 
         /**
-         * La Porte d'Enfer en papier découpé, d'après la photo du propriétaire
-         * (2026-11-08) : le lagon clair fermé par deux bras de terre boisés,
-         * la falaise de calcaire du bras droit, à droite du mot, qui tombe
-         * dans la passe où l'océan bleu sombre écume ; le rivage de roche
-         * rousse au pied du morne, un bateau à cabine bleue au mouillage ;
-         * la plage de sable devant, sa laisse d'algues, les touloulous. L'eau
-         * du lagon scintille sur la carte ouverte.
+         * La Porte d'Enfer en papier découpé, au plus près des photos du
+         * propriétaire (2026-11-10) : le lagon laiteux fermé par deux bras de
+         * terre ; à droite du mot la falaise de calcaire gris en surplomb,
+         * creusée à son pied, le morne boisé qui monte derrière elle et son
+         * rivage de roche rousse, un bateau à cabine bleue au mouillage ; à
+         * gauche le bras bas et boisé, son rivage gris et un rocher isolé ;
+         * l'océan bleu sombre dans la passe ; la plage claire devant, sa laisse
+         * d'algues, les touloulous ; une branche aux feuilles étroites qui
+         * pend dans le coin. L'eau du lagon scintille sur la carte ouverte.
          */
         fun porteEnferPapier() {
-            cumulus(-4f, 22f, 24f, 2001)
-            cumulus(56f, 16f, 18f, 2002)
-            // L'océan, dans la passe entre les deux bras.
-            pieceD("M20 36.8L80 36.8L80 41L20 41Z", papier(0xFF1E4E8A.toInt()), 0.2f)
-            lanieresMer(37.2f, 40.4f, 2003, intArrayOf(papier(0xFF2A5E9A.toInt()), papier(0xFF183E74.toInt())))
+            cumulus(-4f, 20f, 24f, 2001)
+            cumulus(56f, 14f, 22f, 2002)
+            // L'océan, au loin dans la passe.
+            pieceD("M-2 34L102 34L102 44L-2 44Z", papier(0xFF1E4E8A.toInt()), 0.2f)
             plan(1)
-            // Le bras de droite : le morne boisé, sa falaise face à la passe.
-            val crete = brisee(64f, 27.6f, 70f, 25.6f, 78f, 24.6f, 88f, 23.4f, 102f, 22.4f)
-            val morne = sousLaCrete(64f, 102f, crete)
-            morne.op(bosses(66f, 103f, { x -> crete(x) + 0.4f }, 1.2f, 2f, Alea(2004)), Path.Op.UNION)
+            // Le bras de droite : le morne boisé qui monte derrière la falaise.
+            val crete = brisee(72f, 19.6f, 78f, 17.6f, 86f, 16.6f, 94f, 16f, 102f, 15.4f)
+            val morne = sousLaCrete(71f, 102f, crete)
+            morne.op(bosses(72f, 103f, { x -> crete(x) + 0.4f }, 1.2f, 2f, Alea(2004)), Path.Op.UNION)
             piece(morne, papier(0xFF3E7A2E.toInt()))
-            taches(70f, 102f, 36f, 12, 2005, papier(0xFF5E9A3A.toInt()), crete)
-            taches(74f, 102f, 36f, 6, 2006, papier(0xFF2A5A24.toInt()), crete)
-            val calcaire = papier(0xFFA89C88.toInt())
-            pieceD("M63.4 41L63 30.4Q63.6 27.6 66 27.2L70 26.8Q71 32 74 34.4Q76.4 37 80 38.4L80 41Z", calcaire, 0.7f)
-            for ((x0, y0, x1) in arrayOf(Triple(64.6f, 29f, 64.2f), Triple(66.4f, 28f, 66.8f), Triple(68.4f, 28.4f, 68f), Triple(70.6f, 31f, 71f)))
-                barre(x0, y0, x1, 40.6f, 0.45f, papier(0xFF7E7262.toInt()), 0f)
-            pieceD("M63 39.2Q66 38.2 70 39.4L70 41L63 41Z", papier(0xFF4E463E.toInt()), 0f)
+            taches(76f, 102f, 37f, 13, 2005, papier(0xFF5E9A3A.toInt()), crete)
+            taches(80f, 102f, 37f, 8, 2006, papier(0xFF2A5A24.toInt()), crete)
+            // La falaise de calcaire gris, à droite du mot : à pic sous son surplomb, ses coulures,
+            // l'encoche sombre que la mer a creusée à son pied. Agrandie depuis son pied
+            // (propriétaire, 2026-11-10, en deux fois) : à sa première taille, elle s'effaçait.
+            val agrandir = Matrix().apply { setScale(1.6f, 1.6f, 67f, 39.4f) }
+            val falaise = { d: String, col: Int, o: Float -> piece(chemin(d).apply { transform(agrandir) }, col, o) }
+            falaise("M66 28.4L67.8 26.8Q71 26.2 74 26.6L78 27.4Q81 29 83 32Q86 35.6 89 37.4L89 39.4L67.4 39.4L67.2 35Q68 32 67 29.6Z",
+                papier(0xFFA8A294.toInt()), 0.7f)
+            falaise("M66 28.4L67.8 26.8Q71 26.2 74 26.6L78 27.4Q79.6 28.2 80.6 29.4Q75 28.4 69 28.8Q67.2 29.2 67 29.6Z", papier(0xFFCCC6B8.toInt()), 0f)
+            falaise("M67 29.6Q68 32 67.2 35L67.4 39.4L69 39.4Q68.6 34 69.2 29.2Z", papier(0xFF86806F.toInt()), 0f)
+            val rc = Alea(2003)
+            val gx = { x: Float -> 67f + (x - 67f) * 1.6f }
+            val gy = { y: Float -> 39.4f - (39.4f - y) * 1.6f }
+            repeat(13) {
+                val fx = 69f + rc() * 12f; val fy = 29f + rc() * 1.6f
+                val bx = fx + rc() * 0.6f; val by = fy + 4f + rc() * 3f
+                trait("M${gx(fx)} ${gy(fy)}Q${gx(fx + 0.3f)} ${gy(fy + 2.6f)} ${gx(bx)} ${gy(by)}", papier(0xFF7E786C.toInt()), 0.35f + rc() * 0.3f)
+            }
+            falaise("M67.2 35.6Q71 34.4 75 35.8Q78 36.8 80 38.4L80 39.4L67.2 39.4Z", papier(0xFF3E3A36.toInt()), 0f)
+            falaise("M68.6 37Q71 36.2 74 37L74.6 39.4L68.8 39.4Z", papier(0xFF26231F.toInt()), 0f)
             // Le rivage de roche rousse au pied du morne.
-            pieceD("M72 39.4Q86 37.6 102 38.2L102 42.4Q86 42 72 41.4Z", papier(0xFFB0805A.toInt()), 0.5f)
+            pieceD("M88 38.8Q95 38.2 102 38.4L102 41.2Q95 41 88 40.4Z", papier(0xFFA8805E.toInt()), 0.5f)
             val rr = Alea(2007)
-            repeat(14) { galet(73f + rr() * 29f, 39.6f + rr() * 2.2f, 0.6f + rr() * 0.6f, papier(if (rr() < 0.5f) 0xFF8E6A4E.toInt() else 0xFF9E9282.toInt())) }
-            // Le bras de gauche : bas, boisé, bordé de roche grise.
-            val creteG = brisee(-2f, 29f, 12f, 30.4f, 24f, 33.4f, 34f, 36.6f, 38f, 38.4f)
-            val gauche = sousLaCrete(-2f, 38f, creteG)
-            gauche.op(bosses(-3f, 36f, { x -> creteG(x) + 0.4f }, 1.2f, 2.2f, Alea(2008)), Path.Op.UNION)
-            piece(gauche, papier(0xFF2E6A2C.toInt()))
-            taches(-2f, 34f, 40f, 9, 2009, papier(0xFF4E8A34.toInt()), creteG)
-            pieceD("M31.6 39L32.6 35.6Q33.6 34.4 34.6 35.8L35.4 39.4Z", papier(0xFFB4A890.toInt()), 0.4f)
-            pieceD("M-2 40.6Q14 39.4 28 39.6Q36 39.4 40 40.6L36 42.6Q20 44 6 46.6L-2 47.4Z", papier(0xFF8A847A.toInt()), 0.5f)
-            repeat(12) { galet(-1f + rr() * 36f, 41f + rr() * 3.4f, 0.6f + rr() * 0.7f, papier(if (rr() < 0.5f) 0xFF6E6860.toInt() else 0xFFA29C90.toInt())) }
-            // Le lagon : bleu au fond, turquoise, puis clair sur le sable.
-            pieceD("M-2 47.4L6 46.6Q20 44 36 42.6L40 40.6Q60 41 72 41.4Q86 42 102 42.4L102 58L-2 58Z", papier(0xFF5AAEC8.toInt()), 0.3f)
-            pieceD("M-2 50Q50 48 102 49L102 58L-2 58Z", papier(0xFF7CC6CC.toInt()), 0f)
-            pieceD("M-2 53.6Q50 52.4 102 53.4L102 58L-2 58Z", papier(0xFFA8DCD2.toInt()), 0f)
-            lanieresMer(43f, 56f, 2010, intArrayOf(papier(0xFF6ABACC.toInt()), papier(0xFF8ED0D0.toInt()), papier(0xFF4E9EC0.toInt())))
-            // L'écume au pied de la falaise, dans la passe.
-            for ((ex, ey, el) in arrayOf(Triple(60f, 40.6f, 3.4f), Triple(56f, 40.8f, 2f), Triple(66f, 41f, 2.4f)))
-                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.7f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.3f} $ex ${ey}Z", papier(0xFFF2F4F2.toInt()), 0f)
-            // Le bateau au mouillage : coque blanche, cabine bleue.
-            pieceD("M74 44.2L88 44.2L86.8 46.4Q81 47 75.6 46.4Z", papier(0xFFE8ECEE.toInt()), 0.5f)
-            pieceD("M74 44.2L88 44.2L87.8 44.8L74.2 44.8Z", papier(0xFF4A5868.toInt()), 0f)
-            pieceD("M80 44.2L80.6 41.6L85 41.6L85.4 44.2Z", papier(0xFF3A8ACC.toInt()), 0.4f)
-            pieceD("M79.6 41.8L86 41.8L85.8 41L79.8 41Z", papier(0xFF2A5E8A.toInt()), 0f)
-            pieceD("M86.6 43.4L88.4 43.4L88.4 45.6L86.6 45.6Z", papier(0xFF2E2E34.toInt()), 0.2f)
+            repeat(8) { galet(89f + rr() * 13f, 38.8f + rr() * 2f, 0.5f + rr() * 0.6f, papier(if (rr() < 0.5f) 0xFF8E6A4E.toInt() else 0xFF9E9282.toInt())) }
+            // Le lagon : sarcelle dans la passe, puis laiteux, puis presque blanc sur le sable.
+            // Son bord gauche suit le rivage du bras de gauche, qui file vers le coin.
+            pieceD("M-2 45L12 42.4L24 40.2L34.4 38.6L61 38.6Q68 39.4 79 40.2Q90 41 102 41.2L102 58L-2 58Z", papier(0xFF4EA0B0.toInt()), 0.3f)
+            forme(Path().apply { addOval(RectF(32f, 38.2f, 82f, 43.4f), Path.Direction.CW) }, papier(0xFF2A6E96.toInt()), 0.6f)
+            pieceD("M-2 46.2Q40 43 102 43.8L102 58L-2 58Z", papier(0xFF86C2C4.toInt()), 0f)
+            pieceD("M-2 49.4Q50 47.2 102 48L102 58L-2 58Z", papier(0xFFA4D2CE.toInt()), 0f)
+            pieceD("M-2 52Q50 50.6 102 51.2L102 58L-2 58Z", papier(0xFFC2E2D8.toInt()), 0f)
+            val rl = Alea(2010)
+            repeat(10) {
+                val y = 43.6f + rl() * 8f; val x = max(-2f + rl() * 90f, rivePorteEnfer(y) + 1f); val l = 6f + rl() * 12f
+                forme(chemin("M$x ${y}Q${x + l / 2f} ${y - 0.25f} ${x + l} ${y}Q${x + l / 2f} ${y + 0.2f} $x ${y}Z"), blanc(), 0.25f + rl() * 0.2f)
+            }
+            // Le bras de gauche (photos du propriétaire, 2026-11-10) : un coin qui s'effile vers
+            // la passe, son rivage qui file en diagonale vers le coin, ce qui creuse la profondeur.
+            // Une masse basse de buissons ronds vert sombre, arrêtée avant la pointe, sur une
+            // large dalle de roche gris-brun au dessus clair, piquée, creusée au ras de l'eau ;
+            // au bout, un rocher clair plus haut.
+            // Il s'arrête au tiers de la fenêtre (limite tracée par le propriétaire) : la passe
+            // s'ouvre ensuite sur l'océan jusqu'à la falaise.
+            val creteG = brisee(-2f, 30.6f, 6f, 31.4f, 14f, 32.4f, 22f, 33.4f, 28f, 34.6f, 31f, 36f)
+            val gauche = sousLaCrete(-2f, 31f, creteG)
+            gauche.op(bosses(-3f, 30f, { x -> creteG(x) + 0.6f }, 1.4f, 2.4f, Alea(2008)), Path.Op.UNION)
+            gauche.op(chemin("M-4 0L32 0L32 37.2L24 37.6L12 38.6L-4 39.8Z"), Path.Op.INTERSECT)
+            piece(gauche, papier(0xFF224C20.toInt()))
+            taches(-2f, 29f, 38f, 10, 2009, papier(0xFF35702C.toInt()), creteG)
+            taches(-2f, 28f, 38f, 5, 2013, papier(0xFF16381A.toInt()), creteG)
+            val dalle = "M-2 39.2L12 38.2L24 37.2L31 36.8L34 37.2L35.6 38.2L34.4 38.6L24 40.2L12 42.4L-2 45Z"
+            pieceD(dalle, papier(0xFF6E6456.toInt()), 0.5f)
+            pieceD("M-2 39.2L12 38.2L24 37.2L31 36.8L34 37.2L35.6 38.2L34 37.9L24 38L12 39.2L-2 40.4Z", papier(0xFF9A8E78.toInt()), 0f)
+            pieceD("M-2 44.2L12 41.7L24 39.7L34.4 38.4L34.4 38.6L24 40.2L12 42.4L-2 45Z", papier(0xFF4A443C.toInt()), 0f)
+            repeat(34) {
+                val px = -1f + rr() * 34f
+                val haut = rivePorteEnferEnX(px)
+                val py = haut - 0.9f - rr() * (haut - 0.9f - (39.2f - (px + 2f) / 36f * 2.4f) - 1f).coerceAtLeast(0.2f)
+                val pr = 0.2f + rr() * 0.35f
+                piece(Path().apply { addOval(RectF(px - pr * 1.6f, py - pr * 0.6f, px + pr * 1.6f, py + pr * 0.6f), Path.Direction.CW) },
+                    papier(if (rr() < 0.6f) 0xFF6A6052.toInt() else 0xFF9E927E.toInt()), 0f)
+            }
+            pieceD("M28.6 37.4L29.2 35L30.8 33.8L32.6 33.4L34.4 34.2L35.4 36L36.2 37.6Z", papier(0xFFCDBE9E.toInt()), 0.4f)
+            pieceD("M32.6 33.4L34.4 34.2L35.4 36L36.2 37.6L34 37.4Q34.4 35.4 32.6 33.4Z", papier(0xFFA89878.toInt()), 0f)
+            // L'écume au pied de la falaise et du rocher, dans la passe.
+            for ((ex, ey, el) in arrayOf(Triple(63f, 39.2f, 3f), Triple(67.6f, 39.6f, 4f), Triple(73f, 39.8f, 4f), Triple(79f, 39.8f, 4f), Triple(85f, 40f, 3f)))
+                pieceD("M$ex ${ey}Q${ex + el / 2f} ${ey - 0.6f} ${ex + el} ${ey}Q${ex + el / 2f} ${ey + 0.3f} $ex ${ey}Z", papier(0xFFF2F4F2.toInt()), 0f)
+            // Le canot au mouillage est une des bêtes du lieu (`Espece.CANOT`) : il se balance sur la carte ouverte.
             plan(2)
-            // La plage, sa laisse d'algues, le sable piqué.
-            pieceD("M-2 56.6Q50 55.2 102 56L102 68L-2 68Z", papier(0xFFE6D2A8.toInt()), 0.5f)
-            pieceD("M-2 56.6Q50 55.2 102 56L102 56.8Q50 56.2 -2 57.4Z", papier(0xFFF2E4C4.toInt()), 0f)
+            // La plage claire, son sable mouillé au bord, sa laisse d'algues, le sable piqué.
+            pieceD("M-2 53.4Q50 52.6 102 53.2L102 68L-2 68Z", papier(0xFFEADCC0.toInt()), 0.5f)
+            pieceD("M-2 53.4Q50 52.6 102 53.2L102 54.2Q50 53.6 -2 54.4Z", papier(0xFFD6C6A2.toInt()), 0f)
             val rs = Alea(2011)
             var lx = -2f
             while (lx < 102f) {
                 // Des paquets d'algues de taille inégale, pas un trait.
                 repeat(1 + (rs() * 4f).toInt()) {
-                    val ax = lx + rs() * 2.4f; val ay = 57.4f + rs() * 1.2f; val ar = 0.25f + rs() * 0.45f
+                    val ax = lx + rs() * 2.4f; val ay = 55.2f + rs() * 1.2f; val ar = 0.25f + rs() * 0.45f
                     piece(Path().apply { addOval(RectF(ax - ar * 1.6f, ay - ar * 0.6f, ax + ar * 1.6f, ay + ar * 0.6f), Path.Direction.CW) },
                         papier(if (rs() < 0.6f) 0xFF6E6A4A.toInt() else 0xFF8A7A52.toInt()), 0f)
                 }
                 lx += 1f + rs() * 4f
             }
-            repeat(60) {
-                val x = -2f + rs() * 104f; val y = 59f + rs() * 8f
-                piece(disque(x, y, 0.18f + rs() * 0.2f), papier(if (rs() < 0.5f) 0xFFC8B48C.toInt() else 0xFFF4EAD2.toInt()), 0f)
+            repeat(70) {
+                val x = -2f + rs() * 104f; val y = 57f + rs() * 10f
+                piece(disque(x, y, 0.18f + rs() * 0.2f), papier(if (rs() < 0.5f) 0xFFC8B48C.toInt() else 0xFFF6EEDC.toInt()), 0f)
+            }
+            // La branche qui pend dans le coin, ses feuilles étroites qu'on distingue une à une.
+            val bois = papier(0xFF4A3A2A.toInt())
+            trait("M-3 4Q8 14 10 26Q11 34 14 42", bois, 0.7f)
+            trait("M3 12Q12 16 18 14M7 22Q14 26 20 24M9 31Q4 36 2 42", bois, 0.4f)
+            val etroites = intArrayOf(papier(0xFF2E4A26.toInt()), papier(0xFF3E5E30.toInt()), papier(0xFF5A7A3E.toInt()))
+            val rb = Alea(2012)
+            for ((bx, by, sens) in arrayOf(Triple(10f, 26f, 1f), Triple(14f, 42f, 1f), Triple(18f, 14f, 1f), Triple(20f, 24f, 1f), Triple(2f, 42f, -1f), Triple(5f, 10f, 1f)))
+                for (j in 0 until 6) feuillePliee(bx - sens * j * 1.4f, by - j * 1.6f + rb() * 0.6f, 3.4f + rb() * 1.4f,
+                    (if (sens > 0f) 20f else 160f) + (rb() - 0.5f) * 70f + j * 8f * sens, etroites[min((rb() * 3f).toInt(), 2)], 0.28f)
+            repeat(14) {
+                val t = rb(); val fx = -3f + 17f * t; val fy = 4f + 38f * t
+                feuillePliee(fx, fy, 3.2f + rb() * 1.4f, if (rb() < 0.5f) 20f + rb() * 60f else 120f + rb() * 60f,
+                    etroites[min((rb() * 3f).toInt(), 2)], 0.28f)
             }
         }
 
