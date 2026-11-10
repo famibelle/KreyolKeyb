@@ -143,7 +143,13 @@ enum class Espece {
     /** Pas une bête : la barque de bois sur le lagon de l'Îlet du Gosier, qui se balance. */
     BARQUE_BOIS,
     /** Le raton laveur de la Guadeloupe, sur une racine de palétuvier du Grand Cul-de-Sac Marin, qui fouille l'eau. */
-    RATON_MANGROVE
+    RATON_MANGROVE,
+    /**
+     * Le raton laveur de la Guadeloupe, emblème du Parc national que traverse
+     * la route de la Traversée : assis au bord de la route, tourné vers elle,
+     * il hume le sol. Le dessin du Grand Cul-de-Sac, retourné, sans l'eau.
+     */
+    RATON_FORET
 }
 
 /**
@@ -1011,6 +1017,12 @@ object Paysages {
     /** Le haut du mur en ruine du Figuier maudit, d'où se détachent les gravats : x0, x1, et le sol à son pied. */
     internal val MUR_FIGUIER = floatArrayOf(0f, 40f, 56f)
 
+    /** Le bout de la route de la Traversée, où ses bandes de béton se rejoignent sous la trouée (plan du milieu) : x, y. */
+    internal val FUITE_TRAVERSEE = floatArrayOf(60f, 43f)
+
+    /** La voûte au-dessus de la route de la Traversée, d'où la secousse détache des feuilles : x0, x1, y0, y1. */
+    internal val VOUTE_TRAVERSEE = floatArrayOf(30f, 90f, 0f, 10f)
+
     /** La voûte de la forêt des Roches gravées, d'où tombent les feuilles : x0, x1, y0, y1. */
     internal val VOUTE_ROCHES = floatArrayOf(4f, 80f, 6f, 16f)
     internal val FEUILLAGE_MACOU_DROITE = floatArrayOf(76f, 100f, 2f, 30f)
@@ -1086,7 +1098,8 @@ object Paysages {
         Lieu.ILET_GOSIER to listOf(Bete(Espece.BARQUE_BOIS, 13f, 55f, plan = 1), Bete(Espece.PELICAN, 30f, 48f, plan = 1, taille = 1.6f),
             Bete(Espece.TOULOULOU, 40f, 61.6f), Bete(Espece.TOULOULOU, 58f, 62.6f)),
         Lieu.GRAND_CUL_DE_SAC to listOf(Bete(Espece.RATON_MANGROVE, 15f, 48.2f, taille = 1.3f)),
-        Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 50f, 57f, plan = 1)),
+        Lieu.TRAVERSEE to listOf(Bete(Espece.AGOUTI, 52f, 57f, plan = 1, taille = 1.2f),
+            Bete(Espece.RATON_FORET, 74f, 59.6f, plan = 1, taille = 1.3f)),
         Lieu.GRIVELIERE to listOf(Bete(Espece.PARULINE, 22f, 52f)),
         Lieu.MATOUBA to listOf(Bete(Espece.PIC, 13.6f, 30f)),
         Lieu.FORT_DELGRES to listOf(Bete(Espece.ANOLI, 20f, 55f)),
@@ -5471,13 +5484,35 @@ object Paysages {
         }
 
         /** Un agouti qui traverse. Le jour seulement. */
-        fun agouti(x: Float, y: Float) {
+        /**
+         * L'agouti, de profil vers la droite : la croupe haute et dorée, le dos
+         * plus sombre, la petite tête au museau pointu, les pattes fines qui
+         * se croisent au rythme de [foulee] (de -1 à 1). Le jour seulement.
+         */
+        fun agouti(x: Float, y: Float, taille: Float = 1f, foulee: Float = 0f) {
             if (P.nuit) return
-            val poil = duJour(0xFF9A6A3A.toInt())
-            ovale(x, y, 2.4f, 1.2f, poil)
-            ovale(x + 2.2f, y - 0.5f, 0.9f, 0.7f, poil)
-            trait("M${x - 1.4f} ${y + 0.8f}L${x - 1.6f} ${y + 2f}M${x + 1.2f} ${y + 0.8f}L${x + 1.4f} ${y + 2f}",
-                duJour(0xFF5C3E22.toInt()), 0.3f)
+            c.save()
+            c.scale(taille, taille, x, y)
+            val poil = duJour(0xFFA8682E.toInt())
+            val dos = duJour(0xFF6A4020.toInt())
+            val croupe = duJour(0xFFC4883C.toInt())
+            val patte = duJour(0xFF3E2814.toInt())
+            // Les pattes de l'autre côté, derrière le corps.
+            barre(x + 1.2f, y + 0.4f, x + 1.4f - foulee * 0.5f, y + 2f, 0.26f, patte, 0f)
+            barre(x - 1.6f, y + 0.5f, x - 1.9f + foulee * 0.5f, y + 2f, 0.3f, patte, 0f)
+            forme("M${x - 2.7f} ${y + 0.7f}Q${x - 3.2f} ${y - 1.6f} ${x - 1.2f} ${y - 2f}Q${x + 0.8f} ${y - 2.1f} ${x + 1.8f} ${y - 1.1f}" +
+                "Q${x + 2.3f} ${y - 0.3f} ${x + 1.6f} ${y + 0.6f}Q${x - 0.4f} ${y + 1.1f} ${x - 2.7f} ${y + 0.7f}Z", poil)
+            forme("M${x - 2.9f} ${y - 0.3f}Q${x - 2.7f} ${y - 1.9f} ${x - 1.2f} ${y - 2f}Q${x - 1.7f} ${y - 0.6f} ${x - 2.9f} ${y - 0.3f}Z", croupe)
+            forme("M${x - 1.6f} ${y - 1.95f}Q${x + 0.6f} ${y - 2.2f} ${x + 1.7f} ${y - 1.2f}Q${x + 0.4f} ${y - 1.5f} ${x - 1.6f} ${y - 1.95f}Z", dos)
+            forme("M${x + 1.5f} ${y - 1.5f}Q${x + 2.7f} ${y - 2.1f} ${x + 3.8f} ${y - 0.8f}Q${x + 3.5f} ${y - 0.2f} ${x + 2.5f} ${y - 0.3f}" +
+                "Q${x + 1.7f} ${y - 0.4f} ${x + 1.5f} ${y - 1.5f}Z", poil)
+            ovale(x + 2.3f, y - 2f, 0.32f, 0.42f, dos)
+            ovale(x + 2.9f, y - 1.15f, 0.17f, 0.17f, patte)
+            ovale(x + 3.75f, y - 0.75f, 0.14f, 0.12f, patte)
+            // Les pattes de ce côté-ci.
+            barre(x + 1.4f, y + 0.4f, x + 1.7f + foulee * 0.6f, y + 2f, 0.3f, patte, 0f)
+            barre(x - 1.9f, y + 0.5f, x - 2.2f - foulee * 0.6f, y + 2f, 0.34f, patte, 0f)
+            c.restore()
         }
 
         /** Le raton laveur, la queue annelée. La nuit seulement, quand il sort. */
@@ -5498,7 +5533,7 @@ object Paysages {
          * blancs, le museau clair. [fouille] (0 à 1) baisse la tête et plonge
          * les pattes de devant dans l'eau, qui fait un rond.
          */
-        fun ratonMangrove(x: Float, y: Float, fouille: Float) {
+        fun ratonMangrove(x: Float, y: Float, fouille: Float, eau: Boolean = true) {
             val gris = duJour(0xFF8A8478.toInt())
             val sombre = duJour(0xFF5E584E.toInt())
             val clair = duJour(0xFFE6E2D8.toInt())
@@ -5521,7 +5556,7 @@ object Paysages {
             val py = y + fouille * 3.2f
             trait("M${x + 1.8f} ${y - 1.4f}L$px $py", sombre, 0.65f)
             trait("M${x + 2.6f} ${y - 1.6f}L${px + 0.6f} ${py - 0.2f}", sombre, 0.6f)
-            if (fouille > 0.3f) ovale(px + 0.3f, y + 3.4f, 1.2f + fouille, 0.28f, blanc(), 0.6f * fouille)
+            if (eau && fouille > 0.3f) ovale(px + 0.3f, y + 3.4f, 1.2f + fouille, 0.28f, blanc(), 0.6f * fouille)
             // La tête, qui se baisse vers l'eau.
             val hx = x + 3.6f
             val hy = y - 3.4f + fouille * 1.6f
@@ -5768,7 +5803,7 @@ object Paysages {
                     Espece.LIBELLULE -> libellule(x, y)
                     Espece.ANOLI -> anoli(x, y)
                     Espece.PIC -> pic(x, y)
-                    Espece.AGOUTI -> agouti(x, y)
+                    Espece.AGOUTI -> agouti(x, y, b.taille)
                     Espece.RATON -> raton(x, y)
                     Espece.SIFFLEUR -> oiselet(x, y, COULEUR_SIFFLEUR)
                     Espece.PARULINE -> oiselet(x, y, COULEUR_PARULINE)
@@ -5785,6 +5820,7 @@ object Paysages {
                     Espece.CANOT -> canot(x, y, 0f)
                     Espece.BARQUE_BOIS -> barqueBois(x, y, 0f)
                     Espece.RATON_MANGROVE -> { c.save(); c.scale(b.taille, b.taille, x, y); ratonMangrove(x, y, 0f); c.restore() }
+                    Espece.RATON_FORET -> { c.save(); c.scale(-b.taille, b.taille, x, y); ratonMangrove(x, y, 0f, eau = false); c.restore() }
                     Espece.ABEILLE -> if (!P.nuit) abeille(x, y, 1f, 1f, b.taille)
                     Espece.LIANE -> liane(x, y, 0f, b.attache)
                 }
@@ -5857,7 +5893,11 @@ object Paysages {
                 // Il traverse la route, puis la forêt le cache un moment.
                 Espece.AGOUTI -> {
                     val u = (t + 4f + ph) % 11f
-                    if (u < 8f) agouti(x - 14f + u / 8f * 28f, y + abs(sin(u * 9f)) * -0.2f)
+                    if (u < 8f) {
+                        // Il sort du sous-bois et y rentre en fondu, à petits bonds.
+                        voile = min(1f, min(u, 8f - u) / 0.6f)
+                        agouti(x - 14f + u / 8f * 28f, y - abs(sin(u * 9f)) * 0.25f * b.taille, b.taille, sin(u * 9f))
+                    }
                 }
                 Espece.RATON -> {
                     val dx = sin(t * 0.3f + ph) * 6f
@@ -5937,6 +5977,20 @@ object Paysages {
                     }
                     c.save(); c.scale(b.taille, b.taille, x, y)
                     ratonMangrove(x, y, fouille)
+                    c.restore()
+                }
+                // Au bord de la Traversée, il hume le sol un moment, puis se redresse et regarde la route.
+                Espece.RATON_FORET -> {
+                    val u = (t + ph) % 6f
+                    val hume = when {
+                        u < 3f -> 0f
+                        u < 3.4f -> (u - 3f) / 0.4f * 0.35f
+                        u < 5f -> 0.3f + 0.05f * sin((u - 3.4f) * 12f)
+                        u < 5.4f -> 0.35f * (1f - (u - 5f) / 0.4f)
+                        else -> 0f
+                    }
+                    c.save(); c.scale(-b.taille, b.taille, x, y)
+                    ratonMangrove(x, y, hume, eau = false)
                     c.restore()
                 }
                 // La barque de l'Îlet du Gosier, de même.
@@ -8142,108 +8196,179 @@ object Paysages {
             }
         }
 
-        /** Une rambarde de bois en perspective, de ([ax], [ay]) loin à ([bx], [by]) près : poteaux, deux lisses. */
-        private fun rambardeFuyante(ax: Float, ay: Float, bx: Float, by: Float, ha: Float, hb: Float, poteaux: Int, col: Int) {
-            fun pt(u: Float) = floatArrayOf(ax + (bx - ax) * u * u, ay + (by - ay) * u * u, ha + (hb - ha) * u * u)
-            val sombre = mix(col, 0xFF000000.toInt(), 0.2f)
-            for (lisse in floatArrayOf(0.45f, 1f)) {
-                var prec = pt(0f)
-                for (k in 1..24) {
-                    val q = pt(k / 24f)
-                    barre(prec[0], prec[1] - prec[2] * lisse, q[0], q[1] - q[2] * lisse, 0.15f + q[2] * 0.09f,
-                        if (lisse < 1f) sombre else col, 0.3f)
-                    prec = q
-                }
-            }
-            for (k in 0..poteaux) {
-                val q = pt(k / poteaux.toFloat())
-                val e = 0.25f + q[2] * 0.14f
-                barre(q[0], q[1], q[0], q[1] - q[2] * 1.08f, e, col, 0.5f)
-                pieceD("M${q[0] - e / 2f} ${q[1] - q[2] * 1.08f}L${q[0] + e / 2f} ${q[1] - q[2] * 1.08f}L${q[0] + e / 2f} ${q[1]}L${q[0] + e * 0.2f} ${q[1]}Z",
-                    sombre, 0f)
+        /**
+         * Une grande fronde de fougère, vue de profil : un rachis qui part de
+         * ([x], [y]) suivant [angle] (degrés, 0 vers la droite) et se courbe de
+         * [courbe] radians vers la pointe ; ses pennes étroites, courtes à la
+         * base et à la pointe, longues au milieu, retombent des deux côtés.
+         * Toujours partie d'un bord de la fenêtre, jamais en couronne sur un
+         * stipe : la fougère arborescente entière ferait une silhouette de
+         * cocotier.
+         */
+        private fun grandeFronde(x: Float, y: Float, l: Float, angle: Float, courbe: Float, col: Int) {
+            val a = Math.toRadians(angle.toDouble()).toFloat()
+            val tige = mix(col, 0xFF000000.toInt(), 0.35f)
+            val clair = mix(col, 0xFFFFFFFF.toInt(), 0.14f)
+            val n = 22
+            var px = x; var py = y
+            for (k in 1..n) {
+                val u = k / n.toFloat()
+                val ang = a + courbe * u * u
+                val nx = px + cos(ang) * l / n; val ny = py + sin(ang) * l / n
+                barre(px, py, nx, ny, 0.34f * (1f - u * 0.7f), tige, 0f)
+                val f = l * 0.19f * max(0.18f, sin(PI.toFloat() * (0.1f + 0.9f * u))) * (1f - u * 0.3f)
+                val deg = Math.toDegrees(ang.toDouble()).toFloat()
+                feuillePliee(nx, ny, f, deg + 64f, col, 0.2f)
+                feuillePliee(nx, ny, f * 0.9f, deg - 56f, clair, 0.2f)
+                px = nx; py = ny
             }
         }
 
         /**
          * La route de la Traversée en papier découpé, d'après la photo du
-         * propriétaire (2026-11-08) : le chemin pavé du parc national qui
-         * s'enfonce sous la forêt entre ses deux rambardes de bois et tourne
-         * à gauche au fond, la lumière qui tombe au bout, les grands troncs,
-         * un très gros à droite du mot, pris de lianes ; les fougères et les
-         * grandes feuilles des deux bords. Personne sur le chemin : l'agouti
-         * le traverse sur la carte ouverte. Balisiers pour le colibri.
+         * propriétaire (2026-11-10) : la vieille route qui s'enfonce tout
+         * droit sous la forêt, deux bandes de béton et l'herbe au milieu,
+         * jusqu'à la trouée de lumière au bout ; à gauche le mur sombre du
+         * sous-bois et les grandes frondes de fougère qui s'arquent par-dessus,
+         * à droite les arbustes éclairés et les fûts minces pris de lianes. Les
+         * promeneurs de la photo sont remplacés par l'agouti, qui traverse la
+         * route sur la carte ouverte. Le bout de la route est à droite du mot.
+         * Balisiers pour le colibri.
          */
         fun traverseePapier() {
-            // Le fond baigné de lumière, des troncs pâles dans la brume.
-            morneBoise(6f, 2.4f, 2501, mix(papier(0xFF9CCB84.toInt()), P.cielBas, 0.5f), 2.6f)
-            val pale = mix(papier(0xFF7E8E70.toInt()), P.cielBas, 0.4f)
-            for ((x, e) in arrayOf(30f to 0.7f, 38f to 0.5f, 61f to 0.6f, 66f to 0.8f)) barre(x, 44f, x + 0.8f, 2f, e, pale, 0f)
-            morneBoise(17f, 2.6f, 2504, mix(papier(0xFF7DB666.toInt()), P.cielBas, 0.35f), 3f)
-            brumePapier(30f, 72f, 24f, 5f, 2505)
-            morneBoise(27f, 2f, 2502, mix(papier(0xFF5E9E52.toInt()), P.cielBas, 0.25f), 2.8f)
-            morneBoise(35f, 1.6f, 2506, mix(papier(0xFF7AB868.toInt()), P.cielBas, 0.2f), 2.4f)
-            brumePapier(30f, 72f, 39f, 3.4f, 2503)
+            val (vx, vy) = Paysages.FUITE_TRAVERSEE
+            // Au fond : la lumière qui passe la voûte, la trouée de ciel, la forêt lointaine au bout de la route.
+            pieceD("M-2 -2L104 -2L104 70L-2 70Z", papier(0xFFCFE2B8.toInt()), 0f)
+            forme(Path().apply { addOval(RectF(50f, -10f, 74f, 18f), Path.Direction.CW) }, papier(0xFFF4F8EC.toInt()), 0.9f)
+            morneBoise(30f, 2.4f, 2501, mix(papier(0xFF8CBA68.toInt()), P.cielBas, 0.35f), 2.6f)
+            morneBoise(38f, 1.8f, 2502, mix(papier(0xFF6EA650.toInt()), P.cielBas, 0.2f), 2.2f)
+            forme(Path().apply { addOval(RectF(vx - 9f, vy - 9f, vx + 9f, vy + 5f), Path.Direction.CW) }, papier(0xFFD2E8A8.toInt()), 0.75f)
             plan(1)
-            // Les deux bords de forêt, en lisières, qui descendent vers le chemin.
-            val verts = intArrayOf(papier(0xFF4E8E46.toInt()), papier(0xFF2E6A3A.toInt()), papier(0xFF6FA84E.toInt()))
-            for (k in 0 until 3) {
-                rive(true, 8f + k * 9f, 42f + k * 3f, 40f - k * 5f, 2510 + k, verts[k], 3.4f + k * 0.5f)
-                rive(false, 10f + k * 9f, 42f + k * 3f, 60f + k * 5f, 2520 + k, verts[(k + 1) % 3], 3.4f + k * 0.5f)
+            // Le mur sombre du sous-bois, à gauche, jusqu'au bout de la route.
+            val sombre = papier(0xFF1C3620.toInt())
+            pieceD("M-2 -2L52 -2Q47 12 51 24Q55 35 ${vx - 1.4f} ${vy}L${vx - 2f} ${vy + 2f}L-2 70Z", sombre, 0.6f)
+            // Un rideau de frondes sombres qui pendent de la voûte : semées une à une, les feuilles faisaient des confettis.
+            val rg = Alea(2510)
+            val sombres = intArrayOf(papier(0xFF1E3E1E.toInt()), papier(0xFF2A4A24.toInt()), papier(0xFF325A2C.toInt()))
+            repeat(18) { k ->
+                val x = -6f + k * 3f + rg() * 2f
+                grandeFronde(x, -4f + rg() * 10f + k * 0.6f, 22f + rg() * 14f, 70f + rg() * 30f, -0.3f + rg() * 0.6f,
+                    sombres[min((rg() * 3f).toInt(), 2)])
             }
-            // Un tronc fin qui monte en biais à gauche.
-            val ecorce = papier(0xFF5A4E3E.toInt())
-            barre(33f, 47f, 25f, -2f, 1.3f, ecorce, 0.5f)
-            barre(33.2f, 47f, 25.4f, -2f, 0.35f, mix(ecorce, 0xFFFFFFFF.toInt(), 0.2f), 0f)
-            // Le gros tronc à droite du mot : ses contreforts, sa mousse, ses lianes.
-            val gros = papier(0xFF4A4036.toInt())
-            pieceD("M70.4 -2L77.6 -2Q77 20 78 34Q79 42 84 47L64 47Q69 42 70 34Q71 20 70.4 -2Z", gros, 0.8f)
-            pieceD("M75.6 -2L77.6 -2Q77 20 78 34Q79 42 84 47L80.4 47Q77 40 76.2 30Q75.6 14 75.6 -2Z", mix(gros, 0xFFFFFFFF.toInt(), 0.12f), 0f)
-            for ((y, l) in arrayOf(8f to 5f, 18f to 4f, 30f to 6f)) feuillePliee(71f, y, l, 95f, papier(0xFF5E9A44.toInt()), 0.35f)
-            val liane = papier(0xFF6A7A48.toInt())
-            barre(72.2f, -2f, 71.4f, 30f, 0.35f, liane, 0.2f)
-            barre(74.4f, -2f, 75.6f, 22f, 0.3f, liane, 0.2f)
-            barre(82f, -2f, 81.2f, 26f, 0.3f, liane, 0.2f)
-            // Le chemin pavé, qui tourne à gauche au fond.
-            val pave = papier(0xFF8C8478.toInt())
-            pieceD("M20 68L44.4 48Q43.4 45.6 40 44.6L48.6 44.6Q52 45.6 54.2 48L80 68Z", pave, 0.5f)
-            fun gauche(y: Float) = 44.4f - (y - 48f) / 20f * 24.4f
-            fun droite(y: Float) = 54.2f + (y - 48f) / 20f * 25.8f
-            val pierres = intArrayOf(papier(0xFFA49A8C.toInt()), papier(0xFF9A9284.toInt()), papier(0xFF7A7266.toInt()))
-            val rp = Alea(2530)
-            var y = 48.6f
-            while (y < 67f) {
-                val p = (y - 48f) / 20f
-                val e = 0.4f + 1.2f * p
-                var x = gauche(y) + 0.4f + rp() * 1.2f
-                while (x < droite(y) - 1f) {
-                    val l = (1.4f + rp() * 1.6f) * (0.5f + p * 1.4f)
-                    val t = Path()
-                    t.addRoundRect(RectF(x, y, min(x + l, droite(y) - 0.4f), y + e), e * 0.4f, e * 0.4f, Path.Direction.CW)
-                    piece(t, pierres[min((rp() * 3f).toInt(), 2)], 0.3f)
-                    x += l + 0.3f + p * 0.4f
+            // Au bord du mur, des frondes que la lumière du bout éclaire.
+            for ((fx, fy, fl) in arrayOf(Triple(42f, 2f, 18f), Triple(46f, 14f, 16f), Triple(50f, 26f, 12f)))
+                grandeFronde(fx, fy, fl, 50f, 0.9f, papier(0xFF3E7232.toInt()))
+            // Le mur de droite : des arbustes éclairés devant, l'ombre sous la voûte.
+            pieceD("M104 -2L68 -2Q72 14 66 26Q62 36 ${vx + 1.4f} ${vy}L${vx + 2f} ${vy + 2f}L104 70Z", papier(0xFF2E5A28.toInt()), 0.6f)
+            // Les fûts minces qui montent dans la voûte, et leurs lianes.
+            val fut = papier(0xFF2A2A20.toInt())
+            for ((bx, by, hx, e) in arrayOf(floatArrayOf(67f, 42f, 70f, 0.6f), floatArrayOf(75f, 46f, 80f, 1f),
+                    floatArrayOf(86f, 50f, 89f, 0.6f), floatArrayOf(97f, 56f, 101f, 1.2f), floatArrayOf(92f, 30f, 94f, 0.4f)))
+                barre(bx, by, hx, -2f, e, fut, 0.4f)
+            val liane = papier(0xFF3A4A26.toInt())
+            for ((lx, ly, l2) in arrayOf(Triple(72f, 0f, 70.6f), Triple(81f, -2f, 83f), Triple(90f, 0f, 87.6f)))
+                trait("M$lx ${ly}Q${lx + 3f} 14 $l2 26Q${l2 - 1.6f} 32 ${l2 + 0.6f} 38", liane, 0.3f)
+            // Les arbustes : des masses de feuillage où les feuilles partent en tous sens, plus au soleil
+            // vers le bas. Des feuilles rondes semées une à une faisaient des pois ; rayonnant d'un
+            // cœur, des rosettes de salade.
+            val rd = Alea(2520)
+            val clairs = intArrayOf(papier(0xFF2E6428.toInt()), papier(0xFF4E8E36.toInt()), papier(0xFF6EAE44.toInt()), papier(0xFF8CC456.toInt()))
+            repeat(60) { k ->
+                val y = 8f + (k / 60f) * 58f + rd() * 4f
+                val bord = if (y < 43f) 66f else 66f + (y - 43f) * 0.55f
+                val x = bord + rd() * (106f - bord)
+                val r = 2.4f + y / 66f * 3f
+                val soleil = (y - 8f) / 58f
+                forme(Path().apply { addOval(RectF(x - r * 1.2f, y - r * 0.7f, x + r * 1.2f, y + r * 0.8f), Path.Direction.CW) },
+                    clairs[0], 0.9f)
+                repeat(14) {
+                    val i = min((rd() * 2.2f + soleil * 2f).toInt(), 3)
+                    val a = rd() * 2f * PI.toFloat()
+                    val d = rd()
+                    feuillePliee(x + cos(a) * d * r, y + sin(a) * d * r * 0.6f, r * (0.45f + rd() * 0.35f),
+                        rd() * 360f, clairs[i], 0.4f)
                 }
-                y += e + 0.25f + 0.3f * p
             }
-            // Les taches de soleil sur les pavés, le jour.
-            if (!P.allume) for ((tx, ty, tl) in arrayOf(Triple(47f, 51f, 3f), Triple(40f, 57f, 5f), Triple(56f, 61f, 6f)))
-                pieceD("M$tx ${ty}Q${tx + tl / 2f} ${ty - tl * 0.18f} ${tx + tl} ${ty}Q${tx + tl / 2f} ${ty + tl * 0.18f} $tx ${ty}Z",
-                    mix(papier(0xFFE8E0B8.toInt()), pave, 0.25f), 0f)
-            val bois = papier(0xFF8A5634.toInt())
-            rambardeFuyante(43.4f, 46.4f, 17f, 70f, 1.6f, 9f, 9, bois)
-            rambardeFuyante(55f, 46.6f, 83f, 70f, 1.6f, 9f, 9, bois)
+            // La voûte : des feuilles en ombre chinoise le long du haut, la trouée laissée ouverte.
+            val voute = papier(0xFF1E3A1E.toInt())
+            val rv = Alea(2525)
+            repeat(70) {
+                val x = -2f + rv() * 106f
+                if (x < 53f || x > 69f) feuillePliee(x, -2f + rv() * 8f, 2.4f + rv() * 3f, 30f + rv() * 120f, voute, 0.3f)
+                else feuillePliee(x, -2f + rv() * 3f, 1.6f + rv() * 2f, 60f + rv() * 60f, papier(0xFF3E6A30.toInt()), 0.3f)
+            }
+            // La route, de t = 0 au bout à t = 1 en bas de la fenêtre : elle serpente un peu, et la
+            // perspective resserre les dalles vers le bout. Tirée au cordeau, elle ne faisait pas
+            // route forestière (propriétaire, 2026-11-10).
+            fun yRoute(t: Float) = vy + (70f - vy) * t * t
+            fun milieu(t: Float) = vx + (51.5f - vx) * t - 3f * sin(PI.toFloat() * t)
+            // L'herbe des bas-côtés, au bord irrégulier.
+            val rb = Alea(2531)
+            val herbe = Path()
+            herbe.moveTo(milieu(0f) - 1.2f, vy)
+            var t = 0f
+            while (t < 1f) { t = min(1f, t + 0.05f); herbe.lineTo(milieu(t) - 30f * t + (rb() - 0.5f) * 3f * t, yRoute(t)) }
+            herbe.lineTo(milieu(1f) + 32f, 70f)
+            while (t > 0f) { t = max(0f, t - 0.05f); herbe.lineTo(milieu(t) + 30f * t + (rb() - 0.5f) * 3f * t, yRoute(t)) }
+            herbe.close()
+            piece(herbe, papier(0xFF7E9A48.toInt()), 0.4f)
+            // Les deux bandes de béton, cassées en dalles aux bords rongés, l'herbe entre les dalles.
+            val beton = papier(0xFF8E8A7E.toInt())
+            val fissure = papier(0xFF5E5A50.toInt())
+            val rr = Alea(2530)
+            // Des dalles de longueurs inégales : égales, elles faisaient une échelle.
+            for ((g, d) in arrayOf(-16.5f to -5.5f, 5.5f to 16.5f)) {
+                var suite = 0f
+                while (suite < 1f) {
+                    val t0 = suite
+                    suite = min(1f, suite + 0.035f + rr() * 0.09f)
+                    val t1 = suite - (if (rr() < 0.5f) 0.006f else 0.014f + rr() * 0.025f)
+                    val j0 = t0 * 0.9f; val j1 = t1 * 0.9f
+                    val ag = milieu(t0) + g * t0 + (rr() - 0.5f) * j0; val ad = milieu(t0) + d * t0 + (rr() - 0.5f) * j0
+                    val bg = milieu(t1) + g * t1 + (rr() - 0.5f) * j1; val bd = milieu(t1) + d * t1 + (rr() - 0.5f) * j1
+                    val y0 = yRoute(t0); val y1 = yRoute(t1)
+                    // Un coin écorné de temps en temps.
+                    val ecorne = if (rr() < 0.35f) (bd - bg) * (0.15f + rr() * 0.2f) else 0f
+                    pieceD("M$ag ${y0}L$ad ${y0}L$bd ${y1 - ecorne * 0.3f}L${bd - ecorne} ${y1}L$bg ${y1}Z", beton, 0.25f)
+                    if (t0 > 0.3f && rr() < 0.4f) {
+                        val fx = ag + (ad - ag) * (0.2f + rr() * 0.6f)
+                        barre(fx, y0 + 0.2f, fx + (rr() - 0.5f) * 2f * t0, (y0 + y1) / 2f + (rr() - 0.3f) * (y1 - y0), 0.12f + 0.12f * t0, fissure, 0f)
+                    }
+                }
+            }
+            // L'herbe qui déborde sur le béton, en touffes, et les feuilles mortes.
+            val touffes = intArrayOf(papier(0xFF6E8E3A.toInt()), papier(0xFF9AB458.toInt()), papier(0xFF5E7A34.toInt()))
+            repeat(110) {
+                val tt = 0.15f + rr() * 0.85f
+                val bords = floatArrayOf(-16.5f, -5.5f, 5.5f, 16.5f, -11f, 11f)
+                val b = bords[min((rr() * 6f).toInt(), 5)]
+                val x = milieu(tt) + b * tt + (rr() - 0.5f) * 1.6f * tt
+                val yy = yRoute(tt)
+                val l = 0.5f + tt * tt * 2.2f
+                if (rr() < 0.8f) feuillePliee(x, yy, l, -150f + rr() * 120f, touffes[min((rr() * 3f).toInt(), 2)], 0.3f)
+                else ovale(x, yy, l * 0.5f, l * 0.2f, papier(0xFF8A6A3A.toInt()), 0.8f)
+            }
+            if (!P.allume) for ((tt, dx, tl) in arrayOf(Triple(0.85f, -10f, 4f), Triple(0.9f, 9f, 5f), Triple(0.55f, 3f, 2f)))
+                pieceD("M${milieu(tt) + dx * tt} ${yRoute(tt)}Q${milieu(tt) + dx * tt + tl / 2f} ${yRoute(tt) - tl * 0.16f} " +
+                    "${milieu(tt) + dx * tt + tl} ${yRoute(tt)}Q${milieu(tt) + dx * tt + tl / 2f} ${yRoute(tt) + tl * 0.16f} " +
+                    "${milieu(tt) + dx * tt} ${yRoute(tt)}Z", mix(papier(0xFFF0E8C0.toInt()), beton, 0.2f), 0f)
             plan(2)
-            // Les deux bords de sous-bois : fougères, grandes feuilles, balisiers.
-            val fougeres = intArrayOf(papier(0xFF5EA04A.toInt()), papier(0xFF3E8A44.toInt()), papier(0xFF7AB654.toInt()))
-            for ((fx, fy, fl, fa) in arrayOf(
-                floatArrayOf(-2f, 54f, 14f, -25f), floatArrayOf(2f, 60f, 15f, -15f), floatArrayOf(6f, 66f, 13f, -30f),
-                floatArrayOf(102f, 55f, 14f, -155f), floatArrayOf(98f, 61f, 15f, -165f), floatArrayOf(95f, 67f, 12f, -150f)))
-                fougere(fx, fy, fl, fa, fougeres[((fx + fy).toInt() and 0xFF) % 3])
-            feuilleBananier(-2f, 66f, 13f, -40f, papier(0xFF4FB06A.toInt()))
-            feuilleCoeur(18f, 67f, 4f, -10f, papier(VERT_PROFOND))
-            feuilleBananier(102f, 66f, 12f, -142f, papier(0xFF3FA86A.toInt()))
-            feuilleCoeur(84f, 67f, 3.6f, 14f, papier(VERT_PROFOND))
-            balisier(12f, 61f, 14f, feuille())
-            balisier(88f, 61f, 14f, feuille())
+            // Devant, à gauche : les grandes frondes de fougère, parties du bord, qui montent puis
+            // retombent en arc au-dessus de la route. Couchées en rang, elles faisaient des peignes.
+            val fougeres = intArrayOf(papier(0xFF4E9A36.toInt()), papier(0xFF62AE42.toInt()), papier(0xFF3E8A30.toInt()))
+            for ((k, f) in arrayOf(
+                floatArrayOf(-4f, 30f, 46f, -62f, 2.1f), floatArrayOf(-4f, 40f, 50f, -44f, 1.8f),
+                floatArrayOf(-2f, 50f, 40f, -30f, 1.5f), floatArrayOf(-4f, 22f, 36f, -78f, 2.3f),
+                floatArrayOf(-4f, 62f, 30f, -20f, 1.1f)).withIndex())
+                grandeFronde(f[0], f[1], f[2], f[3], f[4], fougeres[k % 3])
+            // À droite : de grandes feuilles au soleil.
+            val rf = Alea(2540)
+            repeat(18) {
+                feuillePliee(84f + rf() * 20f, 58f + rf() * 10f, 4f + rf() * 3f, -160f + rf() * 140f,
+                    papier(if (rf() < 0.5f) 0xFF6EAE44.toInt() else 0xFF8CC456.toInt()), 0.45f)
+            }
+            balisier(12f, 63f, 13f, papier(0xFF3E8A44.toInt()))
+            balisier(88f, 62f, 13f, papier(0xFF4E9A44.toInt()))
         }
 
         // ------------------------------------------- la Grivelière en papier

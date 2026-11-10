@@ -244,6 +244,10 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                         intArrayOf(Paysages.aLHeure(0xFFD0A868.toInt(), heure), Paysages.aLHeure(0xFFB08848.toInt(), heure)),
                         sol0 = 56f, sens = 1f, plan = Paysages.DEVANT, chute = 8f, elan = 0.5f, feuille = true, envol = 2f,
                         grandeur = 1.6f))
+                // Des feuilles que la secousse détache de la voûte tombent sur la route.
+                enPlans && lieu == Lieu.TRAVERSEE && heure != null -> Petales(zone, graine, Paysages.VOUTE_TRAVERSEE,
+                    intArrayOf(Paysages.aLHeure(0xFFB09A3A.toInt(), heure), Paysages.aLHeure(0xFF7A9A3A.toInt(), heure)),
+                    sol0 = 48f, sens = 1f, plan = Paysages.MILIEU, chute = 14f, elan = 0.4f, feuille = true, grandeur = 1.3f)
                 // Des feuilles mortes que la secousse détache de la voûte.
                 enPlans && lieu == Lieu.ROCHES_GRAVEES && heure != null -> Petales(zone, graine, Paysages.VOUTE_ROCHES,
                     intArrayOf(Paysages.aLHeure(0xFFB08A3A.toInt(), heure), Paysages.aLHeure(0xFF8A9A3A.toInt(), heure)),
@@ -2518,7 +2522,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         forceRafale = max(force, if (rafale.any { it >= 0f }) forceRafale else 0f)
         betes.forEachIndexed { i, b ->
             when (b.espece) {
-                Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE -> if (fuite[i] < 0f) fuite[i] = 0f
+                Espece.TOULOULOU, Espece.IGUANE, Espece.RATON, Espece.RATON_MANGROVE, Espece.RATON_FORET -> if (fuite[i] < 0f) fuite[i] = 0f
                 Espece.FANIONS, Espece.PLANTE, Espece.FLEURS, Espece.BATEAU, Espece.CANOT, Espece.BARQUE_BOIS, Espece.ABEILLE, Espece.LIANE,
                 Espece.LIBELLULE -> rafale[i] = 0f
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
@@ -2553,7 +2557,11 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private fun retard(i: Int) = (i % 3) * 0.15f
 
     /** Jusqu'où [b] file à couvert : l'iguane vers la gauche, le raton des Bains Jaunes vers le rocher noir, à gauche aussi. */
-    private fun couvert(b: Bete) = if (b.espece == Espece.RATON) RATON_COUVERT else COUVERT
+    private fun couvert(b: Bete) = when (b.espece) {
+        Espece.RATON -> RATON_COUVERT
+        Espece.RATON_FORET -> RATON_FORET_COUVERT
+        else -> COUVERT
+    }
 
     /** Où est le trou de [b] : quelques pas de côté, en s'écartant du milieu de la fenêtre. */
     private fun trou(b: Bete) = if (b.x < 50f) -TROU else TROU
@@ -2587,7 +2595,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 return@forEachIndexed
             }
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
-            if (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE) {
+            if (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE || b.espece == Espece.RATON_FORET) {
                 fuite[i] += dt
                 val f = fuite[i]
                 val couvert = couvert(b)
@@ -2634,7 +2642,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             c.save()
             c.translate(Paysages.GLISSEMENT[b.plan + 2] * largeur * regardX / e,
                 Paysages.GLISSEMENT[b.plan + 2] * hauteur * regardY / e)
-            if (fuite[i] >= 0f && (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE)) {
+            if (fuite[i] >= 0f && (b.espece == Espece.IGUANE || b.espece == Espece.RATON || b.espece == Espece.RATON_MANGROVE ||
+                    b.espece == Espece.RATON_FORET)) {
                 // Il file tête vers le bord, puis revient tête vers sa pierre,
                 // le corps qui ondule à chaque foulée.
                 val f = fuite[i]
@@ -2648,7 +2657,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                     val versLeRocher = if (RATON_COUVERT > 0f) 1f else -1f
                     val veut = if (f < FILE) versLeRocher else -versLeRocher
                     if (tourne != veut) c.scale(-1f, 1f, b.x + sin(a) * 6f, b.y)
-                } else if (f < FILE) c.scale(-1f, 1f, if (b.espece == Espece.RATON_MANGROVE) b.x else b.x + 5f * b.taille, b.y)
+                } else if (f < FILE) c.scale(-1f, 1f, if (b.espece == Espece.RATON_MANGROVE || b.espece == Espece.RATON_FORET) b.x else b.x + 5f * b.taille, b.y)
             } else if (fuite[i] >= 0f) {
                 // Le trou, ouvert le temps que la bête y entre et en ressorte.
                 val tx = b.x + trou(b)
@@ -2861,6 +2870,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
         const val SOUS_GALET = 3f
         const val RESSORT = 2.2f
         const val RATON_COUVERT = -30f
+        /** Le raton de la Traversée file à droite, dans les fourrés, hors de la fenêtre. */
+        const val RATON_FORET_COUVERT = 34f
         /** Le temps qu'il met à y filer, celui qu'il y reste, celui qu'il met à revenir. */
         const val FILE = 0.9f
         const val A_COUVERT = 4f
