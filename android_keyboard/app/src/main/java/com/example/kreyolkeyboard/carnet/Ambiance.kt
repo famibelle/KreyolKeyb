@@ -201,7 +201,10 @@ abstract class Ambiance(protected val zone: RectF, graine: Int) {
                 enPlans && lieu == Lieu.PORTE_ENFER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PORTE_ENFER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.PETITE_TERRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_PETITE_TERRE, eclatsDuJour = 22)
                 enPlans && lieu == Lieu.GUEULE_GRAND_GOUFFRE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOUFFRE, eclatsDuJour = 30, plan = 2)
-                enPlans && lieu == Lieu.GRANDE_VIGIE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26)
+                enPlans && lieu == Lieu.GRANDE_VIGIE -> Ensemble(
+                    Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_VIGIE, eclatsDuJour = 26,
+                        devant = { y -> if (y < 34f) 9f else 52f }),
+                    Embruns(zone, graine + 1, nuit = heure?.nuit == true))
                 enPlans && lieu == Lieu.ILET_GOSIER -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_GOSIER, eclatsDuJour = 26)
                 enPlans && lieu == Lieu.GRAND_CUL_DE_SAC -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_CUL_DE_SAC, eclatsDuJour = 20)
                 enPlans && lieu == Lieu.MEMORIAL_ACTE -> Reflets(zone, graine, nuit = heure?.nuit == true, eau = Paysages.EAU_ACTE, eclatsDuJour = 22, plan = 4)
@@ -1773,6 +1776,73 @@ private class Ressac(zone: RectF, graine: Int, private val phare: Boolean) : Amb
 }
 
 /**
+ * La mer qui se brise au pied de l'aiguille et du cap de la Grande Vigie
+ * ([Paysages.RESSAC_VIGIE], plan du milieu) : au repos, de petites bouffées
+ * d'écume ; à la secousse, la houle donne un coup et de hautes gerbes montent
+ * l'une après l'autre, de l'aiguille au cap.
+ */
+private class Embruns(zone: RectF, graine: Int, nuit: Boolean) : Ambiance(zone, graine) {
+    private val rang = Paysages.MILIEU
+    // Calées comme le calque du plan, qui déborde de la fenêtre (voir `Cascade`).
+    private val mx = Paysages.marge(rang, largeur.toInt()).toFloat()
+    private val my = Paysages.marge(rang, hauteur.toInt()).toFloat()
+    private val cadre = Paysages.cadrage(largeur + 2f * mx, hauteur + 2f * my)
+    private val n = Paysages.RESSAC_VIGIE.size
+    private val rythme = FloatArray(n) { 2.4f + hasard() * 1.8f }
+    private val phase = FloatArray(n) { hasard() }
+    private val teinte = if (nuit) 0x9FB3D8 else 0xFFFFFF
+    private var temps = 0f
+    /** Depuis quand la houle a donné son coup, ou -1 ; et sa force. */
+    private var coup = -1f
+    private var forceCoup = 0f
+    private var regardX = 0f
+    private var regardY = 0f
+
+    override fun regarder(x: Float, y: Float) {
+        regardX = x
+        regardY = y
+    }
+
+    override fun secouer(force: Float) {
+        if (coup in 0f..0.8f) return
+        coup = 0f
+        forceCoup = force
+    }
+
+    override fun avancer(dt: Float) {
+        temps += dt
+        if (coup >= 0f) { coup += dt; if (coup > n * DECALAGE + GERBE_HAUTE) coup = -1f }
+    }
+
+    override fun dessiner(c: Canvas, p: Paint) {
+        val e = cadre[0]
+        c.save()
+        c.translate(zone.left - mx + cadre[1] + Paysages.GLISSEMENT[rang] * largeur * regardX,
+            zone.top - my + cadre[2] + Paysages.GLISSEMENT[rang] * hauteur * regardY)
+        c.scale(e, e)
+        p.style = Paint.Style.FILL
+        Paysages.RESSAC_VIGIE.forEachIndexed { i, (x, y, s) ->
+            val u = (coup - i * DECALAGE) / GERBE_HAUTE
+            if (coup >= 0f && u in 0f..1f) {
+                Paysages.gerbe(c, p, x, y, (5f + 5f * forceCoup) * s, 4.4f * s, u, teinte, i)
+            } else {
+                // Au repos, la houle se brise doucement.
+                val t = (temps / rythme[i] + phase[i]) % 1f
+                Paysages.gerbe(c, p, x, y, 2f * s, 3f * s, t, teinte, i, force = 0.8f)
+            }
+        }
+        c.restore()
+    }
+
+    private companion object {
+        /** Le temps qu'une gerbe met à monter et retomber, en secondes. */
+        const val GERBE_HAUTE = 1.5f
+        /** Le retard d'une gerbe sur sa voisine de gauche, en secondes. */
+        const val DECALAGE = 0.14f
+    }
+}
+
+/**
  * L'eau calme de l'anse de Bouillante ([Paysages.REFLETS_BOUILLANTE], plan du
  * milieu), ou celle de la mangrove de l'Îlet Macou ([Paysages.EAU_MACOU],
  * avec moins d'éclats) ou celle de la baie du Mémorial ACTe ([Paysages.EAU_ACTE],
@@ -2049,6 +2119,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private val envol = FloatArray(betes.size) { -1f }
     /** Depuis quand chaque tortue a plongé, ou -1 si elle nage sous la surface. */
     private val plongee = FloatArray(betes.size) { -1f }
+    /** Depuis quand chaque baleine saute, ou -1 si elle souffle et sonde comme d'habitude. */
+    private val saut = FloatArray(betes.size) { -1f }
     /** Depuis quand chaque mangue est tombée, ou -1 si elle pend encore. */
     private val chute = FloatArray(betes.size) { -1f }
     /** Depuis quand les mangues tombées se fanent et repoussent, ou -1. */
@@ -2073,6 +2145,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                 Espece.MANGUE -> if (chute[i] < 0f) rafale[i] = 0f
                 Espece.TOURTERELLE, Espece.PELICAN_PIEU -> if (envol[i] < 0f) envol[i] = 0f
                 Espece.TORTUE, Espece.ECREVISSE -> if (plongee[i] < 0f) plongee[i] = 0f
+                Espece.BALEINE -> if (saut[i] < 0f) saut[i] = 0f
                 else -> Unit
             }
         }
@@ -2124,6 +2197,12 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
             }
             // -2 : décrochée à l'instant, elle part à la trame suivante.
             if (chute[i] == -2f) chute[i] = 0f else if (chute[i] >= 0f) chute[i] += dt
+            if (saut[i] >= 0f) {
+                saut[i] += dt
+                // Retombée, elle reprend son cycle par le souffle, qui monte en fondu.
+                if (saut[i] > SAUT) { saut[i] = -1f; geste[i] = 0f }
+                return@forEachIndexed
+            }
             if (fuite[i] < 0f) { geste[i] += dt; return@forEachIndexed }
             if (b.espece == Espece.IGUANE || b.espece == Espece.RATON) {
                 fuite[i] += dt
@@ -2272,6 +2351,7 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
                         c.restore()
                     }
                 }
+                saut[i] >= 0f -> atelier.saut(c, b, saut[i])
                 dehors[i] > 0.02f -> {
                     val r = rafale[i]
                     if (r >= 0f) atelier.peindre(c, b, geste[i], i, forceRafale * exp(-r * 1.6f), r)
@@ -2302,6 +2382,8 @@ private class BetesDuLieu(zone: RectF, lieu: Lieu, heure: Heure) : Ambiance(zone
     private companion object {
         /** Le temps que la tortue met à disparaître en plongeant, qu'elle reste au fond, qu'elle met à remonter. */
         const val PLONGE = 1.2f
+        /** Le saut de la baleine, de l'eau qui se soulève à l'écume qui s'efface, en secondes. */
+        const val SAUT = 5.4f
         const val AU_FOND = 5f
         const val REMONTE = 2.5f
         /** Où l'herbe reçoit les mangues, sous le manguier de Marie-Galante. */
