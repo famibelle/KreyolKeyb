@@ -58,6 +58,10 @@ CIBLES = {
     "qr-triptyque-dos.png": dict(source="triptyque", content="dos"),
     "qr-triptyque-installation.png": dict(source="triptyque", content="installation"),
     "qr-triptyque-progression.png": dict(source="triptyque", content="progression"),
+    # Le code du bloc « Installer en trois étapes » de l'accueil, pour qui lit
+    # la page sur un ordinateur. Même source que les boutons du site
+    # (landing), son propre emplacement.
+    "qr-accueil.png": dict(source="landing", content="qr-code"),
 }
 
 # Mesures reprises de qr-triptyque.png, le fichier d'origine : 1 module de

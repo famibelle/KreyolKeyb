@@ -1,6 +1,6 @@
 ---
-title: "Clavier Créole Guadeloupéen pour Android : Klavyé Kréyòl Karukera"
-description: "Le clavier Android intelligent pour écrire en kréyòl guadeloupéen : suggestions bilingues créole/français, accents par appui long, 100 % hors ligne et gratuit."
+title: "Le clavier en détail : Klavyé Kréyòl Karukera"
+description: "Tout sur Klavyé Kréyòl Karukera, le clavier Android pour écrire en kréyòl guadeloupéen : suggestions bilingues, accents, jeux et cartes, presse, confidentialité."
 image:
   path: /assets/og/partage.png
   width: 1200
@@ -10,7 +10,7 @@ lang: fr
 
 <!-- nav:start -->
 <nav class="site">
-  <a class="nav-brand" href="./" aria-current="page">⌨️ Klavyé Kréyòl</a>
+  <a class="nav-brand" href="./">⌨️ Klavyé Kréyòl</a>
   <a href="simulateur.html">🧪 Essayer</a>
   <a href="nouveautes.html">🎁 Nouveautés</a>
   <details class="menu" name="navmenu">
@@ -58,7 +58,13 @@ lang: fr
 </div>
 <!-- nav:end -->
 
-# Osez le Kréyòl
+<!-- Ancien accueil, jusqu'au 2026-11-27. L'accueil grand public est
+     maintenant index.html, sur le modèle de celui de LuxKeyb ; cette page
+     garde le détail complet. -->
+
+# Le clavier en détail
+
+**Osez le Kréyòl.**
 
 **Écrire en bon kréyòl, sans avoir à y penser.** Ce n'est pas vous qui
 écriviez mal le kréyòl : c'est votre clavier qui ne le connaissait pas.
@@ -282,7 +288,8 @@ Le code source est ouvert et public sur
   <div class="footer-cols">
     <div>
       <strong>Le clavier</strong>
-      <a href="./" aria-current="page">Accueil</a>
+      <a href="./">Accueil</a>
+      <a href="en-detail.html" aria-current="page">Le clavier en détail</a>
       <a href="simulateur.html">Essayer en ligne</a>
       <a href="guide.html">Guide d'installation</a>
       <a href="faq.html">Questions fréquentes</a>
