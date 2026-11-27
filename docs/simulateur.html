@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="assets/theme.css">
 <script>(function(){var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
 <script defer src="assets/theme.js"></script>
-<script>(function(){if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.classList.add('embed-mode');})();</script>
+<script>(function(){var q=new URLSearchParams(location.search);if(q.get('embed')==='1'){document.documentElement.classList.add('embed-mode');if(q.get('demo')==='auto')document.documentElement.classList.add('embed-demo');}})();</script>
 <style>
   * { box-sizing: border-box; }
   body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
@@ -31,6 +31,27 @@
      iframe de 380 px elle apparaît donc toujours, avec la réserve de place que
      theme.css met sous le corps de page. Les deux sautent en mode embed. */
   html.embed-mode body { padding-bottom: 0 !important; }
+  /* ---- ?embed=1&demo=auto : la vitrine de l'accueil (index.html) ----
+     Repris de LuxKeyb. Fond transparent pour se fondre dans la page hôte, et
+     pas de ligne d'inventaire (mots, contextes) : on montre le clavier, pas
+     ses chiffres. Une erreur de chargement reste affichée. */
+  html.embed-demo, html.embed-demo body { background: transparent !important; }
+  /* Même schéma de couleurs que la page hôte : quand le cadre et la page
+     diffèrent, le navigateur peint un fond opaque derrière le cadre, et un
+     rectangle blanc apparaît en mode sombre. */
+  html.embed-demo { color-scheme: light; }
+  html.embed-demo[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    html.embed-demo:not([data-theme="light"]) { color-scheme: dark; }
+  }
+  html.embed-demo .status-line:not(.error) { display: none; }
+  /* L'ombre pleine (60 px de flou) déborde du cadre de 380 px et s'y coupe
+     net : une ombre courte reste à l'intérieur. */
+  html.embed-demo main { padding: 6px 10px 14px; }
+  html.embed-demo .phone { box-shadow: 0 6px 18px rgba(0,0,0,.14); }
+  /* Toucher une lettre suffit à reprendre la main : pas de bouton Arrêter,
+     qui dépasserait du cadre. */
+  html.embed-demo .demo-stop { display: none !important; }
 
   header.hero { text-align: center; padding: 28px 0 8px; }
   .eyebrow { color: var(--sea); font-weight: 700; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 8px; }
@@ -702,9 +723,9 @@
     <div class="demo-groupe">
       <span class="demo-groupe-titre">Se saluer</span>
       <div class="demo-chips">
-        <button type="button" class="demo-chip" data-phrase="Sa ou fè ?">Sa ou fè ?</button>
-        <button type="button" class="demo-chip" data-phrase="Mèsi onpil">Mèsi onpil</button>
-        <button type="button" class="demo-chip" data-phrase="Pa ni pwoblèm !">Pa ni pwoblèm !</button>
+        <button type="button" class="demo-chip" data-phrase="Sa ou fè ?" data-vitrine="non">Sa ou fè ?</button>
+        <button type="button" class="demo-chip" data-phrase="Mèsi onpil" data-vitrine="non">Mèsi onpil</button>
+        <button type="button" class="demo-chip" data-phrase="Pa ni pwoblèm !" data-vitrine="non">Pa ni pwoblèm !</button>
       </div>
     </div>
     <div class="demo-groupe">
@@ -792,7 +813,10 @@
       engine.loadTranslations(gloses);
 
       const sim = new window.KreyolKeyboardSimulator(engine, els);
-      brancherExemples(sim);
+      const exemples = brancherExemples(sim);
+      if (exemples && document.documentElement.classList.contains('embed-demo')) {
+        rejouerEnBoucle(sim, exemples);
+      }
 
       const fmt = (n) => n.toLocaleString('fr-FR');
       statusEl.textContent =
@@ -850,6 +874,70 @@
     els.keyboard.addEventListener('pointerdown', interrompre);
     els.resetBtn?.addEventListener('click', interrompre);
     document.addEventListener('keydown', interrompre);
+
+    // La vitrine de l'accueil saute les salutations (data-vitrine="non") :
+    // trop courtes pour qu'on voie la barre de suggestions travailler.
+    return {
+      demo,
+      phrases: chips.filter((c) => c.dataset.vitrine !== 'non').map((c) => c.dataset.phrase)
+    };
+  }
+
+  // ---- ?embed=1&demo=auto : les exemples s'enchaînent tout seuls ----
+  // Repris de LuxKeyb. Le visiteur de l'accueil voit le clavier écrire avant
+  // d'avoir rien fait. La boucle ne tourne que lorsque le cadre est à
+  // l'écran, et s'arrête pour de bon au premier geste (touche, clavier
+  // physique, Effacer) : le champ est alors vidé, et la lettre touchée
+  // s'écrit dans un champ propre. Rien ne démarre seul si le système demande
+  // moins d'animations.
+  function rejouerEnBoucle(sim, { demo, phrases }) {
+    if (!phrases.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const PAUSE_ENTRE_PHRASES = 2200;
+    let fini = false;
+    let visible = false;
+    let enBoucle = false;
+    let i = 0;
+
+    const reprendreLaMain = () => {
+      if (fini) return;
+      fini = true;
+      demo.arreter();
+      sim.reset();
+      document.body.classList.remove('demo-joue');
+    };
+    // En capture : le champ est vidé avant que la touche n'écrive sa lettre.
+    els.keyboard.addEventListener('pointerdown', reprendreLaMain, true);
+    document.addEventListener('keydown', reprendreLaMain, true);
+    els.resetBtn?.addEventListener('click', reprendreLaMain, true);
+
+    const dodo = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    async function boucle() {
+      if (enBoucle) return;
+      enBoucle = true;
+      while (!fini && visible) {
+        await demo.jouer(phrases[i % phrases.length]);
+        if (fini || !visible) break;
+        i++;
+        await dodo(PAUSE_ENTRE_PHRASES);
+      }
+      enBoucle = false;
+    }
+
+    // Hors de l'écran, la phrase en cours est abandonnée et reprend au
+    // retour, depuis le début.
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entrees) => {
+        visible = entrees.some((e) => e.isIntersecting);
+        if (visible) boucle();
+        else if (!fini) demo.arreter();
+      }, { threshold: 0.4 }).observe(document.querySelector('.phone-shell'));
+    } else {
+      visible = true;
+      boucle();
+    }
   }
 
   init();
@@ -880,6 +968,7 @@
     <div>
       <strong>Le clavier</strong>
       <a href="./">Accueil</a>
+      <a href="en-detail.html">Le clavier en détail</a>
       <a href="simulateur.html" aria-current="page">Essayer en ligne</a>
       <a href="guide.html">Guide d'installation</a>
       <a href="faq.html">Questions fréquentes</a>

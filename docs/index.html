@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klavyé Kréyòl Karukera · Le clavier créole guadeloupéen pour Android</title>
+<meta name="description" content="Le clavier Android qui écrit le kréyòl guadeloupéen avec vous : il propose les mots pendant que vous tapez, devine la suite et remet les accents. Gratuit, open source, zéro pub, 100 % hors ligne.">
+<link rel="canonical" href="https://famibelle.github.io/KreyolKeyb/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Klavyé Kréyòl Karukera">
+<meta property="og:title" content="Écrire en bon kréyòl, sans avoir à y penser">
+<meta property="og:description" content="Le clavier créole guadeloupéen pour Android : les mots justes pendant que vous tapez, et les accents remis tout seuls. Gratuit.">
+<meta property="og:url" content="https://famibelle.github.io/KreyolKeyb/">
+<meta property="og:image" content="https://famibelle.github.io/KreyolKeyb/assets/og/partage.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://famibelle.github.io/KreyolKeyb/assets/og/partage.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/logo/klavye-logo-192.png">
+<link rel="apple-touch-icon" href="assets/logo/klavye-logo-192.png">
+<!-- Fredoka embarquée plutôt que servie par Google Fonts : l'accueil ne
+     contacte aucun service tiers. -->
+<link rel="stylesheet" href="assets/fredoka-embed.css">
+<link rel="stylesheet" href="assets/theme.css">
+<script>(function(){try{var t=localStorage.getItem('kreyol-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script defer src="assets/theme.js"></script>
+<!--
+  Accueil grand public, en HTML autonome (hors du thème Jekyll), sur le modèle
+  de celui de LuxKeyb (docs/index.html de ce dépôt-là, validé le 2026-11-25) :
+  un bandeau sombre avec le clavier en action, des bandes claires courtes,
+  la barre de suggestions comme motif récurrent. Le contenu détaillé
+  (presse complète, tableaux, préservation, nouveautés) vit dans
+  en-detail.md, lié depuis le pied de page.
+
+  Couleurs : uniquement la palette de communication (assets/theme.css) et,
+  pour le bandeau, le fond de référence du logo (#0A5259 → #053035, voir
+  charte-graphique.html). Pas de couleur du clavier ni des publicités.
+
+  La barre de navigation et le pied de page sont recopiés par
+  scripts/sync_nav.py entre leurs marqueurs : ne pas les éditer ici.
+-->
+<style>
+:root{
+  /* Le bandeau sombre ne suit pas le thème : il reste nuit dans les deux. Le
+     texte qui s'y pose prend donc les valeurs sombres de la palette, qui y
+     dépassent toutes 5:1. */
+  --nuit:#053035;
+  --nuit-haut:#0A5259;
+  --sur-nuit:#F5F2EA;
+  --sur-nuit-doux:#C9D3CF;
+  --sur-nuit-lagon:#5FC7CE;
+  --sur-nuit-hibiscus:#F0897C;
+  --sur-nuit-soleil:#E3AE5E;
+  --display:"Fredoka","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --texte:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  /* Les GIF ont un fond blanc qu'on ne peut pas changer : en sombre, un
+     passe-partout et un blanc un peu atténué adoucissent le saut. */
+  --gif-cadre-fond:transparent;
+  --gif-cadre-bord:transparent;
+  --gif-cadre-marge:0px;
+  --gif-luminosite:1;
+}
+/* color-scheme aussi, et le même que celui du simulateur en ?demo=auto :
+   sinon le navigateur peint un fond opaque derrière le cadre du clavier
+   d'essai, qui se voit en mode sombre. */
+:root{color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --gif-cadre-fond:#1F2B29; --gif-cadre-bord:#2E3B39; --gif-cadre-marge:12px; --gif-luminosite:.88;}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --gif-cadre-fond:#1F2B29; --gif-cadre-bord:#2E3B39; --gif-cadre-marge:12px; --gif-luminosite:.88;}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--texte);font-size:17px;line-height:1.55}
+img{max-width:100%}
+a{color:var(--sea)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--sea);outline-offset:3px;border-radius:6px}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(28px,4.6vw,40px);color:var(--ink)}
+/* Titres bicolores, comme le haut de page : la seconde moitié en hibiscus,
+   réservé aux grandes tailles (charte : 18 px et plus). */
+h2 .accent{color:var(--hibiscus)}
+h3{font-size:21px;font-weight:600}
+p{margin:0}
+.enveloppe{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bande{padding-block:72px}
+.chapo{font-size:19px;color:var(--ink-soft);max-width:56ch}
+
+/* La barre partagée colle au bandeau, sans la marge des autres pages. */
+nav.site{margin-bottom:0}
+
+/* ---------- Bandeau d'ouverture ---------- */
+.ouverture{position:relative;overflow:hidden;color:var(--sur-nuit);
+  background:radial-gradient(ellipse 70% 90% at 80% 30%,var(--nuit-haut) 0%,var(--nuit) 70%)}
+.heros{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:center;padding-block:56px 120px}
+.surtitre{font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--sur-nuit-lagon);font-weight:700;margin-bottom:18px}
+.heros h1{font-size:clamp(40px,6.4vw,70px);letter-spacing:-.01em;color:var(--sur-nuit)}
+.heros h1 span{display:block;color:var(--sur-nuit-hibiscus)}
+.heros .chapo{color:var(--sur-nuit-doux);margin-top:24px;font-size:20px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:32px}
+.badge-play img{display:block;height:80px;width:auto}
+.mention{margin-top:14px;font-size:15px;color:var(--sur-nuit-doux)}
+
+.telephone{justify-self:center;width:min(330px,100%);margin:0;background:#0B0F14;border-radius:44px;padding:12px;box-shadow:0 30px 60px rgba(0,0,0,.35),0 0 0 2px rgba(255,255,255,.08);transform:rotate(2.5deg)}
+.telephone img{display:block;width:100%;height:auto;border-radius:32px;background:#fff;filter:brightness(var(--gif-luminosite))}
+.telephone figcaption{color:var(--sur-nuit-doux);font-size:14px;text-align:center;padding:12px 8px 4px;font-style:italic}
+
+/* La vague du bas : le lagon qui rejoint la plage, avec un filet soleil
+   (décor seulement, jamais du texte). */
+.vague{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:70px;display:block}
+.vague .sable{fill:var(--paper)}
+.vague .filet{fill:none;stroke:var(--sun);stroke-width:3}
+
+/* ---------- La barre de suggestions, motif récurrent ---------- */
+/* Sur ordinateur, le clavier d'essai à droite du titre et des quatre gestes ;
+   sur téléphone, juste sous le titre, pour qu'on le voie écrire sans défiler. */
+.essai{display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"titre cadre" "texte cadre";column-gap:56px;row-gap:34px;align-items:start}
+.essai-titre{grid-area:titre}
+.essai-texte{grid-area:texte}
+.essai-cadre{grid-area:cadre;align-self:center;justify-self:center;width:100%;max-width:380px}
+.essai-titre .chapo{margin-top:14px}
+.gestes{list-style:none;padding:0;margin:0;display:grid;gap:26px}
+.gestes li{display:grid;gap:6px}
+.gestes li p:not(.exemple){color:var(--ink-soft)}
+.exemple{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.fleche{color:var(--ink-soft)}
+.saisie{font-family:var(--mono);font-size:16px;color:var(--ink)}
+.puce{font-family:var(--display);font-weight:600;font-size:16px;padding:6px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.puce.choisie{background:var(--sea);border-color:var(--sea);color:var(--paper)}
+.essai-cadre iframe{display:block;width:100%;height:600px;border:0;background:transparent}
+.essai-note{margin-top:6px;font-size:14px;color:var(--ink-soft);text-align:center}
+
+/* ---------- Ils l'écrivent déjà ---------- */
+.preuve{background:var(--card);border-block:1px solid var(--line)}
+.chiffres{display:flex;flex-wrap:wrap;gap:20px 56px;margin-top:30px}
+.chiffre b{display:block;font-family:var(--display);font-weight:600;font-size:clamp(34px,5vw,48px);line-height:1;color:var(--sea)}
+.chiffre span{display:block;margin-top:6px;color:var(--ink-soft);font-size:15px}
+.avis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:36px}
+.avis blockquote{margin:0;padding:18px 20px;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.avis .etoiles{color:var(--sun);letter-spacing:3px;margin-bottom:8px}
+.avis p{font-size:16px}
+.presse{margin-top:30px;color:var(--ink-soft);max-width:72ch}
+.presse strong{color:var(--ink)}
+.source{margin-top:12px;font-size:14px;color:var(--ink-soft)}
+
+/* ---------- Cartes ---------- */
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
+.duo .chapo{margin-top:18px}
+.surtitre-clair{font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--hibiscus);font-weight:700;margin-bottom:12px}
+.cadre-gif{background:var(--gif-cadre-fond);border:1px solid var(--gif-cadre-bord);border-radius:22px;padding:var(--gif-cadre-marge)}
+.cartes figure{margin:0;justify-self:center;width:min(320px,100%)}
+.cartes figure img{display:block;width:100%;height:auto;border-radius:14px;filter:brightness(var(--gif-luminosite))}
+.cartes figcaption{margin-top:12px;font-size:15px;color:var(--ink-soft);text-align:center;font-style:italic}
+.jeux{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.jeux span{font-family:var(--display);font-weight:600;font-size:15px;padding:6px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.jeux small{font-family:var(--texte);font-weight:400;color:var(--ink-soft);margin-left:4px}
+.progression{margin-top:22px;padding:14px 18px;border-left:4px solid var(--sun);background:var(--card);border-radius:0 12px 12px 0;color:var(--ink-soft);font-size:16px}
+.progression strong{color:var(--ink)}
+
+/* ---------- Questions ---------- */
+.questions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 40px;margin-top:40px}
+.question h3{font-size:20px;color:var(--ink)}
+.question p{margin-top:8px;color:var(--ink-soft)}
+
+/* ---------- Faire connaître ---------- */
+.anbasade{background:var(--card);border-block:1px solid var(--line)}
+.anbasade .duo{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}
+.anbasade .liens{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.carte-gwada{margin:0;justify-self:center;width:min(360px,100%)}
+.carte-gwada img{display:block;width:100%;height:auto}
+.carte-gwada .sombre{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .carte-gwada .clair{display:none}
+  :root:not([data-theme="light"]) .carte-gwada .sombre{display:block}}
+:root[data-theme="dark"] .carte-gwada .clair{display:none}
+:root[data-theme="dark"] .carte-gwada .sombre{display:block}
+
+/* ---------- Installer ---------- */
+.installer{background:var(--nuit);color:var(--sur-nuit)}
+.installer h2{color:var(--sur-nuit)}
+.installer .grille{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:center}
+.etapes{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:12px;counter-reset:e}
+.etapes li{counter-increment:e;display:flex;gap:14px;align-items:baseline;color:var(--sur-nuit-doux)}
+.etapes li::before{content:counter(e);flex:none;width:30px;height:30px;border-radius:50%;background:var(--sur-nuit-lagon);color:var(--nuit);font-family:var(--display);font-weight:700;display:grid;place-items:center;transform:translateY(6px)}
+.etapes strong{color:var(--sur-nuit)}
+.etapes a{color:var(--sur-nuit-lagon)}
+.installer .confiance{margin-top:26px;color:var(--sur-nuit-doux);font-size:16px;max-width:60ch}
+.installer .confiance strong{color:var(--sur-nuit)}
+.installer .confiance a{color:var(--sur-nuit-lagon)}
+.qr{text-align:center;color:var(--sur-nuit-doux);font-size:14px}
+.qr img{display:block;width:180px;height:180px;background:#fff;border-radius:14px;padding:8px;margin:0 auto 10px}
+/* Tout ce qui mène à Google Play (badges, GIF du clavier, code QR) se
+   soulève légèrement au survol. */
+.vers-play,.badge-play{display:block;border-radius:12px;transition:transform .2s ease}
+.vers-play:hover,.badge-play:hover{transform:translateY(-3px)}
+.telephone .vers-play{border-radius:32px}
+.qr .vers-play{width:max-content;margin:0 auto;border-radius:14px}
+
+/* ---------- Pied ---------- */
+.lettre{padding-block:56px 8px}
+.lettre .inscription-lettre{max-width:640px;margin:0 auto}
+/* Tant que le formulaire Brevo n'est pas réglé dans inscription-lettre.js,
+   le bloc reste vide : il ne doit alors laisser aucun trou. */
+.lettre:has(.inscription-lettre:empty){display:none}
+footer.site{margin-top:0}
+
+@media (max-width:860px){
+  .heros,.duo,.anbasade .duo,.installer .grille{grid-template-columns:minmax(0,1fr)}
+  .heros{padding-block:32px 100px;gap:36px}
+  .essai{grid-template-columns:minmax(0,1fr);grid-template-areas:"titre" "cadre" "texte";row-gap:28px}
+  .questions,.avis{grid-template-columns:minmax(0,1fr)}
+  .bande{padding-block:56px}
+  .telephone{transform:none;width:min(300px,100%)}
+  .cartes figure{order:-1}
+  .carte-gwada{width:min(260px,100%)}
+}
+@media (max-width:480px){
+  .badge-play img{height:64px}
+}
+@media (prefers-reduced-motion:reduce){.telephone{transform:none}.vers-play,.vers-play:hover,.badge-play,.badge-play:hover{transition:none;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- nav:start -->
+<nav class="site">
+  <a class="nav-brand" href="./" aria-current="page">⌨️ Klavyé Kréyòl</a>
+  <a href="simulateur.html">🧪 Essayer</a>
+  <a href="nouveautes.html">🎁 Nouveautés</a>
+  <details class="menu" name="navmenu">
+    <summary>ℹ️ Le projet</summary>
+    <div class="menu-panel">
+      <a href="corpus.html">Le corpus en chiffres</a>
+      <a href="presskit.html">Dossier de presse</a>
+      <a href="partenaires.html">Partenariats institutionnels</a>
+      <a href="notes_techniques.html">Notes techniques</a>
+      <a href="https://github.com/famibelle/KreyolKeyb">Code source</a>
+      <a href="privacy/privacy-policy.html">Confidentialité</a>
+    </div>
+  </details>
+  <a href="faq.html">❓ FAQ</a>
+  <a class="nav-cta" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dnav">📲 Installer, c'est gratuit</a>
+  <details class="menu nav-after" name="navmenu">
+    <summary>Déjà installé ?</summary>
+    <div class="menu-panel">
+      <a href="guide.html">Guide d'installation</a>
+      <a href="feedbacks_form.html">Donner son avis</a>
+      <a href="beta_onboarding.html">Devenir bêta-testeur</a>
+    </div>
+  </details>
+  <details class="menu nav-after" name="navmenu">
+    <summary>📣 Ambassadeurs</summary>
+    <div class="menu-panel">
+      <a href="ambassadeurs.html">Espace ambassadeurs</a>
+      <a href="ambassade.html">Vin Anbasadè</a>
+      <a href="charte-ambassadeur.html">Charte de l'ambassadeur</a>
+      <a href="tract.html">Tract à imprimer</a>
+      <a href="affiche.html">Affiche à imprimer</a>
+      <a href="triptyque.html">Triptyque à imprimer</a>
+      <a href="publicites.html">Visuels publicitaires</a>
+      <a href="charte-graphique.html">Charte graphique</a>
+    </div>
+  </details>
+  <button type="button" class="theme-toggle" aria-label="Changer de thème">🌙</button>
+</nav>
+<!-- Sur mobile, le bouton de la barre est masqué et remplacé par celle-ci,
+     fixée en bas dans la zone du pouce, donc atteignable à toute profondeur
+     de défilement. -->
+<div class="install-bar">
+  <a class="install-bar-cta" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dbarre-mobile">📲 Installer, c'est gratuit</a>
+  <a class="install-bar-alt" href="simulateur.html">Essayer d'abord dans le navigateur</a>
+</div>
+<!-- nav:end -->
+
+<header class="ouverture">
+  <div class="enveloppe heros">
+    <div>
+      <p class="surtitre">Le clavier créole guadeloupéen</p>
+      <h1>Écrire en bon kréyòl, <span>sans avoir à y penser.</span></h1>
+      <p class="chapo">Le clavier vous propose les mots kréyòl pendant que vous
+      tapez, devine celui qui vient après et remet les accents que vous
+      oubliez. Ce n'est pas vous qui écriviez mal le kréyòl&nbsp;: c'est votre
+      clavier qui ne le connaissait pas.</p>
+      <div class="actions">
+        <a class="badge-play" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dhero">
+          <img src="Screenshots/GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Disponible sur Google Play" width="270" height="80">
+        </a>
+      </div>
+      <p class="mention">Gratuit, open source, zéro pub, 100&nbsp;% hors ligne · Android&nbsp;7.0 et plus récent</p>
+    </div>
+    <figure class="telephone">
+      <a class="vers-play" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dgif-clavier" aria-label="Installer Klavyé Kréyòl Karukera depuis Google Play">
+        <img src="Screenshots/KlavyéAnAktion.gif" width="380" height="390"
+             alt="La phrase « An kréyòl nou ka palé, an kréyòl nou ka maké » écrite dans un SMS. Le premier « kréyòl » est posé en touchant la suggestion ; le second est tapé sans accent et le clavier les remet à l'espace, comme « pale » qui devient « palé » et « make » qui devient « maké »">
+      </a>
+      <figcaption>«&nbsp;An kréyòl nou ka palé, an kréyòl nou ka maké&nbsp;»</figcaption>
+    </figure>
+  </div>
+  <svg class="vague" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
+    <path class="sable" d="M0,46 C240,14 480,14 720,38 C960,62 1200,62 1440,30 L1440,70 L0,70 Z"/>
+    <path class="filet" d="M0,46 C240,14 480,14 720,38 C960,62 1200,62 1440,30"/>
+  </svg>
+</header>
+
+<main>
+  <section class="bande" aria-labelledby="t-gestes">
+    <div class="enveloppe essai">
+      <div class="essai-titre">
+        <h2 id="t-gestes">Écrire <span class="accent">comme on parle</span></h2>
+        <p class="chapo">Vous savez le dire, mais l'écrire, c'est autre
+        chose&nbsp;: é ou è, ò ou o, où va l'accent&nbsp;? Le clavier vous
+        répond pendant que vous tapez. Regardez-le écrire, puis prenez la
+        main&nbsp;: touchez une lettre du clavier d'essai.</p>
+      </div>
+
+      <div class="essai-texte">
+        <!-- Exemples vérifiés sur le moteur du simulateur
+             (assets/simulateur-engine.js) le 2026-11-27 : chaque mot proposé
+             arrive en tête de la barre kréyòl, et « kreyol » est rétabli en
+             « kréyòl » par la restauration des accents. -->
+        <ul class="gestes">
+          <li>
+            <p class="exemple" aria-hidden="true"><span class="saisie">kré</span><span class="fleche">→</span><span class="puce choisie">kréyòl</span></p>
+            <h3>Trois lettres suffisent</h3>
+            <p>Tapez «&nbsp;kré&nbsp;»&nbsp;: «&nbsp;kréyòl&nbsp;» est déjà
+            proposé. Les mots viennent des textes de Sylviane Telchid, Sonny
+            Rupaire, Max Rippon et bien d'autres&nbsp;: vous n'inventez rien,
+            vous choisissez.</p>
+          </li>
+          <li>
+            <p class="exemple" aria-hidden="true"><span class="saisie">nou kay</span><span class="fleche">→</span><span class="puce choisie">bengné</span></p>
+            <h3>Il devine la suite</h3>
+            <p>Après «&nbsp;nou kay&nbsp;», il propose déjà «&nbsp;bengné&nbsp;».
+            Il tient compte de ce que vous venez d'écrire&nbsp;: un appui, et le
+            mot suivant est posé.</p>
+          </li>
+          <li>
+            <p class="exemple" aria-hidden="true"><span class="saisie">kreyol</span><span class="fleche">→</span><span class="puce choisie">kréyòl</span></p>
+            <h3>Il remet les accents</h3>
+            <p>Tapez sans vous soucier des accents&nbsp;: à l'espace,
+            «&nbsp;kreyol&nbsp;» devient «&nbsp;kréyòl&nbsp;». Vos lettres
+            restent les vôtres, seuls les accents s'ajoutent, et un retour
+            arrière les retire si vous n'en vouliez pas.</p>
+          </li>
+          <li>
+            <p class="exemple" aria-hidden="true"><span class="saisie">siklpn</span><span class="fleche">→</span><span class="puce choisie">siklòn</span></p>
+            <h3>Il rattrape les fautes de frappe</h3>
+            <p>Une touche voisine, deux lettres inversées&nbsp;: le bon mot
+            arrive quand même. Et quand aucun mot kréyòl ne correspond, le
+            français prend le relais, sans changer de clavier.</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Le vrai moteur de suggestions, dans le navigateur. ?demo=auto
+           enchaîne des phrases d'exemple tant que le cadre est à l'écran ;
+           le premier geste du visiteur arrête la boucle et vide le champ. -->
+      <div class="essai-cadre">
+        <iframe src="simulateur.html?embed=1&amp;demo=auto" width="380" height="600"
+                loading="lazy"
+                title="Clavier d'essai : il écrit tout seul des phrases en kréyòl ; touchez une lettre pour écrire à votre tour"></iframe>
+        <p class="essai-note">Le clavier d'essai tourne dans votre navigateur&nbsp;:
+        rien de ce que vous y tapez n'est envoyé.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bande preuve" aria-labelledby="t-preuve">
+    <div class="enveloppe">
+      <h2 id="t-preuve">Ils l'écrivent <span class="accent">déjà</span></h2>
+      <div class="chiffres">
+        <p class="chiffre"><b id="dl-chiffre">3&nbsp;000</b><span id="dl-texte">téléchargements et plus</span></p>
+        <p class="chiffre"><b>4,4&nbsp;/&nbsp;5</b><span>sur Google Play, pour 55&nbsp;avis</span></p>
+      </div>
+      <div class="avis">
+        <blockquote>
+          <p class="etoiles" aria-label="5 étoiles sur 5">★★★★★</p>
+          <p>«&nbsp;Je passe ma note de 4 à 5 étoiles car depuis la maj, il y a les traductions des mots dans les jeux juste parfait&nbsp;!&nbsp;»</p>
+        </blockquote>
+        <blockquote>
+          <p class="etoiles" aria-label="5 étoiles sur 5">★★★★★</p>
+          <p>«&nbsp;Très instructif et permet d'accéder à de nombreux mots. Bravo&nbsp;!&nbsp;»</p>
+        </blockquote>
+        <blockquote>
+          <p class="etoiles" aria-label="5 étoiles sur 5">★★★★★</p>
+          <p>«&nbsp;Très fière, satisfaite… ❤️ ❤️&nbsp;»</p>
+        </blockquote>
+      </div>
+      <p class="source">Avis publiés sur la <a href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;hl=fr">fiche Google Play</a>, cités sans leurs auteurs.</p>
+      <p class="presse"><strong>Guadeloupe la 1ère</strong> lui a consacré un
+      sujet au journal de 19h30, <strong>Canal&nbsp;10</strong> l'a présenté
+      dans sa chronique Tech, et <strong>France-Antilles</strong> en a fait un
+      entretien&nbsp;: «&nbsp;Si le créole guadeloupéen n'existe pas, petit à
+      petit, on s'efface&nbsp;». <a href="presskit.html">Lire la presse</a></p>
+    </div>
+  </section>
+
+  <section class="bande cartes" aria-labelledby="t-cartes">
+    <div class="enveloppe duo">
+      <figure>
+        <div class="cadre-gif">
+          <img src="Screenshots/gif_eventail_cartes.gif" width="360" height="593" loading="lazy"
+               alt="Un casier du carnet s'ouvre et ses huit cartes se déploient en éventail, défilent sous le doigt (kouté, pyé, rivyè, solèy), puis la carte pyébwa s'ouvre en grand : arbre, avec une phrase d'un auteur">
+        </div>
+        <figcaption>Le carnet Sanblé&nbsp;: chaque carte porte son sens et une phrase d'auteur.</figcaption>
+      </figure>
+      <div>
+        <p class="surtitre-clair">En prime</p>
+        <h2 id="t-cartes">Chaque mot trouvé devient <span class="accent">une carte</span></h2>
+        <p class="chapo">Six petits jeux vous font rencontrer des mots nouveaux.
+        Chaque mot gagné rejoint votre carnet, Sanblé, sur une carte qui
+        porte son sens en français et une phrase d'un auteur guadeloupéen. La
+        révision Sonjé vous le ramène jusqu'à ce que vous le reteniez.</p>
+        <div class="jeux" aria-label="Les six jeux">
+          <span>Mots mêlés</span>
+          <span>Mots mélangés</span>
+          <span>Mo an Karénaj <small>le mot en six essais</small></span>
+          <span>Fraz a twou <small>le mot qui manque</small></span>
+          <span>Mokwaré <small>mots croisés</small></span>
+          <span>Mo an plas <small>la grille à remplir</small></span>
+        </div>
+        <p class="progression"><strong>Le clavier fait office d'examen.</strong>
+        Si vous réécrivez un mot de votre carnet dans vos messages, sa carte
+        avance toute seule. Et votre niveau monte, de Pipirit à Potomitan, au
+        fil des mots que vous tapez vraiment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bande" aria-labelledby="t-questions">
+    <div class="enveloppe">
+      <h2 id="t-questions">Vos questions</h2>
+      <div class="questions">
+        <div class="question">
+          <h3>«&nbsp;Mon téléphone corrige mon kréyòl en français.&nbsp;»</h3>
+          <p>Celui-ci ne remplace jamais un mot par un autre. Choisissez-le
+          aussi comme correcteur dans les réglages d'Android&nbsp;: vos mots
+          kréyòl ne sont plus pris pour des fautes.</p>
+        </div>
+        <div class="question">
+          <h3>«&nbsp;Je mélange avec le français.&nbsp;»</h3>
+          <p>Lui aussi&nbsp;: les mots français sont proposés sur une seconde
+          ligne, sous les mots kréyòl. Un seul clavier pour les deux.</p>
+        </div>
+        <div class="question">
+          <h3>«&nbsp;Android m'affiche un avertissement.&nbsp;»</h3>
+          <p>Il s'affiche pour tous les claviers, sans exception, au moment de
+          les activer. Celui-ci n'envoie rien de ce que vous tapez&nbsp;: tout
+          reste sur votre téléphone.</p>
+        </div>
+        <div class="question">
+          <h3>«&nbsp;J'ai un iPhone.&nbsp;»</h3>
+          <p>Le clavier existe pour l'instant sur Android. Sur iPhone ou sur
+          ordinateur, essayez-le plus haut sur cette page&nbsp;: touchez une
+          lettre du clavier d'essai.</p>
+        </div>
+      </div>
+      <p style="margin-top:32px"><a href="faq.html">Toutes les réponses</a></p>
+    </div>
+  </section>
+
+  <section class="bande anbasade" aria-labelledby="t-anbasade">
+    <div class="enveloppe duo">
+      <div>
+        <p class="surtitre-clair">Faire connaître</p>
+        <h2 id="t-anbasade">Vin <span class="accent">Anbasadè&nbsp;!</span></h2>
+        <p class="chapo">Chaque message écrit en kréyòl aide notre langue à
+        exister dans le numérique, là où elle se joue chaque jour. Pour aller
+        plus loin, la page ambassadeurs vous donne tout&nbsp;: les contacts des
+        médias locaux, des e-mails prêts à envoyer, et un tract à laisser chez
+        le boulanger, le pharmacien ou la boutique du coin.</p>
+        <p class="liens">
+          <a class="btn" href="ambassade.html">Devenir ambassadeur</a>
+          <a class="btn" href="tract.html">Imprimer le tract</a>
+        </p>
+      </div>
+      <figure class="carte-gwada">
+        <!-- Les noms des fichiers disent le fond qu'ils attendent : « -sombre »
+             est la silhouette lagon, pour fond clair (charte-graphique.html). -->
+        <img class="clair" src="assets/carte-guadeloupe-sombre.svg" alt="" width="360" height="300" loading="lazy">
+        <img class="sombre" src="assets/carte-guadeloupe.svg" alt="" width="360" height="300" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section class="bande installer" id="installer" aria-labelledby="t-installer">
+    <div class="enveloppe grille">
+      <div>
+        <h2 id="t-installer">Installer en trois étapes</h2>
+        <ol class="etapes">
+          <li><span><strong>Installez l'application</strong> depuis Google Play.</span></li>
+          <li><span><strong>Suivez l'accueil de l'application</strong>&nbsp;: il
+          vous montre comment activer le clavier, écran par écran. Le
+          <a href="guide.html">guide</a> en ligne fait de même.</span></li>
+          <li><span><strong>Écrivez votre premier message</strong> en kréyòl.</span></li>
+        </ol>
+        <div class="actions">
+          <a class="badge-play" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dinstaller">
+            <img src="Screenshots/GetItOnGooglePlay_Badge_Web_color_French.svg" alt="Disponible sur Google Play" width="270" height="80" loading="lazy">
+          </a>
+        </div>
+        <p class="confiance"><strong>Ce que vous tapez ne quitte pas votre
+        téléphone.</strong> Pas de compte, pas de serveur, aucune sauvegarde
+        dans le nuage. <a href="privacy/privacy-policy.html">La politique de
+        confidentialité</a> le dit en toutes lettres.</p>
+      </div>
+      <div class="qr">
+        <a class="vers-play" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dqr-code" aria-label="Ouvrir la page de l'application sur Google Play">
+          <img src="assets/qr-accueil.png" width="180" height="180" alt="Code QR ouvrant la page de l'application sur Google Play" loading="lazy">
+        </a>
+        Scannez avec votre téléphone
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="enveloppe lettre">
+  <div class="inscription-lettre"></div>
+  <script defer src="assets/inscription-lettre.js"></script>
+</div>
+
+<!-- footer:start -->
+<footer class="site">
+  <div class="footer-cta">
+    <p class="footer-baseline">An kréyòl nou ka palé, an kréyòl nou ka maké.</p>
+    <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.potomitan.kreyolkeyboard&amp;referrer=utm_source%3Dlanding%26utm_campaign%3Dlaunch10k%26utm_content%3Dpied">📲 Installer, c'est gratuit</a>
+  </div>
+  <div class="footer-cols">
+    <div>
+      <strong>Le clavier</strong>
+      <a href="./" aria-current="page">Accueil</a>
+      <a href="en-detail.html">Le clavier en détail</a>
+      <a href="simulateur.html">Essayer en ligne</a>
+      <a href="guide.html">Guide d'installation</a>
+      <a href="faq.html">Questions fréquentes</a>
+      <a href="nouveautes.html">Nouveautés</a>
+      <a href="newsletter/">Newsletters</a>
+    </div>
+    <div>
+      <strong>Le projet</strong>
+      <a href="corpus.html">Le corpus en chiffres</a>
+      <a href="presskit.html">Dossier de presse</a>
+      <a href="partenaires.html">Partenariats institutionnels</a>
+      <a href="notes_techniques.html">Notes techniques</a>
+      <a href="ergotherapie.html">Fiche ergothérapie</a>
+      <a href="comparatif.html">Comparatif des claviers</a>
+      <a href="comparatif-gboard.html">Mesures face à Gboard</a>
+      <a href="https://github.com/famibelle/KreyolKeyb">Code source</a>
+    </div>
+    <div>
+      <strong>Faire connaître</strong>
+      <a href="ambassadeurs.html">Espace ambassadeurs</a>
+      <a href="ambassade.html">Vin Anbasadè</a>
+      <a href="charte-ambassadeur.html">Charte de l'ambassadeur</a>
+      <a href="tract.html">Tract</a>
+      <a href="affiche.html">Affiche</a>
+      <a href="triptyque.html">Triptyque</a>
+      <a href="publicites.html">Visuels publicitaires</a>
+      <a href="charte-graphique.html">Charte graphique</a>
+    </div>
+    <div>
+      <strong>Participer</strong>
+      <a href="beta_onboarding.html">Devenir bêta-testeur</a>
+      <a href="feedbacks_form.html">Donner son avis</a>
+      <a href="jauge.html">La jauge des 10 000</a>
+      <a href="mailto:contact@potomitan.io">contact@potomitan.io</a>
+    </div>
+  </div>
+  <div class="footer-legal">
+    <span>Potomitan™, Teknoloji pou tout moun.</span>
+    <a href="privacy/privacy-policy.html">Politique de confidentialité</a>
+    <span>Gratuit, open source (MIT), zéro pub, 100&nbsp;% hors ligne.</span>
+  </div>
+</footer>
+<!-- footer:end -->
+
+<script>
+// Le compteur se lit dans le même fichier que la jauge des ambassadeurs :
+// un seul chiffre, une seule source. Arrondi au millier inférieur, donc
+// toujours vrai et toujours rond ; la valeur écrite en dur n'est qu'un repli.
+fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(function(s){
+  if (!s || !s.current) { return; }
+  var arrondi = Math.floor(s.current / 1000) * 1000;
+  if (arrondi < 1000) { return; }
+  document.getElementById('dl-chiffre').textContent = arrondi.toLocaleString('fr-FR');
+}).catch(function(){});
+</script>
+</body>
+</html>

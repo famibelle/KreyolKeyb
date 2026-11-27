@@ -606,6 +606,7 @@ fetch('stats/downloads.json').then(function(r){ return r.json(); }).then(functio
     <div>
       <strong>Le clavier</strong>
       <a href="./">Accueil</a>
+      <a href="en-detail.html">Le clavier en détail</a>
       <a href="simulateur.html">Essayer en ligne</a>
       <a href="guide.html">Guide d'installation</a>
       <a href="faq.html">Questions fréquentes</a>
